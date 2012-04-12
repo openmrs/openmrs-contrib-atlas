@@ -154,7 +154,7 @@ function initialize() {
 
 function getJSON() {
   var script = document.createElement('script');
-  script.setAttribute('src', 'http://burkeware.com/atlas/data.php?callback=loadSites');
+  script.setAttribute('src', 'http://openmrs.org/atlas/data.php?callback=loadSites');
   script.setAttribute('id', 'jsonScript');
   script.setAttribute('type', 'text/javascript');
   document.documentElement.firstChild.appendChild(script);
