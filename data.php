@@ -1,4 +1,6 @@
 <?php
+include("config.php");
+
 function client_error($msg) {
   header('Status: 400 Bad Request');
   echo $msg;
@@ -51,7 +53,7 @@ FROM
 EOL
 ;
 
-$dbh = new PDO('sqlite:atlas.db');
+$dbh = new PDO($db_dsn, $db_username, $db_password);
 $stmt = $dbh->query($sql);
 if (!validateStmt($stmt))
   exit;
