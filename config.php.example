@@ -1,0 +1,9 @@
+
+/* Database Connection */
+
+// data source name
+$db_dsn = "sqlite:atlas.db";
+
+// database credentials
+$db_username = "username";
+$db_password = "password";
