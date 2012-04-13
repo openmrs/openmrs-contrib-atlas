@@ -1,3 +1,4 @@
-.DS_Store
-.htaccess
+.*
 config.php
+*.log
+error_log

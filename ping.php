@@ -1,4 +1,10 @@
 <?php
+
+include "config.php";
+require_once "Klogger.php";
+
+$log = new KLogger("ping.log", KLogger::DEBUG);
+
 function client_error($msg) {
   header('Status: 400 Bad Request');
   echo $msg;
@@ -29,7 +35,7 @@ $method = $_SERVER['REQUEST_METHOD'];
 if ($method == 'DELETE') {
   $deleteId = sqlite_escape_string($_GET['id']);
   $deleteAuth = $_GET['secret'];
-  if ($deleteAuth == 'victor') {
+  if ($deleteAuth == $ping_delete_secret) {
 	  $dbh->query(<<<EOL
 INSERT INTO archive (
   archive_date, id, latitude, longitude, name, url, type, image, patients,
@@ -41,9 +47,11 @@ WHERE id = '$deleteId';
 EOL
 );
     $dbh->query("DELETE FROM atlas WHERE id = '$deleteId'");
+    $log->LogInfo("Deleted ".$deleteId." from ".$_SERVER['REMOTE_ADDR']);
     header('', true, 200);
   } else {
     header('Status: 401 Unauthorized');
+    $log->LogInfo("Unauthorized attempt to delete ".$deleteId." from ".$_SERVER['REMOTE_ADDR']);
   }
   header('Content-Length: 0');
   header('Connection: close'); // allows connection to be released instantly
@@ -53,12 +61,15 @@ EOL
 
 if ($method != 'POST') {
   header('Status: 405 Method Not Allowed');
+  $log->LogInfo("Unauthorized POST from ".$_SERVER['REMOTE_ADDR']);
   exit;
 }
 
 $json = json_decode($HTTP_RAW_POST_DATA, true);
-if (!validate($json))
+if (!validate($json)) {
+  $log->LogDebug("Invalid ping from ".$_SERVER['REMOTE_ADDR']);
   exit;
+}
 
 $dbh->query(<<<EOL
 CREATE TABLE IF NOT EXISTS atlas (
@@ -149,6 +160,7 @@ WHERE
   id = '$id';
 EOL
 );
+  $log->LogDebug("Updated ".$id." from ".$_SERVER['REMOTE_ADDR']);
 } else {
   // new implementation
   $dbh->query(<<<EOL
@@ -160,6 +172,7 @@ INSERT INTO atlas (
   $encounters, $observations, '$contact', '$email', '$notes', '$data', datetime('now'))
 EOL
 );
+  $log->LogDebug("Created ".$id." from ".$_SERVER['REMOTE_ADDR']);
 }
 
 header('', true, 200);

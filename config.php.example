@@ -7,3 +7,8 @@ $db_dsn = "sqlite:atlas.db";
 // database credentials
 $db_username = "username";
 $db_password = "password";
+
+/* Ping Configuration */
+
+// needed to delete an entry
+$ping_delete_secret = "secret";
