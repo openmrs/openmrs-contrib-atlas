@@ -37,7 +37,7 @@ function FadeControl(controlDiv, map) {
     fadeOverTime = !fadeOverTime;
     repaintMarkers();
   };
-  controlUI.appendChild(checkbox);
+  //controlUI.appendChild(checkbox);
 
   var label = document.createElement('LABEL');
   label.id = 'fadeLabel';
