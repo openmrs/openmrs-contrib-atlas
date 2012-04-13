@@ -43,7 +43,7 @@ function FadeControl(controlDiv, map) {
   label.id = 'fadeLabel';
   label.innerHTML = 'Fade';
   label.htmlFor = 'fadeCheckbox';
-  controlUI.appendChild(label);
+  //controlUI.appendChild(label);
 
   /*
   controlUI.style.backgroundColor = 'white';
