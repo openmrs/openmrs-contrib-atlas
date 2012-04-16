@@ -18,7 +18,6 @@ function showId(id) {
 }
 
 function FadeControl(controlDiv, map) {
- 
   // Set CSS styles for the DIV containing the control
   // Setting padding to 5 px will offset the control
   // from the edge of the map
@@ -37,46 +36,13 @@ function FadeControl(controlDiv, map) {
     fadeOverTime = !fadeOverTime;
     repaintMarkers();
   };
-  //controlUI.appendChild(checkbox);
+  controlUI.appendChild(checkbox);
 
   var label = document.createElement('LABEL');
   label.id = 'fadeLabel';
   label.innerHTML = 'Fade';
   label.htmlFor = 'fadeCheckbox';
-  //controlUI.appendChild(label);
-
-  /*
-  controlUI.style.backgroundColor = 'white';
-  controlUI.style.borderStyle = 'solid';
-  controlUI.style.borderWidth = '2px';
-  controlUI.style.cursor = 'pointer';
-  controlUI.style.textAlign = 'center';
-  */
- 
-  /*
-  // Set CSS for the control interior
-  var controlText = document.createElement('INPUT');
-  controlText.style.fontFamily = 'Arial,sans-serif';
-  controlText.style.fontSize = '12px';
-  controlText.style.paddingLeft = '4px';
-  controlText.style.paddingRight = '4px';
-  controlText.innerHTML = '<b>Home</b>';
-  controlUI.appendChild(controlText);
-
-  // Setup the click event listeners: simply set the map to
-  // Chicago
-  google.maps.event.addDomListener(controlUI, 'click', function() {
-	var newVisibility = !sites[0].getVisible();
-	for(i in sites) {
-      sites[i].setVisible(newVisibility);
-    }
-    var myOptions = {
-      disableDefaultUI: !newVisibility
-    };
-	map.setOptions(myOptions);
-  });
-  */
- 
+  controlUI.appendChild(label);
 }
 
 function closeBubbles() {
@@ -140,10 +106,12 @@ function initialize() {
     new google.maps.Point(191,0),
     new google.maps.Point(10, 34));
 
+  /*
   var fadeControlDiv = document.createElement('DIV');
   var fadeControl = new FadeControl(fadeControlDiv, map);
   fadeControlDiv.index = 1;
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(fadeControlDiv);
+  */
 
   google.maps.event.addListener(map, 'click', function() {
     closeBubbles();
