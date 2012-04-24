@@ -40,7 +40,7 @@ if ($method == 'DELETE') {
 INSERT INTO archive (
   archive_date, id, latitude, longitude, name, url, type, image, patients,
   encounters, observations, contact, email, notes, data, date_created
-  ) SELECT datetime('now'), id, latitude, longitude, name, url, type, image, patients,
+  ) SELECT current_timestamp, id, latitude, longitude, name, url, type, image, patients,
   encounters, observations, contact, email, notes, data, date_created
 FROM atlas
 WHERE id = '$deleteId';
@@ -137,7 +137,7 @@ if ($stmt->fetch()) {
 INSERT INTO archive (
   archive_date, id, latitude, longitude, name, url, type, image, patients,
   encounters, observations, contact, email, notes, data, date_created
-  ) SELECT datetime('now'), id, latitude, longitude, name, url, type, image, patients,
+  ) SELECT current_timestamp, id, latitude, longitude, name, url, type, image, patients,
   encounters, observations, contact, email, notes, data, date_created
   FROM atlas
   WHERE id = '$id';
@@ -155,7 +155,7 @@ UPDATE atlas SET
   email = '$email',
   notes = '$notes',
   data = '$data',
-  date_changed = datetime('now')
+  date_changed = current_timestamp
 WHERE
   id = '$id';
 EOL
@@ -169,7 +169,7 @@ INSERT INTO atlas (
   encounters, observations, contact, email, notes, data, date_created
   ) VALUES (
   '$id', '$latitude', '$longitude', '$name', '$url', '$type', '$image', $patients,
-  $encounters, $observations, '$contact', '$email', '$notes', '$data', datetime('now'))
+  $encounters, $observations, '$contact', '$email', '$notes', '$data', current_timestamp)
 EOL
 );
   $log->logDebug("Created ".$id." from ".$_SERVER['REMOTE_ADDR']);
