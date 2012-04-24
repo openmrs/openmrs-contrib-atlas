@@ -28,7 +28,7 @@ function validate($json) {
   return true;
 }
 
-$dbh = new PDO('sqlite:atlas.db');
+$dbh = new PDO($db_dsn, $db_username, $db_password);
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -61,7 +61,7 @@ EOL
 
 if ($method != 'POST') {
   header('Status: 405 Method Not Allowed');
-  $log->logInfo("Unauthorized POST from ".$_SERVER['REMOTE_ADDR']);
+  $log->logInfo("Unauthorized $method from ".$_SERVER['REMOTE_ADDR']);
   exit;
 }
 
