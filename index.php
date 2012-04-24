@@ -235,7 +235,6 @@ function createInfoWindow(site, marker) {
     html += "<fieldset class='site-notes'><legend>Notes</legend>" + site.notes + "</fieldset>";
   if (site.type)
     html += "<div class='site-type'><span class='site-type'>" + site.type + "</span></div>";
-  html += "<input class='site-id' readonly='true' value='" + site.id + "' onclick='this.select()' />";
   html += "</div>";
 
   var infowindow = new google.maps.InfoWindow({

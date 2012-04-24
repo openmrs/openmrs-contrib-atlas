@@ -104,11 +104,3 @@ span.site-type {
 	margin-left: 3px;
 	vertical-align: middle;
 }
-.site-id {
-	float: right;
-	border: none;
-	color: #EEE;
-	margin-top: 5px;
-	font-size: 0.5em;
-	width: 20px;
-}
