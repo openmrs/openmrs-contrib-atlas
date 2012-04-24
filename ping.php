@@ -127,7 +127,8 @@ $observations = intval($json['observations']);
 $contact = sqlite_escape_string($json['contact']);
 $email = sqlite_escape_string($json['email']);
 $notes = sqlite_escape_string($json['notes']);
-$data = sqlite_escape_string($json['data']);
+// TODO: figure out how to store data (string vs. sep table)
+$data = ""; //sqlite_escape_string($json['data']);
 
 $stmt = $dbh->query("SELECT id FROM atlas WHERE id = '$id'");
 if ($stmt->fetch()) {
