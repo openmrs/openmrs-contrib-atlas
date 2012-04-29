@@ -127,7 +127,7 @@ $observations = intval($json['observations']);
 $contact = sqlite_escape_string($json['contact']);
 $email = sqlite_escape_string($json['email']);
 $notes = sqlite_escape_string($json['notes']);
-$data = sqlite_escape_string(json_encode($json['data']);
+$data = sqlite_escape_string(json_encode($json['data']));
 
 $stmt = $dbh->query("SELECT id FROM atlas WHERE id = '$id'");
 if ($stmt->fetch()) {
