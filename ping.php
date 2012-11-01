@@ -36,7 +36,7 @@ if ($method == 'DELETE') {
   $deleteId = sqlite_escape_string($_GET['id']);
   $deleteAuth = $_GET['secret'];
   if ($deleteAuth == $ping_delete_secret) {
-	  $dbh->query(<<<EOL
+    $dbh->query(<<<EOL
 INSERT INTO archive (
   archive_date, id, latitude, longitude, name, url, type, image, patients,
   encounters, observations, contact, email, notes, data, date_created
@@ -73,44 +73,44 @@ if (!validate($json)) {
 
 $dbh->query(<<<EOL
 CREATE TABLE IF NOT EXISTS atlas (
-  id text,
-  latitude text,
-  longitude text,
-  name text,
-  url text,
-  type text,
-  image text,
+  id VARCHAR(38) PRIMARY KEY,
+  latitude VARCHAR(50),
+  longitude VARCHAR(50),
+  name VARCHAR(1024),
+  url VARCHAR(1024),
+  type VARCHAR(1024),
+  image VARCHAR(1024),
   patients int,
   encounters int,
   observations int,
-  contact text,
-  email text,
-  notes text,
-  data text,
-  date_changed text,
-  date_created text,
+  contact VARCHAR(1024),
+  email VARCHAR(1024),
+  notes TEXT,
+  data TEXT,
+  date_changed TIMESTAMP,
+  date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 PRIMARY KEY (id))
 EOL
 );
 $dbh->query(<<<EOL
 CREATE TABLE IF NOT EXISTS archive (
-  archive_date text,
-  id text,
-  latitude text,
-  longitude text,
-  name text,
-  url text,
-  type text,
-  image text,
+  archive_date TIMESTAMP DEFAULTS CURRENT_TIMESTAMP,
+  id VARCHAR(38),
+  latitude VARCHAR(50),
+  longitude VARCHAR(50),
+  name VARCHAR(1024),
+  url VARCHAR(1024),
+  type VARCHAR(1024),
+  image VARCHAR(1024),
   patients int,
   encounters int,
   observations int,
-  contact text,
-  email text,
-  notes text,
-  data text,
-  date_changed text,
-  date_created text);
+  contact VARCHAR(1024),
+  email VARCHAR(1024),
+  notes TEXT,
+  data TEXT,
+  date_changed TIMESTAMP,
+  date_created TIMESTAMP);
 EOL
 );
 
@@ -155,7 +155,7 @@ UPDATE atlas SET
   email = '$email',
   notes = '$notes',
   data = '$data',
-  date_changed = current_timestamp
+  date_changed = CURRENT_TIMESTAMP
 WHERE
   id = '$id';
 EOL
