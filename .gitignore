@@ -3,3 +3,4 @@ config.php
 *.log
 error_log
 *.db
+beta
