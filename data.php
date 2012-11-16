@@ -34,6 +34,7 @@ function validateCallback($callback) {
 
 $sql = <<<EOL
 SELECT
+  @cnt := @cnt + 1 as id,
   latitude,
   longitude,
   name,
@@ -54,6 +55,7 @@ EOL
 ;
 
 $dbh = new PDO($db_dsn, $db_username, $db_password);
+$dbh->query("SET @cnt := 0;")
 $stmt = $dbh->query($sql);
 if (!validateStmt($stmt))
   exit;

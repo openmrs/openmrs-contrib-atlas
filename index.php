@@ -48,8 +48,8 @@ function FadeControl(controlDiv, map) {
 function closeBubbles() {
   for (key in sites) {
     if (sites[key].bubbleOpen) {
-	  sites[key].infowindow.close();
-	  sites[key].bubbleOpen = false;
+      sites[key].infowindow.close();
+      sites[key].bubbleOpen = false;
     }	
   }
 }
@@ -241,14 +241,14 @@ function createInfoWindow(site, marker) {
     content: html,
   });
   google.maps.event.addListener(infowindow, 'closeclick', function() {
-	sites[site.id].bubbleOpen = false;
+    sites[site.id].bubbleOpen = false;
   });
   google.maps.event.addListener(marker, "click", function() {
-	if (sites[site.id].bubbleOpen) {
-	  infowindow.close();
-	  sites[site.id].bubbleOpen = false;
-	} else {
-	  closeBubbles();
+	  if (sites[site.id].bubbleOpen) {
+      infowindow.close();
+      sites[site.id].bubbleOpen = false;
+    } else {
+      closeBubbles();
       infowindow.open(map,marker);
       sites[site.id].bubbleOpen = true;
     }
