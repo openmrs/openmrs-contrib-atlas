@@ -116,8 +116,9 @@ function initialize() {
   google.maps.event.addListener(map, 'click', function() {
     closeBubbles();
   });
-
+  
   getJSON();
+  initLegend();
 }
 
 function getJSON() {
@@ -126,6 +127,19 @@ function getJSON() {
   script.setAttribute('id', 'jsonScript');
   script.setAttribute('type', 'text/javascript');
   document.documentElement.firstChild.appendChild(script);
+}
+
+function initLegend(){
+  var legend = document.getElementById('legend');
+  map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(legend);
+  
+  for (var type in icons) {
+    var name = type;
+    var icon = icons[type].icon;
+    var div = document.createElement('div');
+    div.innerHTML = '<img src="' + icon + '"> ' + name;
+    legend.appendChild(div);
+  }
 }
 
 var icons = {
@@ -138,13 +152,16 @@ var icons = {
   Development: {
     icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png'
   },
-  Default: {
-    icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png'
+  Evaluation: {
+    icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/yellow-dot.png'
+  },
+  Other: {
+    icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/purple-dot.png'
   }
 };
 
 function colorForSite(site) {
-  var image = icons['Default'].icon;
+  var image = icons['Other'].icon;
   switch (site.type) {
     case 'Research':
      image = icons['Research'].icon;
@@ -154,6 +171,9 @@ function colorForSite(site) {
       break;
     case 'Development':
       image = icons['Development'].icon;
+      break;
+    case 'Evaluation':
+      image = icons['Evaluation'].icon;
       break;
   }
   return image;
@@ -293,6 +313,6 @@ setTimeout('initialize()', 500);
 <body>
   <div id="map_title"><img src="OpenMRS-logo.png" /></div>
   <div id="map_canvas" style="width:100%; height:100%"></div>
-  <div id="legend">Legend</div>
+  <div id="legend"><h3>Legend</h3></div>
 </body>
 </html>
