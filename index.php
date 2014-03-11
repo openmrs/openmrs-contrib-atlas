@@ -128,6 +128,37 @@ function getJSON() {
   document.documentElement.firstChild.appendChild(script);
 }
 
+var icons = {
+  Research: {
+    icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/green-dot.png'
+  },
+  Clinical: {
+    icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png'
+  },
+  Development: {
+    icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png'
+  },
+  Default: {
+    icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png'
+  }
+};
+
+function colorForSite(site) {
+  var image = icons['Default'].icon;
+  switch (site.type) {
+    case 'Research':
+     image = icons['Research'].icon;
+     break;
+    case 'Clinical':
+      image = icons['Clinical'].icon;
+      break;
+    case 'Development':
+      image = icons['Development'].icon;
+      break;
+  }
+  return image;
+}
+
 function loadSites(json) {
   var bounds = new google.maps.LatLngBounds();
   for(i=0; i<json.length; i++) {
@@ -145,7 +176,7 @@ function repaintMarkers() {
     var site = sites[key];
     var imageIndex = indexForFadeGroup(site.fadeGroup);
     if (shouldBeVisible(site.fadeGroup)) {
-      site.marker.setIcon(images[imageIndex]);
+      site.marker.setIcon(colorForSite(site));
       site.marker.setShadow(shadows[imageIndex]);
       site.marker.setVisible(true);
     } else {
@@ -165,7 +196,7 @@ function createMarker(site, fadeGroup, bounds) {
     position: latLng,
     map: map,
     title: site.name,
-    icon: images[imageIndex],
+    icon: colorForSite(site),
     shadow: shadows[imageIndex],
     animation: google.maps.Animation.DROP
   });
@@ -262,5 +293,6 @@ setTimeout('initialize()', 500);
 <body>
   <div id="map_title"><img src="OpenMRS-logo.png" /></div>
   <div id="map_canvas" style="width:100%; height:100%"></div>
+  <div id="legend">Legend</div>
 </body>
 </html>
