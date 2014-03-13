@@ -112,3 +112,8 @@ span.site-type {
         padding: 10px;
         margin: 10px;
   }
+
+  #legend div img {
+        vertical-align: middle;
+        margin: 5px;
+  }
