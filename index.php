@@ -56,7 +56,8 @@ function closeBubbles() {
 
 function initialize() {
   var myOptions = {
-    zoom: 3,
+    zoom: 4,
+    minZoom: 2,
     mapTypeId: google.maps.MapTypeId.ROADMAP
   };
   map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
