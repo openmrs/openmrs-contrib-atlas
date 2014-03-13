@@ -116,8 +116,9 @@ function initialize() {
   google.maps.event.addListener(map, 'click', function() {
     closeBubbles();
   });
-
+  
   getJSON();
+  initLegend();
 }
 
 function getJSON() {
@@ -126,6 +127,56 @@ function getJSON() {
   script.setAttribute('id', 'jsonScript');
   script.setAttribute('type', 'text/javascript');
   document.documentElement.firstChild.appendChild(script);
+}
+
+function initLegend(){
+  var legend = document.getElementById('legend');
+  map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(legend);
+  
+  for (var type in icons) {
+    var name = type;
+    var icon = icons[type].icon;
+    var div = document.createElement('div');
+    div.innerHTML = '<img src="' + icon + '"> ' + name;
+    legend.appendChild(div);
+  }
+}
+
+var icons = {
+  Research: {
+    icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/green-dot.png'
+  },
+  Clinical: {
+    icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png'
+  },
+  Development: {
+    icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png'
+  },
+  Evaluation: {
+    icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/yellow-dot.png'
+  },
+  Other: {
+    icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/purple-dot.png'
+  }
+};
+
+function colorForSite(site) {
+  var image = icons['Other'].icon;
+  switch (site.type) {
+    case 'Research':
+     image = icons['Research'].icon;
+     break;
+    case 'Clinical':
+      image = icons['Clinical'].icon;
+      break;
+    case 'Development':
+      image = icons['Development'].icon;
+      break;
+    case 'Evaluation':
+      image = icons['Evaluation'].icon;
+      break;
+  }
+  return image;
 }
 
 function loadSites(json) {
@@ -145,7 +196,7 @@ function repaintMarkers() {
     var site = sites[key];
     var imageIndex = indexForFadeGroup(site.fadeGroup);
     if (shouldBeVisible(site.fadeGroup)) {
-      site.marker.setIcon(images[imageIndex]);
+      site.marker.setIcon(colorForSite(site));
       site.marker.setShadow(shadows[imageIndex]);
       site.marker.setVisible(true);
     } else {
@@ -165,7 +216,7 @@ function createMarker(site, fadeGroup, bounds) {
     position: latLng,
     map: map,
     title: site.name,
-    icon: images[imageIndex],
+    icon: colorForSite(site),
     shadow: shadows[imageIndex],
     animation: google.maps.Animation.DROP
   });
@@ -262,5 +313,6 @@ setTimeout('initialize()', 500);
 <body>
   <div id="map_title"><img src="OpenMRS-logo.png" /></div>
   <div id="map_canvas" style="width:100%; height:100%"></div>
+  <div id="legend"><h3>Legend</h3></div>
 </body>
 </html>
