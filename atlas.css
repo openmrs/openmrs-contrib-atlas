@@ -105,6 +105,16 @@ span.site-type {
 	vertical-align: middle;
 }
 
+#site-update {
+        color: #AAA;
+        font-style: italic;
+	margin-top: 10px;
+        margin-left: 1px;
+        text-align: left;
+        font-size: 0.7em;
+        vertical-align: bottom;
+}
+
 #legend {
         border-style: solid;
         border-width: 1.5px;

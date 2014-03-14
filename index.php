@@ -264,7 +264,6 @@ function addCommas(n) {
 }
 
 function createInfoWindow(site, marker) {
-
   var html = "<div class='site-bubble'>";
   html += "<div class='site-name'>" + site.name + "</div>";
   html += "<div class='site-panel'>"
@@ -287,6 +286,11 @@ function createInfoWindow(site, marker) {
     html += "<fieldset class='site-notes'><legend>Notes</legend>" + site.notes + "</fieldset>";
   if (site.type)
     html += "<div class='site-type'><span class='site-type'>" + site.type + "</span></div>";
+  /*
+   if (site.date_changed)
+    var date_update = new Date(site.date_changed);
+    html += "<div id='site-update'>Last Updated: " + date_update.toLocaleDateString() + "</div>";
+  */
   html += "</div>";
 
   var infowindow = new google.maps.InfoWindow({
