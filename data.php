@@ -47,6 +47,7 @@ SELECT
   contact,
   email,
   notes,
+  data,
   CASE WHEN date_changed IS NULL THEN '' ELSE date_changed END as date_changed,
   date_created
 FROM

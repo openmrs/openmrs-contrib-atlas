@@ -233,6 +233,14 @@ function dateForSite(site) {
   return new Date(dateString).getTime();
 }
 
+function versionForSite(site) {
+  if (site.data) {
+    var data = JSON.parse(site.data);
+    return data['version'].match(/\d+(\.\d+)+/g);
+  }
+  return null; 
+}
+
 function getFadeGroup(site) {
   var ageInMonths = Math.max(0,(new Date().getTime() - dateForSite(site))/2592000000); // milliseconds in 30 days
   var fadeGroup = Math.floor(ageInMonths / 6);
@@ -285,7 +293,9 @@ function createInfoWindow(site, marker) {
   if (site.notes)
     html += "<fieldset class='site-notes'><legend>Notes</legend>" + site.notes + "</fieldset>";
   if (site.type)
-    html += "<div class='site-type'><span class='site-type'>" + site.type + "</span></div>";
+    html += "<div class='site-type'><span class='site-type'>" + site.type + "</span>";
+  if (versionForSite(site))  
+    html += "<span class='site-version'>" + versionForSite(site) + "</span></div>";
   /*
    if (site.date_changed)
     var date_update = new Date(site.date_changed);
