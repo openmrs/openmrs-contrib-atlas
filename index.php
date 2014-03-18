@@ -9,10 +9,12 @@
 <script type="text/javascript">
 var map;
 var sites = [];
+var version = [];
 var images = []
 var shadows = [];
 var fadeOverTime = false;
-
+var legendVersion = true;
+var icons;
 function showId(id) {
   prompt('Implementation ID', id);
 }
@@ -53,6 +55,24 @@ function closeBubbles() {
     }	
   }
 }
+function initVersion() {
+ var i=0, x, count, item;
+ while(i < version.length){
+     count = 1;
+     item = version[i];
+     x = i+1;
+     while(x < version.length && (x = version.indexOf(item,x)) !== -1){
+         count+=1;
+         version.splice(x,1);
+     }
+     version[i] = new Array(version[i],count);
+     ++i;
+ }
+ version.sort(function(a, b){
+    return a[1]-b[1]
+ });
+ version.reverse();
+}
 
 function initialize() {
   var myOptions = {
@@ -61,7 +81,6 @@ function initialize() {
     mapTypeId: google.maps.MapTypeId.ROADMAP
   };
   map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
-
   images[0] = new google.maps.MarkerImage('atlas_sprite.png',
     // This marker is 20 pixels wide by 32 pixels tall.
     new google.maps.Size(20, 34),
@@ -117,9 +136,7 @@ function initialize() {
   google.maps.event.addListener(map, 'click', function() {
     closeBubbles();
   });
-  
   getJSON();
-  initLegend();
 }
 
 function getJSON() {
@@ -135,7 +152,7 @@ function initLegend(){
   map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(legend);
   
   for (var type in icons) {
-    var name = type;
+    var name = icons[type].label;
     var icon = icons[type].icon;
     var div = document.createElement('div');
     div.innerHTML = '<img src="' + icon + '"> ' + name;
@@ -143,50 +160,113 @@ function initLegend(){
   }
 }
 
-var icons = {
-  Research: {
-    icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/green-dot.png'
-  },
-  Clinical: {
-    icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png'
-  },
-  Development: {
-    icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png'
-  },
-  Evaluation: {
-    icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/yellow-dot.png'
-  },
-  Other: {
-    icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/purple-dot.png'
-  }
-};
+function initIcons(){
+    var iconsType = {
+      Research: {
+        icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/green-dot.png',
+        label: 'Research'
+      },
+      Clinical: {
+        icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png',
+        label: 'Clinical'
+      },
+      Development: {
+        icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png',
+        label: 'Development'
+      },
+      Evaluation: {
+        icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/yellow-dot.png',
+        label: 'Evaluation'
+      },
+      Other: {
+        icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/purple-dot.png',
+        label: 'Other'
+      }
+    };
+
+    var iconsVersion = {
+      1: {
+        icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/green-dot.png',
+        label: version[0][0]
+      },
+      2: {
+        icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png',
+        label: version[1][0]
+      },
+      3: {
+        icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png',
+        label: version[2][0]
+      },
+      Other: {
+        icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/yellow-dot.png',
+        label: 'Other'
+      },
+      Unknown: {
+        icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/purple-dot.png',
+        label: 'Unknown'
+      }
+    };
+    if (legendVersion) icons = iconsVersion;
+    else icons = iconsType;
+}
 
 function colorForSite(site) {
   var image = icons['Other'].icon;
-  switch (site.type) {
-    case 'Research':
-     image = icons['Research'].icon;
-     break;
-    case 'Clinical':
-      image = icons['Clinical'].icon;
-      break;
-    case 'Development':
-      image = icons['Development'].icon;
-      break;
-    case 'Evaluation':
-      image = icons['Evaluation'].icon;
-      break;
+  if (legendVersion === true) {
+      switch (versionMForSite(site)) {
+        case version[0][0]:
+         image = icons['1'].icon;
+         break;
+        case version[1][0]:
+          image = icons['2'].icon;
+          break;
+        case version[2][0]:
+          image = icons['3'].icon;
+          break;
+        case null:
+          image = icons['Unknown'].icon;
+          break;
+      }
+      
+  } else {
+      switch (site.type) {
+        case 'Research':
+         image = icons['Research'].icon;
+         break;
+        case 'Clinical':
+          image = icons['Clinical'].icon;
+          break;
+        case 'Development':
+          image = icons['Development'].icon;
+          break;
+        case 'Evaluation':
+          image = icons['Evaluation'].icon;
+          break;
+      }
   }
   return image;
 }
 
+function loadVersion(json) {
+  for(i=0; i<json.length; i++) {
+    var site = json[i];
+    if (site.data) version.push(versionMForSite(site));
+  }
+  initVersion();
+}
+
 function loadSites(json) {
   var bounds = new google.maps.LatLngBounds();
+  loadVersion(json);
+  initIcons();
+  initLegend();
   for(i=0; i<json.length; i++) {
     var site = json[i];
     var fadeGroup = getFadeGroup(site);
     var marker = createMarker(site, fadeGroup, bounds);
     var infowindow = createInfoWindow(site, marker);
+    if (site.data)
+        version.push(versionMForSite(site));
     sites[site.id] = {'marker':marker, 'infowindow':infowindow, 'bubbleOpen':false, 'fadeGroup':fadeGroup};
   }
   map.fitBounds(bounds);
@@ -236,7 +316,15 @@ function dateForSite(site) {
 function versionForSite(site) {
   if (site.data) {
     var data = JSON.parse(site.data);
-    return data['version'].match(/\d+(\.\d+)+/g);
+    return data['version'].match(/\d+(\.\d+)+/g).toString();
+  }
+  return null; 
+}
+
+function versionMForSite(site) {
+  if (site.data) {
+    var data = JSON.parse(site.data);
+    return data['version'].match(/\d+(\.\d+)/g).toString();
   }
   return null; 
 }
