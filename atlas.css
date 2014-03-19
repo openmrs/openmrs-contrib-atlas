@@ -140,8 +140,13 @@ span.site-version {
         padding: 10px;
         margin: 10px;
 }
-
-#legend div img {
+#legend img {
+        width: 32px;
+        height: 28px;
         vertical-align: middle;
         margin: 5px;
 }
+#legend h3 {
+    margin-top : 3px;
+}
+

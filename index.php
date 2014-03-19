@@ -10,13 +10,47 @@
 var map;
 var sites = [];
 var version = [];
-var images = []
+var images = [];
 var shadows = [];
 var fadeOverTime = false;
-var legendVersion = true;
-var icons;
+var legendVersion = false;
 function showId(id) {
   prompt('Implementation ID', id);
+}
+
+function LegendControl(controlDiv, map) {
+
+ 
+  controlDiv.style.padding = '5px';
+
+  var controlUI = document.createElement('div');
+  controlUI.style.backgroundColor = 'white';
+  controlUI.style.borderStyle = 'solid';
+  controlUI.style.borderWidth = '2px';
+  controlUI.style.cursor = 'pointer';
+  controlUI.style.textAlign = 'center';
+  controlUI.title = 'Click to switch legend';
+  controlDiv.appendChild(controlUI);
+
+  var controlText = document.createElement('div');
+  controlText.style.fontFamily = 'Arial,sans-serif';
+  controlText.style.fontSize = '12px';
+  controlText.style.paddingLeft = '4px';
+  controlText.style.paddingRight = '4px';
+  controlText.innerHTML = '<b>Type</b>';
+  controlUI.appendChild(controlText);
+
+  google.maps.event.addDomListener(controlUI, 'click', function() {
+    if (legendVersion === false) {
+      controlText.innerHTML = '<b>Version</b>';
+      legendVersion = true;
+   } else {
+      controlText.innerHTML = '<b>Type</b>';
+      legendVersion = false;
+   }
+    initLegend();
+    repaintMarkers();
+  });
 }
 
 function FadeControl(controlDiv, map) {
@@ -33,7 +67,7 @@ function FadeControl(controlDiv, map) {
 
   var checkbox = document.createElement('INPUT');
   checkbox.type = "checkbox";
-  checkbox.id = 'fadeCheckbox'
+  checkbox.id = 'fadeCheckbox';
   checkbox.onchange = function() {
     fadeOverTime = !fadeOverTime;
     repaintMarkers();
@@ -69,8 +103,11 @@ function initVersion() {
      ++i;
  }
  version.sort(function(a, b){
-    return a[1]-b[1]
+    return a[1]-b[1];
  });
+ version.reverse();
+ version = version.slice(0,3);
+ version.sort(versionCompare);
  version.reverse();
 }
 
@@ -125,32 +162,36 @@ function initialize() {
     new google.maps.Size(37, 34),
     new google.maps.Point(191,0),
     new google.maps.Point(10, 34));
-
+  map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(legend);
   /*
   var fadeControlDiv = document.createElement('DIV');
   var fadeControl = new FadeControl(fadeControlDiv, map);
   fadeControlDiv.index = 1;
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(fadeControlDiv);
   */
-
-  google.maps.event.addListener(map, 'click', function() {
+    var LegendControlDiv = document.createElement('div'); 
+    var legendControl = new LegendControl(LegendControlDiv, map);
+    LegendControlDiv.index = 1;   
+    map.controls[google.maps.ControlPosition.TOP_RIGHT].push(LegendControlDiv); 
+    google.maps.event.addListener(map, 'click', function() {
     closeBubbles();
   });
+  
   getJSON();
 }
 
 function getJSON() {
   var script = document.createElement('script');
-  script.setAttribute('src', 'http://localhost/openmrs-contrib-atlas/data.php?callback=loadSites');
+  script.setAttribute('src', 'http://openmrs.org/atlas/data.php?callback=loadSites');
   script.setAttribute('id', 'jsonScript');
   script.setAttribute('type', 'text/javascript');
   document.documentElement.firstChild.appendChild(script);
 }
 
 function initLegend(){
+  var icons = Icons();
   var legend = document.getElementById('legend');
-  map.controls[google.maps.ControlPosition.RIGHT_BOTTOM].push(legend);
-  
+  legend.innerHTML = '<h3>Legend</h3>';
   for (var type in icons) {
     var name = icons[type].label;
     var icon = icons[type].icon;
@@ -159,9 +200,15 @@ function initLegend(){
     legend.appendChild(div);
   }
 }
+function clearLegend(){
+  var legend = document.getElementById('legend');
+    legend.innerHTML = '';
 
-function initIcons(){
-    var iconsType = {
+}
+function Icons(){
+  var icons;
+  if (legendVersion === false){
+    icons = {
       Research: {
         icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/green-dot.png',
         label: 'Research'
@@ -183,8 +230,8 @@ function initIcons(){
         label: 'Other'
       }
     };
-
-    var iconsVersion = {
+  } else {
+    icons = {
       1: {
         icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/green-dot.png',
         label: version[0][0]
@@ -202,47 +249,50 @@ function initIcons(){
         label: 'Other'
       },
       Unknown: {
-        icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/purple-dot.png',
+        icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/purple.png',
         label: 'Unknown'
       }
     };
-    if (legendVersion) icons = iconsVersion;
-    else icons = iconsType;
+  }
+  return icons;
 }
 
 function colorForSite(site) {
-  var image = icons['Other'].icon;
+  var icons = Icons();
+  var image = {
+      url: icons['Other'].icon,
+      scaledSize: new google.maps.Size(32, 32)
+  };
   if (legendVersion === true) {
-      switch (versionMForSite(site)) {
-        case version[0][0]:
-         image = icons['1'].icon;
-         break;
-        case version[1][0]:
-          image = icons['2'].icon;
-          break;
-        case version[2][0]:
-          image = icons['3'].icon;
-          break;
-        case null:
-          image = icons['Unknown'].icon;
-          break;
-      }
-      
+    switch (versionMajMinForSite(site)) {
+      case version[0][0]:
+       image.url = icons['1'].icon;
+       break;
+      case version[1][0]:
+        image.url = icons['2'].icon;
+        break;
+      case version[2][0]:
+        image.url = icons['3'].icon;
+        break;
+      case null:
+        image.url = icons['Unknown'].icon;
+        break;
+     }  
   } else {
-      switch (site.type) {
-        case 'Research':
-         image = icons['Research'].icon;
-         break;
-        case 'Clinical':
-          image = icons['Clinical'].icon;
-          break;
-        case 'Development':
-          image = icons['Development'].icon;
-          break;
-        case 'Evaluation':
-          image = icons['Evaluation'].icon;
-          break;
-      }
+    switch (site.type) {
+      case 'Research':
+       image.url = icons['Research'].icon;
+       break;
+      case 'Clinical':
+        image.url = icons['Clinical'].icon;
+        break;
+      case 'Development':
+        image.url = icons['Development'].icon;
+        break;
+      case 'Evaluation':
+        image.url = icons['Evaluation'].icon;
+        break;
+    }
   }
   return image;
 }
@@ -250,7 +300,7 @@ function colorForSite(site) {
 function loadVersion(json) {
   for(i=0; i<json.length; i++) {
     var site = json[i];
-    if (site.data) version.push(versionMForSite(site));
+    if (site.data) version.push(versionMajMinForSite(site));
   }
   initVersion();
 }
@@ -258,7 +308,6 @@ function loadVersion(json) {
 function loadSites(json) {
   var bounds = new google.maps.LatLngBounds();
   loadVersion(json);
-  initIcons();
   initLegend();
   for(i=0; i<json.length; i++) {
     var site = json[i];
@@ -266,8 +315,8 @@ function loadSites(json) {
     var marker = createMarker(site, fadeGroup, bounds);
     var infowindow = createInfoWindow(site, marker);
     if (site.data)
-        version.push(versionMForSite(site));
-    sites[site.id] = {'marker':marker, 'infowindow':infowindow, 'bubbleOpen':false, 'fadeGroup':fadeGroup};
+        version.push(versionMajMinForSite(site));
+    sites[site.id] = {'siteData': site, 'marker':marker, 'infowindow':infowindow, 'bubbleOpen':false, 'fadeGroup':fadeGroup};
   }
   map.fitBounds(bounds);
 }
@@ -277,7 +326,7 @@ function repaintMarkers() {
     var site = sites[key];
     var imageIndex = indexForFadeGroup(site.fadeGroup);
     if (shouldBeVisible(site.fadeGroup)) {
-      site.marker.setIcon(colorForSite(site));
+      site.marker.setIcon(colorForSite(site.siteData));
       site.marker.setShadow(shadows[imageIndex]);
       site.marker.setVisible(true);
     } else {
@@ -321,7 +370,7 @@ function versionForSite(site) {
   return null; 
 }
 
-function versionMForSite(site) {
+function versionMajMinForSite(site) {
   if (site.data) {
     var data = JSON.parse(site.data);
     return data['version'].match(/\d+(\.\d+)/g).toString();
@@ -342,7 +391,7 @@ function indexForFadeGroup(fadeGroup) {
 }
 
 function cropUrl(url) {
-	if (url != null && url.length > 50)
+	if (url !== null && url.length > 50)
 	  return url.substring(0,25) + "..." + url.substring(url.length-22);
 	return url;
 }
@@ -358,20 +407,36 @@ function addCommas(n) {
 	}
 	return x1 + x2;
 }
+versionCompare = function(left, right) {
+  if (typeof left[0] + typeof right[0] !== 'stringstring')
+    return false;
+  var a = left[0].split('.');
+  var b = right[0].split('.');
+  var i = 0;
+  var len = Math.max(a.length, b.length);    
+  for (; i < len; i++) {
+     if ((a[i] && !b[i] && parseInt(a[i]) > 0) || (parseInt(a[i]) > parseInt(b[i]))) {
+        return 1;
+    } else if ((b[i] && !a[i] && parseInt(b[i]) > 0) || (parseInt(a[i]) < parseInt(b[i]))) {
+        return -1;
+    }
+  }
+  return 0;
+};
 
 function createInfoWindow(site, marker) {
   var html = "<div class='site-bubble'>";
   html += "<div class='site-name'>" + site.name + "</div>";
-  html += "<div class='site-panel'>"
+  html += "<div class='site-panel'>";
   if (site.image)
     html += "<img class='site-image' src='" + site.image + "' width='80px' height='80px' alt='thumbnail' />";
   if (site.url)
     html += "<div class='site-url'><a target='_blank' href='" + site.url + "' title='" + site.url + "'>" + cropUrl(site.url) + "</a></div>";
-  if (site.patients && site.patients != '0')
+  if (site.patients && site.patients !== '0')
     html += "<div class='site-count'>" + addCommas(site.patients) + " patients</div>";
-  if (site.encounters && site.encounters != '0')
+  if (site.encounters && site.encounters !== '0')
     html += "<div class='site-count'>" + addCommas(site.encounters) + " encounters</div>";
-  if (site.observations && site.observations != '0')
+  if (site.observations && site.observations !== '0')
     html += "<div class='site-count'>" + addCommas(site.observations) + " observations</div>";
   if (site.contact)
     html += "<div class='site-contact'><span class='site-label'>Contact:</span> " + site.contact + "</div>";
@@ -392,7 +457,7 @@ function createInfoWindow(site, marker) {
   html += "</div>";
 
   var infowindow = new google.maps.InfoWindow({
-    content: html,
+    content: html
   });
   google.maps.event.addListener(infowindow, 'closeclick', function() {
     sites[site.id].bubbleOpen = false;
@@ -416,6 +481,6 @@ setTimeout('initialize()', 500);
 <body>
   <div id="map_title"><img src="OpenMRS-logo.png" /></div>
   <div id="map_canvas" style="width:100%; height:100%"></div>
-  <div id="legend"><h3>Legend</h3></div>
+  <div id="legend"></div>
 </body>
 </html>
