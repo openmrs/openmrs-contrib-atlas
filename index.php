@@ -13,7 +13,7 @@ var version = [];
 var images = [];
 var shadows = [];
 var fadeOverTime = false;
-var legendVersion = false;
+var legendGroups = 0;
 function showId(id) {
   prompt('Implementation ID', id);
 }
@@ -37,17 +37,29 @@ function LegendControl(controlDiv, map) {
   controlText.style.fontSize = '12px';
   controlText.style.paddingLeft = '4px';
   controlText.style.paddingRight = '4px';
-  controlText.innerHTML = '<b>Type</b>';
+  controlText.innerHTML = '<b>Groups</b>';
   controlUI.appendChild(controlText);
 
   google.maps.event.addDomListener(controlUI, 'click', function() {
-    if (legendVersion === false) {
-      controlText.innerHTML = '<b>Version</b>';
-      legendVersion = true;
-   } else {
-      controlText.innerHTML = '<b>Type</b>';
-      legendVersion = false;
-   }
+    switch (legendGroups) {
+      case 0:
+        if (version.length > 0) {        
+          legendGroups = 1;
+          //controlText.innerHTML = '<b>Version</b>';
+        } else {
+          //controlText.innerHTML = '<b>None</b>';
+          legendGroups = 2;
+        }
+        break;
+      case 1: 
+        //controlText.innerHTML = '<b>Groups</b>';
+        legendGroups = 2;
+        break;
+      case 2:
+        //controlText.innerHTML = '<b>None</b>';
+        legendGroups = 0;
+        break;
+    }
     initLegend();
     repaintMarkers();
   });
@@ -169,13 +181,15 @@ function initialize() {
   fadeControlDiv.index = 1;
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(fadeControlDiv);
   */
-    var LegendControlDiv = document.createElement('div'); 
-    var legendControl = new LegendControl(LegendControlDiv, map);
-    LegendControlDiv.index = 1;   
-    map.controls[google.maps.ControlPosition.TOP_RIGHT].push(LegendControlDiv); 
-    google.maps.event.addListener(map, 'click', function() {
+  var LegendControlDiv = document.createElement('div'); 
+  var legendControl = new LegendControl(LegendControlDiv, map);
+  LegendControlDiv.index = 1;   
+  map.controls[google.maps.ControlPosition.TOP_RIGHT].push(LegendControlDiv); 
+  google.maps.event.addListener(map, 'click', function() {
     closeBubbles();
   });
+  var markerGroups = document.getElementById('marker-groups');
+  map.controls[google.maps.ControlPosition.TOP_RIGHT].push(markerGroups);
   
   getJSON();
 }
@@ -189,15 +203,19 @@ function getJSON() {
 }
 
 function initLegend(){
-  var icons = Icons();
   var legend = document.getElementById('legend');
-  legend.innerHTML = '<h3>Legend</h3>';
-  for (var type in icons) {
-    var name = icons[type].label;
-    var icon = icons[type].icon;
-    var div = document.createElement('div');
-    div.innerHTML = '<img src="' + icon + '"> ' + name;
-    legend.appendChild(div);
+  legend.setAttribute('hidden', true);
+  if (legendGroups !== 2) {
+    var icons = Icons();
+    legend.removeAttribute('hidden');
+    legend.innerHTML = '<h3>Legend</h3>';
+    for (var type in icons) {
+      var name = icons[type].label;
+      var icon = icons[type].icon;
+      var div = document.createElement('div');
+      div.innerHTML = '<img src="' + icon + '"> ' + name;
+      legend.appendChild(div);
+    }
   }
 }
 function clearLegend(){
@@ -207,14 +225,14 @@ function clearLegend(){
 }
 function Icons(){
   var icons;
-  if (legendVersion === false){
+  if (legendGroups === 0){
     icons = {
       Research: {
         icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/green-dot.png',
         label: 'Research'
       },
       Clinical: {
-        icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png',
+        icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/purple-dot.png',
         label: 'Clinical'
       },
       Development: {
@@ -226,18 +244,18 @@ function Icons(){
         label: 'Evaluation'
       },
       Other: {
-        icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/purple-dot.png',
+        icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png',
         label: 'Other'
       }
     };
-  } else {
+  } else if (legendGroups === 1) {
     icons = {
       1: {
         icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/green-dot.png',
         label: version[0][0]
       },
       2: {
-        icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png',
+        icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/yellow-dot.png',
         label: version[1][0]
       },
       3: {
@@ -245,7 +263,7 @@ function Icons(){
         label: version[2][0]
       },
       Other: {
-        icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/yellow-dot.png',
+        icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png',
         label: 'Other'
       },
       Unknown: {
@@ -253,7 +271,14 @@ function Icons(){
         label: 'Unknown'
       }
     };
-  }
+  } else {
+      icons = {
+        Other: {
+          icon: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png',
+          label: 'Other'
+        }
+      };
+    }
   return icons;
 }
 
@@ -263,7 +288,7 @@ function colorForSite(site) {
       url: icons['Other'].icon,
       scaledSize: new google.maps.Size(32, 32)
   };
-  if (legendVersion === true) {
+  if (legendGroups === 1) {
     switch (versionMajMinForSite(site)) {
       case version[0][0]:
        image.url = icons['1'].icon;
@@ -278,7 +303,7 @@ function colorForSite(site) {
         image.url = icons['Unknown'].icon;
         break;
      }  
-  } else {
+  } else if (legendGroups === 0){
     switch (site.type) {
       case 'Research':
        image.url = icons['Research'].icon;
@@ -482,5 +507,6 @@ setTimeout('initialize()', 500);
   <div id="map_title"><img src="OpenMRS-logo.png" /></div>
   <div id="map_canvas" style="width:100%; height:100%"></div>
   <div id="legend"></div>
+  <div id="marker-groups"><img src="http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png"></div>
 </body>
 </html>
