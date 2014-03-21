@@ -20,13 +20,12 @@ function showId(id) {
 
 function LegendControl(controlDiv, map) {
 
- 
-  controlDiv.style.padding = '5px';
-
+  controlDiv.style.paddingTop = '5px';
+  controlDiv.style.paddingRight = '1px';
   var controlUI = document.createElement('div');
   controlUI.style.backgroundColor = 'white';
   controlUI.style.borderStyle = 'solid';
-  controlUI.style.borderWidth = '2px';
+  controlUI.style.borderWidth = '1px';
   controlUI.style.cursor = 'pointer';
   controlUI.style.textAlign = 'center';
   controlUI.title = 'Click to switch legend';
