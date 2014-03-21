@@ -33,11 +33,13 @@ function LegendControl(controlDiv, map) {
   controlDiv.appendChild(controlUI);
 
   var controlText = document.createElement('div');
+  controlText.id='marker-groups';
+  controlText.setAttribute('id', 'marker-groups')
   controlText.style.fontFamily = 'Arial,sans-serif';
   controlText.style.fontSize = '12px';
   controlText.style.paddingLeft = '4px';
   controlText.style.paddingRight = '4px';
-  controlText.innerHTML = '<b>Groups</b>';
+  controlText.innerHTML = '<img src="http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png"><b>Groups</b>';
   controlUI.appendChild(controlText);
 
   google.maps.event.addDomListener(controlUI, 'click', function() {
@@ -507,6 +509,5 @@ setTimeout('initialize()', 500);
   <div id="map_title"><img src="OpenMRS-logo.png" /></div>
   <div id="map_canvas" style="width:100%; height:100%"></div>
   <div id="legend"></div>
-  <div id="marker-groups"><img src="http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png"></div>
 </body>
 </html>
