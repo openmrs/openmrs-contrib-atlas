@@ -150,12 +150,13 @@ span.site-version {
     margin-top : 3px;
 }
 #marker-groups {
-    padding: 2px;
+    padding-bottom: 1px;
+    padding-right: 2px;
 }
 #marker-groups img {
     
-    vertical-align: middle;
+     vertical-align: middle;
      margin-right: 2px;
-     width: 15px;
-     height: 15px;
+     width: 10px;
+     height: 10px;
 }
