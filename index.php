@@ -326,7 +326,7 @@ function colorForSite(site) {
 function loadVersion(json) {
   for(i=0; i<json.length; i++) {
     var site = json[i];
-    if (site.data) version.push(versionMajMinForSite(site));
+    if (site.version) version.push(versionMajMinForSite(site));
   }
   initVersion();
 }
@@ -340,7 +340,7 @@ function loadSites(json) {
     var fadeGroup = getFadeGroup(site);
     var marker = createMarker(site, fadeGroup, bounds);
     var infowindow = createInfoWindow(site, marker);
-    if (site.data)
+    if (site.version)
         version.push(versionMajMinForSite(site));
     sites[site.id] = {'siteData': site, 'marker':marker, 'infowindow':infowindow, 'bubbleOpen':false, 'fadeGroup':fadeGroup};
   }
@@ -389,17 +389,17 @@ function dateForSite(site) {
 }
 
 function versionForSite(site) {
-  if (site.data) {
-    var data = JSON.parse(site.data);
-    return data['version'].match(/\d+(\.\d+)+/g).toString();
+  if (site.version) {
+    var version = site.version;
+    return version.match(/\d+(\.\d+)+/g).toString();
   }
   return null; 
 }
 
 function versionMajMinForSite(site) {
-  if (site.data) {
-    var data = JSON.parse(site.data);
-    return data['version'].match(/\d+(\.\d+)/g).toString();
+  if (site.version) {
+    var version = site.version;
+    return version.match(/\d+(\.\d+)/g).toString();
   }
   return null; 
 }

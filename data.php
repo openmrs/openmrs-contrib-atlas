@@ -72,9 +72,17 @@ if (array_key_exists('callback', $_GET)) {
   $callback = false;
 }
 
+foreach ($result as $site) {
+    $dataJson = json_decode($site['data'], true);
+    $version = $dataJson['version'];
+    $site['version'] = $version;
+    unset($site['data']);
+    $newResult[] = $site;
+}
+
 if ($callback)
   echo "$callback(";
-echo json_encode($result);
+echo json_encode($newResult);
 if ($callback)
   echo ");";
 
