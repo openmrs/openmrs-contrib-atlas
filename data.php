@@ -73,11 +73,20 @@ if (array_key_exists('callback', $_GET)) {
 }
 
 foreach ($result as $site) {
-    $dataJson = json_decode($site['data'], true);
-    $version = $dataJson['version'];
-    $site['version'] = $version;
-    unset($site['data']);
-    $newResult[] = $site;
+    $atlasVersion = json_decode($site['atlasVersion']);
+    switch ($atlasVersion) 
+    {
+        case NULL:
+            $dataJson = json_decode($site['data'], true);
+            $version = $dataJson['version'];
+            $site['version'] = $version;
+            unset($site['data']);
+            $newResult[] = $site;
+            break;
+        case 1.2:
+            //TODO
+            break;
+    } 
 }
 
 if ($callback)
