@@ -416,22 +416,34 @@ function indexForFadeGroup(fadeGroup) {
   return Math.min(fadeGroup, 3); // max images index is 3, fadeGroup can go higher
 }
 
-function cropUrl(url) {
-	if (url !== null && url.length > 50)
-	  return url.substring(0,25) + "..." + url.substring(url.length-22);
-	return url;
+function safeUrl(url) {
+  if (url != null) {
+    if (url.indexOf('http://') == 0 || url.indexOf('https://') == 0)
+      return url;
+    return 'http://' + url;
+  }
+  return url;
+}
+
+function displayUrl(url) {
+  if (url == null)
+    return url;
+  var displayUrl = url.replace(/^https?:\/\//i, '');
+  if (displayUrl.length > 50)
+    return displayUrl.substring(0,25) + "..." + displayUrl.substring(displayUrl.length-22);
+  return displayUrl;
 }
 
 function addCommas(n) {
-	n += '';
-	x = n.split('.');
-	x1 = x[0];
-	x2 = x.length > 1 ? '.' + x[1] : '';
-	var regex = /(\d+)(\d{3})/;
-	while (regex.test(x1)) {
-	  x1 = x1.replace(regex, '$1' + ',' + '$2');
-	}
-	return x1 + x2;
+  n += '';
+  x = n.split('.');
+  x1 = x[0];
+  x2 = x.length > 1 ? '.' + x[1] : '';
+  var regex = /(\d+)(\d{3})/;
+  while (regex.test(x1)) {
+    x1 = x1.replace(regex, '$1' + ',' + '$2');
+  }
+  return x1 + x2;
 }
 versionCompare = function(left, right) {
   if (typeof left[0] + typeof right[0] !== 'stringstring')
@@ -457,7 +469,8 @@ function createInfoWindow(site, marker) {
   if (site.image)
     html += "<img class='site-image' src='" + site.image + "' width='80px' height='80px' alt='thumbnail' />";
   if (site.url)
-    html += "<div class='site-url'><a target='_blank' href='" + site.url + "' title='" + site.url + "'>" + cropUrl(site.url) + "</a></div>";
+    html += "<div class='site-url'><a target='_blank' href='" + safeUrl(site.url) + "' title='" + site.url + "'>"
+            + displayUrl(safeUrl(site.url)) + "</a></div>";
   if (site.patients && site.patients !== '0')
     html += "<div class='site-count'>" + addCommas(site.patients) + " patients</div>";
   if (site.encounters && site.encounters !== '0')
