@@ -6,6 +6,11 @@ body {
 	margin: 0px;
 	padding: 0px;
 }
+.control {
+        -webkit-user-select: none;  /* Chrome all / Safari all */
+        -moz-user-select: none;     /* Firefox all */
+        -ms-user-select: none;      /* IE 10+ */
+}
 #map_title {
 	font-size: 2em;
 	font-family: Arial, san-serif;

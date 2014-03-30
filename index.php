@@ -33,7 +33,8 @@ function LegendControl(controlDiv, map) {
 
   var controlText = document.createElement('div');
   controlText.id='marker-groups';
-  controlText.setAttribute('id', 'marker-groups')
+  controlText.setAttribute('id', 'marker-groups');
+  controlText.setAttribute('class', 'control');
   controlText.style.fontFamily = 'Arial,sans-serif';
   controlText.style.fontSize = '12px';
   controlText.style.paddingLeft = '4px';
@@ -520,6 +521,6 @@ setTimeout('initialize()', 500);
 <body>
   <div id="map_title"><img src="OpenMRS-logo.png" /></div>
   <div id="map_canvas" style="width:100%; height:100%"></div>
-  <div id="legend"></div>
+  <div id="legend" class="control"></div>
 </body>
 </html>
