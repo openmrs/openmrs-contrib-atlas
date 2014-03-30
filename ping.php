@@ -71,7 +71,7 @@ if (!validate($json)) {
   exit;
 }
 
-$dbh->query(<<<EOL
+$dbh->exec(<<<EOL
 CREATE TABLE IF NOT EXISTS atlas (
   id VARCHAR(38) PRIMARY KEY,
   latitude VARCHAR(50),
@@ -89,12 +89,13 @@ CREATE TABLE IF NOT EXISTS atlas (
   data TEXT,
   date_changed TIMESTAMP,
   date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-PRIMARY KEY (id))
+  atlasVersion varchar(50),
+PRIMARY KEY (id));
 EOL
 );
-$dbh->query(<<<EOL
+$dbh->exec(<<<EOL
 CREATE TABLE IF NOT EXISTS archive (
-  archive_date TIMESTAMP DEFAULTS CURRENT_TIMESTAMP,
+  archive_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   id VARCHAR(38),
   latitude VARCHAR(50),
   longitude VARCHAR(50),
@@ -110,9 +111,24 @@ CREATE TABLE IF NOT EXISTS archive (
   notes TEXT,
   data TEXT,
   date_changed TIMESTAMP,
-  date_created TIMESTAMP);
+  date_created TIMESTAMP,
+  atlasVersion varchar(50));
 EOL
 );
+$uptodate = $dbh->query("SELECT atlasVersion FROM atlas");
+if (!$uptodate) {
+  $dbh->exec(<<<EOL
+  ALTER TABLE atlas ADD atlasVersion varchar(50);
+EOL
+);
+}
+$uptodate = $dbh->query("SELECT atlasVersion FROM archive");
+if (!$uptodate) {
+  $dbh->exec(<<<EOL
+  ALTER TABLE archive ADD atlasVersion varchar(50);
+EOL
+);
+}
 
 $id = sqlite_escape_string($json['id']);
 $latitude = floatval($json['geolocation']['latitude']);
@@ -128,6 +144,7 @@ $contact = sqlite_escape_string($json['contact']);
 $email = sqlite_escape_string($json['email']);
 $notes = sqlite_escape_string($json['notes']);
 $data = sqlite_escape_string(json_encode($json['data']));
+$atlasVersion = sqlite_escape_string($json['atlasVersion']);
 
 $stmt = $dbh->query("SELECT id FROM atlas WHERE id = '$id'");
 if ($stmt->fetch()) {
@@ -136,9 +153,9 @@ if ($stmt->fetch()) {
   $dbh->exec(<<<EOL
 INSERT INTO archive (
   archive_date, id, latitude, longitude, name, url, type, image, patients,
-  encounters, observations, contact, email, notes, data, date_created
+  encounters, observations, contact, email, notes, data, date_created, atlasVersion
   ) SELECT current_timestamp, id, latitude, longitude, name, url, type, image, patients,
-  encounters, observations, contact, email, notes, data, date_created
+  encounters, observations, contact, email, notes, data, date_created, atlasVersion
   FROM atlas
   WHERE id = '$id';
 UPDATE atlas SET
@@ -155,7 +172,8 @@ UPDATE atlas SET
   email = '$email',
   notes = '$notes',
   data = '$data',
-  date_changed = CURRENT_TIMESTAMP
+  date_changed = CURRENT_TIMESTAMP,
+  atlasVersion = '$atlasVersion'
 WHERE
   id = '$id';
 EOL
@@ -166,10 +184,10 @@ EOL
   $dbh->query(<<<EOL
 INSERT INTO atlas (
   id, latitude, longitude, name, url, type, image, patients,
-  encounters, observations, contact, email, notes, data, date_created
+  encounters, observations, contact, email, notes, data, date_created, atlasVersion
   ) VALUES (
   '$id', '$latitude', '$longitude', '$name', '$url', '$type', '$image', $patients,
-  $encounters, $observations, '$contact', '$email', '$notes', '$data', current_timestamp)
+  $encounters, $observations, '$contact', '$email', '$notes', '$data', current_timestamp, '$atlasVersion')
 EOL
 );
   $log->logDebug("Created ".$id." from ".$_SERVER['REMOTE_ADDR']);
