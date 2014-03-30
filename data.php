@@ -48,6 +48,7 @@ SELECT
   email,
   notes,
   data,
+  atlasVersion,
   CASE WHEN date_changed IS NULL THEN '' ELSE date_changed END as date_changed,
   date_created
 FROM
@@ -83,9 +84,14 @@ foreach ($result as $site) {
             unset($site['data']);
             $newResult[] = $site;
             break;
-        case 1.2:
+        case "1.2":
+            unset($site['data']);
             //TODO
+            $newResult[] = $site;
             break;
+        default:
+            unset($site['data']);
+            $newResult[] = $site;
     } 
 }
 
