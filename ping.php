@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS atlas (
   data TEXT,
   date_changed TIMESTAMP,
   date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  atlasVersion varchar(1024),
+  atlasVersion varchar(50),
 PRIMARY KEY (id));
 EOL
 );
@@ -112,20 +112,20 @@ CREATE TABLE IF NOT EXISTS archive (
   data TEXT,
   date_changed TIMESTAMP,
   date_created TIMESTAMP,
-  atlasVersion varchar(1024));
+  atlasVersion varchar(50));
 EOL
 );
 $uptodate = $dbh->query("SELECT atlasVersion FROM atlas");
 if (!$uptodate) {
   $dbh->exec(<<<EOL
-  ALTER TABLE atlas ADD atlasVersion varchar(1024);
+  ALTER TABLE atlas ADD atlasVersion varchar(50);
 EOL
 );
 }
 $uptodate = $dbh->query("SELECT atlasVersion FROM archive");
 if (!$uptodate) {
   $dbh->exec(<<<EOL
-  ALTER TABLE archive ADD atlasVersion varchar(1024);
+  ALTER TABLE archive ADD atlasVersion varchar(50);
 EOL
 );
 }
