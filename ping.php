@@ -87,9 +87,8 @@ CREATE TABLE IF NOT EXISTS atlas (
   email VARCHAR(1024),
   notes TEXT,
   data TEXT,
-  date_changed TIMESTAMP,
   date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-PRIMARY KEY (id))
+  date_changed TIMESTAMP);
 EOL
 );
 $dbh->query(<<<EOL
@@ -109,8 +108,8 @@ CREATE TABLE IF NOT EXISTS archive (
   email VARCHAR(1024),
   notes TEXT,
   data TEXT,
-  date_changed TIMESTAMP,
-  date_created TIMESTAMP);
+  date_created TIMESTAMP,
+  date_changed TIMESTAMP);
 EOL
 );
 
