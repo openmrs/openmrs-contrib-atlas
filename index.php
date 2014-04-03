@@ -33,8 +33,8 @@ $(document).ready(function() {
   $('#marker-groups').mouseleave(function(){
     $('#legendChoice').css('display', 'none');
   });
-  $('#legend1').click(function(){	
-    var clicked = $(this).attr("id");	
+  $('#legend1').click(function(){
+    var clicked = $(this).attr("id");
     clickLegend(clicked);
     $('#legendChoice').css('display', 'none');
   });
@@ -48,7 +48,7 @@ $(document).ready(function() {
 function clickLegend(id){
   switch ($('#'+id).html()) {
     case divVersions:
-      if (version.length > 0) {    
+      if (version.length > 0) {
         $('#'+id).html($('#legendSelected').html());
         $('#legendSelected').html(divVersions);
         legendGroups = 1;
