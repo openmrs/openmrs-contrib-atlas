@@ -39,9 +39,9 @@ if ($method == 'DELETE') {
     $dbh->query(<<<EOL
 INSERT INTO archive (
   archive_date, id, latitude, longitude, name, url, type, image, patients,
-  encounters, observations, contact, email, notes, data, date_created
+  encounters, observations, contact, email, notes, data, date_created, atlas_version
   ) SELECT current_timestamp, id, latitude, longitude, name, url, type, image, patients,
-  encounters, observations, contact, email, notes, data, date_created
+  encounters, observations, contact, email, notes, data, date_created, atlas_version
 FROM atlas
 WHERE id = '$deleteId';
 EOL
@@ -89,7 +89,7 @@ CREATE TABLE IF NOT EXISTS atlas (
   data TEXT,
   date_changed TIMESTAMP,
   date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  atlasVersion varchar(50),
+  atlas_version varchar(50),
 PRIMARY KEY (id));
 EOL
 );
@@ -112,20 +112,20 @@ CREATE TABLE IF NOT EXISTS archive (
   data TEXT,
   date_changed TIMESTAMP,
   date_created TIMESTAMP,
-  atlasVersion varchar(50));
+  atlas_version varchar(50));
 EOL
 );
-$uptodate = $dbh->query("SELECT atlasVersion FROM atlas");
+$uptodate = $dbh->query("SELECT atlas_version FROM atlas");
 if (!$uptodate) {
   $dbh->exec(<<<EOL
-  ALTER TABLE atlas ADD atlasVersion varchar(50);
+  ALTER TABLE atlas ADD atlas_version varchar(50);
 EOL
 );
 }
-$uptodate = $dbh->query("SELECT atlasVersion FROM archive");
+$uptodate = $dbh->query("SELECT atlas_version FROM archive");
 if (!$uptodate) {
   $dbh->exec(<<<EOL
-  ALTER TABLE archive ADD atlasVersion varchar(50);
+  ALTER TABLE archive ADD atlas_version varchar(50);
 EOL
 );
 }
@@ -153,9 +153,9 @@ if ($stmt->fetch()) {
   $dbh->exec(<<<EOL
 INSERT INTO archive (
   archive_date, id, latitude, longitude, name, url, type, image, patients,
-  encounters, observations, contact, email, notes, data, date_created, atlasVersion
+  encounters, observations, contact, email, notes, data, date_created, atlas_version
   ) SELECT current_timestamp, id, latitude, longitude, name, url, type, image, patients,
-  encounters, observations, contact, email, notes, data, date_created, atlasVersion
+  encounters, observations, contact, email, notes, data, date_created, atlas_version
   FROM atlas
   WHERE id = '$id';
 UPDATE atlas SET
@@ -173,7 +173,7 @@ UPDATE atlas SET
   notes = '$notes',
   data = '$data',
   date_changed = CURRENT_TIMESTAMP,
-  atlasVersion = '$atlasVersion'
+  atlas_version = '$atlasVersion'
 WHERE
   id = '$id';
 EOL
@@ -184,7 +184,7 @@ EOL
   $dbh->query(<<<EOL
 INSERT INTO atlas (
   id, latitude, longitude, name, url, type, image, patients,
-  encounters, observations, contact, email, notes, data, date_created, atlasVersion
+  encounters, observations, contact, email, notes, data, date_created, atlas_version
   ) VALUES (
   '$id', '$latitude', '$longitude', '$name', '$url', '$type', '$image', $patients,
   $encounters, $observations, '$contact', '$email', '$notes', '$data', current_timestamp, '$atlasVersion')

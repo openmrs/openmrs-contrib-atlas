@@ -48,7 +48,7 @@ SELECT
   email,
   notes,
   data,
-  atlasVersion,
+  atlas_version,
   CASE WHEN date_changed IS NULL THEN '' ELSE date_changed END as date_changed,
   date_created
 FROM
@@ -74,7 +74,7 @@ if (array_key_exists('callback', $_GET)) {
 }
 
 foreach ($result as $site) {
-    $atlasVersion = json_decode($site['atlasVersion']);
+    $atlasVersion = json_decode($site['atlas_version']);
     list($major, $minor) = explode(".", $atlasVersion);
     if ($major >= 1 && $minor > 1) {
         unset($site['data']);
