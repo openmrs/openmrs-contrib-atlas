@@ -34,13 +34,11 @@ $(document).ready(function() {
     $('#legendChoice').css('display', 'none');
   });
   $('#legend1').click(function(){	
-    event.stopPropagation();
     var clicked = $(this).attr("id");	
     clickLegend(clicked);
     $('#legendChoice').css('display', 'none');
   });
   $('#legend2').click(function(){	
-    event.stopPropagation();
     var clicked = $(this).attr("id");
     clickLegend(clicked);
     $('#legendChoice').css('display', 'none');
@@ -525,7 +523,7 @@ setTimeout('initialize()', 500);
   <div id="map_title"><img src="OpenMRS-logo.png" /></div>
   <div id="map_canvas" style="width:100%; height:100%"></div>
   <div id="legend" class="control"></div>
-  <div class="container" id ="marker-groups">
+  <div class="container control" id ="marker-groups">
       <div class="dropDownControl" id="legendSelected" title="Click to switch legend"></div>
       <div class = "dropDownOptionsDiv" id="legendChoice">
           <div class = "dropDownItemDiv" id="legend1"></div>
