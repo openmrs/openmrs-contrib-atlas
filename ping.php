@@ -33,20 +33,24 @@ $dbh = new PDO($db_dsn, $db_username, $db_password);
 $method = $_SERVER['REQUEST_METHOD'];
 
 if ($method == 'DELETE') {
-  $deleteId = sqlite_escape_string($_GET['id']);
+  $deleteId = $_GET['id'];
+  $deleteParam = array('deleteId' => $deleteId);     
   $deleteAuth = $_GET['secret'];
   if ($deleteAuth == $ping_delete_secret) {
-    $dbh->query(<<<EOL
+    $queryInsert = $db->prepare(<<<EOL
 INSERT INTO archive (
   archive_date, id, latitude, longitude, name, url, type, image, patients,
   encounters, observations, contact, email, notes, data, date_created
   ) SELECT current_timestamp, id, latitude, longitude, name, url, type, image, patients,
   encounters, observations, contact, email, notes, data, date_created
 FROM atlas
-WHERE id = '$deleteId';
+WHERE id = :deleteId;
 EOL
 );
-    $dbh->query("DELETE FROM atlas WHERE id = '$deleteId'");
+    $queryInsert->execute($deleteParam);
+
+    $queryDelete = $dbh->query("DELETE FROM atlas WHERE id = :deleteId");
+    $queryDelete->execute($deleteParam);
     $log->logInfo("Deleted ".$deleteId." from ".$_SERVER['REMOTE_ADDR']);
     header('', true, 200);
   } else {
@@ -112,66 +116,70 @@ CREATE TABLE IF NOT EXISTS archive (
   date_changed TIMESTAMP);
 EOL
 );
+$id = array('id' => $json['id']);
+$param = array(
+'id' => $json['id'],
+'latitude' => floatval($json['geolocation']['latitude']),
+'longitude' => floatval($json['geolocation']['longitude']),
+'name' => $json['name'],
+'url' => $json['url'],
+'type' => $json['type'],
+'image' => $json['image'],
+'patients' => intval($json['patients']),
+'encounters' => intval($json['encounters']),
+'observations' => intval($json['observations']),
+'contact' => $json['contact'],
+'email' => $json['email'],
+'notes' => $json['notes'],
+'data' => json_encode($json['data']));
 
-$id = sqlite_escape_string($json['id']);
-$latitude = floatval($json['geolocation']['latitude']);
-$longitude = floatval($json['geolocation']['longitude']);
-$name = sqlite_escape_string($json['name']);
-$url = sqlite_escape_string($json['url']);
-$type = sqlite_escape_string($json['type']);
-$image = sqlite_escape_string($json['image']);
-$patients = intval($json['patients']);
-$encounters = intval($json['encounters']);
-$observations = intval($json['observations']);
-$contact = sqlite_escape_string($json['contact']);
-$email = sqlite_escape_string($json['email']);
-$notes = sqlite_escape_string($json['notes']);
-$data = sqlite_escape_string(json_encode($json['data']));
-
-$stmt = $dbh->query("SELECT id FROM atlas WHERE id = '$id'");
+$stmt = $dbh->prepare("SELECT id FROM atlas WHERE id = :id");
+$stmt->execute($id);
 if ($stmt->fetch()) {
   // implementation already exists
   // $dbh->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
-  $dbh->exec(<<<EOL
+$query =  $dbh->prepare(<<<EOL
 INSERT INTO archive (
   archive_date, id, latitude, longitude, name, url, type, image, patients,
   encounters, observations, contact, email, notes, data, date_created
   ) SELECT current_timestamp, id, latitude, longitude, name, url, type, image, patients,
   encounters, observations, contact, email, notes, data, date_created
   FROM atlas
-  WHERE id = '$id';
+  WHERE id = :id;
 UPDATE atlas SET
-  latitude = '$latitude',
-  longitude = '$longitude',
-  name = '$name',
-  url = '$url',
-  type = '$type',
-  image = '$image',
-  patients = $patients,
-  encounters = $encounters,
-  observations = $observations,
-  contact = '$contact',
-  email = '$email',
-  notes = '$notes',
-  data = '$data',
+  latitude = :latitude,
+  longitude = :longitude,
+  name = :name,
+  url = :url,
+  type = :type,
+  image = :image,
+  patients = :patients,
+  encounters = :encounters,
+  observations = :observations,
+  contact = :contact,
+  email = :email,
+  notes = :notes,
+  data = :data,
   date_changed = CURRENT_TIMESTAMP
 WHERE
-  id = '$id';
+  id = :id;
 EOL
 );
-  $log->logDebug("Updated ".$id." from ".$_SERVER['REMOTE_ADDR']);
+  $query->execute($param);
+  $log->logDebug("Updated ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
 } else {
   // new implementation
-  $dbh->query(<<<EOL
+  $query = $dbh->prepare(<<<EOL
 INSERT INTO atlas (
   id, latitude, longitude, name, url, type, image, patients,
   encounters, observations, contact, email, notes, data, date_created
   ) VALUES (
-  '$id', '$latitude', '$longitude', '$name', '$url', '$type', '$image', $patients,
-  $encounters, $observations, '$contact', '$email', '$notes', '$data', current_timestamp)
+  :id, :latitude, :longitude, :name, :url, :type, :image, :patients,
+  :encounters, :observations, :contact, :email, :notes, :data, current_timestamp)
 EOL
 );
-  $log->logDebug("Created ".$id." from ".$_SERVER['REMOTE_ADDR']);
+  $query->execute($param);
+  $log->logDebug("Created ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
 }
 
 header('', true, 200);
