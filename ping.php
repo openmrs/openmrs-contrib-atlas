@@ -40,9 +40,9 @@ if ($method == 'DELETE') {
     $queryInsert = $db->prepare(<<<EOL
 INSERT INTO archive (
   archive_date, id, latitude, longitude, name, url, type, image, patients,
-  encounters, observations, contact, email, notes, data, date_created
+  encounters, observations, contact, email, notes, data, date_created, atlas_version
   ) SELECT current_timestamp, id, latitude, longitude, name, url, type, image, patients,
-  encounters, observations, contact, email, notes, data, date_created
+  encounters, observations, contact, email, notes, data, date_created, atlas_version
 FROM atlas
 WHERE id = :deleteId;
 EOL
@@ -75,7 +75,7 @@ if (!validate($json)) {
   exit;
 }
 
-$dbh->query(<<<EOL
+$dbh->exec(<<<EOL
 CREATE TABLE IF NOT EXISTS atlas (
   id VARCHAR(38) PRIMARY KEY,
   latitude VARCHAR(50),
@@ -92,12 +92,13 @@ CREATE TABLE IF NOT EXISTS atlas (
   notes TEXT,
   data TEXT,
   date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  date_changed TIMESTAMP);
+  date_changed TIMESTAMP,
+  atlas_version varchar(50));
 EOL
 );
-$dbh->query(<<<EOL
+$dbh->exec(<<<EOL
 CREATE TABLE IF NOT EXISTS archive (
-  archive_date TIMESTAMP DEFAULTS CURRENT_TIMESTAMP,
+  archive_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   id VARCHAR(38),
   latitude VARCHAR(50),
   longitude VARCHAR(50),
@@ -113,9 +114,24 @@ CREATE TABLE IF NOT EXISTS archive (
   notes TEXT,
   data TEXT,
   date_created TIMESTAMP,
-  date_changed TIMESTAMP);
+  date_changed TIMESTAMP,
+  atlas_version varchar(50));
 EOL
 );
+$uptodate = $dbh->query("SELECT atlas_version FROM atlas");
+if (!$uptodate) {
+  $dbh->exec(<<<EOL
+  ALTER TABLE atlas ADD atlas_version varchar(50);
+EOL
+);
+}
+$uptodate = $dbh->query("SELECT atlas_version FROM archive");
+if (!$uptodate) {
+  $dbh->exec(<<<EOL
+  ALTER TABLE archive ADD atlas_version varchar(50);
+EOL
+);
+}
 $id = array('id' => $json['id']);
 $param = array(
 'id' => $json['id'],
@@ -131,7 +147,8 @@ $param = array(
 'contact' => $json['contact'],
 'email' => $json['email'],
 'notes' => $json['notes'],
-'data' => json_encode($json['data']));
+'data' => json_encode($json['data']),
+'atlas_version' => $json['atlasVersion']);
 
 $stmt = $dbh->prepare("SELECT id FROM atlas WHERE id = :id");
 $stmt->execute($id);
@@ -141,9 +158,9 @@ if ($stmt->fetch()) {
 $query =  $dbh->prepare(<<<EOL
 INSERT INTO archive (
   archive_date, id, latitude, longitude, name, url, type, image, patients,
-  encounters, observations, contact, email, notes, data, date_created
+  encounters, observations, contact, email, notes, data, date_created, atlas_version
   ) SELECT current_timestamp, id, latitude, longitude, name, url, type, image, patients,
-  encounters, observations, contact, email, notes, data, date_created
+  encounters, observations, contact, email, notes, data, date_created, atlas_version
   FROM atlas
   WHERE id = :id;
 UPDATE atlas SET
@@ -160,7 +177,8 @@ UPDATE atlas SET
   email = :email,
   notes = :notes,
   data = :data,
-  date_changed = CURRENT_TIMESTAMP
+  date_changed = CURRENT_TIMESTAMP,
+  atlas_version = :atlas_version
 WHERE
   id = :id;
 EOL
@@ -172,10 +190,10 @@ EOL
   $query = $dbh->prepare(<<<EOL
 INSERT INTO atlas (
   id, latitude, longitude, name, url, type, image, patients,
-  encounters, observations, contact, email, notes, data, date_created
+  encounters, observations, contact, email, notes, data, date_created, atlas_version
   ) VALUES (
   :id, :latitude, :longitude, :name, :url, :type, :image, :patients,
-  :encounters, :observations, :contact, :email, :notes, :data, current_timestamp)
+  :encounters, :observations, :contact, :email, :notes, :data, current_timestamp, :atlas_version)
 EOL
 );
   $query->execute($param);

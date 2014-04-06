@@ -48,6 +48,7 @@ SELECT
   email,
   notes,
   data,
+  atlas_version,
   CASE WHEN date_changed IS NULL THEN '' ELSE date_changed END as date_changed,
   date_created
 FROM
@@ -73,20 +74,19 @@ if (array_key_exists('callback', $_GET)) {
 }
 
 foreach ($result as $site) {
-    $atlasVersion = json_decode($site['atlasVersion']);
-    switch ($atlasVersion) 
-    {
-        case NULL:
-            $dataJson = json_decode($site['data'], true);
-            $version = $dataJson['version'];
-            $site['version'] = $version;
-            unset($site['data']);
-            $newResult[] = $site;
-            break;
-        case 1.2:
-            //TODO
-            break;
-    } 
+    $atlasVersion = json_decode($site['atlas_version']);
+    list($major, $minor) = explode(".", $atlasVersion);
+    if ($major >= 1 && $minor > 1) {
+        unset($site['data']);
+        //TODO
+        $newResult[] = $site;
+    } else {
+        $dataJson = json_decode($site['data'], true);
+        $version = $dataJson['version'];
+        $site['version'] = $version;
+        unset($site['data']);
+        $newResult[] = $site;
+    }
 }
 
 if ($callback)
