@@ -4,8 +4,8 @@
 <title>OpenMRS Atlas</title>
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 <link rel="stylesheet" href="atlas.css" type="text/css" media="screen" />
-<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false">
-</script>
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 <script type="text/javascript">
 var map;
 var sites = [];
@@ -14,57 +14,61 @@ var images = [];
 var shadows = [];
 var fadeOverTime = false;
 var legendGroups = 0;
+var divSites ='<img src="http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png"><b>Sites</b>';
+var divTypes ='<img src="group-dot.png"><b>Types</b>'
+var divVersions ='<img src="group-dot.png"><b>Versions</b>';
+
 function showId(id) {
   prompt('Implementation ID', id);
 }
 
-function LegendControl(controlDiv, map) {
-
-  controlDiv.style.paddingTop = '5px';
-  controlDiv.style.paddingRight = '1px';
-  var controlUI = document.createElement('div');
-  controlUI.style.backgroundColor = 'white';
-  controlUI.style.borderStyle = 'solid';
-  controlUI.style.borderWidth = '1px';
-  controlUI.style.cursor = 'pointer';
-  controlUI.style.textAlign = 'center';
-  controlUI.title = 'Click to switch legend';
-  controlDiv.appendChild(controlUI);
-
-  var controlText = document.createElement('div');
-  controlText.id='marker-groups';
-  controlText.setAttribute('id', 'marker-groups');
-  controlText.setAttribute('class', 'control');
-  controlText.style.fontFamily = 'Arial,sans-serif';
-  controlText.style.fontSize = '12px';
-  controlText.style.paddingLeft = '4px';
-  controlText.style.paddingRight = '4px';
-  controlText.innerHTML = '<img src="http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png"><b>Groups</b>';
-  controlUI.appendChild(controlText);
-
-  google.maps.event.addDomListener(controlUI, 'click', function() {
-    switch (legendGroups) {
-      case 0:
-        if (version.length > 0) {        
-          legendGroups = 1;
-          //controlText.innerHTML = '<b>Version</b>';
-        } else {
-          //controlText.innerHTML = '<b>None</b>';
-          legendGroups = 2;
-        }
-        break;
-      case 1: 
-        //controlText.innerHTML = '<b>Groups</b>';
-        legendGroups = 2;
-        break;
-      case 2:
-        //controlText.innerHTML = '<b>None</b>';
-        legendGroups = 0;
-        break;
-    }
-    initLegend();
-    repaintMarkers();
+$(document).ready(function() {
+  $('#legendSelected').html(divTypes);
+  $('#legend2').html(divVersions);
+  $('#legend1').html(divSites);
+  
+  $('#legendSelected').mouseover(function(){
+    $('#legendChoice').css('display', 'block');
   });
+  $('#marker-groups').mouseleave(function(){
+    $('#legendChoice').css('display', 'none');
+  });
+  $('#legend1').click(function(){
+    var clicked = $(this).attr("id");
+    clickLegend(clicked);
+    $('#legendChoice').css('display', 'none');
+  });
+  $('#legend2').click(function(){	
+    var clicked = $(this).attr("id");
+    clickLegend(clicked);
+    $('#legendChoice').css('display', 'none');
+  });
+});
+
+function clickLegend(id){
+  switch ($('#'+id).html()) {
+    case divVersions:
+      if (version.length > 0) {
+        $('#'+id).html($('#legendSelected').html());
+        $('#legendSelected').html(divVersions);
+        legendGroups = 1;
+      }
+      break;
+    case divSites: 
+      $('#'+id).html($('#legendSelected').html());
+      $('#legendSelected').html(divSites); 
+      //controlText.innerHTML = '<b>Groups</b>';
+      legendGroups = 2;
+      break;
+    case divTypes:
+      $('#'+id).html($('#legendSelected').html());
+      $('#legendSelected').html(divTypes); 
+      //controlText.innerHTML = '<b>Groups</b>';
+      legendGroups = 0;
+      break;
+  }
+  initLegend();
+  repaintMarkers();
 }
 
 function FadeControl(controlDiv, map) {
@@ -183,10 +187,7 @@ function initialize() {
   fadeControlDiv.index = 1;
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(fadeControlDiv);
   */
-  var LegendControlDiv = document.createElement('div'); 
-  var legendControl = new LegendControl(LegendControlDiv, map);
-  LegendControlDiv.index = 1;   
-  map.controls[google.maps.ControlPosition.TOP_RIGHT].push(LegendControlDiv); 
+ 
   google.maps.event.addListener(map, 'click', function() {
     closeBubbles();
   });
@@ -522,5 +523,13 @@ setTimeout('initialize()', 500);
   <div id="map_title"><img src="OpenMRS-logo.png" /></div>
   <div id="map_canvas" style="width:100%; height:100%"></div>
   <div id="legend" class="control"></div>
+  <div class="container control" id ="marker-groups">
+      <div class="dropDownControl" id="legendSelected" title="Click to switch legend"></div>
+      <div class = "dropDownOptionsDiv" id="legendChoice">
+          <div class = "dropDownItemDiv" id="legend1"></div>
+          <div class = "dropDownItemDiv" id="legend2"></div>
+          <div class="separatorDiv"></div>        
+      </div>          
+  </div>
 </body>
 </html>
