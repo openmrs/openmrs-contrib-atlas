@@ -127,6 +127,9 @@ function initVersion() {
  version = version.slice(0,3);
  version.sort(versionCompare);
  version.reverse();
+ while (version.length < 4){
+     version.push(0);
+ }
 }
 
 function initialize() {
@@ -213,11 +216,13 @@ function initLegend(){
     legend.removeAttribute('hidden');
     legend.innerHTML = '<h3>Legend</h3>';
     for (var type in icons) {
-      var name = icons[type].label;
-      var icon = icons[type].icon;
-      var div = document.createElement('div');
-      div.innerHTML = '<img src="' + icon + '"> ' + name;
-      legend.appendChild(div);
+      if (icons[type].label) {
+        var name = icons[type].label;
+        var icon = icons[type].icon;
+        var div = document.createElement('div');
+        div.innerHTML = '<img src="' + icon + '"> ' + name;
+        legend.appendChild(div);
+      }
     }
   }
 }
