@@ -10,6 +10,8 @@
 var map;
 var sites = [];
 var version = [];
+var unknownVersion = 0;
+var otherVersion = 0;
 var images = [];
 var shadows = [];
 var fadeOverTime = false;
@@ -124,6 +126,7 @@ function initVersion() {
     return a[1]-b[1];
  });
  version.reverse();
+ if (version.length > 3) otherVersion = 1;
  version = version.slice(0,3);
  version.sort(versionCompare);
  version.reverse();
@@ -219,9 +222,11 @@ function initLegend(){
       if (icons[type].label) {
         var name = icons[type].label;
         var icon = icons[type].icon;
-        var div = document.createElement('div');
-        div.innerHTML = '<img src="' + icon + '"> ' + name;
-        legend.appendChild(div);
+        if (!(icons[type].label === 'Unknown' && unknownVersion === 0) && !(icons[type].label === 'Other' && otherVersion === 0 && legendGroups === 1 )) {
+            var div = document.createElement('div');
+            div.innerHTML = '<img src="' + icon + '"> ' + name;
+            legend.appendChild(div);
+        }
       }
     }
   }
@@ -334,6 +339,7 @@ function loadVersion(json) {
   for(i=0; i<json.length; i++) {
     var site = json[i];
     if (site.version) version.push(versionMajMinForSite(site));
+    else unknownVersion++;
   }
   initVersion();
 }
