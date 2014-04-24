@@ -9,6 +9,7 @@
 <script type="text/javascript">
 var map;
 var sites = [];
+var types = [];
 var version = [];
 var unknownVersion = 0;
 var otherVersion = 0;
@@ -222,7 +223,8 @@ function initLegend(){
       if (icons[type].label) {
         var name = icons[type].label;
         var icon = icons[type].icon;
-        if (!(icons[type].label === 'Unknown' && unknownVersion === 0) && !(icons[type].label === 'Other' && otherVersion === 0 && legendGroups === 1 )) {
+        if (!(icons[type].label === 'Unknown' && unknownVersion === 0) && !(icons[type].label === 'Other' && otherVersion === 0 && legendGroups === 1 )
+                && !(legendGroups === 0 && !types.hasOwnProperty(type))) {
             var div = document.createElement('div');
             div.innerHTML = '<img src="' + icon + '"> ' + name;
             legend.appendChild(div);
@@ -319,15 +321,19 @@ function colorForSite(site) {
   } else if (legendGroups === 0){
     switch (site.type) {
       case 'Research':
+       types['Research'] = 1;
        image.url = icons['Research'].icon;
        break;
       case 'Clinical':
+        types['Clinical'] = 1;
         image.url = icons['Clinical'].icon;
         break;
       case 'Development':
+        types['Development'] = 1;
         image.url = icons['Development'].icon;
         break;
       case 'Evaluation':
+        types['Evaluation'] = 1;
         image.url = icons['Evaluation'].icon;
         break;
     }
@@ -347,12 +353,12 @@ function loadVersion(json) {
 function loadSites(json) {
   var bounds = new google.maps.LatLngBounds();
   loadVersion(json);
-  initLegend();
   for(i=0; i<json.length; i++) {
     var site = json[i];
     var fadeGroup = getFadeGroup(site);
     var marker = createMarker(site, fadeGroup, bounds);
     var infowindow = createInfoWindow(site, marker);
+    initLegend();
     if (site.version)
         version.push(versionMajMinForSite(site));
     sites[site.id] = {'siteData': site, 'marker':marker, 'infowindow':infowindow, 'bubbleOpen':false, 'fadeGroup':fadeGroup};
