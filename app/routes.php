@@ -13,5 +13,15 @@
 
 Route::get('/', function()
 {
-	return View::make('hello');
+	return View::make('index');
+});
+
+Route::get('data.php', function()
+{
+    return View::make('data');
+});
+
+Route::match(array('DELETE', 'POST'), 'ping.php', function()
+{
+    return View::make('ping');
 });

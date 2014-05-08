@@ -31,7 +31,8 @@ ClassLoader::addDirectories(array(
 |
 */
 
-Log::useFiles(storage_path().'/logs/laravel.log');
+$logFile = 'ping.log';
+Log::useDailyFiles(storage_path().'/logs/'.$logFile);
 
 /*
 |--------------------------------------------------------------------------
@@ -79,3 +80,5 @@ App::down(function()
 */
 
 require app_path().'/filters.php';
+
+error_reporting(E_ALL ^ E_NOTICE); 
