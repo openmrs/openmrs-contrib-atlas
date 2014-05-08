@@ -1,6 +1,31 @@
-.*
+.DS_Store
+Thumbs.db
+atlas.db
 config.php
-*.log
-error_log
-*.db
-beta
+ping.log
+
+### Laravel4 ###
+/bootstrap/compiled.php
+.env.*.php
+.env.php
+
+
+### Laravel ###
+/app/_ide_helpers.php
+/bootstrap/compiled.php
+/vendor
+.env.local.php
+.env.php
+composer.phar
+composer.lock
+
+
+### NetBeans ###
+nbproject/private/
+build/
+nbbuild/
+dist/
+nbdist/
+nbactions.xml
+nb-configuration.xml
+nbproject/
