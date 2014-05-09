@@ -40,5 +40,5 @@ php composer.phar install
 
 ### Configure you envrionnement
 
-- Add writing write for server to app/storage (www-data for Apache)
+- Add writting rights to app/storage (www-data for Apache)
 
