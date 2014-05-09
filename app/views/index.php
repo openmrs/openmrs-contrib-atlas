@@ -4,6 +4,7 @@
 <title>OpenMRS Atlas</title>
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 <link rel="stylesheet" href="css/atlas.css" type="text/css" media="screen" />
+<script id="globalnav-script" src="https://id.openmrs.org/globalnav/js/app-optimized.js" type="text/javascript"></script>
 <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 <script type="text/javascript">
@@ -200,7 +201,8 @@ function initialize() {
   });
   var markerGroups = document.getElementById('marker-groups');
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(markerGroups);
-  
+  var login = document.getElementById('login');
+  map.controls[google.maps.ControlPosition.TOP_RIGHT].push(login);
   getJSON();
 }
 
@@ -540,6 +542,7 @@ setTimeout('initialize()', 500);
   <div id="map_title"><img src="images/OpenMRS-logo.png" /></div>
   <div id="map_canvas" style="width:100%; height:100%"></div>
   <div id="legend" class="control"></div>
+  <div class="loginControl dropDownControl control" title="Click to login with your OpenMRS ID" id ="login"><img src="images/openmrs.ico">Login</div>
   <div class="container control" id ="marker-groups">
       <div class="dropDownControl" id="legendSelected" title="Click to switch legend"></div>
       <div class = "dropDownOptionsDiv" id="legendChoice">
