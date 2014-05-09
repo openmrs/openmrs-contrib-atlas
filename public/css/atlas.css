@@ -250,3 +250,17 @@ span.site-version {
 .dropDownControl:hover{
         background: -webkit-linear-gradient(top,rgb(255,255,255),rgb(230,230,230));
 }
+.loginControl {
+        position: relative;
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+        margin-top: 6px;
+        margin-right: 5px;
+}   
+
+#login img {
+        vertical-align: middle;
+        margin-right: 10px;
+        width: 10px;
+        height: 10px;
+}
