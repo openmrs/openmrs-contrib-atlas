@@ -7,21 +7,39 @@ For instructions on how to use the module, see the Atlas Module wiki page.
 Altas Server 2.0 has been refactored with Laravel PHP Framework.
 
 #Installation
-
 ## Server requirement
 Atlas server can be deployed on Apache or Nginx server. 
-### Apache configuration (Ubuntu > 13.04)
-Mcrypt extension and mod-rewrite module are required
+### Apache configuration (and Ubuntu > 13.04)
+**Mcrypt** extension and **mod-rewrite** module are required
+```sh
+# Install mcrypt
+sudo apt-get install php5-mcrypt
+sudo ln -s /etc/php5/conf.d/mcrypt.ini /etc/php5/apache2/conf.d/20-mcrypt.ini
+sudo php5enmod mcrypt
 
+Edit /etc/php5/apache2/php.ini and add extension=mcrypt.so
+
+# Activate mod_rewrite
+sudo a2enmod rewrite
+
+# Restart Apche
+sudo service apache2 restart
+```
 ## Project configuration
 
-#### Install dependencies with Composer
+### Install dependencies with Composer
 ```
+# Clone the repo
+
 # Get Composer
+cd path/to/atlas
 curl -sS https://getcomposer.org/installer | php
+
 # Install vendors and dependencies
 php composer.phar install
-# Add writing write for server to app/storage (www-data for Apache)
-sudo chown -R www-data:www-data app/storage
+```
 
-Let(s started ! 
+### Configure you envrionnement
+
+# Add writing write for server to app/storage (www-data for Apache)
+
