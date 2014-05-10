@@ -171,6 +171,23 @@ span.site-version {
         margin: 2px;
         z-index: 0;
 }
+a {
+        font-family: Arial, sans-serif;
+        -webkit-user-select: none;
+        font-size: 12px;
+        font-weight: bold;
+        text-decoration: none;
+        color: black;
+}
+
+a:visited {
+        font-family: Arial, sans-serif;
+        -webkit-user-select: none;
+        font-size: 12px;
+        font-weight: bold;
+        text-decoration: none;
+        color: black;
+}
 .dropDownControl {
         direction: ltr;
         overflow-x: hidden;

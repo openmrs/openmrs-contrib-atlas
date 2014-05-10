@@ -542,7 +542,15 @@ setTimeout('initialize()', 500);
   <div id="map_title"><img src="images/OpenMRS-logo.png" /></div>
   <div id="map_canvas" style="width:100%; height:100%"></div>
   <div id="legend" class="control"></div>
-  <div class="loginControl dropDownControl control" title="Click to login with your OpenMRS ID" id ="login"><img src="images/openmrs.ico">Login</div>
+  @if (Session::has(user))
+  <div class="loginControl dropDownControl control" title="Click to logout" id ="login">
+    <img src="images/openmrs.ico">{{ link_to_route('logout', 'Logout' )}}</a>
+  </div>
+  @else
+    <div class="loginControl dropDownControl control" title="Click to login with your OpenMRS ID" id ="login">
+    <a href="http://localhost:3000/authenticate/atlas"><img src="images/openmrs.ico">Login</a>
+  </div>
+  @endif
   <div class="container control" id ="marker-groups">
       <div class="dropDownControl" id="legendSelected" title="Click to switch legend"></div>
       <div class = "dropDownOptionsDiv" id="legendChoice">
