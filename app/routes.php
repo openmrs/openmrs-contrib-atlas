@@ -11,8 +11,14 @@
 |
 */
 
-Route::get('/', function()
-{
+Route::get('/', function() {
+
+	if (Session::has(user)) {
+		$user = Session::get(user);
+		Log::info('Logged user: ' . $user->uid);
+		return View::make('index', array('user' => $user));
+	}
+	Log::info('Unknow user');
 	return View::make('index');
 });
 
@@ -60,3 +66,40 @@ Route::filter('validateCallback', function()
 		if (strpos($reserved, ",$callback,") !== false) App::abort(400, 'Callback cannot be reserved word.');
 	}
 });
+
+Route::get('auth/multipass/callback', array(
+	'before' => 'multipass',
+	'uses' => 'AuthController@decodeMultipass'));
+
+Route::filter('multipass', function()
+{
+    if ( !Input::has('multipass') || !Input::has('signature') )
+    {
+        App::abort(403, 'Unauthorized action.');
+    }
+});
+
+Route::get('logout', array('as' => 'logout', function()
+{
+    Auth::logout();
+    Log::info('User logged out');
+    Session::flush();
+
+    return Redirect::to('/');
+}));
+
+Route::get('login', array('as' => 'login', function()
+{
+    if (App::environment('production')) {
+		//Create User
+    	$user = new \Illuminate\Auth\GenericUser(
+    		array('uid' => 'john.doe', 
+    			'name' => 'John Doe',
+    			'email' => 'john.doe@openmrs.org'));
+    	Log::info('Fake user stored in session: ' . $user->uid);
+    	Auth::login($user);
+    	Session::put('user', $user);;
+    	return Redirect::to('/');
+	}
+    return Redirect::to('http://localhost:3000/authenticate/atlas');
+}));

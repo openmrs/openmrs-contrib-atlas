@@ -4,9 +4,13 @@
 <title>OpenMRS Atlas</title>
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 <link rel="stylesheet" href="css/atlas.css" type="text/css" media="screen" />
+<link rel="stylesheet" href="css/menu.css" type="text/css" />
+<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css" rel="stylesheet" />
 <script id="globalnav-script" src="https://id.openmrs.org/globalnav/js/app-optimized.js" type="text/javascript"></script>
 <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script type="text/javascript" src="js/gmap3.min.js"></script>
+<script type="text/javascript" src="js/menu.js"></script> 
 <script type="text/javascript">
 var map;
 var sites = [];
@@ -27,10 +31,22 @@ function showId(id) {
 }
 
 $(document).ready(function() {
+  initLegendChoice();
+  initLoginButton();
+ });
+function initLoginButton() {
+  $('#login').mouseover(function(){
+    $('#logout').css('display', 'block');
+  });
+  $('#login').mouseleave(function(){
+    $('#logout').css('display', 'none');
+  });
+}
+function initLegendChoice() {
   $('#legendSelected').html(divTypes);
   $('#legend2').html(divVersions);
   $('#legend1').html(divSites);
-  
+
   $('#legendSelected').mouseover(function(){
     $('#legendChoice').css('display', 'block');
   });
@@ -42,13 +58,12 @@ $(document).ready(function() {
     clickLegend(clicked);
     $('#legendChoice').css('display', 'none');
   });
-  $('#legend2').click(function(){	
+  $('#legend2').click(function(){ 
     var clicked = $(this).attr("id");
     clickLegend(clicked);
     $('#legendChoice').css('display', 'none');
   });
-});
-
+}
 function clickLegend(id){
   switch ($('#'+id).html()) {
     case divVersions:
@@ -195,14 +210,15 @@ function initialize() {
   fadeControlDiv.index = 1;
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(fadeControlDiv);
   */
- 
+
   google.maps.event.addListener(map, 'click', function() {
     closeBubbles();
   });
-  var markerGroups = document.getElementById('marker-groups');
-  map.controls[google.maps.ControlPosition.TOP_RIGHT].push(markerGroups);
   var login = document.getElementById('login');
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(login);
+  var markerGroups = document.getElementById('marker-groups');
+  map.controls[google.maps.ControlPosition.TOP_RIGHT].push(markerGroups);
+
   getJSON();
 }
 
@@ -534,7 +550,6 @@ function createInfoWindow(site, marker) {
   });
   return infowindow;
 }
-
 setTimeout('initialize()', 500);
 </script>
 </head>
@@ -542,7 +557,21 @@ setTimeout('initialize()', 500);
   <div id="map_title"><img src="images/OpenMRS-logo.png" /></div>
   <div id="map_canvas" style="width:100%; height:100%"></div>
   <div id="legend" class="control"></div>
-  <div class="loginControl dropDownControl control" title="Click to login with your OpenMRS ID" id ="login"><img src="images/openmrs.ico">Login</div>
+  @if (Session::has(user))
+  <div class="container control logged" id ="login">
+      <div class="dropDownControl" id="user"><span class="glyphicon glyphicon-user"></span> {{ $user->name }}</div>
+      <div class = "dropDownOptionsDiv" id="logout">
+      <div class = "dropDownItemDiv" id="editSite"><img src="images/blue-dot.png">Edit my site</div>
+        <div class = "dropDownItemDiv" id="newSite"><img src="images/blue-dot.png">Add new site</div>
+        <div class = "dropDownItemDiv" id="logout"><span class="glyphicon glyphicon-log-out"></span> {{ link_to_route('logout', 'Logout' )}}</div>
+          <div class="separatorDiv"></div>        
+      </div>          
+  </div>
+  @else
+    <div class="loginControl dropDownControl control" title="Click to login with your OpenMRS ID" id ="login">
+    <a href="http://localhost:3000/authenticate/atlas"><span class="glyphicon glyphicon-log-in"></span> {{ link_to_route('login', 'Login' )}}</a>
+  </div>
+  @endif
   <div class="container control" id ="marker-groups">
       <div class="dropDownControl" id="legendSelected" title="Click to switch legend"></div>
       <div class = "dropDownOptionsDiv" id="legendChoice">

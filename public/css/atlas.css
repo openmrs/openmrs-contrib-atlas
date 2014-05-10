@@ -172,6 +172,7 @@ span.site-version {
         z-index: 0;
 }
 .dropDownControl {
+        height:19px;
         direction: ltr;
         overflow-x: hidden;
         overflow-y: hidden;
@@ -179,9 +180,9 @@ span.site-version {
         position: relative;
         font-family: Arial, sans-serif;
         -webkit-user-select: none;
-        font-size: 12px;
+        font-size: 11px;
         margin-top: 4px;
-        width: 70px;
+        min-width: 73px;
         padding-bottom: 1px;
         border-top-width: 1px;
         border-right-width: 1px;
@@ -200,6 +201,8 @@ span.site-version {
         box-shadow: rgba(0, 0, 0, 0.398438) 0px 2px 4px;
         color: rgb(0, 0, 0);
         padding-left: 6px;
+        padding-right: 5px;
+        padding-top:2px;
         font-weight: bold;
         background-image: initial;
         background-attachment: initial;
@@ -213,7 +216,7 @@ span.site-version {
 .dropDownOptionsDiv{
         background-color: white;
         z-index: 0;
-        font-size: 12px;
+        font-size: 11px;
         padding-top: 2px;
         border-right-width: 1px;
         border-bottom-width: 1px;
@@ -228,6 +231,7 @@ span.site-version {
         border-top-width: 0px; 
         border-top-style: initial;
         border-top-color: initial;
+        font-weight: bold;
         -webkit-box-shadow: rgba(0, 0, 0, 0.398438) 0px 2px 4px;
         box-shadow: rgba(0, 0, 0, 0.398438) 0px 2px 4px;
         position: relative;
@@ -237,7 +241,7 @@ span.site-version {
 .dropDownItemDiv{
         font-family: Arial, sans-serif;
         -webkit-user-select: none;
-        padding-top: 2px;
+        padding-top: 3px;
         padding-right: 5px;
         padding-bottom: 3px;
         padding-left: 6px;
@@ -250,17 +254,48 @@ span.site-version {
 .dropDownControl:hover{
         background: -webkit-linear-gradient(top,rgb(255,255,255),rgb(230,230,230));
 }
+.glyphicon {
+    color: #333333;
+    margin-right: 5px;
+}
 .loginControl {
         position: relative;
         font-family: Arial, sans-serif;
-        font-size: 12px;
+        font-size: 11px;
         margin-top: 6px;
-        margin-right: 5px;
+        margin-left: 4px;
 }   
-
+.logged {
+        min-width: 120px;
+}
 #login img {
         vertical-align: middle;
         margin-right: 10px;
         width: 10px;
-        height: 10px;
+        height: 15px;
+}
+#login a {
+        font-family: Arial, sans-serif;
+        -webkit-user-select: none;
+        font-size: 11px;
+        font-weight: bold;
+        text-decoration: none;
+        color: black;
+}
+#login a:hover {
+        font-family: Arial, sans-serif;
+        -webkit-user-select: none;
+        font-size: 11px;
+        font-weight: bold;
+        text-decoration: none;
+        color: black;
+}
+
+#login a:visited. {
+        font-family: Arial, sans-serif;
+        -webkit-user-select: none;
+        font-size: 11px;
+        font-weight: bold;
+        text-decoration: none;
+        color: black;
 }
