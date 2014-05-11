@@ -20,34 +20,44 @@ class AuthController extends BaseController {
     	$blocksize = 16;
 
     	Log::info('Token: ' . $token);
-    	// Replace _ with / and - with +
-    	$token = preg_replace('/_/', '/', $token);
-    	$token = preg_replace('/\-/', '+', $token); 
-    	$token = base64_decode($token);
 
-    	// Decrypt Token
-  		$cipher = mcrypt_module_open(MCRYPT_RIJNDAEL_128,'','cbc','');
-  		mcrypt_generic_init($cipher, $key, $iv);
+    	// Signature Verification
+    	$hash = base64_encode(hash_hmac("sha1", $token, $api_key, true));
 
-  		$decrypted = mdecrypt_generic($cipher,$token);
-  		
-  		// Remove invisble character
- 	    $decrypted = trim($decrypted, "\x00..\x1F");
-  		$userToken  = json_decode($decrypted);
-  		Log::info('Decoded Multipass: ' . $decrypted);
+    	if ($hash = $signature) {
+    		Log::info('Signature OK');
+	    	// Replace _ with / and - with +
+	    	$token = preg_replace('/_/', '/', $token);
+	    	$token = preg_replace('/\-/', '+', $token); 
+	    	$token = base64_decode($token);
 
-  		//Create User
-  		$user = new \Illuminate\Auth\GenericUser(
-  			array('uid' => $userToken->uid, 
-  				'name' => $userToken->user_name,
-  				'email' => $userToken->user_email));
+	    	// Decrypt Token
+	  		$cipher = mcrypt_module_open(MCRYPT_RIJNDAEL_128,'','cbc','');
+	  		mcrypt_generic_init($cipher, $key, $iv);
 
-		Log::info('user: ' . $user->uid);
+	  		$decrypted = mdecrypt_generic($cipher,$token);
+	  		
+	  		// Remove invisble character
+	 	    $decrypted = trim($decrypted, "\x00..\x1F");
+	  		$userToken  = json_decode($decrypted);
+	  		Log::debug('Decoded Multipass: ' . $decrypted);
 
-  		// Log User
-		Auth::login($user);
-		Session::put('user', $user);
-    	return Redirect::to('/');
+	  		//Create User
+	  		$user = new \Illuminate\Auth\GenericUser(
+	  			array('uid' => $userToken->uid, 
+	  				'name' => $userToken->user_name,
+	  				'email' => $userToken->user_email));
+
+			Log::info('User stored in session: ' . $user->uid);
+
+	  		// Log User
+			Auth::login($user);
+			Session::put('user', $user);
+	    	return Redirect::to('/');
+	    }
+	    	Log::info('Signature and Hashed Token mismatch/n');
+	    	Log::debug('Hash/n' . $hash);
+	    	Log::debug('Signature/n' . $signature);
     }
 
 }
