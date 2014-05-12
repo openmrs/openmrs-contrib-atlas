@@ -37,7 +37,7 @@ if ($method == 'DELETE') {
   $deleteParam = array('deleteId' => $deleteId);     
   $deleteAuth = $_GET['secret'];
   if ($deleteAuth == $ping_delete_secret) {
-    $queryInsert = $db->prepare(<<<EOL
+    $queryInsert = $dbh->prepare(<<<EOL
 INSERT INTO archive (
   archive_date, id, latitude, longitude, name, url, type, image, patients,
   encounters, observations, contact, email, notes, data, date_created, atlas_version
@@ -49,7 +49,7 @@ EOL
 );
     $queryInsert->execute($deleteParam);
 
-    $queryDelete = $dbh->query("DELETE FROM atlas WHERE id = :deleteId");
+    $queryDelete = $dbh->prepare("DELETE FROM atlas WHERE id = :deleteId");
     $queryDelete->execute($deleteParam);
     $log->logInfo("Deleted ".$deleteId." from ".$_SERVER['REMOTE_ADDR']);
     header('', true, 200);
