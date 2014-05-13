@@ -87,3 +87,19 @@ Route::get('logout', array('as' => 'logout', function()
 
     return Redirect::to('/');
 }));
+
+Route::get('login', array('as' => 'login', function()
+{
+    if (App::environment('production')) {
+		//Create User
+    	$user = new \Illuminate\Auth\GenericUser(
+    		array('uid' => 'john.doe', 
+    			'name' => 'John Doe',
+    			'email' => 'john.doe@openmrs.org'));
+    	Log::info('Fake user stored in session: ' . $user->uid);
+    	Auth::login($user);
+    	Session::put('user', $user);;
+    	return Redirect::to('/');
+	}
+    return Redirect::to('http://localhost:3000/authenticate/atlas');
+}));

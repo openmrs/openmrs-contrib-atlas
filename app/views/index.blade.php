@@ -569,7 +569,7 @@ setTimeout('initialize()', 500);
   </div>
   @else
     <div class="loginControl dropDownControl control" title="Click to login with your OpenMRS ID" id ="login">
-    <a href="http://localhost:3000/authenticate/atlas"><span class="glyphicon glyphicon-log-in"></span> Login</a>
+    <a href="http://localhost:3000/authenticate/atlas"><span class="glyphicon glyphicon-log-in"></span> {{ link_to_route('login', 'Login' )}}</a>
   </div>
   @endif
   <div class="container control" id ="marker-groups">
