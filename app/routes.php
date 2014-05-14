@@ -16,12 +16,47 @@ Route::get('/', function()
 	return View::make('index');
 });
 
-Route::get('data.php', function()
+Route::delete('ping.php', array(
+	'before' => 'secret',
+	'uses' => 'PingController@pingDelete'));
+
+Route::post('ping.php', array(
+	'before' => 'validateJson',
+	'uses' => 'PingController@pingPost'));
+
+Route::get('data.php', array(
+	'before' => 'validateCallback',
+	'uses' => 'DataController@getData'));
+
+Route::filter('secret', function()
 {
-    return View::make('data');
+    if ( !Input::has('secret') || !Input::has('id') )
+    {
+        App::abort(400, 'Invalid Content');
+    }
+    if (Input::get('secret') != getenv('PING_DELETE_SECRET'))
+    {
+		App::abort(401, 'Unauthorized');
+		Log::info("Unauthorized attempt to delete ".$deleteId." from ".Request::server('REMOTE_ADDR'))	;
+	}
 });
 
-Route::match(array('DELETE', 'POST'), 'ping.php', function()
+Route::filter('validateJson', function()
 {
-    return View::make('ping');
+	$json = json_decode(Request::getContent(), true);
+	if ($json == NULL) App::abort(400, 'Missing data');
+	if (!is_array($json)) App::abort(400, 'Unable to parse data');
+	if (!array_key_exists('id', $json)) App::abort(400, 'Missing id');
+	if (!array_key_exists('geolocation', $json)) App::abort(400, 'Missing geolocation');
+	if (!array_key_exists('name', $json)) App::abort(400, 'Missing name');
+});
+
+Route::filter('validateCallback', function()
+{
+	if (Input::has('callback')) {
+		$callback = Input::get('callback');
+		if (!preg_match('/^[a-z_][a-z0-9_]+$/i', $callback)) App::abort(400, 'Invalid callback.');
+		$reserved = ",abstract,boolean,break,byte,case,catch,char,class,const,continue,default,do,double,else,extends,false,final,finally	float,for,function,goto,if,implements,import,in,instanceof,int,interface,long,native,new,null,package,private,protected	public,return,short,static,super,switch,synchronized,this,throw,throws,transient,true,try,var,void,while,with,";
+		if (strpos($reserved, ",$callback,") !== false) App::abort(400, 'Callback cannot be reserved word.');
+	}
 });

@@ -11,9 +11,10 @@ Altas Server 2.0 has been refactored with Laravel PHP Framework.
 Atlas server can be deployed on Apache or Nginx server. 
 ### Apache configuration (and Ubuntu > 13.04)
 **Mcrypt** extension and **mod-rewrite** module are required
+**mysql driver** for php may be required
 ```sh
 # Install mcrypt
-sudo apt-get install php5-mcrypt
+sudo apt-get install php5-mcrypt php5-mysql
 sudo ln -s /etc/php5/conf.d/mcrypt.ini /etc/php5/apache2/conf.d/20-mcrypt.ini
 sudo php5enmod mcrypt
 
