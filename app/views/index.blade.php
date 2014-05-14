@@ -9,8 +9,8 @@
 <script id="globalnav-script" src="https://id.openmrs.org/globalnav/js/app-optimized.js" type="text/javascript"></script>
 <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-<script type="text/javascript" src="js/gmap3.min.js"></script>
-<script type="text/javascript" src="js/menu.js"></script> 
+<script type="text/javascript" src="js/user.js"></script>
+<script type="text/javascript" src="js/yqlgeo.js"></script>
 <script type="text/javascript">
 var map;
 var sites = [];
@@ -41,6 +41,18 @@ function initLoginButton() {
   $('#login').mouseleave(function(){
     $('#logout').css('display', 'none');
   });
+  $('#editSite, #newSite').click(function(){
+    $('#legendSelected').html(divSites); 
+    $('#legend1').html(divTypes); 
+    $('#legend2').html(divVersions); 
+    legendGroups = 2;
+    initLegend();
+  	repaintMarkers();
+  	if ($(this).attr("id") == "editSite")
+  	  editMarker();
+  	if ($(this).attr("id") == "newSite")
+  	  var marker = createSite();
+  });
 }
 function initLegendChoice() {
   $('#legendSelected').html(divTypes);
@@ -53,12 +65,7 @@ function initLegendChoice() {
   $('#marker-groups').mouseleave(function(){
     $('#legendChoice').css('display', 'none');
   });
-  $('#legend1').click(function(){
-    var clicked = $(this).attr("id");
-    clickLegend(clicked);
-    $('#legendChoice').css('display', 'none');
-  });
-  $('#legend2').click(function(){ 
+  $('#legend1, #legend2').click(function(){
     var clicked = $(this).attr("id");
     clickLegend(clicked);
     $('#legendChoice').css('display', 'none');
@@ -580,5 +587,7 @@ setTimeout('initialize()', 500);
           <div class="separatorDiv"></div>        
       </div>          
   </div>
+  <div id='atlas-hidden-latitude' style='hidden:true;'>/<div>
+  <div id='atlas-hidden-longitude' style='hidden:true;'>/<div>
 </body>
 </html>

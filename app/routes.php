@@ -11,7 +11,8 @@
 |
 */
 
-Route::get('/', function() {
+Route::get('/', array('as' => 'home', function() 
+{
 
 	if (Session::has(user)) {
 		$user = Session::get(user);
@@ -20,7 +21,7 @@ Route::get('/', function() {
 	}
 	Log::info('Unknow user');
 	return View::make('index');
-});
+}));
 
 Route::delete('ping.php', array(
 	'before' => 'secret',
@@ -84,8 +85,9 @@ Route::get('logout', array('as' => 'logout', function()
     Auth::logout();
     Log::info('User logged out');
     Session::flush();
-
-    return Redirect::to('/');
+    if (App::environment('production')) return Redirect::to('/');
+    $url = urlencode(route('home'));
+    return Redirect::to('http://localhost:3000/disconnect?destination='. $url);
 }));
 
 Route::get('login', array('as' => 'login', function()
