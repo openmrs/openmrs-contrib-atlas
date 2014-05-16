@@ -18,6 +18,9 @@ function initLoginButton() {
       var marker = createSite();
   });
 }
+$(function () {
+  
+});
 
 function getGeolocation() {
   if (navigator.geolocation) {
@@ -97,7 +100,7 @@ function getCurrentLatLng() {
 
 function newSite() {
   var site = {
-    id: currentUser,
+    id: sites.length,
     contact: userName,
     uid: currentUser,
     name: 'New Site',
@@ -107,4 +110,12 @@ function newSite() {
     date_created: new Date().toLocaleString()
   }
   return site;
+}
+
+function deleteMarker(site) {
+  sites[site].marker.setMap(null);
+  var i = sites.indexOf(site);
+  if(i != -1) {
+    sites.splice(i, 1);
+  }
 }
