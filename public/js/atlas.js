@@ -472,7 +472,7 @@ function createInfoWindow(site, marker) {
   if (site.contact)
     html += "<div class='site-contact'><span class='site-label'>Contact:</span> " + site.contact + "</div>";
   if (site.email)
-    html += "<a href='mailto:"+ site.email + "' class='site-email'><img src='mail.png' width='15px' height='15px'/></a>";
+    html += "<a href='mailto:"+ site.email + "' class='site-email'><img src='images/mail.png' width='15px' height='15px'/></a>";
   html += "</div>";
   if (site.notes)
     html += "<fieldset class='site-notes'><legend>Notes</legend>" + site.notes + "</fieldset>";
@@ -485,8 +485,7 @@ function createInfoWindow(site, marker) {
     var date_update = new Date(site.date_changed);
     html += "<div id='site-update'>Last Updated: " + date_update.toLocaleDateString() + "</div>";
   */
-  html += "</div>";
-
+  html += "</div>"
   var infowindow = new google.maps.InfoWindow({
     content: html
   });
@@ -501,6 +500,12 @@ function createInfoWindow(site, marker) {
       closeBubbles();
       infowindow.open(map,marker);
       sites[site.id].bubbleOpen = true;
+      if (site.uid == currentUser) { 
+        $('.gm-style-iw').parent().append('<div id="edit" style="position: absolute;overflow:none; right:12px;bottom:10px; color:#3F3F3F"><i class="fa fa-lg fa-pencil" style="color:rgba(171, 166, 166, 1)"></i></div>');
+        $('.gm-style-iw').parent().append('<div id="delete" style="position: absolute;overflow:none; right:12px;bottom:25px; color:#3F3F3F"><i class="fa fa-lg fa-trash-o" style="color:rgba(171, 166, 166, 1)"></i></div>');
+      } else  {
+        $('.gm-style-iw').parent().append('<div id="lock" style="position: absolute;overflow:none; right:13px;bottom:10px; color:#3F3F3F"><i title="Claim ownership using Helpesk"  class="fa fa-lg fa-lock" style="color:rgba(171, 166, 166, 1)"></i></div>');
+      }
     }
   });
   return infowindow;

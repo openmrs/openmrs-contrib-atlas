@@ -82,16 +82,18 @@ Route::filter('multipass', function()
 
 Route::get('logout', array('as' => 'logout', function()
 {
+    $idServer = getenv('ID_HOST');
     Auth::logout();
     Log::info('User logged out');
     Session::flush();
     if (App::environment('production')) return Redirect::to('/');
     $url = urlencode(route('home'));
-    return Redirect::to('http://localhost:3000/disconnect?destination='. $url);
+    return Redirect::to('http://'.$idServer.'/disconnect?destination='. $url);
 }));
 
 Route::get('login', array('as' => 'login', function()
 {
+    $idServer = getenv('ID_HOST');
     if (App::environment('production')) {
 		//Create User
     	$user = new \Illuminate\Auth\GenericUser(
@@ -103,5 +105,5 @@ Route::get('login', array('as' => 'login', function()
     	Session::put('user', $user);;
     	return Redirect::to('/');
 	}
-    return Redirect::to('http://localhost:3000/authenticate/atlas');
+    return Redirect::to('http://'.$idServer.'/authenticate/atlas');
 }));

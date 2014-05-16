@@ -24,7 +24,7 @@ class AuthController extends BaseController {
     	// Signature Verification
     	$hash = base64_encode(hash_hmac("sha1", $token, $api_key, true));
 
-    	if ($hash = $signature) {
+    	if ($hash == $signature) {
     		Log::info('Signature OK');
 	    	// Replace _ with / and - with +
 	    	$token = preg_replace('/_/', '/', $token);

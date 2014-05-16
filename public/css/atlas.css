@@ -266,7 +266,7 @@ span.site-version {
         margin-left: 4px;
 }   
 .logged {
-        min-width: 120px;
+        min-width: 110px;
 }
 #login img {
         vertical-align: middle;
@@ -298,4 +298,7 @@ span.site-version {
         font-weight: bold;
         text-decoration: none;
         color: black;
+}
+#user {
+    text-align: center;
 }
