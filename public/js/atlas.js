@@ -311,6 +311,8 @@ function colorForSite(site) {
         break;
     }
   }
+  if (site.uid == currentUser && legendGroups === 2)
+      image.url = 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png';
   return image;
 }
 

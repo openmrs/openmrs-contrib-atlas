@@ -78,6 +78,10 @@ function createSite() {
     animation: google.maps.Animation.DROP,
   });
   marker.setDraggable (true);
+  var site = newSite();
+  var fadeGroup = getFadeGroup(site);
+  var infowindow = createInfoWindow(site, marker);
+  sites[site.id] = {'siteData': site, 'marker':marker, 'infowindow':infowindow, 'bubbleOpen':false, 'fadeGroup':fadeGroup};
   return marker;
 }
 
@@ -89,4 +93,18 @@ function getCurrentLatLng() {
   } else {
     return null;
   }
+}
+
+function newSite() {
+  var site = {
+    id: currentUser,
+    contact: userName,
+    uid: currentUser,
+    name: 'New Site',
+    email: userEmail,
+    type:  'TBD',
+    date_changed: new Date().toLocaleString(),
+    date_created: new Date().toLocaleString()
+  }
+  return site;
 }

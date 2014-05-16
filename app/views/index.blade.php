@@ -16,6 +16,8 @@
 <script type="text/javascript">
 var map;
 var currentUser;
+var userEmail;
+var userName;
 var sites = [];
 var types = [];
 var version = [];
@@ -33,6 +35,8 @@ $(document).ready(function() {
   initLegendChoice();
   initLoginButton();
   currentUser = $('#user-id').val().trim();
+  userName = $('#user-name').val().trim();
+  userEmail = $('#user-email').val().trim();
  });
 
 setTimeout('initialize()', 500);
@@ -68,5 +72,7 @@ setTimeout('initialize()', 500);
   <div id='atlas-hidden-latitude' style='hidden:true;'></div>
   <div id='atlas-hidden-longitude' style='hidden:true;'></div>
   <input type="hidden" id="user-id" value="{{ $user->uid }} " />
+  <input type="hidden" id="user-name" value="{{ $user->name }} " />
+  <input type="hidden" id="user-email" value="{{ $user->email }} " />
 </body>
 </html>
