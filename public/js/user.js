@@ -68,6 +68,7 @@ function editMarker()  {
 }
 
 function createSite() {
+  closeBubbles();
   myPosition = getCurrentLatLng();
   var image = {
     url: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png',
@@ -84,7 +85,8 @@ function createSite() {
   var site = newSite();
   var fadeGroup = getFadeGroup(site);
   var infowindow = createInfoWindow(site, marker);
-  sites[site.id] = {'siteData': site, 'marker':marker, 'infowindow':infowindow, 'bubbleOpen':false, 'fadeGroup':fadeGroup};
+  var editwindow = createEditInfoWindow(site, marker);
+  sites[site.id] = {'siteData': site, 'marker':marker, 'infowindow':infowindow, 'editwindow':editwindow, 'bubbleOpen':false,'editBubbleOpen':false, 'fadeGroup':fadeGroup};
   return marker;
 }
 
@@ -105,6 +107,8 @@ function newSite() {
     uid: currentUser,
     name: 'New Site',
     email: userEmail,
+    url: '',
+
     type:  'TBD',
     date_changed: new Date().toLocaleString(),
     date_created: new Date().toLocaleString()
@@ -118,4 +122,48 @@ function deleteMarker(site) {
   if(i != -1) {
     sites.splice(i, 1);
   }
+}
+
+function createEditInfoWindow(site, marker) {
+  var html = "<div class='site-bubble'>";
+  html += "<form class='form' role='form'>"
+  html += "<div class='form-group'><input type='text' required='true' placeholder='Site Name' class='form-control input-sm' value='"+ site.name + "' name='name'></div>";
+  html += "<div class='form-group'>";
+  if (site.image)
+    html += "<img class='form-group' src='" + site.image + "' width='80px' height='80px' alt='thumbnail' />";
+    html += "<div class='form-group'><input type='text' class='form-control input-sm' placeholder='Site URL' value='"+ site.url + "' name='url'></div>";
+    html += "<div class='form-group'><input type='text' class='form-control input-sm'  placeholder='Contact' value='"+ site.contact + "' name='contact'></div>";
+    html += "<div class='form-group'><input type='email' class='form-control input-sm' placeholder='Email' value='"+ site.email + "' name='email'></div>";
+    html += "<textarea class='form-control' value='"+ site.notes + "' name='notes' rows='2' placeholder='Notes'></textarea>";
+    html += "</div>";
+    html += "<div class='row'><div class='col-xs-8'>";
+    html += "<select class=form-control input-sm>"
+              +"<option>Clinical</option>"
+              +"<option>Evaluation</option>"
+              +"<option>Development</option>"
+              +"<option>Research</option>"
+              +"<option>Other</option>"
+            +"</select></div>";
+  ;
+  html += "<div class=''><button type='submit' class='btn btn-primary'>Save</button></div></div></form></div>"
+  var infowindow = new google.maps.InfoWindow({
+    content: html
+  });
+  google.maps.event.addListener(infowindow, 'closeclick', function() {
+    sites[site.id].editBubbleOpen = false;
+  });
+  if (site.uid == currentUser) { 
+    $("#map_canvas").on('click', "#delete", function(e){
+      e.preventDefault();
+      var id = $(this).attr("value");
+      deleteMarker(id);
+    });
+    $("#map_canvas").on('click', "#undo", function(e){
+      e.preventDefault();
+      var id = $(this).attr("value");
+      sites[id].editBubbleOpen = false;
+      sites[id].editwindow.close();
+    });
+  }
+  return infowindow;
 }

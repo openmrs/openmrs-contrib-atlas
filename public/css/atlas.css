@@ -166,7 +166,7 @@ span.site-version {
         width: 10px;
         height: 10px;
 }
-.container {
+.atlas-container {
         z-index: 1;
         margin: 2px;
         z-index: 0;

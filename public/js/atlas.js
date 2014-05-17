@@ -78,6 +78,10 @@ function closeBubbles() {
     if (sites[key].bubbleOpen) {
       sites[key].infowindow.close();
       sites[key].bubbleOpen = false;
+    }
+    if (sites[key].editBubbleOpen) {
+      sites[key].editwindow.close();
+      sites[key].editBubbleOpen = false;
     } 
   }
 }
@@ -336,7 +340,7 @@ function loadSites(json) {
     initLegend();
     if (site.version)
         version.push(versionMajMinForSite(site));
-    sites[site.id] = {'siteData': site, 'marker':marker, 'infowindow':infowindow, 'bubbleOpen':false, 'fadeGroup':fadeGroup};
+    sites[site.id] = {'siteData': site, 'marker':marker, 'infowindow':infowindow, 'editwindow': null, 'bubbleOpen':false, 'editBubbleOpen':false, 'fadeGroup':fadeGroup};
   }
   map.fitBounds(bounds);
 }
@@ -495,7 +499,10 @@ function createInfoWindow(site, marker) {
     sites[site.id].bubbleOpen = false;
   });
   google.maps.event.addListener(marker, "click", function() {
-    if (sites[site.id].bubbleOpen) {
+    if (sites[site.id].editBubbleOpen) {
+      sites[site.id].editwindow.close();
+      sites[site.id].editBubbleOpen = false;
+    } else if (sites[site.id].bubbleOpen) {
       infowindow.close();
       sites[site.id].bubbleOpen = false;
     } else {
@@ -503,18 +510,30 @@ function createInfoWindow(site, marker) {
       infowindow.open(map,marker);
       sites[site.id].bubbleOpen = true;
       if (site.uid == currentUser) { 
-        $('.gm-style-iw').parent().append('<div id="edit" value="'+site.id+'" class="control" style="position: absolute;overflow:none; right:12px;bottom:10px; color:#3F3F3F"><i class="fa fa-lg fa-pencil" style="color:rgba(171, 166, 166, 1)"></i></div>');
-        $('.gm-style-iw').parent().append('<div id="delete" value="'+site.id+'" class="control" style="position: absolute;overflow:none; right:12px;bottom:25px; color:#3F3F3F"><i class="fa fa-lg fa-trash-o" style="color:rgba(171, 166, 166, 1)"></i></div>');
-      } else  {
+        $('.gm-style-iw').parent().append('<div id="edit" value="'+site.id+'" title ="Edit site" class="control" style="position: absolute;overflow:none; right:12px;bottom:10px; color:#3F3F3F"><i class="fa fa-lg fa-pencil" style="color:rgba(171, 166, 166, 1)"></i></div>');
+        $('.gm-style-iw').parent().append('<div id="delete" value="'+site.id+'" title ="Delete site" class="control" style="position: absolute;overflow:none; right:12px;bottom:25px; color:#3F3F3F"><i class="fa fa-lg fa-trash-o" style="color:rgba(171, 166, 166, 1)"></i></div>');
+      } else {
         $('.gm-style-iw').parent().append('<div id="lock" style="position: absolute;overflow:none; right:13px;bottom:10px; color:#3F3F3F"><i title="Claim ownership using Helpesk"  class="fa fa-lg fa-lock" style="color:rgba(171, 166, 166, 1)"></i></div>');
       }
     }
   });
-  if (site.uid == currentUser) { 
+  if (site.uid == currentUser) {
     $("#map_canvas").on('click', "#delete", function(e){
       e.preventDefault();
       var id = $(this).attr("value");
       deleteMarker(id);
+    });
+    $("#map_canvas").on('click', "#edit", function(e){
+      e.preventDefault();
+      var id = $(this).attr("value");
+      infowindow.close();
+      sites[id].bubbleOpen = false;
+      sites[id].editwindow.open(map,sites[id].marker);
+      sites[id].editBubbleOpen = true;
+      $('.site-bubble').parent().css('overflow', 'hidden');
+      $('.gm-style-iw').parent().append('<div id="undo" title ="Undo change" value="'+id+'" class="control" style="position: absolute;overflow:none; right:12px;bottom:10px; color:#3F3F3F"><i class="fa fa-lg fa-history" style="color:rgba(171, 166, 166, 1)"></i></div>');
+      $('.gm-style-iw').parent().append('<div id="delete" title ="Delete site" value="'+id+'" class="control" style="position: absolute;overflow:none; right:12px;bottom:28px; color:#3F3F3F"><i class="fa fa-lg fa-trash-o" style="color:rgba(171, 166, 166, 1)"></i></div>');
+    
     });
   }
   return infowindow;
