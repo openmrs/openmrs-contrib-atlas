@@ -93,6 +93,7 @@ span.site-type {
         clear: both;
         border: 1px solid #EEE;
         margin: 2px 0px 2px 0px;
+        padding: 1px 4px 1px 5px;
         border-radius: 5px;
         -webkit-border-radius: 5px;
 }
@@ -302,4 +303,8 @@ span.site-version {
 #user {
     text-align: center;
     padding-left: 2px;
+}
+
+.bubble-form {
+    overflow: hidden;
 }

@@ -19,7 +19,7 @@ function initLoginButton() {
   });
 }
 $(function () {
-  
+   initEditListener();
 });
 
 function getGeolocation() {
@@ -75,14 +75,15 @@ function createSite() {
     scaledSize: new google.maps.Size(32, 32)
   };
   var marker = new google.maps.Marker({
-    position: map.getCenter(),
+    position: myPosition,
     map: map,
     title: 'New',
     icon: image,
+    draggable: false,
     animation: google.maps.Animation.DROP,
   });
-  marker.setDraggable (true);
-  var site = newSite();
+  marker.setDraggable(true);
+  var site = newSite(myPosition);
   var fadeGroup = getFadeGroup(site);
   var infowindow = createInfoWindow(site, marker);
   var editwindow = createEditInfoWindow(site, marker);
@@ -96,19 +97,21 @@ function getCurrentLatLng() {
   if ( lng != '' && lat != '' ){
     return new google.maps.LatLng(lat, lng);
   } else {
-    return null;
+    return map.getCenter();
   }
 }
 
-function newSite() {
+function newSite(myPosition) {
   var site = {
     id: sites.length,
     contact: userName,
     uid: currentUser,
     name: 'New Site',
     email: userEmail,
+    notes: '',
     url: '',
-
+    latitude: myPosition.lat(),
+    longitude: myPosition.lng(),
     type:  'TBD',
     date_changed: new Date().toLocaleString(),
     date_created: new Date().toLocaleString()
@@ -125,27 +128,7 @@ function deleteMarker(site) {
 }
 
 function createEditInfoWindow(site, marker) {
-  var html = "<div class='site-bubble'>";
-  html += "<form class='form' role='form'>"
-  html += "<div class='form-group'><input type='text' required='true' placeholder='Site Name' class='form-control input-sm' value='"+ site.name + "' name='name'></div>";
-  html += "<div class='form-group'>";
-  if (site.image)
-    html += "<img class='form-group' src='" + site.image + "' width='80px' height='80px' alt='thumbnail' />";
-    html += "<div class='form-group'><input type='text' class='form-control input-sm' placeholder='Site URL' value='"+ site.url + "' name='url'></div>";
-    html += "<div class='form-group'><input type='text' class='form-control input-sm'  placeholder='Contact' value='"+ site.contact + "' name='contact'></div>";
-    html += "<div class='form-group'><input type='email' class='form-control input-sm' placeholder='Email' value='"+ site.email + "' name='email'></div>";
-    html += "<textarea class='form-control' value='"+ site.notes + "' name='notes' rows='2' placeholder='Notes'></textarea>";
-    html += "</div>";
-    html += "<div class='row'><div class='col-xs-8'>";
-    html += "<select class=form-control input-sm>"
-              +"<option>Clinical</option>"
-              +"<option>Evaluation</option>"
-              +"<option>Development</option>"
-              +"<option>Research</option>"
-              +"<option>Other</option>"
-            +"</select></div>";
-  ;
-  html += "<div class=''><button type='submit' class='btn btn-primary'>Save</button></div></div></form></div>"
+  var html = contentEditwindow(site);
   var infowindow = new google.maps.InfoWindow({
     content: html
   });
@@ -161,9 +144,113 @@ function createEditInfoWindow(site, marker) {
     $("#map_canvas").on('click', "#undo", function(e){
       e.preventDefault();
       var id = $(this).attr("value");
+      sites[id].marker.setDraggable(false);
+      sites[id].marker.setPosition(new google.maps.LatLng(site.latitude, site.longitude));
       sites[id].editBubbleOpen = false;
       sites[id].editwindow.close();
     });
   }
   return infowindow;
+} 
+
+function initEditListener() {
+   $('#map_canvas').on('submit', 'form', (function(e) {
+    e.preventDefault();
+    var id = $('#site').val();
+    var name = $('#name').val().trim();
+    var mail = $('#email').val().trim();
+    var notes = $('#notes').val().trim();
+    var contact =$('#contact').val().trim();
+    var url  = $('#url').val().trim();
+    var type = $('select').val().trim();
+    if(name === '' || id === '') {
+      alert('Site name is missing');
+    } else {
+      var site = sites[id].siteData;
+      var pos = sites[id].marker.getPosition();
+      site.name = name;
+      site.email =  mail;
+      site.url = url;
+      site.contact = contact;
+      site.notes = notes;
+      site.type = type;
+      site.longitude = pos.lng();
+      site.latitude = pos.lat();
+      sites[id].siteData = site;
+      sites[id].infowindow.setContent(contentInfowindow(site));
+      sites[id].editwindow.setContent(contentEditwindow(site));
+      sites[id].editwindow.close();
+      sites[id].editBubbleOpen = false;
+      alert('Information saved');
+      sites[id].marker.setDraggable(false);
+      $.ajax({
+        url: '',
+        type: 'post',
+        data: null,
+        success: function(html) {
+          alert(html);
+        }
+      });
+    }
+    return false;
+  }));
+}
+
+function contentInfowindow(site) {
+var html = "<div class='site-bubble'>";
+  html += "<div class='site-name'>" + site.name + "</div>";
+  html += "<div class='site-panel'>";
+  if (site.image)
+    html += "<img class='site-image' src='" + site.image + "' width='80px' height='80px' alt='thumbnail' />";
+  if (site.url)
+    html += "<div class='site-url'><a target='_blank' href='" + safeUrl(site.url) + "' title='" + site.url + "'>"
+            + displayUrl(safeUrl(site.url)) + "</a></div>";
+  if (site.patients && site.patients !== '0')
+    html += "<div class='site-count'>" + addCommas(site.patients) + " patients</div>";
+  if (site.encounters && site.encounters !== '0')
+    html += "<div class='site-count'>" + addCommas(site.encounters) + " encounters</div>";
+  if (site.observations && site.observations !== '0')
+    html += "<div class='site-count'>" + addCommas(site.observations) + " observations</div>";
+  if (site.contact)
+    html += "<div class='site-contact'><span class='site-label'>Contact:</span> " + site.contact + "</div>";
+  if (site.email)
+    html += "<a href='mailto:"+ site.email + "' class='site-email'><img src='images/mail.png' width='15px' height='15px'/></a>";
+  html += "</div>";
+  if (site.notes)
+    html += "<fieldset class='site-notes'>" + site.notes + "</fieldset>";
+  if (site.type)
+    html += "<div class='site-type'><span class='site-type'>" + site.type + "</span>";
+  if (versionForSite(site))  
+    html += "<span class='site-version'>" + versionForSite(site) + "</span></div>";
+  /*
+   if (site.date_changed)
+    var date_update = new Date(site.date_changed);
+    html += "<div id='site-update'>Last Updated: " + date_update.toLocaleDateString() + "</div>";
+  */
+  html += "</div>"
+  return html;
+}
+
+function contentEditwindow(site) {
+  var html = "<div class='site-bubble bubble-form'>";
+  html += "<form method='post' id='"+ site.id +"'>"
+  html += "<div class='form-group'><input type='text' required='true' placeholder='Site Name' title='Site Name' class='form-control input-sm' value='"+ site.name + "' id='name' name='name'></div>";
+  html += "<div class='form-group'>";
+  if (site.image)
+  html += "<img class='form-group' src='" + site.image + "' width='80px' height='80px' alt='thumbnail' />";
+  html += "<div class='form-group'><input type='text' class='form-control input-sm' placeholder='Site URL' title='Site URL' value='"+ site.url + "' name='url' id='url'></div>";
+  html += "<div class='form-group'><input type='text' class='form-control input-sm'  placeholder='Contact' title='Contact' value='"+ site.contact + "' name='contact' id ='contact'></div>";
+  html += "<div class='form-group'><input type='email' class='form-control input-sm' placeholder='Email' title='Email' value='"+ site.email + "' name='email' id='email'></div>";
+  html += "<textarea class='form-control' value='' name='notes' rows='2' id='notes' placeholder='Notes'>"+ site.notes + "</textarea>";
+  html += "<input type='hidden' id='site' value='"+site.id+"'/></div>";
+  html += "<div class='row'><div class='col-xs-8'>";
+  html += "<select title='Site type' id='type' class='form-control input-sm'>"
+            +"<option>Clinical</option>"
+            +"<option>Evaluation</option>"
+            +"<option>Development</option>"
+            +"<option>Research</option>"
+            +"<option>Other</option>"
+          +"</select></div>";
+  html += "<div class=''><button type='submit' class='btn btn-primary'>Save</button></div></div></form></div>"
+  return html;
 }

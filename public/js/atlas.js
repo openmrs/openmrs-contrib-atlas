@@ -481,7 +481,7 @@ function createInfoWindow(site, marker) {
     html += "<a href='mailto:"+ site.email + "' class='site-email'><img src='images/mail.png' width='15px' height='15px'/></a>";
   html += "</div>";
   if (site.notes)
-    html += "<fieldset class='site-notes'><legend>Notes</legend>" + site.notes + "</fieldset>";
+    html += "<fieldset class='site-notes'>" + site.notes + "</fieldset>";
   if (site.type)
     html += "<div class='site-type'><span class='site-type'>" + site.type + "</span>";
   if (versionForSite(site))  
@@ -530,10 +530,9 @@ function createInfoWindow(site, marker) {
       sites[id].bubbleOpen = false;
       sites[id].editwindow.open(map,sites[id].marker);
       sites[id].editBubbleOpen = true;
-      $('.site-bubble').parent().css('overflow', 'hidden');
+      sites[id].marker.setDraggable(true);
       $('.gm-style-iw').parent().append('<div id="undo" title ="Undo change" value="'+id+'" class="control" style="position: absolute;overflow:none; right:12px;bottom:10px; color:#3F3F3F"><i class="fa fa-lg fa-history" style="color:rgba(171, 166, 166, 1)"></i></div>');
       $('.gm-style-iw').parent().append('<div id="delete" title ="Delete site" value="'+id+'" class="control" style="position: absolute;overflow:none; right:12px;bottom:28px; color:#3F3F3F"><i class="fa fa-lg fa-trash-o" style="color:rgba(171, 166, 166, 1)"></i></div>');
-    
     });
   }
   return infowindow;
