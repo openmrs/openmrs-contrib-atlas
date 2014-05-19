@@ -86,7 +86,6 @@ Route::get('logout', array('as' => 'logout', function()
     Auth::logout();
     Log::info('User logged out');
     Session::flush();
-    if (App::environment('production')) return Redirect::to('/');
     $url = urlencode(route('home'));
     return Redirect::to('http://'.$idServer.'/disconnect?destination='. $url);
 }));
@@ -94,16 +93,5 @@ Route::get('logout', array('as' => 'logout', function()
 Route::get('login', array('as' => 'login', function()
 {
     $idServer = getenv('ID_HOST');
-    if (App::environment('production')) {
-		//Create User
-    	$user = new \Illuminate\Auth\GenericUser(
-    		array('uid' => 'john.doe', 
-    			'name' => 'John Doe',
-    			'email' => 'john.doe@openmrs.org'));
-    	Log::info('Fake user stored in session: ' . $user->uid);
-    	Auth::login($user);
-    	Session::put('user', $user);;
-    	return Redirect::to('/');
-	}
     return Redirect::to('http://'.$idServer.'/authenticate/atlas');
 }));
