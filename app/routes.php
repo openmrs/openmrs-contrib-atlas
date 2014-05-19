@@ -66,6 +66,7 @@ Route::filter('validateCallback', function()
 		$reserved = ",abstract,boolean,break,byte,case,catch,char,class,const,continue,default,do,double,else,extends,false,final,finally	float,for,function,goto,if,implements,import,in,instanceof,int,interface,long,native,new,null,package,private,protected	public,return,short,static,super,switch,synchronized,this,throw,throws,transient,true,try,var,void,while,with,";
 		if (strpos($reserved, ",$callback,") !== false) App::abort(400, 'Callback cannot be reserved word.');
 	}
+    return Response::view('data')->header('Content-Type', 'application/json');;
 });
 
 Route::get('auth/multipass/callback', array(
@@ -87,11 +88,11 @@ Route::get('logout', array('as' => 'logout', function()
     Log::info('User logged out');
     Session::flush();
     $url = urlencode(route('home'));
-    return Redirect::to('http://'.$idServer.'/disconnect?destination='. $url);
+    return Redirect::to('https://'.$idServer.'/disconnect?destination='. $url);
 }));
 
 Route::get('login', array('as' => 'login', function()
 {
     $idServer = getenv('ID_HOST');
-    return Redirect::to('http://'.$idServer.'/authenticate/atlas');
+    return Redirect::to('https://'.$idServer.'/authenticate/atlas');
 }));

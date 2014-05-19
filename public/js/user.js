@@ -19,7 +19,7 @@ function initLoginButton() {
   });
 }
 $(function () {
-   initEditListener();
+  initEditListener();
 });
 
 function getGeolocation() {
@@ -69,7 +69,7 @@ function editMarker()  {
 
 function createSite() {
   closeBubbles();
-  myPosition = getCurrentLatLng();
+  myPosition = map.getCenter();
   var image = {
     url: 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png',
     scaledSize: new google.maps.Size(32, 32)
@@ -139,7 +139,9 @@ function createEditInfoWindow(site, marker) {
     $("#map_canvas").on('click', "#delete", function(e){
       e.preventDefault();
       var id = $(this).attr("value");
-      deleteMarker(id);
+      bootbox.confirm("Are you sure ? Your site will be deleted", function(result) {
+        if (result) deleteMarker(id);
+      });
     });
     $("#map_canvas").on('click', "#undo", function(e){
       e.preventDefault();
@@ -164,7 +166,7 @@ function initEditListener() {
     var url  = $('#url').val().trim();
     var type = $('select').val().trim();
     if(name === '' || id === '') {
-      alert('Site name is missing');
+      bootbox.alert("Site Name is missing !");
     } else {
       var site = sites[id].siteData;
       var pos = sites[id].marker.getPosition();
@@ -181,7 +183,7 @@ function initEditListener() {
       sites[id].editwindow.setContent(contentEditwindow(site));
       sites[id].editwindow.close();
       sites[id].editBubbleOpen = false;
-      alert('Information saved');
+      //bootbox.alert('Information saved');
       sites[id].marker.setDraggable(false);
       $.ajax({
         url: '',

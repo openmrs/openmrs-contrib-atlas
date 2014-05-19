@@ -518,11 +518,6 @@ function createInfoWindow(site, marker) {
     }
   });
   if (site.uid == currentUser) {
-    $("#map_canvas").on('click', "#delete", function(e){
-      e.preventDefault();
-      var id = $(this).attr("value");
-      deleteMarker(id);
-    });
     $("#map_canvas").on('click', "#edit", function(e){
       e.preventDefault();
       var id = $(this).attr("value");
