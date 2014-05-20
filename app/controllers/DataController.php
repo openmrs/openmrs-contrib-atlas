@@ -1,3 +1,4 @@
+
 <?php
 
 /**
@@ -69,11 +70,12 @@ EOL
 		    }
 		}
 
+		$contents = json_encode($newResult);
 		if ($callback)
-		  echo "$callback(";
-		echo json_encode($newResult);
-		if ($callback)
-		  echo ");";
+			$contents = $callback . "(" . $contents ." );";
+		$response = Response::make($contents, 200);
+		$response->header('Content-Type', 'application/json');
+		return $response;
 	}
 
 	private function validateStmt($stmt)
