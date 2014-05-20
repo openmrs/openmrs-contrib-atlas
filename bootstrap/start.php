@@ -27,7 +27,7 @@ $app = new Illuminate\Foundation\Application;
 $env = $app->detectEnvironment(array(
 
 	'local' => array('alex-ThinkPad-T410'),
-    'production' => array('atlas-server'),
+    'prod' => array('atlas-server'),
 
 ));
 
