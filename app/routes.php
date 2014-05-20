@@ -26,6 +26,14 @@ Route::delete('ping.php', array(
 	'before' => 'secret',
 	'uses' => 'PingController@pingDelete'));
 
+Route::post('ping.php/atlas', array(
+	'before' => 'validateAtlasJson',
+	'uses' => 'PingController@pingAtlas'));
+
+Route::delete('ping.php/atlas', array(
+	'before' => 'validateAtlasDelete',
+	'uses' => 'PingController@pingAtlasDelete'));
+
 Route::post('ping.php', array(
 	'before' => 'validateJson',
 	'uses' => 'PingController@pingPost'));

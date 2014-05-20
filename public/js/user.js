@@ -20,6 +20,13 @@ function initLoginButton() {
 }
 $(function () {
   initEditListener();
+  $("#map_canvas").on('click', "#delete", function(e){
+    e.preventDefault();
+    var id = $(this).attr("value");
+    bootbox.confirm("Are you sure ? Your site will be deleted", function(result) {
+      if (result) deleteMarker(id);
+    });
+  });  
 });
 
 function getGeolocation() {
@@ -104,12 +111,14 @@ function getCurrentLatLng() {
 function newSite(myPosition) {
   var site = {
     id: sites.length,
+    token: '',
     contact: userName,
     uid: currentUser,
     name: 'New Site',
     email: userEmail,
     notes: '',
     url: '',
+    image: '',
     latitude: myPosition.lat(),
     longitude: myPosition.lng(),
     type:  'TBD',
@@ -120,10 +129,30 @@ function newSite(myPosition) {
 }
 
 function deleteMarker(site) {
-  sites[site].marker.setMap(null);
-  var i = sites.indexOf(site);
-  if(i != -1) {
-    sites.splice(i, 1);
+  var deleted = sites[site].siteData.token;
+  if  (deleted != '' && deleted != null) {
+    $.ajax({
+      url: 'ping.php/atlas?id='+deleted,
+      type: 'DELETE',
+      dataType: 'text',
+    })
+    .done(function(response) {
+      sites[site].marker.setMap(null);
+      var i = sites.indexOf(site);
+      if(i != -1) {
+        sites.splice(i, 1);
+      }
+    })
+    .fail(function() {
+      bootbox.alert( "Error saving your marker - Please try again !" );
+      return;
+    });
+  } else {
+    sites[site].marker.setMap(null);
+      var i = sites.indexOf(site);
+      if(i != -1) {
+        sites.splice(i, 1);
+      }
   }
 }
 
@@ -136,13 +165,6 @@ function createEditInfoWindow(site, marker) {
     sites[site.id].editBubbleOpen = false;
   });
   if (site.uid == currentUser) { 
-    $("#map_canvas").on('click', "#delete", function(e){
-      e.preventDefault();
-      var id = $(this).attr("value");
-      bootbox.confirm("Are you sure ? Your site will be deleted", function(result) {
-        if (result) deleteMarker(id);
-      });
-    });
     $("#map_canvas").on('click', "#undo", function(e){
       e.preventDefault();
       var id = $(this).attr("value");
@@ -183,15 +205,21 @@ function initEditListener() {
       sites[id].editwindow.setContent(contentEditwindow(site));
       sites[id].editwindow.close();
       sites[id].editBubbleOpen = false;
-      //bootbox.alert('Information saved');
       sites[id].marker.setDraggable(false);
+      var json = JSON.stringify(site);
+      //alert(json);
       $.ajax({
-        url: '',
-        type: 'post',
-        data: null,
-        success: function(html) {
-          alert(html);
-        }
+        url: 'ping.php/atlas',
+        type: 'POST',
+        data: json,
+        dataType: 'text',
+      })
+      .done(function(response) {
+        site.token = response;
+        //bootbox.alert('Marker saved');
+      })
+      .fail(function() {
+        bootbox.alert( "Error saving your marker - Please try again !" );
       });
     }
     return false;
@@ -240,7 +268,7 @@ function contentEditwindow(site) {
   html += "<div class='form-group'>";
   if (site.image)
   html += "<img class='form-group' src='" + site.image + "' width='80px' height='80px' alt='thumbnail' />";
-  html += "<div class='form-group'><input type='text' class='form-control input-sm' placeholder='Site URL' title='Site URL' value='"+ site.url + "' name='url' id='url'></div>";
+  html += "<div class='form-group'><input type='url' class='form-control input-sm' placeholder='Site URL' title='Site URL' value='"+ site.url + "' name='url' id='url'></div>";
   html += "<div class='form-group'><input type='text' class='form-control input-sm'  placeholder='Contact' title='Contact' value='"+ site.contact + "' name='contact' id ='contact'></div>";
   html += "<div class='form-group'><input type='email' class='form-control input-sm' placeholder='Email' title='Email' value='"+ site.email + "' name='email' id='email'></div>";
   html += "<textarea class='form-control' value='' name='notes' rows='2' id='notes' placeholder='Notes'>"+ site.notes + "</textarea>";

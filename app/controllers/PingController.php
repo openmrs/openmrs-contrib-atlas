@@ -56,6 +56,192 @@ EOL
 
 		$json = json_decode(Request::getContent(), true);
 
+		$this->createTable();
+
+		$id = array('id' => $json['id']);
+		$param = array(
+			'id' => $json['id'],
+			'latitude' => floatval($json['geolocation']['latitude']),
+			'longitude' => floatval($json['geolocation']['longitude']),
+			'name' => $json['name'],
+			'url' => $json['url'],
+			'type' => $json['type'],
+			'image' => $json['image'],
+			'patients' => intval($json['patients']),
+			'encounters' => intval($json['encounters']),
+			'observations' => intval($json['observations']),
+			'contact' => $json['contact'],
+			'email' => $json['email'],
+			'notes' => $json['notes'],
+			'data' => json_encode($json['data']),
+			'atlas_version' => $json['atlasVersion']);
+
+		$stmt = $dbh->prepare("SELECT id FROM atlas WHERE id = :id");
+		$stmt->execute($id);
+		$id = $param['id'];
+		if ($stmt->fetch()) {
+		  // implementation already exists
+		  // $dbh->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
+			$query =  $dbh->prepare(
+<<<EOL
+INSERT INTO archive (
+	archive_date, id, latitude, longitude, name, url, type, image, patients,
+	encounters, observations, contact, email, notes, data, date_created, atlas_version
+) SELECT current_timestamp, id, latitude, longitude, name, url, type, image, patients,
+encounters, observations, contact, email, notes, data, date_created, atlas_version
+FROM atlas
+WHERE id = :id;
+UPDATE atlas SET
+	latitude = :latitude,
+	longitude = :longitude,
+	name = :name,
+	url = :url,
+	type = :type,
+	image = :image,
+	patients = :patients,
+	encounters = :encounters,
+	observations = :observations,
+	contact = :contact,
+	email = :email,
+	notes = :notes,
+	data = :data,
+	date_changed = CURRENT_TIMESTAMP,
+	atlas_version = :atlas_version
+WHERE id = :id;
+EOL
+			);
+			$query->execute($param);
+			Log::debug("Updated ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
+		} else {
+			 // new implementation
+			$query = $dbh->prepare(
+<<<EOL
+INSERT INTO atlas (
+	id, latitude, longitude, name, url, type, image, patients,
+	encounters, observations, contact, email, notes, data, date_created, atlas_version
+	) VALUES (
+:id, :latitude, :longitude, :name, :url, :type, :image, :patients,
+:encounters, :observations, :contact, :email, :notes, :data, current_timestamp, :atlas_version)
+EOL
+			);
+			$query->execute($param);
+			Log::debug("Created ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
+		}
+
+		return 'SUCCES';
+	}
+
+	/**
+	 * Handle Post Ping from Atlas Server
+	 *
+	 */
+	public function pingAtlas()
+	{
+		$db_dsn = getenv('DB_DNS');
+		$db_username = getenv('DB_USERNAME');
+		$db_password = getenv('DB_PASSWORD');
+		$dbh = new PDO($db_dsn, $db_username, $db_password);
+		$this->createTable();
+		
+		Log::debug("DATA received: " . Request::getContent());
+		$json = json_decode(Request::getContent(), true);
+		
+		$id['id'] = ($json['token'] != '') ? $json['token'] : Uuid::uuid4()->toString();
+		$param = array(
+			'id' => $id['id'],
+			'latitude' => floatval($json['latitude']),
+			'longitude' => floatval($json['longitude']),
+			'name' => $json['name'],
+			'url' => $json['url'],
+			'type' => $json['type'],
+			'image' => $json['image'],
+			'contact' => $json['contact'],
+			'email' => $json['email'],
+			'notes' => $json['notes'],
+			'data' => json_encode($json['data']),
+			'atlas_version' => $json['atlasVersion'],
+			'openmrs_id' => $json['uid']);
+
+		$stmt = $dbh->prepare("SELECT id FROM atlas WHERE id = :id");
+		$stmt->execute($id);
+		$id = $param['id'];
+		if ($stmt->fetch()) {
+		  // implementation already exists
+		  // $dbh->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
+			$query =  $dbh->prepare(
+<<<EOL
+INSERT INTO archive (
+	archive_date, id, latitude, longitude, name, url, type, image, patients,
+	encounters, observations, contact, email, notes, data, date_created, atlas_version, openmrs_id
+) SELECT current_timestamp, id, latitude, longitude, name, url, type, image, patients,
+encounters, observations, contact, email, notes, data, date_created, atlas_version, openmrs_id
+FROM atlas
+WHERE id = :id;
+UPDATE atlas SET
+	latitude = :latitude,
+	longitude = :longitude,
+	name = :name,
+	url = :url,
+	type = :type,
+	image = :image,
+	contact = :contact,
+	email = :email,
+	notes = :notes,
+	data = :data,
+	date_changed = CURRENT_TIMESTAMP,
+	openmrs_id = :openmrs_id
+WHERE id = :id;
+EOL
+			);
+			$query->execute($param);
+			Log::debug("Updated ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
+		} else {
+			 // new implementation
+			$query = $dbh->prepare(
+<<<EOL
+INSERT INTO atlas (
+	id, latitude, longitude, name, url, type, image, contact, email,
+	 notes, data, date_created, atlas_version, openmrs_id
+	) VALUES (
+:id, :latitude, :longitude, :name, :url, :type, :image, :contact, :email,
+ :notes, :data, current_timestamp, :atlas_version, :openmrs_id)
+EOL
+			);
+			$query->execute($param);
+			Log::debug("Created ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
+		}
+		$principal = 'openmrs_id:' . $param['openmrs_id'];
+		$auth = DB::table('auth')->where('atlas_id', '=', $id)->where('principal','=', 
+				$principal)->first();
+			if ($auth == NULL) {
+				DB::table('auth')->insert(array('atlas_id' => $id, 'principal' => 
+					$principal, 'token' => $param['openmrs_id']));
+				Log::debug("Created auth");
+			} else {
+				DB::table('auth')->where('id', $auth->id)->update(array('atlas_id' => $id, 'principal' => 
+					$principal, 'token' => $param['openmrs_id'], 'privileges' => ALL));
+				Log::debug("Updated auth: " . $auth->id);
+			}
+
+		return $id;
+	}
+
+	public function pingAtlasDelete() {
+		$id = Input::get('id');
+		DB::table('auth')->where('atlas_id', '=', $id)->delete();
+		DB::table('atlas')->where('id', '=', $id)->delete();
+		Log::debug("Deleted marker: " . $id);
+	}
+
+	public function createTable() 
+	{
+		$db_dsn = getenv('DB_DNS');
+		$db_username = getenv('DB_USERNAME');
+		$db_password = getenv('DB_PASSWORD');
+		$dbh = new PDO($db_dsn, $db_username, $db_password);
+
+		$json = json_decode(Request::getContent(), true);
+
 		$dbh->exec(
 <<<EOL
 CREATE TABLE IF NOT EXISTS atlas (
@@ -117,75 +303,6 @@ ALTER TABLE archive ADD atlas_version varchar(50);
 EOL
 			);
 		}
-		$id = array('id' => $json['id']);
-		$param = array(
-			'id' => $json['id'],
-			'latitude' => floatval($json['geolocation']['latitude']),
-			'longitude' => floatval($json['geolocation']['longitude']),
-			'name' => $json['name'],
-			'url' => $json['url'],
-			'type' => $json['type'],
-			'image' => $json['image'],
-			'patients' => intval($json['patients']),
-			'encounters' => intval($json['encounters']),
-			'observations' => intval($json['observations']),
-			'contact' => $json['contact'],
-			'email' => $json['email'],
-			'notes' => $json['notes'],
-			'data' => json_encode($json['data']),
-			'atlas_version' => $json['atlasVersion']);
 
-		$stmt = $dbh->prepare("SELECT id FROM atlas WHERE id = :id");
-		$stmt->execute($id);
-		if ($stmt->fetch()) {
-		  // implementation already exists
-		  // $dbh->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
-			$query =  $dbh->prepare(
-<<<EOL
-INSERT INTO archive (
-	archive_date, id, latitude, longitude, name, url, type, image, patients,
-	encounters, observations, contact, email, notes, data, date_created, atlas_version
-) SELECT current_timestamp, id, latitude, longitude, name, url, type, image, patients,
-encounters, observations, contact, email, notes, data, date_created, atlas_version
-FROM atlas
-WHERE id = :id;
-UPDATE atlas SET
-	latitude = :latitude,
-	longitude = :longitude,
-	name = :name,
-	url = :url,
-	type = :type,
-	image = :image,
-	patients = :patients,
-	encounters = :encounters,
-	observations = :observations,
-	contact = :contact,
-	email = :email,
-	notes = :notes,
-	data = :data,
-	date_changed = CURRENT_TIMESTAMP,
-	atlas_version = :atlas_version
-WHERE id = :id;
-EOL
-			);
-			$query->execute($param);
-			Log::debug("Updated ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
-		} else {
-			 // new implementation
-			$query = $dbh->prepare(
-<<<EOL
-INSERT INTO atlas (
-	id, latitude, longitude, name, url, type, image, patients,
-	encounters, observations, contact, email, notes, data, date_created, atlas_version
-	) VALUES (
-:id, :latitude, :longitude, :name, :url, :type, :image, :patients,
-:encounters, :observations, :contact, :email, :notes, :data, current_timestamp, :atlas_version)
-EOL
-			);
-			$query->execute($param);
-			Log::debug("Created ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
-		}
-
-		return 'SUCCES';
 	}
 }
