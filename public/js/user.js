@@ -20,6 +20,13 @@ function initLoginButton() {
 }
 $(function () {
   initEditListener();
+  $("#map_canvas").on('click', "#delete", function(e){
+    e.preventDefault();
+    var id = $(this).attr("value");
+    bootbox.confirm("Are you sure ? Your site will be deleted", function(result) {
+      if (result) deleteMarker(id);
+    });
+  });  
 });
 
 function getGeolocation() {
@@ -136,13 +143,6 @@ function createEditInfoWindow(site, marker) {
     sites[site.id].editBubbleOpen = false;
   });
   if (site.uid == currentUser) { 
-    $("#map_canvas").on('click', "#delete", function(e){
-      e.preventDefault();
-      var id = $(this).attr("value");
-      bootbox.confirm("Are you sure ? Your site will be deleted", function(result) {
-        if (result) deleteMarker(id);
-      });
-    });
     $("#map_canvas").on('click', "#undo", function(e){
       e.preventDefault();
       var id = $(this).attr("value");
