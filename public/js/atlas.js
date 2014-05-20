@@ -183,7 +183,7 @@ function initialize() {
 
 function getJSON() {
   var script = document.createElement('script');
-  script.setAttribute('src', 'http://openmrs.org/atlas/data.php?callback=loadSites');
+  script.setAttribute('src', 'http://localhost/openmrs-contrib-atlas/public/data.php?callback=loadSites');
   script.setAttribute('id', 'jsonScript');
   script.setAttribute('type', 'text/javascript');
   document.documentElement.firstChild.appendChild(script);
@@ -336,11 +336,14 @@ function loadSites(json) {
     var site = json[i];
     var fadeGroup = getFadeGroup(site);
     var marker = createMarker(site, fadeGroup, bounds);
+    var editwindow = null;
     var infowindow = createInfoWindow(site, marker);
+    if (site.uid == currentUser)
+      editwindow = createEditInfoWindow(site, marker);
     initLegend();
     if (site.version)
         version.push(versionMajMinForSite(site));
-    sites[site.id] = {'siteData': site, 'marker':marker, 'infowindow':infowindow, 'editwindow': null, 'bubbleOpen':false, 'editBubbleOpen':false, 'fadeGroup':fadeGroup};
+    sites[site.id] = {'siteData': site, 'marker':marker, 'infowindow':infowindow, 'editwindow':editwindow, 'bubbleOpen':false,'editBubbleOpen':false, 'fadeGroup':fadeGroup};
   }
   map.fitBounds(bounds);
 }

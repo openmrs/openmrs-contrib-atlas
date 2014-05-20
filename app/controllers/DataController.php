@@ -19,6 +19,7 @@ class DataController extends BaseController {
 		$callback = Input::get('callback');
 		$sql = <<<EOL
 SELECT
+	id as token,
 	@cnt := @cnt + 1 as id,
 	latitude,
 	longitude,
@@ -31,6 +32,7 @@ SELECT
 	observations,
 	contact,
 	email,
+	openmrs_id as uid,
 	notes,
 	data,
 	atlas_version,
@@ -51,6 +53,7 @@ EOL
 		  exit;
 
 		foreach ($result as $site) {
+			if ($site['uid'] == '') unset($site['token']);
 		    $major = 0;
 		    $minor = 0;
 		    $atlasVersion = json_decode($site['atlas_version']);

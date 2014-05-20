@@ -119,3 +119,14 @@ Route::filter('secret', function()
 		Log::info("Unauthorized attempt to delete ".$deleteId." from ".Request::server('REMOTE_ADDR'))	;
 	}
 });
+
+Route::filter('validateAtlasJson', function()
+{
+	$json = json_decode(Request::getContent(), true);
+	if ($json == NULL) App::abort(400, 'Missing data');
+	if (!is_array($json)) App::abort(400, 'Unable to parse data');
+	if (!array_key_exists('token', $json)) App::abort(400, 'Missing token');
+	if (!array_key_exists('longitude', $json)) App::abort(400, 'Missing longitude');
+	if (!array_key_exists('latitude', $json)) App::abort(400, 'Missing latitude');
+	if (!array_key_exists('name', $json)) App::abort(400, 'Missing name');
+});
