@@ -142,7 +142,8 @@ EOL
 		$db_password = getenv('DB_PASSWORD');
 		$dbh = new PDO($db_dsn, $db_username, $db_password);
 		$this->createTable();
-		
+		$user = Session::get(user);
+
 		Log::debug("DATA received: " . Request::getContent());
 		$json = json_decode(Request::getContent(), true);
 		
@@ -161,7 +162,7 @@ EOL
 			'data' => json_encode($json['data']),
 			'atlas_version' => $json['atlasVersion'],
 			'openmrs_id' => $json['uid']);
-
+		if ($json['uid'] == '') unset($param['openmrs_id']);
 		$stmt = $dbh->prepare("SELECT id FROM atlas WHERE id = :id");
 		$stmt->execute($id);
 		$id = $param['id'];
@@ -189,7 +190,6 @@ UPDATE atlas SET
 	notes = :notes,
 	data = :data,
 	date_changed = CURRENT_TIMESTAMP,
-	openmrs_id = :openmrs_id
 WHERE id = :id;
 EOL
 			);
@@ -210,16 +210,16 @@ EOL
 			$query->execute($param);
 			Log::debug("Created ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
 		}
-		$principal = 'openmrs_id:' . $param['openmrs_id'];
+		$principal = 'openmrs_id:' . $user->uid;
 		$auth = DB::table('auth')->where('atlas_id', '=', $id)->where('principal','=', 
 				$principal)->first();
 			if ($auth == NULL) {
 				DB::table('auth')->insert(array('atlas_id' => $id, 'principal' => 
-					$principal, 'token' => $param['openmrs_id']));
+					$principal, 'token' => $user->uid));
 				Log::debug("Created auth");
 			} else {
 				DB::table('auth')->where('id', $auth->id)->update(array('atlas_id' => $id, 'principal' => 
-					$principal, 'token' => $param['openmrs_id'], 'privileges' => ALL));
+					$principal, 'token' => $user->uid, 'privileges' => ALL));
 				Log::debug("Updated auth: " . $auth->id);
 			}
 

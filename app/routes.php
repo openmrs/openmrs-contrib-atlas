@@ -16,7 +16,10 @@ Route::get('/', array('as' => 'home', function()
 	if (Session::has(user)) {
 		$user = Session::get(user);
 		Log::info('Logged user: ' . $user->uid);
-		return View::make('index', array('user' => $user));
+		$privileges = DB::table('auth')->where('token','=', $user->uid)->lists('atlas_id');
+		$list = json_encode($privileges);
+		Log::info('Authorized site: ' . $lists);
+		return View::make('index', array('user' => $user, 'auth_site' => $list));
 	}
 	Log::info('Unknow user');
 	return View::make('index');

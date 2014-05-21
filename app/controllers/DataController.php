@@ -54,6 +54,7 @@ EOL
 
 		foreach ($result as $site) {
 			if ($site['uid'] == '') unset($site['token']);
+			unset($site['uid']);
 		    $major = 0;
 		    $minor = 0;
 		    $atlasVersion = json_decode($site['atlas_version']);

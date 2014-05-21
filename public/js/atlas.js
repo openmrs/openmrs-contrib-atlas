@@ -183,7 +183,7 @@ function initialize() {
 
 function getJSON() {
   var script = document.createElement('script');
-  script.setAttribute('src', 'http://localhost/openmrs-contrib-atlas/public/data.php?callback=loadSites');
+  script.setAttribute('src', 'http://107.170.156.44//data.php?callback=loadSites');
   script.setAttribute('id', 'jsonScript');
   script.setAttribute('type', 'text/javascript');
   document.documentElement.firstChild.appendChild(script);
@@ -315,7 +315,7 @@ function colorForSite(site) {
         break;
     }
   }
-  if (site.uid == currentUser && legendGroups === 2)
+  if (((site.uid != '' && site.uid == currentUser) || auth_site.indexOf(site.token) != -1) && legendGroups === 2)
       image.url = 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png';
   return image;
 }
@@ -334,11 +334,12 @@ function loadSites(json) {
   loadVersion(json);
   for(i=0; i<json.length; i++) {
     var site = json[i];
+    site.uid = '';
     var fadeGroup = getFadeGroup(site);
     var marker = createMarker(site, fadeGroup, bounds);
     var editwindow = null;
     var infowindow = createInfoWindow(site, marker);
-    if (site.uid == currentUser)
+    if ((site.uid != '' && site.uid == currentUser) || auth_site.indexOf(site.token) != -1)
       editwindow = createEditInfoWindow(site, marker);
     initLegend();
     if (site.version)
@@ -512,7 +513,7 @@ function createInfoWindow(site, marker) {
       closeBubbles();
       infowindow.open(map,marker);
       sites[site.id].bubbleOpen = true;
-      if (site.uid == currentUser) { 
+      if ((site.uid != null && site.uid == currentUser) || auth_site.indexOf(site.token) != -1) { 
         $('.gm-style-iw').parent().append('<div id="edit" value="'+site.id+'" title ="Edit site" class="control" style="position: absolute;overflow:none; right:12px;bottom:10px; color:#3F3F3F"><i class="fa fa-lg fa-pencil" style="color:rgba(171, 166, 166, 1)"></i></div>');
         $('.gm-style-iw').parent().append('<div id="delete" value="'+site.id+'" title ="Delete site" class="control" style="position: absolute;overflow:none; right:12px;bottom:25px; color:#3F3F3F"><i class="fa fa-lg fa-trash-o" style="color:rgba(171, 166, 166, 1)"></i></div>');
       } else {
@@ -520,7 +521,7 @@ function createInfoWindow(site, marker) {
       }
     }
   });
-  if (site.uid == currentUser) {
+  if ((site.uid != null && site.uid == currentUser) || auth_site.indexOf(site.token) != -1) {
     $("#map_canvas").on('click', "#edit", function(e){
       e.preventDefault();
       var id = $(this).attr("value");

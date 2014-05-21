@@ -16,10 +16,15 @@
 <script type="text/javascript" src="js/yqlgeo.js"></script>
 <script type="text/javascript" src="js/bootbox.js"></script>
 <script type="text/javascript">
-var map;
+var auth = JSON.stringify({{ $auth_site }});
+if (auth != null) 
+  var auth_site = JSON.parse(auth);
+else
+  var auth_site = '';
 var currentUser;
 var userEmail;
 var userName;
+var map;
 var sites = [];
 var types = [];
 var version = [];
@@ -37,6 +42,7 @@ $(document).ready(function() {
   initLegendChoice();
   initLoginButton();
   currentUser = $('#user-id').val().trim();
+  if (currentUser == '') currentUser = 'visitor';
   userName = $('#user-name').val().trim();
   userEmail = $('#user-email').val().trim();
  });
