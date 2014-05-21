@@ -315,7 +315,7 @@ function colorForSite(site) {
         break;
     }
   }
-  if ((site.uid == currentUser || auth_site.indexOf(site.token) != -1) && legendGroups === 2)
+  if (((site.uid != null && site.uid == currentUser) || auth_site.indexOf(site.token) != -1) && legendGroups === 2)
       image.url = 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png';
   return image;
 }
