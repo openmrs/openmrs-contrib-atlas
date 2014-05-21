@@ -16,10 +16,16 @@
 <script type="text/javascript" src="js/yqlgeo.js"></script>
 <script type="text/javascript" src="js/bootbox.js"></script>
 <script type="text/javascript">
-var map;
+var auth = JSON.stringify({{ $auth_site }});
+if (auth != null) 
+  var auth_site = JSON.parse(auth);
+else
+  var auth_site = '';
+console.log(auth_site);
 var currentUser;
 var userEmail;
 var userName;
+var map;
 var sites = [];
 var types = [];
 var version = [];

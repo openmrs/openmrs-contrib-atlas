@@ -143,8 +143,8 @@ function deleteMarker(site) {
         sites.splice(i, 1);
       }
     })
-    .fail(function() {
-      bootbox.alert( "Error saving your marker - Please try again !" );
+    .fail(function(jqXHR, textStatus, errorThrown) {
+      bootbox.alert( "Error deleting your marker - Please try again ! - " + jqXHR.statusText );
       return;
     });
   } else {
@@ -164,7 +164,7 @@ function createEditInfoWindow(site, marker) {
   google.maps.event.addListener(infowindow, 'closeclick', function() {
     sites[site.id].editBubbleOpen = false;
   });
-  if (site.uid == currentUser) { 
+  if (site.uid == currentUser || auth_site.indexOf(site.token) != -1) { 
     $("#map_canvas").on('click', "#undo", function(e){
       e.preventDefault();
       var id = $(this).attr("value");
@@ -218,8 +218,8 @@ function initEditListener() {
         site.token = response;
         //bootbox.alert('Marker saved');
       })
-      .fail(function() {
-        bootbox.alert( "Error saving your marker - Please try again !" );
+      .fail(function(jqXHR, textStatus, errorThrown) {
+        bootbox.alert( "Error saving your marker - Please try again ! - " + jqXHR.statusText );
       });
     }
     return false;

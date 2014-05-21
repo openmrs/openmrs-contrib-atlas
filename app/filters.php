@@ -133,10 +133,10 @@ Route::filter('validateAtlasJson', function()
 		App::abort(403, 'Unauthorized Action - Not logged');
 	$id = $json['token'];
 	$user = Session::get(user);
-	$principal = 'openmrs_id:'.$user->uid;
+	$token = $user->uid;
 	$exist = DB::table('atlas')->where('id','=', $id)->first();
 	if ($exist != null) {
-		$privileges = DB::table('auth')->where('principal','=', $principal)->where('atlas_id','=',$id)
+		$privileges = DB::table('auth')->where('token','=', $token)->where('atlas_id','=',$id)
 		->where('privileges', '=', 'ALL')->first();
 		if ($privileges == NULL)
 			App::abort(403, 'Unauthorized Action - Privileges missing');
@@ -151,8 +151,8 @@ Route::filter('validateAtlasDelete', function()
 		App::abort(403, 'Unauthorized Action - Not logged');
 	$id = Input::get('id');
 	$user = Session::get(user);
-	$principal = 'openmrs_id:'.$user->uid;
-	$privileges = DB::table('auth')->where('principal','=', $principal)->where('atlas_id','=',$id)
+	$token = $user->uid;
+	$privileges = DB::table('auth')->where('token','=', $token)->where('atlas_id','=',$id)
 	->where('privileges', '=', 'ALL')->first();
 	if ($privileges == NULL)
 		App::abort(403, 'Unauthorized Action - Priveleges missing');
