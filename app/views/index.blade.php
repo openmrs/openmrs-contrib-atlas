@@ -21,7 +21,6 @@ if (auth != null)
   var auth_site = JSON.parse(auth);
 else
   var auth_site = '';
-console.log(auth_site);
 var currentUser;
 var userEmail;
 var userName;
