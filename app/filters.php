@@ -129,4 +129,31 @@ Route::filter('validateAtlasJson', function()
 	if (!array_key_exists('longitude', $json)) App::abort(400, 'Missing longitude');
 	if (!array_key_exists('latitude', $json)) App::abort(400, 'Missing latitude');
 	if (!array_key_exists('name', $json)) App::abort(400, 'Missing name');
+	if (!Session::has(user))
+		App::abort(403, 'Unauthorized Action - Not logged');
+	$id = $json['token'];
+	$user = Session::get(user);
+	$principal = 'openmrs_id:'.$user->uid;
+	$exist = DB::table('atlas')->where('id','=', $id)->first();
+	if ($exist != null) {
+		$privileges = DB::table('auth')->where('principal','=', $principal)->where('atlas_id','=',$id)
+		->where('privileges', '=', 'ALL')->first();
+		if ($privileges == NULL)
+			App::abort(403, 'Unauthorized Action - Privileges missing');
+	}
+});
+
+Route::filter('validateAtlasDelete', function()
+{
+	if ( !Input::has('id'))
+		App::abort(400, 'Missing site dd');
+	if ( !Session::has(user) )
+		App::abort(403, 'Unauthorized Action - Not logged');
+	$id = Input::get('id');
+	$user = Session::get(user);
+	$principal = 'openmrs_id:'.$user->uid;
+	$privileges = DB::table('auth')->where('principal','=', $principal)->where('atlas_id','=',$id)
+	->where('privileges', '=', 'ALL')->first();
+	if ($privileges == NULL)
+		App::abort(403, 'Unauthorized Action - Priveleges missing');
 });

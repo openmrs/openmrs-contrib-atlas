@@ -129,10 +129,30 @@ function newSite(myPosition) {
 }
 
 function deleteMarker(site) {
-  sites[site].marker.setMap(null);
-  var i = sites.indexOf(site);
-  if(i != -1) {
-    sites.splice(i, 1);
+  var deleted = sites[site].siteData.token;
+  if  (deleted != '' && deleted != null) {
+    $.ajax({
+      url: 'ping.php/atlas?id='+deleted,
+      type: 'DELETE',
+      dataType: 'text',
+    })
+    .done(function(response) {
+      sites[site].marker.setMap(null);
+      var i = sites.indexOf(site);
+      if(i != -1) {
+        sites.splice(i, 1);
+      }
+    })
+    .fail(function() {
+      bootbox.alert( "Error saving your marker - Please try again !" );
+      return;
+    });
+  } else {
+    sites[site].marker.setMap(null);
+      var i = sites.indexOf(site);
+      if(i != -1) {
+        sites.splice(i, 1);
+      }
   }
 }
 

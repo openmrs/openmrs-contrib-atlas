@@ -78,6 +78,7 @@ EOL
 
 		$stmt = $dbh->prepare("SELECT id FROM atlas WHERE id = :id");
 		$stmt->execute($id);
+		$id = $param['id'];
 		if ($stmt->fetch()) {
 		  // implementation already exists
 		  // $dbh->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
@@ -163,6 +164,7 @@ EOL
 
 		$stmt = $dbh->prepare("SELECT id FROM atlas WHERE id = :id");
 		$stmt->execute($id);
+		$id = $param['id'];
 		if ($stmt->fetch()) {
 		  // implementation already exists
 		  // $dbh->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
@@ -208,8 +210,27 @@ EOL
 			$query->execute($param);
 			Log::debug("Created ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
 		}
+		$principal = 'openmrs_id:' . $param['openmrs_id'];
+		$auth = DB::table('auth')->where('atlas_id', '=', $id)->where('principal','=', 
+				$principal)->first();
+			if ($auth == NULL) {
+				DB::table('auth')->insert(array('atlas_id' => $id, 'principal' => 
+					$principal, 'token' => $param['openmrs_id']));
+				Log::debug("Created auth");
+			} else {
+				DB::table('auth')->where('id', $auth->id)->update(array('atlas_id' => $id, 'principal' => 
+					$principal, 'token' => $param['openmrs_id'], 'privileges' => ALL));
+				Log::debug("Updated auth: " . $auth->id);
+			}
 
-		return $param['id'];
+		return $id;
+	}
+
+	public function pingAtlasDelete() {
+		$id = Input::get('id');
+		DB::table('auth')->where('atlas_id', '=', $id)->delete();
+		DB::table('atlas')->where('id', '=', $id)->delete();
+		Log::debug("Deleted marker: " . $id);
 	}
 
 	public function createTable() 
