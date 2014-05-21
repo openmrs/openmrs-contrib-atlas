@@ -42,6 +42,7 @@ $(document).ready(function() {
   initLegendChoice();
   initLoginButton();
   currentUser = $('#user-id').val().trim();
+  if (currentUser == '') currentUser = 'visitor';
   userName = $('#user-name').val().trim();
   userEmail = $('#user-email').val().trim();
  });

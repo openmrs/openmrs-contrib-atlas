@@ -315,7 +315,7 @@ function colorForSite(site) {
         break;
     }
   }
-  if (((site.uid != null && site.uid == currentUser) || auth_site.indexOf(site.token) != -1) && legendGroups === 2)
+  if (((site.uid != '' && site.uid == currentUser) || auth_site.indexOf(site.token) != -1) && legendGroups === 2)
       image.url = 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png';
   return image;
 }
@@ -339,7 +339,7 @@ function loadSites(json) {
     var marker = createMarker(site, fadeGroup, bounds);
     var editwindow = null;
     var infowindow = createInfoWindow(site, marker);
-    if ((site.uid != null && site.uid == currentUser) || auth_site.indexOf(site.token) != -1)
+    if ((site.uid != '' && site.uid == currentUser) || auth_site.indexOf(site.token) != -1)
       editwindow = createEditInfoWindow(site, marker);
     initLegend();
     if (site.version)
