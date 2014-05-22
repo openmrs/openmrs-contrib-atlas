@@ -17,38 +17,14 @@ class DataController extends BaseController {
 		$db_username = getenv('DB_USERNAME');
 		$db_password = getenv('DB_PASSWORD');
 		$callback = Input::get('callback');
-		$sql = <<<EOL
-SELECT
-	id as token,
-	@cnt := @cnt + 1 as id,
-	latitude,
-	longitude,
-	name,
-	url,
-	type,
-	image,
-	patients,
-	encounters,
-	observations,
-	contact,
-	email,
-	notes,
-	data,
-	atlas_version,
-	CASE WHEN date_changed IS NULL THEN '' ELSE date_changed END as date_changed,
-	date_created
-FROM
-	atlas
-EOL
-		;
+		$sites = DB::table('atlas')
+                     ->select(DB::raw('id as token,  latitude,
+                     	longitude, name, url, type, image, patients, encounters, observations,
+                     	contact,email,notes,data,atlas_version,
+                     	CASE WHEN date_changed IS NULL THEN "" ELSE date_changed END as date_changed,
+                     	date_created'))->get();
 
-		$dbh = new PDO($db_dsn, $db_username, $db_password);
-		$dbh->query("SET @cnt := 0");
-		$stmt = $dbh->query($sql);
-		if (!$this->validateStmt($stmt))
-		  exit;
-		$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
-		if (!$this->validateResult($result))
+		if (!$this->validateResult($sites))
 		  exit;
 		
 		if (Session::has(user)) {
@@ -58,8 +34,11 @@ EOL
 		} else {
 			$privileges = array('visitor');
 		}
-
-		foreach ($result as $site) {
+		$id = 0;
+		foreach ($sites as $site) {
+			$id++;
+			$site = (array)$site;
+			$site['id'] = $id;
 			if (!in_array($site['token'], $privileges))
 				unset($site['token']);
 		    $major = 0;

@@ -5,15 +5,21 @@ function initLoginButton() {
   $('#login').mouseleave(function(){
     $('#logout').css('display', 'none');
   });
-  $('#editSite, #newSite').click(function(){
+  $('#editSite, #newSite, #locateMe').click(function(){
     $('#legendSelected').html(divSites); 
     $('#legend1').html(divTypes); 
     $('#legend2').html(divVersions); 
     legendGroups = 2;
     initLegend();
     repaintMarkers();
-    if ($(this).attr("id") == "editSite")
+    if ($(this).attr("id") == "locateMe")
       editMarker();
+    if ($(this).attr("id") == "editSite") {
+      getMarkerPosition(function (result) {
+        map.setCenter(result);
+        map.setZoom(10);
+      });
+    }
     if ($(this).attr("id") == "newSite")
       var marker = createSite();
   });
@@ -72,6 +78,14 @@ function handle_errors(error) {
 
 function editMarker()  {
   getGeolocation();
+}
+
+function getMarkerPosition(callback)  {
+  for(i = 1; i < sites.length; i++) {
+    if (sites[i].siteData.token == auth_site[0])
+      callback(sites[i].marker.getPosition());
+  }
+  return null;
 }
 
 function createSite() {
@@ -181,6 +195,7 @@ function initEditListener() {
    $('#map_canvas').on('submit', 'form', (function(e) {
     e.preventDefault();
     var id = $('#site').val();
+    var image = $('#image').val();
     var name = $('#name').val().trim();
     var mail = $('#email').val().trim();
     var notes = $('#notes').val().trim();
@@ -197,6 +212,7 @@ function initEditListener() {
       site.url = url;
       site.contact = contact;
       site.notes = notes;
+      site.image = image;
       site.type = type;
       site.longitude = pos.lng();
       site.latitude = pos.lat();
@@ -216,6 +232,7 @@ function initEditListener() {
       })
       .done(function(response) {
         site.token = response;
+        auth_site.push(response);
         //bootbox.alert('Marker saved');
       })
       .fail(function(jqXHR, textStatus, errorThrown) {
@@ -266,9 +283,8 @@ function contentEditwindow(site) {
   html += "<form method='post' id='"+ site.id +"'>"
   html += "<div class='form-group'><input type='text' required='true' placeholder='Site Name' title='Site Name' class='form-control input-sm' value='"+ site.name + "' id='name' name='name'></div>";
   html += "<div class='form-group'>";
-  if (site.image)
-  html += "<img class='form-group' src='" + site.image + "' width='80px' height='80px' alt='thumbnail' />";
   html += "<div class='form-group'><input type='url' class='form-control input-sm' placeholder='Site URL' title='Site URL' value='"+ site.url + "' name='url' id='url'></div>";
+  html += "<div class='form-group'><input type='url' class='form-control input-sm' placeholder='Image' title='Image' value='"+ site.image + "' name='image' id='image'></div>";
   html += "<div class='form-group'><input type='text' class='form-control input-sm'  placeholder='Contact' title='Contact' value='"+ site.contact + "' name='contact' id ='contact'></div>";
   html += "<div class='form-group'><input type='email' class='form-control input-sm' placeholder='Email' title='Email' value='"+ site.email + "' name='email' id='email'></div>";
   html += "<textarea class='form-control' value='' name='notes' rows='2' id='notes' placeholder='Notes'>"+ site.notes + "</textarea>";
