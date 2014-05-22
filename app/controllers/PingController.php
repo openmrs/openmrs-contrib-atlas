@@ -146,7 +146,7 @@ EOL
 
 		Log::debug("DATA received: " . Request::getContent());
 		$json = json_decode(Request::getContent(), true);
-		
+		$date = new \DateTime;
 		$id['id'] = ($json['token'] != '') ? $json['token'] : Uuid::uuid4()->toString();
 		$param = array(
 			'id' => $id['id'],
@@ -161,69 +161,55 @@ EOL
 			'notes' => $json['notes'],
 			'data' => json_encode($json['data']),
 			'atlas_version' => $json['atlasVersion'],
-			'openmrs_id' => $json['uid']);
-		if ($json['uid'] == '') unset($param['openmrs_id']);
-		$stmt = $dbh->prepare("SELECT id FROM atlas WHERE id = :id");
-		$stmt->execute($id);
-		$id = $param['id'];
-		if ($stmt->fetch()) {
-		  // implementation already exists
-		  // $dbh->setAttribute( PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION );
-			$query =  $dbh->prepare(
-<<<EOL
-INSERT INTO archive (
-	archive_date, id, latitude, longitude, name, url, type, image, patients,
-	encounters, observations, contact, email, notes, data, date_created, atlas_version, openmrs_id
-) SELECT current_timestamp, id, latitude, longitude, name, url, type, image, patients,
-encounters, observations, contact, email, notes, data, date_created, atlas_version, openmrs_id
-FROM atlas
-WHERE id = :id;
-UPDATE atlas SET
-	latitude = :latitude,
-	longitude = :longitude,
-	name = :name,
-	url = :url,
-	type = :type,
-	image = :image,
-	contact = :contact,
-	email = :email,
-	notes = :notes,
-	data = :data,
-	date_changed = CURRENT_TIMESTAMP
-WHERE id = :id;
-EOL
-			);
-			$query->execute($param);
+			'date_created' => $date,
+			'openmrs_id' => $user->uid);
+
+		$site = DB::table('atlas')->where('id','=', $param['id'])->first();
+		if ($site != null) {
+			DB::table('archive')->insert(array(
+				'archive_date' => $date, 
+				'id' => $site->id, 
+				'type' => $site->type,
+				'longitude' =>  $site->longitude, 
+				'latitude' =>  $site->latitude,
+				'name' =>  $site->name, 
+				'url' =>  $site->url, 
+				'image' =>  $site->image, 
+				'contact' =>  $site->contact, 
+				'openmrs_id' =>  $site->openmrs_id, 
+				'patients' =>  $site->patients, 
+				'encounters' =>  $site->encounters, 
+				'observations' =>  $site->observations, 
+				'notes' =>  $site->notes, 
+				'email' => $site->email,
+				'data' =>  $site->data, 
+				'atlas_version' => $site->atlas_version,
+				'date_created' => $site->date_created));
+
+			unset($param['openmrs_id']);
+			unset($param['date_created']);
+			DB::table('atlas')->where('id', '=', $site->id)->update($param);
 			Log::debug("Updated ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
 		} else {
 			 // new implementation
-			$query = $dbh->prepare(
-<<<EOL
-INSERT INTO atlas (
-	id, latitude, longitude, name, url, type, image, contact, email,
-	 notes, data, date_created, atlas_version, openmrs_id
-	) VALUES (
-:id, :latitude, :longitude, :name, :url, :type, :image, :contact, :email,
- :notes, :data, current_timestamp, :atlas_version, :openmrs_id)
-EOL
-			);
-			$query->execute($param);
+			DB::table('atlas')->insert($param);
 			Log::debug("Created ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
 		}
-		$principal = 'openmrs_id:' . $user->uid;
-		$auth = DB::table('auth')->where('atlas_id', '=', $id)->where('principal','=', 
+
+		$principal = 'openmrs_id:' . $user->uid; 
+		$auth = DB::table('auth')->where('atlas_id', '=', $param['id'])->where('principal','=', 
 				$principal)->first();
 			if ($auth == NULL) {
-				DB::table('auth')->insert(array('atlas_id' => $id, 'principal' => 
+				DB::table('auth')->insert(array('atlas_id' => $param['id'], 'principal' => 
 					$principal, 'token' => $user->uid));
 				Log::debug("Created auth");
 			} else {
-				DB::table('auth')->where('id', $auth->id)->update(array('atlas_id' => $id, 'principal' => 
+				DB::table('auth')->where('id', $auth->id)->update(array('atlas_id' => $param['id'], 'principal' => 
 					$principal, 'token' => $user->uid, 'privileges' => ALL));
 				Log::debug("Updated auth: " . $auth->id);
 			}
 
-		return $id;
+		return $param['id'];
 	}
 
 	public function pingAtlasDelete() {
