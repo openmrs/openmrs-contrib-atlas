@@ -164,7 +164,7 @@ function createEditInfoWindow(site, marker) {
   google.maps.event.addListener(infowindow, 'closeclick', function() {
     sites[site.id].editBubbleOpen = false;
   });
-  if ((site.uid != null && site.uid == currentUser) || auth_site.indexOf(site.token) != -1) { 
+  if ((site.uid == currentUser) || auth_site.indexOf(site.token) != -1) { 
     $("#map_canvas").on('click', "#undo", function(e){
       e.preventDefault();
       var id = $(this).attr("value");
