@@ -32,7 +32,6 @@ SELECT
 	observations,
 	contact,
 	email,
-	openmrs_id as uid,
 	notes,
 	data,
 	atlas_version,
@@ -51,10 +50,18 @@ EOL
 		$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
 		if (!$this->validateResult($result))
 		  exit;
+		
+		if (Session::has(user)) {
+			$user = Session::get(user);
+			Log::info('User get data: ' . $user->uid);
+			$privileges = DB::table('auth')->where('token','=', $user->uid)->lists('atlas_id');
+		} else {
+			$privileges = array('visitor');
+		}
 
 		foreach ($result as $site) {
-			if ($site['uid'] == '') unset($site['token']);
-			unset($site['uid']);
+			if (!in_array($site['token'], $privileges))
+				unset($site['token']);
 		    $major = 0;
 		    $minor = 0;
 		    $atlasVersion = json_decode($site['atlas_version']);

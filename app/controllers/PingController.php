@@ -189,7 +189,7 @@ UPDATE atlas SET
 	email = :email,
 	notes = :notes,
 	data = :data,
-	date_changed = CURRENT_TIMESTAMP,
+	date_changed = CURRENT_TIMESTAMP
 WHERE id = :id;
 EOL
 			);
