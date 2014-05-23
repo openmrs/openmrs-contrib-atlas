@@ -58,7 +58,10 @@ setTimeout('initialize()', 500);
   <div class="atlas-container control logged" id ="login">
       <div class="dropDownControl" id="user"><span class="glyphicon glyphicon-user"></span> {{ $user->name }}</div>
       <div class = "dropDownOptionsDiv" id="logout">
+      <div class = "dropDownItemDiv" id="locateMe"><img src="images/blue-dot.png">Locate Me</div>
+      @if (strlen($auth_site) > 5)
       <div class = "dropDownItemDiv" id="editSite"><img src="images/blue-dot.png">Edit my site</div>
+      @endif
         <div class = "dropDownItemDiv" id="newSite"><img src="images/blue-dot.png">Add new site</div>
         <div class = "dropDownItemDiv" id="logout"><span class="glyphicon glyphicon-log-out"></span> {{ link_to_route('logout', 'Logout' )}}</div>
           <div class="separatorDiv"></div>        

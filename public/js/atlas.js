@@ -313,6 +313,10 @@ function colorForSite(site) {
         types['Evaluation'] = 1;
         image.url = icons['Evaluation'].icon;
         break;
+      case 'Other':
+        types['Other'] = 1;
+        image.url = icons['Other'].icon;
+        break;
     }
   }
   if ((site.uid == currentUser || auth_site.indexOf(site.token) != -1) && legendGroups === 2)

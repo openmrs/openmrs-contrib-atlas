@@ -5,15 +5,21 @@ function initLoginButton() {
   $('#login').mouseleave(function(){
     $('#logout').css('display', 'none');
   });
-  $('#editSite, #newSite').click(function(){
+  $('#editSite, #newSite, #locateMe').click(function(){
     $('#legendSelected').html(divSites); 
     $('#legend1').html(divTypes); 
     $('#legend2').html(divVersions); 
     legendGroups = 2;
     initLegend();
     repaintMarkers();
-    if ($(this).attr("id") == "editSite")
+    if ($(this).attr("id") == "locateMe")
       editMarker();
+    if ($(this).attr("id") == "editSite") {
+      getMarkerPosition(function (result) {
+        map.setCenter(result);
+        map.setZoom(10);
+      });
+    }
     if ($(this).attr("id") == "newSite")
       var marker = createSite();
   });
@@ -72,6 +78,14 @@ function handle_errors(error) {
 
 function editMarker()  {
   getGeolocation();
+}
+
+function getMarkerPosition(callback)  {
+  for(i = 1; i < sites.length; i++) {
+    if (sites[i].siteData.token == auth_site[0])
+      callback(sites[i].marker.getPosition());
+  }
+  return null;
 }
 
 function createSite() {
@@ -200,7 +214,6 @@ function initEditListener() {
       site.notes = notes;
       site.image = image;
       site.type = type;
-      site.uid = currentUser;
       site.longitude = pos.lng();
       site.latitude = pos.lat();
       sites[id].siteData = site;
