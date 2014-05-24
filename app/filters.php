@@ -125,13 +125,13 @@ Route::filter('validateAtlasJson', function()
 	$json = json_decode(Request::getContent(), true);
 	if ($json == NULL) App::abort(400, 'Missing data');
 	if (!is_array($json)) App::abort(400, 'Unable to parse data');
-	if (!array_key_exists('token', $json)) App::abort(400, 'Missing token');
+	if (!array_key_exists('uuid', $json)) App::abort(400, 'Missing uuid');
 	if (!array_key_exists('longitude', $json)) App::abort(400, 'Missing longitude');
 	if (!array_key_exists('latitude', $json)) App::abort(400, 'Missing latitude');
 	if (!array_key_exists('name', $json)) App::abort(400, 'Missing name');
 	if (!Session::has(user))
 		App::abort(403, 'Unauthorized Action - Not logged');
-	$id = $json['token'];
+	$id = $json['uuid'];
 	$user = Session::get(user);
 	$token = $user->uid;
 	$exist = DB::table('atlas')->where('id','=', $id)->first();
@@ -140,6 +140,7 @@ Route::filter('validateAtlasJson', function()
 		->where('privileges', '=', 'ALL')->first();
 		if ($privileges == NULL)
 			App::abort(403, 'Unauthorized Action - Privileges missing');
+		Log::debug("Update authorized : " . $privileges->principal . "/" . $privileges->atlas_id);
 	}
 });
 

@@ -18,7 +18,7 @@ class DataController extends BaseController {
 		$db_password = getenv('DB_PASSWORD');
 		$callback = Input::get('callback');
 		$sites = DB::table('atlas')
-                     ->select(DB::raw('id as token,  latitude,
+                     ->select(DB::raw('id as uuid,  latitude,
                      	longitude, name, url, type, image, patients, encounters, observations,
                      	contact,email,notes,data,atlas_version,
                      	CASE WHEN date_changed IS NULL THEN "" ELSE date_changed END as date_changed,
@@ -39,8 +39,8 @@ class DataController extends BaseController {
 			$id++;
 			$site = (array)$site;
 			$site['id'] = $id;
-			if (!in_array($site['token'], $privileges))
-				unset($site['token']);
+			if (!in_array($site['uuid'], $privileges))
+				unset($site['uuid']);
 		    $major = 0;
 		    $minor = 0;
 		    $atlasVersion = json_decode($site['atlas_version']);

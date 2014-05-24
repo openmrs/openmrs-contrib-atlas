@@ -143,11 +143,12 @@ EOL
 		$dbh = new PDO($db_dsn, $db_username, $db_password);
 		$this->createTable();
 		$user = Session::get(user);
+		$date = new \DateTime;
 
 		Log::debug("DATA received: " . Request::getContent());
 		$json = json_decode(Request::getContent(), true);
-		$date = new \DateTime;
-		$id['id'] = ($json['token'] != '') ? $json['token'] : Uuid::uuid4()->toString();
+		$id['id'] = ($json['uuid'] != '') ? $json['uuid'] : Uuid::uuid4()->toString();
+
 		$param = array(
 			'id' => $id['id'],
 			'latitude' => floatval($json['latitude']),
@@ -164,6 +165,10 @@ EOL
 			'date_created' => $date,
 			'openmrs_id' => $user->uid);
 
+		$privileges = DB::table('auth')->where('token','=', $user->uid)->where('atlas_id','=', $param['id'])
+		->where('privileges', '=', 'ALL')->first();
+		Log::debug("Privileges: " . $privileges->principal . "/" . $privileges->privileges);
+
 		$site = DB::table('atlas')->where('id','=', $param['id'])->first();
 		if ($site != null) {
 			DB::table('archive')->insert(array(
@@ -176,7 +181,7 @@ EOL
 				'url' =>  $site->url, 
 				'image' =>  $site->image, 
 				'contact' =>  $site->contact, 
-				'openmrs_id' =>  $site->openmrs_id, 
+				'changed_by' =>$privileges->principal, 
 				'patients' =>  $site->patients, 
 				'encounters' =>  $site->encounters, 
 				'observations' =>  $site->observations, 
@@ -214,9 +219,37 @@ EOL
 
 	public function pingAtlasDelete() {
 		$id = Input::get('id');
-		DB::table('auth')->where('atlas_id', '=', $id)->delete();
-		DB::table('atlas')->where('id', '=', $id)->delete();
-		Log::debug("Deleted marker: " . $id);
+		$user = Session::get(user);
+		$date = new \DateTime;
+		$site = DB::table('atlas')->where('id','=', $id)->first();
+		$privileges = DB::table('auth')->where('token','=', $user->uid)->where('atlas_id','=', $id)
+		->where('privileges', '=', 'ALL')->first();
+		Log::debug("Privileges: " . $privileges->principal . "/" . $privileges->privileges);
+
+		if ($site != null) {
+			DB::table('archive')->insert(array(
+				'archive_date' => $date, 
+				'id' => $site->id, 
+				'type' => $site->type,
+				'longitude' =>  $site->longitude, 
+				'latitude' =>  $site->latitude,
+				'name' =>  $site->name, 
+				'url' =>  $site->url, 
+				'image' =>  $site->image, 
+				'contact' =>  $site->contact, 
+				'changed_by' =>  $privileges->principal, 
+				'patients' =>  $site->patients, 
+				'encounters' =>  $site->encounters, 
+				'observations' =>  $site->observations, 
+				'notes' =>  $site->notes, 
+				'email' => $site->email,
+				'data' =>  $site->data, 
+				'atlas_version' => $site->atlas_version,
+				'date_created' => $site->date_created));
+			DB::table('auth')->where('atlas_id', '=', $id)->delete();
+			DB::table('atlas')->where('id', '=', $id)->delete();
+			Log::debug("Deleted marker: " . $id);
+		}
 	}
 
 	public function createTable() 
