@@ -128,7 +128,7 @@ function newSite(myPosition) {
     uuid: '',
     contact: userName,
     uid: currentUser,
-    name: 'New Site',
+    name: userName + ' Site',
     email: userEmail,
     notes: '',
     url: '',

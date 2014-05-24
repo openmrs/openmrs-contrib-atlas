@@ -206,14 +206,9 @@ EOL
 				$principal)->first();
 			if ($auth == NULL) {
 				DB::table('auth')->insert(array('atlas_id' => $param['id'], 'principal' => 
-					$principal, 'token' => $user->uid));
+					$principal, 'token' => $user->uid, 'privileges' => 'ALL'));
 				Log::debug("Created auth");
-			} else {
-				DB::table('auth')->where('id', $auth->id)->update(array('atlas_id' => $param['id'], 'principal' => 
-					$principal, 'token' => $user->uid, 'privileges' => ALL));
-				Log::debug("Updated auth: " . $auth->id);
 			}
-
 		return $param['id'];
 	}
 
