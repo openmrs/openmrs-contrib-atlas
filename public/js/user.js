@@ -13,11 +13,12 @@ function initLoginButton() {
     initLegend();
     repaintMarkers();
     if ($(this).attr("id") == "locateMe")
-      editMarker();
+      locateMe();
     if ($(this).attr("id") == "editSite") {
-      getMarkerPosition(function (result) {
+      getMarkerPosition(nextSite, function (result) {
         map.setCenter(result);
         map.setZoom(8);
+        nextSite = (nextSite < auth_site.length - 1) ? nextSite+1 : 0;
       });
     }
     if ($(this).attr("id") == "newSite")
@@ -76,14 +77,15 @@ function handle_errors(error) {
   }
 }
 
-function editMarker()  {
+function locateMe()  {
   getGeolocation();
 }
 
-function getMarkerPosition(callback)  {
+function getMarkerPosition(nextSite, callback)  {
   for(i = 1; i < sites.length; i++) {
-    if (sites[i].siteData.uuid == auth_site[0])
+    if (sites[i].siteData.uuid == auth_site[nextSite]){
       callback(sites[i].marker.getPosition());
+    }
   }
   return null;
 }

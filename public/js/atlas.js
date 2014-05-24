@@ -74,7 +74,7 @@ function FadeControl(controlDiv, map) {
 }
 
 function closeBubbles() {
-  for (key in sites) {
+  for (var key in sites) {
     if (sites[key].bubbleOpen) {
       sites[key].infowindow.close();
       sites[key].bubbleOpen = false;
@@ -277,7 +277,7 @@ function Icons(){
 function colorForSite(site) {
   var icons = Icons();
   var image = {
-      url: icons['Other'].icon,
+      url: icons.Other.icon,
       scaledSize: new google.maps.Size(32, 32)
   };
   if (legendGroups === 1) {
@@ -292,34 +292,34 @@ function colorForSite(site) {
         image.url = icons['3'].icon;
         break;
       case null:
-        image.url = icons['Unknown'].icon;
+        image.url = icons.Unknown.icon;
         break;
      }  
   } else if (legendGroups === 0){
     switch (site.type) {
       case 'Research':
-       types['Research'] = 1;
-       image.url = icons['Research'].icon;
+       types.Research = 1;
+       image.url = icons.Research.icon;
        break;
       case 'Clinical':
-        types['Clinical'] = 1;
-        image.url = icons['Clinical'].icon;
+        types.Clinical = 1;
+        image.url = icons.Clinical.icon;
         break;
       case 'Development':
-        types['Development'] = 1;
-        image.url = icons['Development'].icon;
+        types.Development = 1;
+        image.url = icons.Development.icon;
         break;
       case 'Evaluation':
-        types['Evaluation'] = 1;
-        image.url = icons['Evaluation'].icon;
+        types.Evaluation = 1;
+        image.url = icons.Evaluation.icon;
         break;
       case 'Other':
-        types['Other'] = 1;
-        image.url = icons['Other'].icon;
+        types.Other = 1;
+        image.url = icons.Other.icon;
         break;
     }
   }
-  if ((site.uid == currentUser || auth_site.indexOf(site.uuid) != -1) && legendGroups === 2)
+  if ((site.uid === currentUser || auth_site.indexOf(site.uuid) !== -1) && legendGroups === 2)
       image.url = 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png';
   return image;
 }
@@ -343,7 +343,7 @@ function loadSites(json) {
     var marker = createMarker(site, fadeGroup, bounds);
     var editwindow = null;
     var infowindow = createInfoWindow(site, marker);
-    if ((site.uid != '' && site.uid == currentUser) || auth_site.indexOf(site.uuid) != -1)
+    if ((site.uid !== '' && site.uid === currentUser) || auth_site.indexOf(site.uuid) !== -1)
       editwindow = createEditInfoWindow(site, marker);
     initLegend();
     if (site.version)
@@ -354,7 +354,7 @@ function loadSites(json) {
 }
 
 function repaintMarkers() {
-  for (key in sites) {
+  for (var key in sites) {
     var site = sites[key];
     var imageIndex = indexForFadeGroup(site.fadeGroup);
     if (shouldBeVisible(site.fadeGroup)) {
@@ -423,8 +423,8 @@ function indexForFadeGroup(fadeGroup) {
 }
 
 function safeUrl(url) {
-  if (url != null) {
-    if (url.indexOf('http://') == 0 || url.indexOf('https://') == 0)
+  if (url !== null) {
+    if (url.indexOf('http://') === 0 || url.indexOf('https://') === 0)
       return url;
     return 'http://' + url;
   }
@@ -432,7 +432,7 @@ function safeUrl(url) {
 }
 
 function displayUrl(url) {
-  if (url == null)
+  if (url === null)
     return url;
   var displayUrl = url.replace(/^https?:\/\//i, '');
   if (displayUrl.length > 50)
@@ -528,7 +528,7 @@ function createInfoWindow(site, marker) {
       }
     }
   });
-  if ((site.uid == currentUser) || auth_site.indexOf(site.uuid) != -1) {
+  if ((site.uid === currentUser) || auth_site.indexOf(site.uuid) !== -1) {
     $("#map_canvas").on('click', "#edit", function(e){
       e.preventDefault();
       var id = $(this).attr("value");
