@@ -17,7 +17,7 @@ function initLoginButton() {
     if ($(this).attr("id") == "editSite") {
       getMarkerPosition(function (result) {
         map.setCenter(result);
-        map.setZoom(10);
+        map.setZoom(8);
       });
     }
     if ($(this).attr("id") == "newSite")
@@ -25,7 +25,7 @@ function initLoginButton() {
   });
 }
 $(function () {
-  initEditListener();
+  eventSaveMarker();
   $("#map_canvas").on('click', "#delete", function(e){
     e.preventDefault();
     var id = $(this).attr("value");
@@ -82,7 +82,7 @@ function editMarker()  {
 
 function getMarkerPosition(callback)  {
   for(i = 1; i < sites.length; i++) {
-    if (sites[i].siteData.token == auth_site[0])
+    if (sites[i].siteData.uuid == auth_site[0])
       callback(sites[i].marker.getPosition());
   }
   return null;
@@ -125,10 +125,10 @@ function getCurrentLatLng() {
 function newSite(myPosition) {
   var site = {
     id: sites.length,
-    token: '',
+    uuid: '',
     contact: userName,
     uid: currentUser,
-    name: 'New Site',
+    name: userName + ' Site',
     email: userEmail,
     notes: '',
     url: '',
@@ -143,7 +143,7 @@ function newSite(myPosition) {
 }
 
 function deleteMarker(site) {
-  var deleted = sites[site].siteData.token;
+  var deleted = sites[site].siteData.uuid;
   if  (deleted != '' && deleted != null) {
     $.ajax({
       url: 'ping.php/atlas?id='+deleted,
@@ -152,10 +152,6 @@ function deleteMarker(site) {
     })
     .done(function(response) {
       sites[site].marker.setMap(null);
-      var i = sites.indexOf(site);
-      if(i != -1) {
-        sites.splice(i, 1);
-      }
     })
     .fail(function(jqXHR, textStatus, errorThrown) {
       bootbox.alert( "Error deleting your marker - Please try again ! - " + jqXHR.statusText );
@@ -163,11 +159,17 @@ function deleteMarker(site) {
     });
   } else {
     sites[site].marker.setMap(null);
-      var i = sites.indexOf(site);
-      if(i != -1) {
-        sites.splice(i, 1);
-      }
   }
+  var i = auth_site.indexOf(sites[site].siteData.uuid);
+  if(i != -1) {
+    auth_site.splice(i, 1);
+  }
+  var i = sites.indexOf(site);
+  if(i != -1) {
+    sites.splice(i, 1);
+  }
+  if (auth_site.length == 0)
+    $('#editSite').attr('hidden', true);
 }
 
 function createEditInfoWindow(site, marker) {
@@ -178,7 +180,7 @@ function createEditInfoWindow(site, marker) {
   google.maps.event.addListener(infowindow, 'closeclick', function() {
     sites[site.id].editBubbleOpen = false;
   });
-  if ((site.uid == currentUser) || auth_site.indexOf(site.token) != -1) { 
+  if ((site.uid == currentUser) || auth_site.indexOf(site.uuid) != -1) { 
     $("#map_canvas").on('click', "#undo", function(e){
       e.preventDefault();
       var id = $(this).attr("value");
@@ -191,7 +193,7 @@ function createEditInfoWindow(site, marker) {
   return infowindow;
 } 
 
-function initEditListener() {
+function eventSaveMarker() {
    $('#map_canvas').on('submit', 'form', (function(e) {
     e.preventDefault();
     var id = $('#site').val();
@@ -223,7 +225,6 @@ function initEditListener() {
       sites[id].editBubbleOpen = false;
       sites[id].marker.setDraggable(false);
       var json = JSON.stringify(site);
-      //alert(json);
       $.ajax({
         url: 'ping.php/atlas',
         type: 'POST',
@@ -231,8 +232,10 @@ function initEditListener() {
         dataType: 'text',
       })
       .done(function(response) {
-        site.token = response;
+        site.uuid = response;
         auth_site.push(response);
+        if (auth_site.length > 0)
+          $('#editSite').attr('hidden', false);
         //bootbox.alert('Marker saved');
       })
       .fail(function(jqXHR, textStatus, errorThrown) {

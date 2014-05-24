@@ -37,8 +37,8 @@ function clickLegend(id){
       legendGroups = 0;
       break;
   }
-  initLegend();
   repaintMarkers();
+  initLegend();
 }
 
 function showId(id) {
@@ -319,7 +319,7 @@ function colorForSite(site) {
         break;
     }
   }
-  if ((site.uid == currentUser || auth_site.indexOf(site.token) != -1) && legendGroups === 2)
+  if ((site.uid == currentUser || auth_site.indexOf(site.uuid) != -1) && legendGroups === 2)
       image.url = 'http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png';
   return image;
 }
@@ -343,7 +343,7 @@ function loadSites(json) {
     var marker = createMarker(site, fadeGroup, bounds);
     var editwindow = null;
     var infowindow = createInfoWindow(site, marker);
-    if ((site.uid != '' && site.uid == currentUser) || auth_site.indexOf(site.token) != -1)
+    if ((site.uid != '' && site.uid == currentUser) || auth_site.indexOf(site.uuid) != -1)
       editwindow = createEditInfoWindow(site, marker);
     initLegend();
     if (site.version)
@@ -517,15 +517,18 @@ function createInfoWindow(site, marker) {
       closeBubbles();
       infowindow.open(map,marker);
       sites[site.id].bubbleOpen = true;
-      if ((site.uid == currentUser) || auth_site.indexOf(site.token) != -1) { 
+      if ((site.uid == currentUser) || auth_site.indexOf(site.uuid) != -1) { 
         $('.gm-style-iw').parent().append('<div id="edit" value="'+site.id+'" title ="Edit site" class="control" style="position: absolute;overflow:none; right:12px;bottom:10px; color:#3F3F3F"><i class="fa fa-lg fa-pencil" style="color:rgba(171, 166, 166, 1)"></i></div>');
         $('.gm-style-iw').parent().append('<div id="delete" value="'+site.id+'" title ="Delete site" class="control" style="position: absolute;overflow:none; right:12px;bottom:25px; color:#3F3F3F"><i class="fa fa-lg fa-trash-o" style="color:rgba(171, 166, 166, 1)"></i></div>');
       } else {
-        $('.gm-style-iw').parent().append('<div id="lock" style="position: absolute;overflow:none; right:13px;bottom:10px; color:#3F3F3F"><i title="Claim ownership using Helpesk"  class="fa fa-lg fa-lock" style="color:rgba(171, 166, 166, 1)"></i></div>');
+        if (currentUser !== 'visitor')
+          $('.gm-style-iw').parent().append('<div id="lock" style="position: absolute;overflow:none; right:13px;bottom:10px; color:#3F3F3F"><i title="Claim ownership using Helpesk"  class="fa fa-lg fa-lock" style="color:rgba(171, 166, 166, 1)"></i></div>');
+        else
+          $('.gm-style-iw').parent().append('<div id="lock" style="position: absolute;overflow:none; right:13px;bottom:10px; color:#3F3F3F"><i class="fa fa-lg fa-lock" style="color:rgba(171, 166, 166, 1)"></i></div>');
       }
     }
   });
-  if ((site.uid == currentUser) || auth_site.indexOf(site.token) != -1) {
+  if ((site.uid == currentUser) || auth_site.indexOf(site.uuid) != -1) {
     $("#map_canvas").on('click', "#edit", function(e){
       e.preventDefault();
       var id = $(this).attr("value");
