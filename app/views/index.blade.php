@@ -24,6 +24,7 @@ else
 var currentUser;
 var userEmail;
 var userName;
+var nextSite = 0;
 var map;
 var sites = [];
 var types = [];

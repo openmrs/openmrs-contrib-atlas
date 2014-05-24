@@ -13,7 +13,7 @@ class ChangeColumnSize extends Migration {
 	public function up()
 	{
 		DB::statement('ALTER TABLE auth MODIFY COLUMN token VARCHAR(1024)');
-		DB::statement('ALTER TABLE auth MODIFY COLUMN privileges VARCHAR(1024)');
+		DB::statement('ALTER TABLE auth MODIFY COLUMN privileges VARCHAR(1024) DEFAULT "ALL"');
 		DB::statement('ALTER TABLE archive MODIFY COLUMN changed_by VARCHAR(1024)');
 	}
 
