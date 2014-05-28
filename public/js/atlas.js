@@ -175,6 +175,8 @@ function initialize() {
   });
   var login = document.getElementById("login");
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(login);
+  var screenshot = document.getElementById("screenshot");
+  map.controls[google.maps.ControlPosition.TOP_RIGHT].push(screenshot);
   var markerGroups = document.getElementById("marker-groups");
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(markerGroups);
 

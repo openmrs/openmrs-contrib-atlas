@@ -55,6 +55,8 @@ setTimeout('initialize()', 500);
   <div id="map_title"><img src="images/OpenMRS-logo.png" /></div>
   <div id="map_canvas" style="width:100%; height:100%"></div>
   <div id="legend" class="control"></div>
+  <div class="atlas-container loginControl dropDownControl control" title="Click to take a screenshot" id ="screenshot">
+  <span class="glyphicon glyphicon-camera"></span> Capture </div>
   @if (Session::has(user))
   <div class="atlas-container control logged" id ="login">
       <div class="dropDownControl" id="user"><span class="glyphicon glyphicon-user"></span> {{ $user->name }}</div>
