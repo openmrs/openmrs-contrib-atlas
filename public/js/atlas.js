@@ -112,12 +112,16 @@ function initVersion() {
 }
 
 function initialize() {
-  var myOptions = {
-    zoom: 4,
-    minZoom: 2,
-    mapTypeId: google.maps.MapTypeId.ROADMAP
-  };
-  map = new google.maps.Map(document.getElementById("map_canvas"), myOptions);
+  $("#map_canvas").gmap3({
+    map:{
+      options:{
+        zoom: 4,
+        minZoom: 2,
+        mapTypeId: google.maps.MapTypeId.ROADMAP
+      },
+    }
+  });
+  map = $("#map_canvas").gmap3('get');
   images[0] = new google.maps.MarkerImage("atlas_sprite.png",
     // This marker is 20 pixels wide by 32 pixels tall.
     new google.maps.Size(20, 34),
@@ -175,6 +179,8 @@ function initialize() {
   });
   var login = document.getElementById("login");
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(login);
+  var screenshot = document.getElementById("screenshot");
+  map.controls[google.maps.ControlPosition.TOP_RIGHT].push(screenshot);
   var markerGroups = document.getElementById("marker-groups");
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(markerGroups);
 

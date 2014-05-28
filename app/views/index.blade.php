@@ -11,12 +11,17 @@
 <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+<script src="//cdn.jsdelivr.net/gmap3/5.1.1/gmap3.min.js"></script>
 <script type="text/javascript" src="js/user.js"></script>
 <script type="text/javascript" src="js/atlas.js"></script>
+<script type="text/javascript" src="js/tools.js"></script>
 <script type="text/javascript" src="js/yqlgeo.js"></script>
 <script type="text/javascript" src="js/bootbox.js"></script>
 <script type="text/javascript">
-var auth = JSON.stringify({{ $auth_site }});
+var auth = null;
+@if ( strlen($auth_site) > 5)
+  auth = JSON.stringify({{ $auth_site }});
+@endif
 if (auth != null) 
   var auth_site = JSON.parse(auth);
 else
@@ -55,6 +60,8 @@ setTimeout('initialize()', 500);
   <div id="map_title"><img src="images/OpenMRS-logo.png" /></div>
   <div id="map_canvas" style="width:100%; height:100%"></div>
   <div id="legend" class="control"></div>
+  <div class="atlas-container loginControl dropDownControl control" title="Click to take a screenshot" id ="screenshot">
+  <span class="glyphicon glyphicon-camera"></span> Capture </div>
   @if (Session::has(user))
   <div class="atlas-container control logged" id ="login">
       <div class="dropDownControl" id="user"><span class="glyphicon glyphicon-user"></span> {{ $user->name }}</div>

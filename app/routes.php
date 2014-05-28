@@ -64,3 +64,7 @@ Route::get('login', array('as' => 'login', function()
     $idServer = getenv('ID_HOST');
     return Redirect::to('https://'.$idServer.'/authenticate/atlas');
 }));
+
+Route::get('capture', array(
+	'as' => 'capture',
+	'uses' => 'AtlasController@takeCapture'));

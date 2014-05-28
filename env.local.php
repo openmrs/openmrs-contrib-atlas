@@ -26,6 +26,8 @@ return array(
     /* API Key for ID Auth */
     'API_KEY' => '1234567890abcdef',
     'SITE_KEY' => 'localhost',
-    'ID_HOST' => 'localhost:3000'
+    'ID_HOST' => 'localhost:3000',
+
+    'PHANTOM_PATH' => '/usr/bin/phantomjs'
     
 );

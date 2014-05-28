@@ -275,7 +275,7 @@ span.site-version {
         width: 10px;
         height: 15px;
 }
-#login a {
+.control a {
         font-family: Arial, sans-serif;
         -webkit-user-select: none;
         font-size: 11px;
@@ -283,7 +283,7 @@ span.site-version {
         text-decoration: none;
         color: black;
 }
-#login a:hover {
+.control a:hover {
         font-family: Arial, sans-serif;
         -webkit-user-select: none;
         font-size: 11px;
@@ -292,7 +292,7 @@ span.site-version {
         color: black;
 }
 
-#login a:visited. {
+.control a:visited. {
         font-family: Arial, sans-serif;
         -webkit-user-select: none;
         font-size: 11px;
