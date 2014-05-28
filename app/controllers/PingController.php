@@ -145,7 +145,7 @@ class PingController extends BaseController {
 		->where('privileges', '=', 'ALL')->first();
 
 		if ($user->role == 'ADMIN' && $privileges == NULL) {
-			$privilege = new Privileges(array('token' => $user->uid, 
+			$privileges = new Privileges(array('token' => $user->uid, 
 	  				'principal' => 'admin:' . $user->uid,
 	  				'privileges' => 'ADMIN'));
 		}
@@ -173,8 +173,10 @@ class PingController extends BaseController {
 				'atlas_version' => $site->atlas_version,
 				'date_created' => $site->date_created,
 				'created_by' => $site->created_by));
-
+			
+			unset($param['created_by']);
 			unset($param['date_created']);
+
 			DB::table('atlas')->where('id', '=', $site->id)->update($param);
 			Log::debug("Updated ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
 		} else {
@@ -204,7 +206,7 @@ class PingController extends BaseController {
 		->where('privileges', '=', 'ALL')->first();
 
 		if ($user->role == 'ADMIN' && $privileges == NULL) {
-			$privilege = new Privileges(array('token' => $user->uid, 
+			$privileges = new Privileges(array('token' => $user->uid, 
 	  				'principal' => 'admin:' . $user->uid,
 	  				'privileges' => 'ADMIN'));
 		}
