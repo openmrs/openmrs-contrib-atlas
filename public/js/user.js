@@ -178,15 +178,17 @@ function deleteMarker(site) {
 function createEditInfoWindow(site, marker) {
   var html = contentEditwindow(site);
   var infowindow = new google.maps.InfoWindow({
-    content: html
+    content: html,
+    maxWidth: 200
   });
   google.maps.event.addListener(infowindow, "closeclick", function() {
     sites[site.id].editBubbleOpen = false;
   });
-  if ((site.uid == currentUser) || auth_site.indexOf(site.uuid) != -1) { 
+  if ((site.uid == currentUser) || (site.uuid) !== null) { 
     $("#map_canvas").on("click", "#undo", function(e){
       e.preventDefault();
       var id = $(this).attr("value");
+      var site = sites[id].siteData;
       sites[id].marker.setDraggable(false);
       sites[id].marker.setPosition(new google.maps.LatLng(site.latitude, site.longitude));
       sites[id].editBubbleOpen = false;
@@ -236,7 +238,8 @@ function eventSaveMarker() {
       })
       .done(function(response) {
         site.uuid = response;
-        auth_site.push(response);
+        if (auth_site.indexOf(response) === -1)
+          auth_site.push(response);
         if (auth_site.length > 0)
           $("#editSite").attr("hidden", false);
         //bootbox.alert("Marker saved");
@@ -285,7 +288,7 @@ var html = "<div class='site-bubble'>";
 }
 
 function contentEditwindow(site) {
-  var html = "<div class='site-bubble bubble-form'>";
+  var html = "<div class='site-bubble bubble-form' style='width:200px'>";
   html += "<form method='post' id='"+ site.id +"'>";
   html += "<div class='form-group'><input type='text' required='true' placeholder='Site Name' title='Site Name' class='form-control input-sm' value='"+ site.name + "' id='name' name='name'></div>";
   html += "<div class='form-group'>";

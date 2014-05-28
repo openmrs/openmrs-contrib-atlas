@@ -338,12 +338,13 @@ function loadSites(json) {
   loadVersion(json);
   for(i=0; i<json.length; i++) {
     var site = json[i];
-    site.uid = "";
+    if (!site.hasOwnProperty("uuid"))
+      site.uuid = null;
     var fadeGroup = getFadeGroup(site);
     var marker = createMarker(site, fadeGroup, bounds);
     var editwindow = null;
     var infowindow = createInfoWindow(site, marker);
-    if ((site.uid !== "" && site.uid === currentUser) || auth_site.indexOf(site.uuid) !== -1)
+    if ((site.uid !== "" && site.uid === currentUser) || (auth_site.indexOf(site.uuid) !== -1) || site.uuid !== null)
       editwindow = createEditInfoWindow(site, marker);
     initLegend();
     if (site.version)
@@ -517,7 +518,7 @@ function createInfoWindow(site, marker) {
       closeBubbles();
       infowindow.open(map,marker);
       sites[site.id].bubbleOpen = true;
-      if ((site.uid == currentUser) || auth_site.indexOf(site.uuid) != -1) { 
+      if ((site.uid == currentUser) || site.uuid !== null) { 
         $(".gm-style-iw").parent().append("<div id='edit' value='"+site.id+"' title ='Edit site' class='control' style='position: absolute;overflow:none; right:12px;bottom:10px; color:#3F3F3F'><i class='fa fa-lg fa-pencil' style='color:rgba(171, 166, 166, 1)'></i></div>");
         $(".gm-style-iw").parent().append("<div id='delete' value='"+site.id+"' title ='Delete site' class='control' style='position: absolute;overflow:none; right:12px;bottom:25px; color:#3F3F3F'><i class='fa fa-lg fa-trash-o' style='color:rgba(171, 166, 166, 1)'></i></div>");
       } else {
@@ -527,10 +528,9 @@ function createInfoWindow(site, marker) {
           $(".gm-style-iw").parent().append("<div id='lock' style='position: absolute;overflow:none; right:13px;bottom:10px; color:#3F3F3F'><i class='fa fa-lg fa-lock' style='color:rgba(171, 166, 166, 1)'></i></div>");
       }
     }
-  });
-  if ((site.uid === currentUser) || auth_site.indexOf(site.uuid) !== -1) {
+      if ((site.uid === currentUser) || site.uuid !== null) {
     $("#map_canvas").on("click", "#edit", function(e){
-      e.preventDefault();
+      //e.preventDefault();
       var id = $(this).attr("value");
       infowindow.close();
       sites[id].bubbleOpen = false;
@@ -540,6 +540,8 @@ function createInfoWindow(site, marker) {
       $(".gm-style-iw").parent().append("<div id='undo' title ='Undo change' value='"+id+"' class='control' style='position: absolute;overflow:none; right:12px;bottom:10px; color:#3F3F3F'><i class='fa fa-lg fa-history' style='color:rgba(171, 166, 166, 1)'></i></div>");
       $(".gm-style-iw").parent().append("<div id='delete' title ='Delete site' value='"+id+"' class='control' style='position: absolute;overflow:none; right:12px;bottom:28px; color:#3F3F3F'><i class='fa fa-lg fa-trash-o' style='color:rgba(171, 166, 166, 1)'></i></div>");
     });
-  }
+  } 
+  });
+
   return infowindow;
 }
