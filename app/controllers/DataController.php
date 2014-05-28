@@ -39,7 +39,7 @@ class DataController extends BaseController {
 			$id++;
 			$site = (array)$site;
 			$site['id'] = $id;
-			if (!in_array($site['uuid'], $privileges))
+			if (!in_array($site['uuid'], $privileges) && $user->role != 'ADMIN')
 				unset($site['uuid']);
 		    $major = 0;
 		    $minor = 0;

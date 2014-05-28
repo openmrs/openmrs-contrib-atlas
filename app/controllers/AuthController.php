@@ -46,10 +46,15 @@ class AuthController extends BaseController {
 	  		$user = new \Illuminate\Auth\GenericUser(
 	  			array('uid' => $userToken->uid, 
 	  				'name' => $userToken->user_name,
-	  				'email' => $userToken->user_email));
+	  				'email' => $userToken->user_email,
+	  				'principal' => 'openmrs_id:' . $userToken->uid,
+	  				'role' => NULL));
+	  		$role = DB::table('admin')->where('token','=', $user->uid)->first();
+	  		if ($role != null)
+	  			$user->role = 'ADMIN';
 
 			Log::info('User stored in session: ' . $user->uid);
-
+			Log::info('User Rolen: ' . $user->role);
 	  		// Log User
 			Auth::login($user);
 			Session::put('user', $user);

@@ -139,10 +139,16 @@ class PingController extends BaseController {
 			'data' => json_encode($json['data']),
 			'atlas_version' => $json['atlasVersion'],
 			'date_created' => $date,
-			'openmrs_id' => $user->uid);
+			'created_by' => $user->principal);
 
 		$privileges = DB::table('auth')->where('token','=', $user->uid)->where('atlas_id','=', $param['id'])
 		->where('privileges', '=', 'ALL')->first();
+
+		if ($user->role == 'ADMIN' && $privileges == NULL) {
+			$privilege = new Privileges(array('token' => $user->uid, 
+	  				'principal' => 'admin:' . $user->uid,
+	  				'privileges' => 'ADMIN'));
+		}
 		Log::debug("Privileges: " . $privileges->principal . "/" . $privileges->privileges);
 
 		$site = DB::table('atlas')->where('id','=', $param['id'])->first();
@@ -165,9 +171,9 @@ class PingController extends BaseController {
 				'email' => $site->email,
 				'data' =>  $site->data, 
 				'atlas_version' => $site->atlas_version,
-				'date_created' => $site->date_created));
+				'date_created' => $site->date_created,
+				'created_by' => $site->created_by));
 
-			unset($param['openmrs_id']);
 			unset($param['date_created']);
 			DB::table('atlas')->where('id', '=', $site->id)->update($param);
 			Log::debug("Updated ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
@@ -175,16 +181,17 @@ class PingController extends BaseController {
 			 // new implementation
 			DB::table('atlas')->insert($param);
 			Log::debug("Created ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
-		}
 
-		$principal = 'openmrs_id:' . $user->uid; 
-		$auth = DB::table('auth')->where('atlas_id', '=', $param['id'])->where('principal','=', 
-				$principal)->first();
-			if ($auth == NULL) {
-				DB::table('auth')->insert(array('atlas_id' => $param['id'], 'principal' => 
-					$principal, 'token' => $user->uid, 'privileges' => 'ALL'));
-				Log::debug("Created auth");
+			$principal = 'openmrs_id:' . $user->uid; 
+			$auth = DB::table('auth')->where('atlas_id', '=', $param['id'])->where('principal','=', 
+					$principal)->first();
+				if ($auth == NULL) {
+					DB::table('auth')->insert(array('atlas_id' => $param['id'], 'principal' => 
+						$principal, 'token' => $user->uid, 'privileges' => 'ALL'));
+					Log::debug("Created auth");
+				}
 			}
+
 		return $param['id'];
 	}
 
@@ -193,8 +200,14 @@ class PingController extends BaseController {
 		$user = Session::get(user);
 		$date = new \DateTime;
 		$site = DB::table('atlas')->where('id','=', $id)->first();
-		$privileges = DB::table('auth')->where('token','=', $user->uid)->where('atlas_id','=', $id)
+		$privileges = DB::table('auth')->where('token','=', $user->uid)->where('atlas_id','=', $param['id'])
 		->where('privileges', '=', 'ALL')->first();
+
+		if ($user->role == 'ADMIN' && $privileges == NULL) {
+			$privilege = new Privileges(array('token' => $user->uid, 
+	  				'principal' => 'admin:' . $user->uid,
+	  				'privileges' => 'ADMIN'));
+		}
 		Log::debug("Privileges: " . $privileges->principal . "/" . $privileges->privileges);
 
 		if ($site != null) {
@@ -216,7 +229,8 @@ class PingController extends BaseController {
 				'email' => $site->email,
 				'data' =>  $site->data, 
 				'atlas_version' => $site->atlas_version,
-				'date_created' => $site->date_created));
+				'date_created' => $site->date_created,
+				'created_by' => $site->created_by));
 			DB::table('auth')->where('atlas_id', '=', $id)->delete();
 			DB::table('atlas')->where('id', '=', $id)->delete();
 			Log::info("Deleted ".$deleteId." from ".$_SERVER['REMOTE_ADDR']);

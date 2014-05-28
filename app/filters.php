@@ -138,7 +138,7 @@ Route::filter('validateAtlasJson', function()
 	if ($exist != null) {
 		$privileges = DB::table('auth')->where('token','=', $token)->where('atlas_id','=',$id)
 		->where('privileges', '=', 'ALL')->first();
-		if ($privileges == NULL)
+		if ($privileges == NULL && $user->role !== 'ADMIN')
 			App::abort(403, 'Unauthorized Action - Privileges missing');
 		Log::debug("Update authorized : " . $privileges->principal . "/" . $privileges->atlas_id);
 	}
@@ -155,6 +155,6 @@ Route::filter('validateAtlasDelete', function()
 	$token = $user->uid;
 	$privileges = DB::table('auth')->where('token','=', $token)->where('atlas_id','=',$id)
 	->where('privileges', '=', 'ALL')->first();
-	if ($privileges == NULL)
+	if ($privileges == NULL && $user->role !== 'ADMIN')
 		App::abort(403, 'Unauthorized Action - Priveleges missing');
 });
