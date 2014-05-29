@@ -13,10 +13,14 @@
 <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="js/user.js"></script>
 <script type="text/javascript" src="js/atlas.js"></script>
+<script type="text/javascript" src="js/tools.js"></script>
 <script type="text/javascript" src="js/yqlgeo.js"></script>
 <script type="text/javascript" src="js/bootbox.js"></script>
 <script type="text/javascript">
-var auth = JSON.stringify({{ $auth_site }});
+var auth = null;
+@if ($auth_site.length > 5)
+  auth = JSON.stringify({{ $auth_site }});
+@endif
 if (auth != null) 
   var auth_site = JSON.parse(auth);
 else
