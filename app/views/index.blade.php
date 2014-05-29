@@ -18,7 +18,7 @@
 <script type="text/javascript" src="js/bootbox.js"></script>
 <script type="text/javascript">
 var auth = null;
-@if ($auth_site.length > 5)
+@if ( strlen($auth_site) > 5)
   auth = JSON.stringify({{ $auth_site }});
 @endif
 if (auth != null) 

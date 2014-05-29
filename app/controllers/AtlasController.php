@@ -10,7 +10,12 @@ class AtlasController extends BaseController {
     {
     	$phantomjs = getenv('PHANTOM_PATH');
 		$filename = storage_path() . '/capture_' . str_random(12) . '.png';
+		$legend = Input::get('legend');
+		$zoom = Input::get('zoom');
+		$lat = Input::get('lat');
+		$lng = Input::get('lng');
 	 	Log::info('Temp file name:' . $filename);
+
 
 	 	App::finish(function($request, $response) use ($filename)
 		{
@@ -20,7 +25,8 @@ class AtlasController extends BaseController {
 			}
 		});
 		
-	 	$command = $phantomjs . ' ' . public_path() . '/js/capture.js ' . $filename . ' > '. storage_path() . '/phantomjs.log';
+	 	$command = $phantomjs . ' ' . public_path() . '/js/capture.js ' . $filename .' '. $legend . ' '
+	 	 . $zoom . ' ' . $lat . ' ' . $lng . ' > '. storage_path() . '/phantomjs.log';
 	 	Log::info('Comand:' . $command);
 		shell_exec($command);
 

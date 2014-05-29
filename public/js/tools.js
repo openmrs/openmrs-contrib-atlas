@@ -1,8 +1,11 @@
 $(function () {
   $('#screenshot').click(function () {
-    var centerLat = map.getCenter().lat();
-    var centerLng = map.getCenter().lng();
+    var lat = map.getCenter().lat();
+    var lng = map.getCenter().lng();
     var zoom = map.getZoom();
-    window.location = "capture";
+    var url = "capture?legend=" + legendGroups + "&zoom="
+     + zoom + "&lat=" + lat + "&lng=" + lng ;
+     console.log(url);
+    window.location = url ;
   });
 });
