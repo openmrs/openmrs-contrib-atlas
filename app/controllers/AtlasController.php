@@ -14,6 +14,7 @@ class AtlasController extends BaseController {
 		$zoom = Input::get('zoom');
 		$lat = Input::get('lat');
 		$lng = Input::get('lng');
+		$siteURL = getenv('SITE_URL');
 	 	Log::info('Temp file name:' . $filename);
 
 
@@ -26,7 +27,7 @@ class AtlasController extends BaseController {
 		});
 		
 	 	$command = $phantomjs . ' ' . public_path() . '/js/capture.js ' . $filename .' '. $legend . ' '
-	 	 . $zoom . ' ' . $lat . ' ' . $lng . ' > '. storage_path() . '/phantomjs.log';
+	 	 . $zoom . ' ' . $lat . ' ' . $lng . ' ' . $siteURL;
 	 	Log::info('Comand:' . $command);
 		shell_exec($command);
 

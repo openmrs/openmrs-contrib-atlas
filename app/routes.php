@@ -56,13 +56,13 @@ Route::get('logout', array('as' => 'logout', function()
     Log::info('User logged out');
     Session::flush();
     $url = urlencode(route('home'));
-    return Redirect::to('https://'.$idServer.'/disconnect?destination='. $url);
+    return Redirect::to($idServer.'/disconnect?destination='. $url);
 }));
 
 Route::get('login', array('as' => 'login', function()
 {
     $idServer = getenv('ID_HOST');
-    return Redirect::to('https://'.$idServer.'/authenticate/atlas');
+    return Redirect::to($idServer.'/authenticate/atlas');
 }));
 
 Route::get('capture', array(
