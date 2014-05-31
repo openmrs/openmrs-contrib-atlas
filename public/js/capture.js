@@ -3,9 +3,6 @@ system = require('system'),
 address, output, size, queue, legend, zoom, lng, lat;
 
 queue = [];
-address = 'http://localhost/openmrs-contrib-atlas/public/'
-output = 'maptest.png'
-selector = '#map_canvas';
 page.viewportSize = { width: 1280, height: 720 };
 
 if (system.args.length < 1 ) {
@@ -16,7 +13,8 @@ if (system.args.length < 1 ) {
     zoom = Number(system.args[3]);
     lat = Number(system.args[4]);
     lng = Number(system.args[5]);
-    console.log('Output: ' + output);
+    address = (system.args[6]);
+    console.log('Param:' + output +  "/" + legend + "/" + address);
 }
 
 page.onError = function(msg, trace) {
@@ -32,12 +30,11 @@ page.onError = function(msg, trace) {
 };
 
 page.onResourceRequested = function(req, net){
-    console.log('Request (#' + req.id + ') URL:'+ req.url);
     if (req.url ==='https://id.openmrs.org/globalnav/js/app-optimized.js')
       net.abort();
 }
 page.onResourceReceveid = function(req, net){
-    console.log("onResourceReceveid" + req.url);
+
 }
 
 page.open(address, function (status) {
@@ -50,15 +47,8 @@ page.open(address, function (status) {
             if (queue[address] !== 'done') {
                 console.log("Page loading succesfull");
                 console.log("Beautify atlas...");
-                page.evaluate(function() {
-                  if (!JSON.stringify && typeof JSON.serialize === "function") {
-                    JSON.stringify = JSON.serialize;
-                  }
-                  if (!JSON.parse && typeof JSON.deserialize === "function") {
-                    JSON.parse = JSON.deserialize;
-                  }
-                });
                 page.evaluate(function(param) {
+                    
                     var clickElement = function (el){
                         var ev = document.createEvent("MouseEvent");
                         ev.initMouseEvent(

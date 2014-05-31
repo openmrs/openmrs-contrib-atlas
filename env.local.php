@@ -1,4 +1,4 @@
-<?php
+e<?php
     /*
 	|--------------------------------------------------------------------------
 	| Config File Sample
@@ -26,8 +26,12 @@ return array(
     /* API Key for ID Auth */
     'API_KEY' => '1234567890abcdef',
     'SITE_KEY' => 'localhost',
-    'ID_HOST' => 'localhost:3000',
+    'ID_HOST' => 'http://localhost:3000',
 
-    'PHANTOM_PATH' => '/usr/bin/phantomjs'
+    /* PhantomJS bin path */
+    'PHANTOM_PATH' => '/usr/bin/phantomjs',
+
+    /* Site URL */
+    'SITE_URL' => 'http://localhost/openmrs-contrib-atlas/public/'
     
 );

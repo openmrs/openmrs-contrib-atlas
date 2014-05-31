@@ -189,7 +189,7 @@ function initialize() {
 
 function getJSON() {
   var script = document.createElement("script");
-  script.setAttribute("src", "http://localhost/openmrs-contrib-atlas/public/data.php?callback=loadSites");
+  script.setAttribute("src", siteSrc);
   script.setAttribute("id", "jsonScript");
   script.setAttribute("type", "text/javascript");
   document.documentElement.firstChild.appendChild(script);
