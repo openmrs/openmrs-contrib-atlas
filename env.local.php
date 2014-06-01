@@ -1,4 +1,4 @@
-e<?php
+<?php
     /*
 	|--------------------------------------------------------------------------
 	| Config File Sample
@@ -32,6 +32,9 @@ return array(
     'PHANTOM_PATH' => '/usr/bin/phantomjs',
 
     /* Site URL */
-    'SITE_URL' => 'http://localhost/openmrs-contrib-atlas/public/'
+    'SITE_URL' => 'http://localhost/openmrs-contrib-atlas/public/',
+    
+    /* Markers Source */
+    'SITE_SOURCE' => 'http://localhost/openmrs-contrib-atlas/public/data.php?callback=loadSites'
     
 );

@@ -39,6 +39,22 @@ curl -sS https://getcomposer.org/installer | php
 php composer.phar install
 ```
 
+### Install PhantomJS
+```sh
+
+# Download phantomJS tarbal
+wget https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-1.9.7-linux-x86_64.tar.bz2
+tar -xvf phantomjs-1.9.7-linux-x86_64.tar.bz2
+sudo cp phantomjs-1.9.7-linux-x86_64/bin/phantomjs /usr/bin/
+sudo chmod a+x /usr/bin/phantomjs
+
+# Install fonts
+sudo apt-get install fontconfig freetype
+sudo apt-get install xfonts-100dpi xfonts-75dpi xfonts-scalable xfonts-cyrillic
+sudo apt-get install ttf-mscorefonts-installer
+
+```
+
 ### Configure you envrionnement
 
 - Add writting rights to app/storage (www-data for Apache)
