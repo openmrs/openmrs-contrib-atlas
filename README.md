@@ -59,3 +59,31 @@ sudo apt-get install ttf-mscorefonts-installer
 
 - Add writting rights to app/storage (www-data for Apache)
 
+`sudo chown -R www-data:www-data app/storage`
+
+ - Rename `env.local.php` to `.env.prod.php` and edit it with your own configuration (database, site_url, phantomJS bin, openmrs id secret).
+
+ - Set correct hostame in `bootstrap/start.php` 
+```php
+$env = $app->detectEnvironment(array(
+   'local' => array('dev_host'),
+   'prod' => array('production_hostame'),
+));
+```
+### Register CronJob
+
+´´´sh
+crontab -e
+
+#Add this line:
+*/10 * * * * /usr/bin/php /var/www/openmrs-contrib-atlas/artisan screen-capture
+´´´
+
+Let's started ! 
+
+## Directory Description
+- `public/` : images, css, and js files 
+- `app/views/` : ping.php, index.php, data.php 
+- `app/controllers/` : controllers (not yet used)
+- `app/routes.php` : routing config
+

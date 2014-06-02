@@ -12,7 +12,7 @@ if (system.args.length < 1 ) {
     width = system.args[3];
     height = system.args[4];
     address = (system.args[5]);
-    console.log('Param:' + output +  "/" + legend + "/" + address);
+    console.log('Param:' + path +  "/" + legend + "/" + address);
 }
 
 page.viewportSize = { width: width, height: height };
