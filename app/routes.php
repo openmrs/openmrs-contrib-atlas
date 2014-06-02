@@ -67,4 +67,13 @@ Route::get('login', array('as' => 'login', function()
 
 Route::get('capture', array(
 	'as' => 'capture',
+	'before' => 'isAdmin',
 	'uses' => 'AtlasController@takeCapture'));
+
+Route::get('screenshot', array(
+	'as' => 'download',
+	'uses' => 'AtlasController@cronCapture'));
+
+Route::get('download', array(
+	'as' => 'cron',
+	'uses' => 'AtlasController@downloadCapture'));

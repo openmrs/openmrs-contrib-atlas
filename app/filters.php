@@ -158,3 +158,12 @@ Route::filter('validateAtlasDelete', function()
 	if ($privileges == NULL && $user->role !== 'ADMIN')
 		App::abort(403, 'Unauthorized Action - Priveleges missing');
 });
+
+Route::filter('isAdmin', function()
+{
+	if ( !Session::has(user) )
+		App::abort(403, 'Unauthorized Action - Not logged');
+	$user = Session::get(user);
+	if ($user->role !== 'ADMIN')
+		App::abort(403, 'Unauthorized Action - Priveleges missing');
+});
