@@ -47,6 +47,7 @@ var divVersions ='<img src="images/group-dot.png"><b>Versions</b>';
 $(document).ready(function() {
   initLegendChoice();
   initLoginButton();
+  initDownloadButton();
   currentUser = $('#user-id').val().trim();
   if (currentUser == '') currentUser = 'visitor';
   userName = $('#user-name').val().trim();
@@ -60,20 +61,27 @@ setTimeout('initialize()', 500);
   <div id="map_title"><img src="images/OpenMRS-logo.png" /></div>
   <div id="map_canvas" style="width:100%; height:100%"></div>
   <div id="legend" class="control"></div>
-  <div class="atlas-container loginControl dropDownControl control" title="Click to take a screenshot" id ="screenshot">
-  <span class="glyphicon glyphicon-camera"></span> Capture </div>
+  <div class="atlas-container control screen" id ="download">
+      <div class="dropDownControl control"
+        title="Click to download a screenshot" id ="down-screen">
+        <i class="fa fa-download"></i></span> Download
+      </div>
+      <div class = "dropDownOptionsDiv screen" id="screen">
+        <div class = "dropDownItemDiv screen" id="1024x768"><i class="fa fa-file-image-o"></i>1024x768</div>
+        <div class = "dropDownItemDiv screen" id="1280x1024"><i class="fa fa-file-image-o"></i>1920x1080</div>
+        <div class="separatorDiv"></div>
+      </div>
+  </div>
   @if (Session::has(user))
   <div class="atlas-container control logged" id ="login">
       <div class="dropDownControl" id="user"><span class="glyphicon glyphicon-user"></span> {{ $user->name }}</div>
       <div class = "dropDownOptionsDiv" id="logout">
-      <div class = "dropDownItemDiv" id="locateMe"><img src="images/blue-dot.png">Locate Me</div>
-      <div class = "dropDownItemDiv" id="editSite" @if(strlen($auth_site) < 5) hidden="true" @endif>
-      <img src="images/blue-dot.png">Edit my site</div>
-      
-      
+        <div class = "dropDownItemDiv" id="locateMe"><img src="images/blue-dot.png">Locate Me</div>
+        <div class = "dropDownItemDiv" id="editSite" @if(strlen($auth_site) < 5) hidden="true" @endif>
+        <img src="images/blue-dot.png">Edit my site</div>
         <div class = "dropDownItemDiv" id="newSite"><img src="images/blue-dot.png">Add new site</div>
         <div class = "dropDownItemDiv" id="logout"><span class="glyphicon glyphicon-log-out"></span> {{ link_to_route('logout', 'Logout' )}}</div>
-          <div class="separatorDiv"></div>        
+        <div class="separatorDiv"></div>        
       </div>          
   </div>
   @else
