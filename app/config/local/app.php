@@ -39,6 +39,6 @@ return array(
 	|
 	*/
 
-	'timezone' => 'Europe/Paris',
+	'timezone' => 'UTC',
 
 );

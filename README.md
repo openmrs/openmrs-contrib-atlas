@@ -70,14 +70,15 @@ $env = $app->detectEnvironment(array(
    'prod' => array('production_hostame'),
 ));
 ```
-### Register CronJob
 
-´´´sh
+### Register screen capture  cron job
+
+```sh
 crontab -e
 
-#Add this line:
+#And add this line to end of file:
 */10 * * * * /usr/bin/php /var/www/openmrs-contrib-atlas/artisan screen-capture
-´´´
+```
 
 Let's started ! 
 
