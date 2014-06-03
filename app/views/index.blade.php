@@ -94,9 +94,12 @@ setTimeout('initialize()', 500);
       <div class = "dropDownOptionsDiv" id="legendChoice">
           <div class = "dropDownItemDiv" id="legend1"></div>
           <div class = "dropDownItemDiv" id="legend2"></div>
-          <div class="separatorDiv"></div>        
       </div>          
   </div>
+   <div class = "atlas-container loginControl dropDownControl control" id="fade" title="Fade inactive sites over time.">
+    <label><input type="checkbox" id="fadeCheckbox"><b>Fade</b></label>
+   </div>
+          <div class="separatorDiv"></div>        
   <div id='atlas-hidden-latitude' style='hidden:true;'></div>
   <div id='atlas-hidden-longitude' style='hidden:true;'></div>
   <input type="hidden" id="user-id" value="{{ $user->uid }} " />

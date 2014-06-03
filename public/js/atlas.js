@@ -5,7 +5,7 @@ function initLegendChoice() {
   $("#legendSelected").html(divTypes);
   $("#legend2").html(divVersions);
   $("#legend1").html(divSites);
-
+  $("#fadeCheckbox").attr('checked', false);
   $("#legendSelected").mouseover(function(){
     $("#legendChoice").css("display", "block");
   });
@@ -16,6 +16,10 @@ function initLegendChoice() {
     var clicked = $(this).attr("id");
     clickLegend(clicked);
     $("#legendChoice").css("display", "none");
+  });
+  $("#fadeCheckbox").click(function(){
+    fadeOverTime = !fadeOverTime;
+    repaintMarkers();  
   });
 }
 function clickLegend(id){
@@ -46,34 +50,6 @@ function clickLegend(id){
 
 function showId(id) {
   prompt("Implementation ID", id);
-}
-
-function FadeControl(controlDiv, map) {
-  // Set CSS styles for the DIV containing the control
-  // Setting padding to 5 px will offset the control
-  // from the edge of the map
-  controlDiv.style.padding = "5px";
- 
-  // Set CSS for the control border
-  var controlUI = document.createElement("DIV");
-  controlUI.id = "fadeControl";
-  controlUI.title = "Fade inactive sites over time.";
-  controlDiv.appendChild(controlUI);
-
-  var checkbox = document.createElement("INPUT");
-  checkbox.type = "checkbox";
-  checkbox.id = "fadeCheckbox";
-  checkbox.onchange = function() {
-    fadeOverTime = !fadeOverTime;
-    repaintMarkers();
-  };
-  controlUI.appendChild(checkbox);
-
-  var label = document.createElement("LABEL");
-  label.id = "fadeLabel";
-  label.innerHTML = "Fade";
-  label.htmlFor = "fadeCheckbox";
-  controlUI.appendChild(label);
 }
 
 function closeBubbles() {
@@ -186,6 +162,8 @@ function initialize() {
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(download);
   var markerGroups = document.getElementById("marker-groups");
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(markerGroups);
+  var fade = document.getElementById("fade");
+  map.controls[google.maps.ControlPosition.TOP_RIGHT].push(fade);
 
   getJSON();
 }
@@ -366,11 +344,13 @@ function loadSites(json) {
 function repaintMarkers() {
   for (var key in sites) {
     var site = sites[key];
-    var imageIndex = indexForFadeGroup(site.fadeGroup);
+    var opacity = 1;
+    if (fadeOverTime) 
+      opacity = (1 - (site.fadeGroup * 0.25));
     if (shouldBeVisible(site.fadeGroup)) {
       site.marker.setIcon(colorForSite(site.siteData));
-      site.marker.setShadow(shadows[imageIndex]);
       site.marker.setVisible(true);
+      site.marker.setOpacity(opacity);
     } else {
       site.marker.setVisible(false);
     }
@@ -398,7 +378,7 @@ function createMarker(site, fadeGroup, bounds) {
 
 function dateForSite(site) {
   var dateString = site.date_changed;
-  if (!dateString)
+  if (dateString === "0000-00-00 00:00:00")
     dateString = site.date_created;
   dateString = dateString.replace(/-/g, "/");
   return new Date(dateString).getTime();

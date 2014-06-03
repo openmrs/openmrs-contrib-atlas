@@ -56,34 +56,37 @@ class CaptureCommand extends Command {
 			$siteURL = getenv('SITE_URL');
 			$path = storage_path(). '/captures';
 			for ($i = 0; $i < 3; $i++) {
-				$legend = $i;
-				$width = '1024';
-				$height = '768';
-				$size = $width . 'x' . $height;
-				$filename =  storage_path(). '/captures/atlas'. $legend . '_' . $size . '.png';
-				if (file_exists($filename))
-					unlink($filename);
+				for ($j = 0; $j < 2; $j++) {
+					$legend = $i;
+					$fade = $j;
+					$width = '1024';
+					$height = '768';
+					$size = $width . 'x' . $height;
+					$filename =  storage_path(). '/captures/atlas'. $legend . $fade .'_' . $size . '.png';
+					if (file_exists($filename))
+						unlink($filename);
 
-			 	$command = $phantomjs . ' ' . public_path() . '/js/capture-cron.js ' . $path .' '. $legend . ' '
-			 	 . $width . ' ' . $height . ' ' . $siteURL . ' > ' . storage_path(). '/phantomjs.log';
-			 	Log::info('Comand:' . $command);
-				shell_exec($command);
-				Log::info('Image created: ' . $filename);
-				$this->info('Image created: ' . $filename);
+				 	$command = $phantomjs . ' ' . public_path() . '/js/capture-cron.js ' . $path .' '. $legend . ' '
+				 	 . $width . ' ' . $height . ' ' . $siteURL . ' ' . $fade . ' > ' . storage_path(). '/phantomjs.log';
+				 	Log::info('Comand:' . $command);
+					shell_exec($command);
+					Log::info('Image created: ' . $filename);
+					$this->info('Image created: ' . $filename);
 
-				$width = '1920';
-				$height = '1080';
-				$size = $width . 'x' . $height;
-				$filename =  storage_path(). '/captures/atlas'. $legend . '_' . $size . '.png';
-				if (file_exists($filename))
-					unlink($filename);
+					$width = '1920';
+					$height = '1080';
+					$size = $width . 'x' . $height;
+					$filename =  storage_path(). '/captures/atlas'. $legend . $fade . '_' . $size . '.png';
+					if (file_exists($filename))
+						unlink($filename);
 
-			 	$command = $phantomjs . ' ' . public_path() . '/js/capture-cron.js ' . $path .' '. $legend . ' '
-			 	 . $width . ' ' . $height . ' ' . $siteURL . ' > ' . storage_path(). '/phantomjs.log';
-			 	Log::info('Comand:' . $command);
-				shell_exec($command);
-				Log::info('Image created: ' . $filename);
-				$this->info('Image created: ' . $filename);
+				 	$command = $phantomjs . ' ' . public_path() . '/js/capture-cron.js ' . $path .' '. $legend . ' '
+				 	 . $width . ' ' . $height . ' ' . $siteURL . ' ' . $fade . ' > ' . storage_path(). '/phantomjs.log';
+				 	Log::info('Comand:' . $command);
+					shell_exec($command);
+					Log::info('Image created: ' . $filename);
+					$this->info('Image created: ' . $filename);
+				}
 			}
 			Log::info('Screeshot creation succesfull');
 			$this->info('Screeshot creation succesfull');

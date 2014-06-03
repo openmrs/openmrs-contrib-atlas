@@ -46,8 +46,10 @@ class AtlasController extends BaseController {
 		$legend = Input::get('legend');
 		$size = Input::get('size');
 		$siteURL = getenv('SITE_URL');
-		
-		$requestedFile =  storage_path(). '/captures/atlas'. $legend . '_' . $size . '.png';
+		$fade = 0;
+		if (Input::get('fade') === "true")
+			$fade = 1;
+		$requestedFile =  storage_path(). '/captures/atlas'. $legend . $fade . '_' . $size . '.png';
 
     	if ( file_exists($requestedFile)) {
     		$file = 'atlas_capture' . $size . '.png';
