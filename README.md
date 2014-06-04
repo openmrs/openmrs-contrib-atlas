@@ -8,22 +8,40 @@ Altas Server 2.0 has been refactored with Laravel PHP Framework.
 
 #Installation
 ## Server requirement
-Atlas server can be deployed on Apache or Nginx server. 
+- Apache2
+- Mysql
+- PHP >= 5.4, php5-mcypt, php5-mysql
+- url rewriting and mod_rewrite enabled on apache
+- PhantomJS >= 1.9.7 (require : libicu48, fontconfig, mscorefont)
+- Composer
+
 ### Apache configuration (and Ubuntu > 13.04)
 **Mcrypt** extension and **mod-rewrite** module are required
 **mysql driver** for php may be required
 ```sh
-# Install mcrypt
+# Install mcrypt and mysql php ext (if needed)
 sudo apt-get install php5-mcrypt php5-mysql
 sudo ln -s /etc/php5/conf.d/mcrypt.ini /etc/php5/apache2/conf.d/20-mcrypt.ini
 sudo php5enmod mcrypt
-
 edit /etc/php5/apache2/php.ini and add extension=mcrypt.so
 
-# Activate mod_rewrite
+# Activate mod_rewrite (if needed)
 sudo a2enmod rewrite
 
-# Restart Apche
+# Configure Virtual Host
+# DocumentRoot to public/ folder
+# and AllowOverride All directive
+
+DocumentRoot /opt/atlas/public
+
+<Directory /opt/atlas/public/>
+   Options Indexes FollowSymLinks MultiViews
+   AllowOverride All
+   Order allow,deny
+   allow from all
+</Directory>
+
+# Restart Aapche
 sudo service apache2 restart
 ```
 ## Project configuration
@@ -31,60 +49,81 @@ sudo service apache2 restart
 ### Install dependencies with Composer
 ```sh
 # Clone the repo
-# Get Composer
-cd path/to/atlas
-curl -sS https://getcomposer.org/installer | php
+git clone https://github.com/openmrs/openmrs-contrib-atlas.git /opt/atlas
+cd /opt/atlas
 
 # Install vendors and dependencies
+composer install
+
+# If Composer is not in PATH
+curl -sS https://getcomposer.org/installer | php
 php composer.phar install
+```
+### Configure you envrionnement
+
+- Add writting rights to app/storage (www-data for Apache)
+
+```sh 
+sudo chown -R www-data:www-data app/storage
+sudo chmod -R ug+rw app/storage
+```
+
+ - Rename `env.local.php` to `.env.prod.php` and edit it with your own configuration (database, site_url, phantomJS bin, openmrs id secret).
+
+ - Set correct prod hostame in `bootstrap/start.php` (`hostname` value)
+
+```php
+$env = $app->detectEnvironment(array(
+   'local' => array('dev_host'),
+   'prod' => array('prod_hostame'),
+));
+```
+ - Set correct server Timezone in app/config/app (ie. America/New_York)
+```php
+ 'timezone' => 'America/New_York',
 ```
 
 ### Install PhantomJS
 ```sh
-
-# Download phantomJS tarbal
+# Download latest phantomJS tarbal
 wget https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-1.9.7-linux-x86_64.tar.bz2
 tar -xvf phantomjs-1.9.7-linux-x86_64.tar.bz2
 sudo cp phantomjs-1.9.7-linux-x86_64/bin/phantomjs /usr/bin/
 sudo chmod a+x /usr/bin/phantomjs
 
-# Install fonts
+# Install libicu48 and fonts
+sudo apt-get install libicu48
 sudo apt-get install fontconfig freetype
 sudo apt-get install xfonts-100dpi xfonts-75dpi xfonts-scalable xfonts-cyrillic
 sudo apt-get install ttf-mscorefonts-installer
 
+# add PhantomJS path in .env.prod.php
 ```
 
-### Configure you envrionnement
-
-- Add writting rights to app/storage (www-data for Apache)
-
-`sudo chown -R www-data:www-data app/storage`
-
- - Rename `env.local.php` to `.env.prod.php` and edit it with your own configuration (database, site_url, phantomJS bin, openmrs id secret).
-
- - Set correct hostame in `bootstrap/start.php` 
-```php
-$env = $app->detectEnvironment(array(
-   'local' => array('dev_host'),
-   'prod' => array('production_hostame'),
-));
-```
-
-### Register screen capture  cron job
-
+### Register screen capture cron job
 ```sh
-crontab -e
+crontab -u www-data -e
 
 #And add this line to end of file:
-*/10 * * * * /usr/bin/php /var/www/openmrs-contrib-atlas/artisan screen-capture
+*/8 * * * * /usr/bin/php /var/www/openmrs-contrib-atlas/artisan screen-capture
 ```
+### Init Database
+- Seed atlas database with sql dump
+- Sync with latest schema using Laravel CLI :
+```
+cd /opt/atlas
+php artisan migrate
+```
+### Create first screen captures
+`php artisan screen-capture --force`
 
 Let's started ! 
 
 ## Directory Description
 - `public/` : images, css, and js files 
-- `app/views/` : ping.php, index.php, data.php 
-- `app/controllers/` : controllers (not yet used)
+- `app/views/` : blade template and views
+- `app/controllers/` : controllers
+- `app/storage/` : logs, sessions, ...
 - `app/routes.php` : routing config
+- `app/filters.php` : routing filters
 
