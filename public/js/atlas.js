@@ -530,8 +530,6 @@ function createInfoWindow(site, marker) {
       } else {
         if (currentUser !== "visitor")
           $(".gm-style-iw").parent().append("<div id='lock' style='position: absolute;overflow:none; right:13px;bottom:10px; color:#3F3F3F'><i title='Claim ownership using Helpesk'  class='fa fa-lg fa-lock' style='color:rgba(171, 166, 166, 1)'></i></div>");
-        else
-          $(".gm-style-iw").parent().append("<div id='lock' style='position: absolute;overflow:none; right:13px;bottom:10px; color:#3F3F3F'><i class='fa fa-lg fa-lock' style='color:rgba(171, 166, 166, 1)'></i></div>");
       }
     }
       if ((site.uid === currentUser) || site.uuid !== null) {
