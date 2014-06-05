@@ -319,3 +319,4 @@ span.site-version {
 .bubble-form {
     overflow: hidden;
 }
+.tooltip-inner {min-width: 250px; !important; }

@@ -1,3 +1,6 @@
+var lockHtml = "<div id='lockInfo'>You cannot modify this site. If you wish to claim ownership of this site, please contact the ";
+lockHtml += "<a href='http://cl.openmrs.org/track/click.php?u=30039905&id=c4087a259d664e978fd6f3630b9188bb&url=";
+lockHtml += "http%3A%2F%2Fgo.openmrs.org%2Fhelpdesk&url_id=04c52b64769a7567d21db835fcd45f51f99842bd' target='_blank'> OpenMRS HelpDesk.</a></div>";
 function initLegendChoice() {
   $("#legendSelected").html(divTypes);
   $("#legend2").html(divVersions);
@@ -528,23 +531,25 @@ function createInfoWindow(site, marker) {
         $(".gm-style-iw").parent().append("<div id='edit' value='"+site.id+"' title ='Edit site' class='control' style='position: absolute;overflow:none; right:12px;bottom:10px; color:#3F3F3F'><i class='fa fa-lg fa-pencil' style='color:rgba(171, 166, 166, 1)'></i></div>");
         $(".gm-style-iw").parent().append("<div id='delete' value='"+site.id+"' title ='Delete site' class='control' style='position: absolute;overflow:none; right:12px;bottom:25px; color:#3F3F3F'><i class='fa fa-lg fa-trash-o' style='color:rgba(171, 166, 166, 1)'></i></div>");
       } else {
-        if (currentUser !== "visitor")
-          $(".gm-style-iw").parent().append("<div id='lock' style='position: absolute;overflow:none; right:13px;bottom:10px; color:#3F3F3F'><i title='Claim ownership using Helpesk'  class='fa fa-lg fa-lock' style='color:rgba(171, 166, 166, 1)'></i></div>");
+        if (currentUser !== "visitor") {
+          $(".gm-style-iw").parent().append("<div id='lock' style='position: absolute;overflow:none; right:13px;bottom:10px; color:#3F3F3F'><i data-toggle='tooltip' class='fa fa-lg fa-lock' style='color:rgba(171, 166, 166, 1)'></i></div>");
+          $('.fa-lock').tooltip({trigger: 'click hover', placement: 'right', html: true, title: lockHtml, delay: { show: 500, hide: 1200 }});
+        }
       }
     }
-      if ((site.uid === currentUser) || site.uuid !== null) {
-    $("#map_canvas").on("click", "#edit", function(e){
-      //e.preventDefault();
-      var id = $(this).attr("value");
-      infowindow.close();
-      sites[id].bubbleOpen = false;
-      sites[id].editwindow.open(map,sites[id].marker);
-      sites[id].editBubbleOpen = true;
-      sites[id].marker.setDraggable(true);
-      $(".gm-style-iw").parent().append("<div id='undo' title ='Undo change' value='"+id+"' class='control' style='position: absolute;overflow:none; right:12px;bottom:10px; color:#3F3F3F'><i class='fa fa-lg fa-history' style='color:rgba(171, 166, 166, 1)'></i></div>");
-      $(".gm-style-iw").parent().append("<div id='delete' title ='Delete site' value='"+id+"' class='control' style='position: absolute;overflow:none; right:12px;bottom:28px; color:#3F3F3F'><i class='fa fa-lg fa-trash-o' style='color:rgba(171, 166, 166, 1)'></i></div>");
-    });
-  } 
+    if ((site.uid === currentUser) || site.uuid !== null) {
+      $("#map_canvas").on("click", "#edit", function(e){
+        //e.preventDefault();
+        var id = $(this).attr("value");
+        infowindow.close();
+        sites[id].bubbleOpen = false;
+        sites[id].editwindow.open(map,sites[id].marker);
+        sites[id].editBubbleOpen = true;
+        sites[id].marker.setDraggable(true);
+        $(".gm-style-iw").parent().append("<div id='undo' title ='Undo change' value='"+id+"' class='control' style='position: absolute;overflow:none; right:12px;bottom:10px; color:#3F3F3F'><i class='fa fa-lg fa-history' style='color:rgba(171, 166, 166, 1)'></i></div>");
+        $(".gm-style-iw").parent().append("<div id='delete' title ='Delete site' value='"+id+"' class='control' style='position: absolute;overflow:none; right:12px;bottom:28px; color:#3F3F3F'><i class='fa fa-lg fa-trash-o' style='color:rgba(171, 166, 166, 1)'></i></div>");
+      });
+    } 
   });
 
   return infowindow;
