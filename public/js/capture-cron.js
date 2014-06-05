@@ -66,7 +66,7 @@ page.open(address, function (status) {
                     $(".control").attr('hidden', 'true');
                     $(".gmnoprint").attr('hidden', 'true');
                     $("#legend").removeAttr('hidden');
-                    if (param.fade == "1")
+                    if (param.fade == "0")
                         clickElement($("#fadeCheckbox")[0]);
                     if (param.legend == "2")
                         clickElement($("#legend1")[0]);

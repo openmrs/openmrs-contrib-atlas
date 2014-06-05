@@ -38,7 +38,7 @@ var unknownVersion = 0;
 var otherVersion = 0;
 var images = [];
 var shadows = [];
-var fadeOverTime = false;
+var fadeOverTime = true;
 var legendGroups = 0;
 var divSites ='<img src="http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png"><b>Sites</b>';
 var divTypes ='<img src="images/group-dot.png"><b>Types</b>'
@@ -94,12 +94,11 @@ setTimeout('initialize()', 500);
       <div class = "dropDownOptionsDiv" id="legendChoice">
           <div class = "dropDownItemDiv" id="legend1"></div>
           <div class = "dropDownItemDiv" id="legend2"></div>
+          <div class = "dropDownItemDiv" id="fade" title="Fade outdated sites over time.">
+            <label><input type="checkbox" id="fadeCheckbox"><b>Fade</b></label>
+          </div>
       </div>          
-  </div>
-   <div class = "atlas-container loginControl dropDownControl control" id="fade" title="Fade inactive sites over time.">
-    <label><input type="checkbox" id="fadeCheckbox"><b>Fade</b></label>
-   </div>
-          <div class="separatorDiv"></div>        
+  </div>     
   <div id='atlas-hidden-latitude' style='hidden:true;'></div>
   <div id='atlas-hidden-longitude' style='hidden:true;'></div>
   <input type="hidden" id="user-id" value="{{ $user->uid }} " />

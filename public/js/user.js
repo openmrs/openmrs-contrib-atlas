@@ -278,6 +278,8 @@ var html = "<div class='site-bubble'>";
     html += "<div class='site-type'><span class='site-type'>" + site.type + "</span>";
   if (versionForSite(site))  
     html += "<span class='site-version'>" + versionForSite(site) + "</span></div>";
+  if (getFadeGroup(site) > 0)
+    html += "<div class='site-fade'>Why is this site fading away?</div>";
   /*
    if (site.date_changed)
     var date_update = new Date(site.date_changed);
