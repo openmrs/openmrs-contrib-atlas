@@ -45,12 +45,17 @@ class CaptureCommand extends Command {
 		$date = $date->modify('-10 minute');
 		$this->info('Last checked: ' . $date->format('Y-m-d H:i:s'));
 		
-		$lastUpdate = DB::table('atlas')->select('date_changed')->orderBy('date_changed', 'desc')->first();
-		Log::info('Last updated: ' . $lastUpdate->date_changed);
-		$this->info('Last updated: ' . $lastUpdate->date_changed);
+		$lastCreated = DB::table('atlas')->select('date_created')->orderBy('date_created', 'desc')->first();
+		$lastChanged = DB::table('archive')->select('archive_date')->orderBy('archive_date', 'desc')->first();
 
-		$dateChanged = new Datetime($lastUpdate->date_changed);
-		if (count($rep) == 0 || $force ||  ($dateChanged > $date) ) {
+		Log::info('Last updated: ' . $lastChanged->archive_date);
+		Log::info('Last created: ' . $lastCreated->date_created);
+		$this->info('Last updated: ' . $lastChanged->archive_date);
+		$this->info('Last created: ' . $lastCreated->date_created);
+
+		$dateCreated = new Datetime($lastCreated->date_created);
+		$dateChanged = new Datetime($lastChanged->archive_date);
+		if (count($rep) == 0 || $force ||  ($dateChanged > $date) ||  ($dateCreated > $date) ) {
 			$this->info('Generating screenshot');
 			$phantomjs = getenv('PHANTOM_PATH');
 			$siteURL = getenv('SITE_URL');
