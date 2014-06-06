@@ -1,11 +1,13 @@
-var lockHtml = "<div id='lockInfo'>You cannot modify this site. If you wish to claim ownership of this site, please contact the ";
+var lockHtml = "<div class='toggle' id='lockInfo'>You cannot modify this site. If you wish to claim ownership of this site, please contact the ";
 lockHtml += "<a href='http://cl.openmrs.org/track/click.php?u=30039905&id=c4087a259d664e978fd6f3630b9188bb&url=";
 lockHtml += "http%3A%2F%2Fgo.openmrs.org%2Fhelpdesk&url_id=04c52b64769a7567d21db835fcd45f51f99842bd' target='_blank'> OpenMRS HelpDesk.</a></div>";
+var fadeHtml = "<div class='toggle' id='fadeInfo'> Sites that have not been updated for more than six months will begin to fade away. ";
+fadeHtml += "Fading can be turned off through the controls on this page.</div>";
 function initLegendChoice() {
   $("#legendSelected").html(divTypes);
   $("#legend2").html(divVersions);
   $("#legend1").html(divSites);
-
+  $("#fadeCheckbox").prop('checked', true);
   $("#legendSelected").mouseover(function(){
     $("#legendChoice").css("display", "block");
   });
@@ -16,6 +18,11 @@ function initLegendChoice() {
     var clicked = $(this).attr("id");
     clickLegend(clicked);
     $("#legendChoice").css("display", "none");
+  });
+  $("#fadeCheckbox").click(function(){
+    fadeOverTime = !fadeOverTime;
+    closeBubbles();
+    repaintMarkers();  
   });
 }
 function clickLegend(id){
@@ -46,34 +53,6 @@ function clickLegend(id){
 
 function showId(id) {
   prompt("Implementation ID", id);
-}
-
-function FadeControl(controlDiv, map) {
-  // Set CSS styles for the DIV containing the control
-  // Setting padding to 5 px will offset the control
-  // from the edge of the map
-  controlDiv.style.padding = "5px";
- 
-  // Set CSS for the control border
-  var controlUI = document.createElement("DIV");
-  controlUI.id = "fadeControl";
-  controlUI.title = "Fade inactive sites over time.";
-  controlDiv.appendChild(controlUI);
-
-  var checkbox = document.createElement("INPUT");
-  checkbox.type = "checkbox";
-  checkbox.id = "fadeCheckbox";
-  checkbox.onchange = function() {
-    fadeOverTime = !fadeOverTime;
-    repaintMarkers();
-  };
-  controlUI.appendChild(checkbox);
-
-  var label = document.createElement("LABEL");
-  label.id = "fadeLabel";
-  label.innerHTML = "Fade";
-  label.htmlFor = "fadeCheckbox";
-  controlUI.appendChild(label);
 }
 
 function closeBubbles() {
@@ -356,6 +335,7 @@ function loadSites(json) {
     if ((site.uid !== "" && site.uid === currentUser) || (auth_site.indexOf(site.uuid) !== -1) || site.uuid !== null)
       editwindow = createEditInfoWindow(site, marker);
     initLegend();
+    repaintMarkers();
     if (site.version)
         version.push(versionMajMinForSite(site));
     sites[site.id] = {"siteData": site, "marker":marker, "infowindow":infowindow, "editwindow":editwindow, "bubbleOpen":false,"editBubbleOpen":false, "fadeGroup":fadeGroup};
@@ -366,11 +346,13 @@ function loadSites(json) {
 function repaintMarkers() {
   for (var key in sites) {
     var site = sites[key];
-    var imageIndex = indexForFadeGroup(site.fadeGroup);
+    var opacity = 1;
+    if (fadeOverTime) 
+      opacity = (1 - (site.fadeGroup * 0.25));
     if (shouldBeVisible(site.fadeGroup)) {
       site.marker.setIcon(colorForSite(site.siteData));
-      site.marker.setShadow(shadows[imageIndex]);
       site.marker.setVisible(true);
+      site.marker.setOpacity(opacity);
     } else {
       site.marker.setVisible(false);
     }
@@ -398,7 +380,7 @@ function createMarker(site, fadeGroup, bounds) {
 
 function dateForSite(site) {
   var dateString = site.date_changed;
-  if (!dateString)
+  if (dateString === "0000-00-00 00:00:00")
     dateString = site.date_created;
   dateString = dateString.replace(/-/g, "/");
   return new Date(dateString).getTime();
@@ -502,13 +484,14 @@ function createInfoWindow(site, marker) {
     html += "<fieldset class='site-notes'>" + site.notes + "</fieldset>";
   if (site.type)
     html += "<div class='site-type'><span class='site-type'>" + site.type + "</span>";
-  if (versionForSite(site))  
+  if (versionForSite(site))
     html += "<span class='site-version'>" + versionForSite(site) + "</span></div>";
   /*
    if (site.date_changed)
     var date_update = new Date(site.date_changed);
     html += "<div id='site-update'>Last Updated: " + date_update.toLocaleDateString() + "</div>";
   */
+  html += "<div style='height:2px'></div>";
   html += "</div>";
   var infowindow = new google.maps.InfoWindow({
     content: html
@@ -516,6 +499,19 @@ function createInfoWindow(site, marker) {
   google.maps.event.addListener(infowindow, "closeclick", function() {
     sites[site.id].bubbleOpen = false;
   });
+  google.maps.event.addListener(infowindow, 'domready', function(){
+    $(".gm-style-iw").parent().append("<div class='site-fade' data-toggle='fade'>Why is this site fading away?</div>");
+    $('.site-fade').tooltip({
+      trigger: 'click hover', placement: 'bottom',
+      html: true, title: fadeHtml,
+      delay: { show: 500, hide: 1200 }});
+    if (fadeOverTime && getFadeGroup(site) > 0) {
+      $(".site-fade").css("display", "block");
+    }
+    else {
+      $(".site-fade").css("display", "none");
+    }
+  }); 
   google.maps.event.addListener(marker, "click", function() {
     if (sites[site.id].editBubbleOpen) {
       sites[site.id].editwindow.close();
@@ -526,13 +522,13 @@ function createInfoWindow(site, marker) {
     } else {
       closeBubbles();
       infowindow.open(map,marker);
-      sites[site.id].bubbleOpen = true;
+      sites[site.id].bubbleOpen = true; 
       if ((site.uid == currentUser) || site.uuid !== null) { 
-        $(".gm-style-iw").parent().append("<div id='edit' value='"+site.id+"' title ='Edit site' class='control' style='position: absolute;overflow:none; right:12px;bottom:10px; color:#3F3F3F'><i class='fa fa-lg fa-pencil' style='color:rgba(171, 166, 166, 1)'></i></div>");
-        $(".gm-style-iw").parent().append("<div id='delete' value='"+site.id+"' title ='Delete site' class='control' style='position: absolute;overflow:none; right:12px;bottom:25px; color:#3F3F3F'><i class='fa fa-lg fa-trash-o' style='color:rgba(171, 166, 166, 1)'></i></div>");
+        $(".gm-style-iw").parent().append("<div id='edit' value='"+site.id+"' title ='Edit site' class='control' style='position: absolute;overflow:none; right:12px;bottom:16px; color:#3F3F3F'><i class='fa fa-lg fa-pencil' style='color:rgba(171, 166, 166, 1)'></i></div>");
+        $(".gm-style-iw").parent().append("<div id='delete' value='"+site.id+"' title ='Delete site' class='control' style='position: absolute;overflow:none; right:12px;bottom:31px; color:#3F3F3F'><i class='fa fa-lg fa-trash-o' style='color:rgba(171, 166, 166, 1)'></i></div>");
       } else {
         if (currentUser !== "visitor") {
-          $(".gm-style-iw").parent().append("<div id='lock' style='position: absolute;overflow:none; right:13px;bottom:10px; color:#3F3F3F'><i data-toggle='tooltip' class='fa fa-lg fa-lock' style='color:rgba(171, 166, 166, 1)'></i></div>");
+          $(".gm-style-iw").parent().append("<div id='lock' style='position: absolute;overflow:none; right:13px;bottom:16px; color:#3F3F3F'><i data-toggle='tooltip' class='fa fa-lg fa-lock' style='color:rgba(171, 166, 166, 1)'></i></div>");
           $('.fa-lock').tooltip({trigger: 'click hover', placement: 'right', html: true, title: lockHtml, delay: { show: 500, hide: 1200 }});
         }
       }

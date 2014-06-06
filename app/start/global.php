@@ -31,8 +31,13 @@ ClassLoader::addDirectories(array(
 |
 */
 
-$logFile = 'ping.log';
-Log::useDailyFiles(storage_path().'/logs/'.$logFile);
+$logFile = 'atlas.log';
+Log::useDailyFiles(storage_path().'/logs/'.$logFile, 7, 'warning');
+
+if (App::environment() == 'local') {
+	$monolog = Log::getMonolog();
+	$monolog->pushHandler(new \Monolog\Handler\ChromePHPHandler());
+}
 
 /*
 |--------------------------------------------------------------------------

@@ -3,6 +3,8 @@ Thumbs.db
 atlas.db
 config.php
 ping.log
+/app/storage/captures/*
+/app/storage/*.log
 
 ### Laravel4 ###
 /bootstrap/compiled.php

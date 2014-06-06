@@ -1,6 +1,6 @@
 var page = require('webpage').create(),
 system = require('system'),
-address, output, size, queue, legend, width, height;
+address, output, size, queue, legend, width, height, fade;
 
 queue = [];
 
@@ -12,11 +12,12 @@ if (system.args.length < 1 ) {
     width = system.args[3];
     height = system.args[4];
     address = (system.args[5]);
+    fade = (system.args[6]);
     console.log('Param:' + path +  "/" + legend + "/" + address);
 }
 
 page.viewportSize = { width: width, height: height };
-output = path + '/atlas' + legend + '_' + width + 'x'+ height +'.png';
+output = path + '/atlas' + legend + fade + '_' + width + 'x'+ height +'.png';
 page.onError = function(msg, trace) {
     var msgStack = ['ERROR: ' + msg];
     if (trace && trace.length) {
@@ -65,11 +66,13 @@ page.open(address, function (status) {
                     $(".control").attr('hidden', 'true');
                     $(".gmnoprint").attr('hidden', 'true');
                     $("#legend").removeAttr('hidden');
+                    if (param.fade == "0")
+                        clickElement($("#fadeCheckbox")[0]);
                     if (param.legend == "2")
                         clickElement($("#legend1")[0]);
                     if (param.legend == "1")
                         clickElement($("#legend2")[0]);
-                }, { legend: legend });
+                }, { legend: legend , fade: fade});
 
                 setTimeout(function () {
                     console.log("Rendering to file...");

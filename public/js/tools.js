@@ -21,11 +21,11 @@ function initDownloadButton() {
     $("#screen").css("display", "none");
   });
   $('#1024x768').click(function () {
-    var url = "download?legend=" + legendGroups + "&size=1024x768";
+    var url = "download?legend=" + legendGroups + "&size=1024x768" + "&fade=" + fadeOverTime;
     window.location = url ;
   });
   $('#1280x1024').click(function () {
-    var url = "download?legend=" + legendGroups + "&size=1920x1080";
+    var url = "download?legend=" + legendGroups + "&size=1920x1080" + "&fade=" + fadeOverTime;
     window.location = url ;
   });
   
