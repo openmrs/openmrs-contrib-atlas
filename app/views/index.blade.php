@@ -6,7 +6,9 @@
 <link rel="stylesheet" href="css/atlas.css" type="text/css" media="screen" />
 <link rel="stylesheet" href="lib/css/font-awesome.min.css">
 <link rel="stylesheet" href="lib/css/bootstrap.min.css">
+@if (!Session::has(module))
 <script id="globalnav-script" src="https://id.openmrs.org/globalnav/js/app-optimized.js" type="text/javascript"></script>
+@endif
 <script type="text/javascript" src="https://maps.google.com/maps/api/js?sensor=false"></script>
 <script type="text/javascript" src="lib/js/jquery-1.11.1.min.js"></script>
 <script type="text/javascript" src="lib/js/bootstrap.min.js"></script>

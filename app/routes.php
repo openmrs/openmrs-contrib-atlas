@@ -13,6 +13,10 @@
 
 Route::get('/', array('as' => 'home', function() 
 {
+	if (Input::has('module')) {
+		Log::info('User from module');
+		Session::set('module', true);
+	}
 	if (Session::has(user)) {
 		$user = Session::get(user);
 		Log::info('Logged user: ' . $user->uid);

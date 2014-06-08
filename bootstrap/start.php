@@ -61,6 +61,8 @@ $framework = $app['path.base'].
 
 require $framework.'/Illuminate/Foundation/start.php';
 
+$app->forgetMiddleware('Illuminate\Http\FrameGuard');
+
 /*
 |--------------------------------------------------------------------------
 | Return The Application
