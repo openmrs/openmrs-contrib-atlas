@@ -98,13 +98,24 @@ ga('send', 'pageview');
         <div class = "dropDownItemDiv" id="editSite" @if(strlen($auth_site) < 5) hidden="true" @endif>
         <img src="images/blue-dot.png">Edit my site</div>
         <div class = "dropDownItemDiv" id="newSite"><img src="images/blue-dot.png">Add new site</div>
-        <div class = "dropDownItemDiv" id="logout"><span class="glyphicon glyphicon-log-out"></span> {{ link_to_route('logout', 'Sign Out' )}}</div>
+        <div class = "dropDownItemDiv" id="logout"><span class="glyphicon glyphicon-log-out"></span> 
+        @if (!Session::has(module))
+          {{ link_to_route('logout', 'Sign Out' )}}
+        @else
+          {{ link_to_route('logout', 'Sign Out', null, array('target'=>'blank'))}}
+        @endif
+        </div>
         <div class="separatorDiv"></div>        
       </div>          
   </div>
   @else
     <div class="atlas-container loginControl dropDownControl control" title="Click to sign in with your OpenMRS ID" id ="login">
-    <span class="glyphicon glyphicon-log-in"></span> {{ link_to_route('login', 'Sign In' )}}
+    <span class="glyphicon glyphicon-log-in"></span>
+    @if (!Session::has(module))
+      {{ link_to_route('login', 'Sign In')}}
+    @else
+      {{ link_to_route('login', 'Sign In', null, array('target'=>'blank'))}}
+    @endif
   </div>
   @endif
   <div class="atlas-container loginControl dropDownControl control" title="How to place my information on the Atlas" id ="help">

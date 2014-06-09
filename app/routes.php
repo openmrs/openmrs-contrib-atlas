@@ -16,6 +16,13 @@ Route::get('/', array('as' => 'home', function()
 	if (Input::has('module')) {
 		Log::info('User from module');
 		Session::set('module', true);
+	} else if (Session::has('module')) {
+		Session::remove('module');
+		Session::flash('module', true);
+	}
+	if (Session::hasOldInput('module')) {
+		Log::info('Remove old module session');
+		Session::remove('module');
 	}
 	if (Session::has(user)) {
 		$user = Session::get(user);
@@ -58,8 +65,12 @@ Route::get('logout', array('as' => 'logout', function()
     $idServer = getenv('ID_HOST');
     Auth::logout();
     Log::info('User logged out');
-    Session::flush();
-    $url = urlencode(route('home'));
+    Session::remove('user');
+    if (Session::has('module'))
+		$url = urlencode(route('close'));
+	else {
+    	$url = urlencode(route('home'));
+    }
     return Redirect::to($idServer.'/disconnect?destination='. $url);
 }));
 
@@ -86,3 +97,9 @@ Route::match(array('GET', 'POST'), 'admin', array(
 	'as' => 'admin',
 	'before' => 'isAdmin',
 	'uses' => 'AdminController@adminQuery'));
+
+Route::get('module/close', array('as' => 'close', function() {
+	if (!Session::has('module'))
+		return Redirect::route('/');
+	return Response::view('close');
+}));

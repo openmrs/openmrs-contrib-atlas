@@ -58,6 +58,8 @@ class AuthController extends BaseController {
 	  		// Log User
 			Auth::login($user);
 			Session::put('user', $user);
+			if (Session::has('module'))
+				return Response::view('close');
 	    	return Redirect::to('/');
 	    }
 	    	Log::info('Signature and Hashed Token mismatch/n');
