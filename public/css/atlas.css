@@ -321,6 +321,15 @@ span.site-version {
 
 .bubble-form {
     overflow: hidden;
+    font-size: 1em;
+}
+
+#module {
+    margin : 0px 4px 0px 0px;
+}
+.module {
+    margin-top : -10px;
+    margin-bottom: 5px;
 }
 #fade input[type=checkbox] {
 -ms-transform: scale(0.8); /* IE */

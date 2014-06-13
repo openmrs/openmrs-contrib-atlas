@@ -113,20 +113,18 @@ Route::get('module/login', array('as' => 'module-login', function() {
 
 Route::get('module', array('as' => 'module', 'before' => 'module', function() 
 {
-	Session::set('module', true);
-	Session::flash('module', $module);
+	$module = Input::get('module');
+	Session::set('module', $module);
 	if (Session::has(user)) {
-		$module = Input::get('module');
 		$moduleSite = DB::table('auth')->where('token','=', $module)->lists('atlas_id');
 		$user = Session::get(user);
 		Log::info('Logged user: ' . $user->uid);
 		$privileges = DB::table('auth')->where('token','=', $user->uid)->lists('atlas_id');
 		$list = json_encode($privileges);
-		$listM = json_encode($moduleSite);
 		Log::info('Authorized site: ' . $list);
-		Log::info('Authorized module: ' . $listsM);
-		return View::make('index', array('user' => $user,'mod_site' => $listsM,
-		 'auth_site' => $list, 'module' =>  Input::get('module')));
+		Log::info('Authorized module: ' . $module);
+		return View::make('index', array('user' => $user,
+		 'auth_site' => $list, 'module' =>  $module));
 	}
 	return Redirect::route('module-login', array('module' => Input::get('module')));
 }));
