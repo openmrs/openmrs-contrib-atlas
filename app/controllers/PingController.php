@@ -118,6 +118,57 @@ class PingController extends BaseController {
 		}
 		return 'SUCCES';
 	}
+	/**
+	 * Post Ping function - Handle Ping from Atlas Module 2.0
+	 *
+	 */
+	public function pingPostModule()
+	{
+		$this->createTable();
+		Log::debug("DATA received: " . Request::getContent());
+		$json = json_decode(Request::getContent(), true);
+		$date = new \DateTime;
+		$id['id'] = $json['id'];
+
+		$param = array(
+			'id' => $json['id'],
+			'patients' => intval($json['patients']),
+			'encounters' => intval($json['encounters']),
+			'observations' => intval($json['observations']),
+			'date_created' => $date);
+
+		$site = DB::table('atlas')->where('id','=', $param['id'])->first();
+		if ($site != null) {
+			DB::table('archive')->insert(array(
+				'archive_date' => $date, 
+				'site_uuid' => $site->id, 
+				'id' => Uuid::uuid4()->toString(), 
+				'action' =>  'UPDATE',  
+				'type' => $site->type,
+				'longitude' =>  $site->longitude, 
+				'latitude' =>  $site->latitude,
+				'name' =>  $site->name, 
+				'url' =>  $site->url, 
+				'image' =>  $site->image, 
+				'contact' =>  $site->contact, 
+				'changed_by' => 'module:' . $_SERVER['REMOTE_ADDR'], 
+				'patients' =>  $site->patients, 
+				'encounters' =>  $site->encounters, 
+				'observations' =>  $site->observations, 
+				'notes' =>  $site->notes, 
+				'email' => $site->email,
+				'data' =>  $site->data, 
+				'atlas_version' => $site->atlas_version,
+				'date_created' => $site->date_created));
+
+			unset($param['date_created']);
+			DB::table('atlas')->where('id', '=', $site->id)->update($param);
+			Log::debug("Updated ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
+		} else {
+			Log::debug("Site not found: ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
+		}
+		return 'SUCCES';
+	}
 
 	/**
 	 * Handle Post Ping from Atlas Server

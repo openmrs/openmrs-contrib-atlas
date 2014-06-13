@@ -13,15 +13,8 @@
 
 Route::get('/', array('as' => 'home', function() 
 {
-	if (Input::has('module')) {
-		Log::info('User from module');
-		Session::set('module', true);
-	} else if (Session::has('module')) {
-		Session::remove('module');
-		Session::flash('module', true);
-	}
-	if (Session::hasOldInput('module')) {
-		Log::info('Remove old module session');
+	if (Session::has('module')) {
+		Log::info('Old session from module');
 		Session::remove('module');
 	}
 	if (Session::has(user)) {
@@ -47,6 +40,14 @@ Route::post('ping.php/atlas', array(
 Route::delete('ping.php/atlas', array(
 	'before' => 'validateAtlasDelete',
 	'uses' => 'PingController@pingAtlasDelete'));
+
+Route::post('ping.php/module', array(
+	'before' => 'validateAtlasDelete',
+	'uses' => 'PingController@pingPostModule'));
+
+Route::delete('ping.php/module', array(
+	'before' => 'validateAtlasDelete',
+	'uses' => 'PingController@pingDelete'));
 
 Route::post('ping.php', array(
 	'before' => 'validateJson',
@@ -102,4 +103,30 @@ Route::get('module/close', array('as' => 'close', function() {
 	if (!Session::has('module'))
 		return Redirect::route('/');
 	return Response::view('close');
+}));
+
+Route::get('module/login', array('as' => 'module-login', function() {
+	if (Session::has('user'))
+		return Redirect::route('module', array('module' => Input::get('module')));
+	return Response::view('module');
+}));
+
+Route::get('module', array('as' => 'module', 'before' => 'module', function() 
+{
+	Session::set('module', true);
+	Session::flash('module', $module);
+	if (Session::has(user)) {
+		$module = Input::get('module');
+		$moduleSite = DB::table('auth')->where('token','=', $module)->lists('atlas_id');
+		$user = Session::get(user);
+		Log::info('Logged user: ' . $user->uid);
+		$privileges = DB::table('auth')->where('token','=', $user->uid)->lists('atlas_id');
+		$list = json_encode($privileges);
+		$listM = json_encode($moduleSite);
+		Log::info('Authorized site: ' . $list);
+		Log::info('Authorized module: ' . $listsM);
+		return View::make('index', array('user' => $user,'mod_site' => $listsM,
+		 'auth_site' => $list, 'module' =>  Input::get('module')));
+	}
+	return Redirect::route('module-login', array('module' => Input::get('module')));
 }));

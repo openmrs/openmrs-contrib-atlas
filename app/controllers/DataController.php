@@ -26,7 +26,11 @@ class DataController extends BaseController {
 
 		if (!$this->validateResult($sites))
 		  exit;
-		
+		if (Session::has('module')) {
+			$module = Session::get('module');
+			Log::info('Module get data: ' . $module);
+			$privilegesM = DB::table('auth')->where('token','=', $module)->first();
+		}
 		if (Session::has(user)) {
 			$user = Session::get(user);
 			Log::info('User get data: ' . $user->uid);
@@ -39,6 +43,8 @@ class DataController extends BaseController {
 			$id++;
 			$site = (array)$site;
 			$site['id'] = $id;
+			if ( $privilegesM->atlas_id == $id)
+				array_add($site, 'module', '1');
 			if (!in_array($site['uuid'], $privileges) && $user->role != 'ADMIN')
 				unset($site['uuid']);
 		    $major = 0;

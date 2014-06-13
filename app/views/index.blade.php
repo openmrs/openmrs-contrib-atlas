@@ -20,13 +20,17 @@
 <script type="text/javascript" src="lib/js/yqlgeo.js"></script>
 <script type="text/javascript">
 var auth = null;
-@if ( strlen($auth_site) > 5)
+var module = null;
+@if ( strlen($auth_site) > 30)
   auth = JSON.stringify({{ $auth_site }});
 @endif
 if (auth != null) 
   var auth_site = JSON.parse(auth);
 else
   var auth_site = "";
+@if ( strlen($module) > 30)
+  module = {{ $module }};
+@endif
 var siteSrc = "{{ getenv('SITE_SOURCE') }}";
 var currentUser;
 var userEmail;

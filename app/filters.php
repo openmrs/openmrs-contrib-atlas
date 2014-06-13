@@ -167,3 +167,11 @@ Route::filter('isAdmin', function()
 	if ($user->role !== 'ADMIN')
 		return Redirect::home();
 });
+
+Route::filter('module', function()
+{
+	if (!Input::has('module'))
+		App::abort(500, 'Missing Parameter');
+	if (strlen(Input::get('module')) < 30)
+		App::abort(500, 'Invalid parameters');
+});
