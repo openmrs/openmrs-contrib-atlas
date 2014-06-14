@@ -335,6 +335,7 @@ function loadVersion(json) {
 
 function loadSites(json) {
   var bounds = new google.maps.LatLngBounds();
+  var uniqueMarker = null;
   loadVersion(json);
   for(i=0; i<json.length; i++) {
     var site = json[i];
@@ -349,10 +350,14 @@ function loadSites(json) {
     initLegend();
     repaintMarkers();
     if (site.version)
-        version.push(versionMajMinForSite(site));
+      version.push(versionMajMinForSite(site));
+    if (site_module !== 1 && site.uuid !== null && module !== null && auth_site.length === 1)
+      uniqueMarker = marker;
     sites[site.id] = {"siteData": site, "marker":marker, "infowindow":infowindow, "editwindow":editwindow, "bubbleOpen":false,"editBubbleOpen":false, "fadeGroup":fadeGroup};
   }
   map.fitBounds(bounds);
+    if (uniqueMarker !== null)
+      google.maps.event.trigger(uniqueMarker, 'click');
 }
 
 function repaintMarkers() {
@@ -574,6 +579,5 @@ function createInfoWindow(site, marker) {
       });
     } 
   });
-
   return infowindow;
 }
