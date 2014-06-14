@@ -107,7 +107,7 @@ Route::get('module/close', array('as' => 'close', function() {
 
 Route::get('module/login', array('as' => 'module-login', function() {
 	if (Session::has('user'))
-		return Redirect::route('module', array('module' => Input::get('module')));
+		return Redirect::route('module', array('uuid' => Input::get('uuid')));
 	return Response::view('module');
 }));
 
@@ -130,5 +130,5 @@ Route::get('module', array('as' => 'module', 'before' => 'module', function()
 	if ($moduleSite != NULL) {
 		return View::make('index', array('module' =>  $module, 'site_module' => $site_module));
 	}
-	return Redirect::route('module-login', array('module' => $module));
+	return Redirect::route('module-login', array('uuid' => $module));
 }));

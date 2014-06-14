@@ -363,7 +363,12 @@ span.site-version {
 .toggle {
         cursor:pointer;
 }
-
+.me-button {
+    margin-top : 3px;
+}
+#alert {
+    font-size: 18px;
+}
 .help-modal h3 {
     font size: 20px;
 }

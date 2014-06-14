@@ -510,6 +510,14 @@ function createInfoWindow(site, marker) {
     var date_updated = dateChangedString(site);
     html += "<div id='site-update'>Last Updated: " + date_updated + "</div>";
   }
+  if (site_module !== 1 && site.uuid !== null && module !== null) {
+    html += "<div class='me-button'><button type='button' id='me-button' title='Pick the site for this server.'";
+    html += "class='btn btn-success btn-xs'>This is me !</button></div>";
+  }
+  if (site.module === 1) {
+    html += "<div class='me-button'><button type='button' id='detach-button' title='Detach the site from this server.'";
+    html += "class='btn btn-info btn-xs'>Detach me !</button></div>";
+  }
   html += "<div style='height:2px'></div>";
   html += "</div>";
   var infowindow = new google.maps.InfoWindow({
