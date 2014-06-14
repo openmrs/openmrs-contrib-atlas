@@ -116,6 +116,7 @@ Route::get('module', array('as' => 'module', 'before' => 'module', function()
 	$module = Input::get('uuid');
 	Session::set('module', $module);
 	$moduleSite = DB::table('auth')->where('token','=', $module)->first();
+	$site_module = ($moduleSite != NULL) ? 1 : 0;
 	if (Session::has(user)) {
 		$user = Session::get(user);
 		Log::info('Logged user: ' . $user->uid);
@@ -124,10 +125,10 @@ Route::get('module', array('as' => 'module', 'before' => 'module', function()
 		Log::info('Authorized site: ' . $list);
 		Log::info('Authorized module: ' . $module);
 		return View::make('index', array('user' => $user,
-		 'auth_site' => $list, 'module' =>  $module));
+		 'auth_site' => $list, 'module' =>  $module, 'site_module' => $site_module));
 	}
 	if ($moduleSite != NULL) {
-		return View::make('index', array('module' =>  $module));
+		return View::make('index', array('module' =>  $module, 'site_module' => $site_module));
 	}
 	return Redirect::route('module-login', array('module' => $module));
 }));

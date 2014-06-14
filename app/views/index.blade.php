@@ -21,6 +21,7 @@
 <script type="text/javascript">
 var auth = null;
 var module = null;
+var site_module = null;
 @if ( strlen($auth_site) > 30)
   auth = JSON.stringify({{ $auth_site }});
 @endif
@@ -30,6 +31,7 @@ else
   var auth_site = "";
 @if ( strlen($module) > 30)
   module = "{{ $module }}";
+  site_module = {{ $site_module }};
 @endif
 var siteSrc = "{{ getenv('SITE_SOURCE') }}";
 var currentUser;

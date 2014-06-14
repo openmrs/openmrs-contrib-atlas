@@ -313,8 +313,14 @@ function colorForSite(site) {
         break;
     }
   }
-  if ((site.uid === currentUser || auth_site.indexOf(site.uuid) !== -1) && legendGroups === 2)
+  if ((site.uid === currentUser || auth_site.indexOf(site.uuid) !== -1) && legendGroups === 2 && site_module !== 1)
       image.url = "https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png";
+  if ((site.module === 1 && legendGroups === 2 && module !== null && site_module === 1)) {
+      image.url = "https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png";
+  } else if ((site.uid === currentUser || auth_site.indexOf(site.uuid) !== -1) 
+    && legendGroups === 2 && (module === null || site_module === 0)) {
+    image.url = "https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png";
+  }
   return image;
 }
 

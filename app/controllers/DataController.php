@@ -43,8 +43,10 @@ class DataController extends BaseController {
 			$id++;
 			$site = (array)$site;
 			$site['id'] = $id;
-			if ( $privilegesM->atlas_id == $id)
-				array_add($site, 'module', '1');
+			if ( $privilegesM->atlas_id == $site['uuid']) {
+				Log::info('Module auth site: ' . $id);
+				$site['module'] = 1;
+			}
 			if (!in_array($site['uuid'], $privileges) && $user->role != 'ADMIN')
 				unset($site['uuid']);
 		    $major = 0;
