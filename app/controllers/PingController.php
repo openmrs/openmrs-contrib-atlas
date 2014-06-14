@@ -128,10 +128,14 @@ class PingController extends BaseController {
 		Log::debug("DATA received: " . Request::getContent());
 		$json = json_decode(Request::getContent(), true);
 		$date = new \DateTime;
-		$id['id'] = $json['id'];
+		$module = $json['id'];
+		Log::info('Module uuid: ' . $module);
+		$siteM = DB::table('auth')->where('token','=', $module)->first();
+		if ($siteM == NULL)
+			App::abort(403, 'Unauthorized');
 
 		$param = array(
-			'id' => $json['id'],
+			'id' => $siteM->atlas_id,
 			'patients' => intval($json['patients']),
 			'encounters' => intval($json['encounters']),
 			'observations' => intval($json['observations']),

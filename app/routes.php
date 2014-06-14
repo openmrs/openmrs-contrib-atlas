@@ -113,10 +113,10 @@ Route::get('module/login', array('as' => 'module-login', function() {
 
 Route::get('module', array('as' => 'module', 'before' => 'module', function() 
 {
-	$module = Input::get('module');
+	$module = Input::get('uuid');
 	Session::set('module', $module);
+	$moduleSite = DB::table('auth')->where('token','=', $module)->first();
 	if (Session::has(user)) {
-		$moduleSite = DB::table('auth')->where('token','=', $module)->lists('atlas_id');
 		$user = Session::get(user);
 		Log::info('Logged user: ' . $user->uid);
 		$privileges = DB::table('auth')->where('token','=', $user->uid)->lists('atlas_id');
@@ -126,5 +126,8 @@ Route::get('module', array('as' => 'module', 'before' => 'module', function()
 		return View::make('index', array('user' => $user,
 		 'auth_site' => $list, 'module' =>  $module));
 	}
-	return Redirect::route('module-login', array('module' => Input::get('module')));
+	if ($moduleSite != NULL) {
+		return View::make('index', array('module' =>  $module));
+	}
+	return Redirect::route('module-login', array('module' => $module));
 }));

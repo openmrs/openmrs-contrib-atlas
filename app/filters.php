@@ -170,8 +170,8 @@ Route::filter('isAdmin', function()
 
 Route::filter('module', function()
 {
-	if (!Input::has('module'))
+	if (!Input::has('uuid'))
 		App::abort(500, 'Missing Parameter');
-	if (strlen(Input::get('module')) < 30)
+	if (strlen(Input::get('uuid')) < 30)
 		App::abort(500, 'Invalid parameters');
 });
