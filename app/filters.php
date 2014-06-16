@@ -175,3 +175,14 @@ Route::filter('module', function()
 	if (strlen(Input::get('uuid')) < 30)
 		App::abort(500, 'Invalid parameters');
 });
+Route::when('module/*', 'module');
+
+Route::filter('module-auth', function()
+{
+	$json = json_decode(Request::getContent(), true);
+	if ($json == NULL) App::abort(400, 'Missing data');
+	if (!is_array($json)) App::abort(400, 'Unable to parse data');
+	if (!array_key_exists('token', $json)) App::abort(400, 'Missing module token');
+	if (!array_key_exists('site', $json)) App::abort(400, 'Missing site uuid');
+	if ($json['token'] != Session::get('module')) App::abort(400, 'Module and token mismatch');
+});

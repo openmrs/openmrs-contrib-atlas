@@ -111,6 +111,13 @@ Route::get('module/login', array('as' => 'module-login', function() {
 	return Response::view('module');
 }));
 
+Route::post('module/auth', array(
+	'before' => 'module-auth',
+	'uses' => 'AuthController@authModule'));
+
+Route::delete('module/auth', array(
+	'uses' => 'AuthController@deauthModule'));
+
 Route::get('module', array('as' => 'module', 'before' => 'module', function() 
 {
 	$module = Input::get('uuid');

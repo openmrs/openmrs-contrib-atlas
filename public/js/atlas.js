@@ -3,6 +3,7 @@ lockHtml += "<a href='http://cl.openmrs.org/track/click.php?u=30039905&id=c4087a
 lockHtml += "http%3A%2F%2Fgo.openmrs.org%2Fhelpdesk&url_id=04c52b64769a7567d21db835fcd45f51f99842bd' target='_blank'> OpenMRS HelpDesk.</a></div>";
 var fadeHtml = "<div class='toggle' id='fadeInfo'> Sites that have not been updated for more than six months will begin to fade away. ";
 fadeHtml += "Fading can be turned off through the controls on this page.</div>";
+var uniqueMarker = null;
 function initLegendChoice() {
   $("#legendSelected").html(divTypes);
   $("#legend2").html(divVersions);
@@ -335,7 +336,6 @@ function loadVersion(json) {
 
 function loadSites(json) {
   var bounds = new google.maps.LatLngBounds();
-  var uniqueMarker = null;
   loadVersion(json);
   for(i=0; i<json.length; i++) {
     var site = json[i];
@@ -355,9 +355,8 @@ function loadSites(json) {
       uniqueMarker = marker;
     sites[site.id] = {"siteData": site, "marker":marker, "infowindow":infowindow, "editwindow":editwindow, "bubbleOpen":false,"editBubbleOpen":false, "fadeGroup":fadeGroup};
   }
+  setTimeout('openBubble(uniqueMarker)', 800);
   map.fitBounds(bounds);
-    if (uniqueMarker !== null)
-      google.maps.event.trigger(uniqueMarker, 'click');
 }
 
 function repaintMarkers() {
@@ -516,7 +515,7 @@ function createInfoWindow(site, marker) {
     html += "<div id='site-update'>Last Updated: " + date_updated + "</div>";
   }
   if (site_module !== 1 && site.uuid !== null && module !== null) {
-    html += "<div class='me-button'><button type='button' id='me-button' title='Pick the site for this server.'";
+    html += "<div class='me-button'><button type='button' id='me-button' value='" + site.id + "' title='Pick the site for this server.'";
     html += "class='btn btn-success btn-xs'>This is me !</button></div>";
   }
   if (site.module === 1) {
@@ -554,7 +553,17 @@ function createInfoWindow(site, marker) {
     } else {
       closeBubbles();
       infowindow.open(map,marker);
-      sites[site.id].bubbleOpen = true; 
+      sites[site.id].bubbleOpen = true;
+      if (site_module !== 1 && site.uuid !== null && module !== null) {
+        html = "<div class='me-button'><button type='button' id='me-button' value='" + site.id + "' title='Pick the site for this server.'";
+        html += "class='btn btn-success btn-xs'>This is me !</button></div>";
+        $(".site-bubble").append(html);
+      }
+      if (site.module === 1) {
+        html = "<div class='me-button'><button type='button' id='detach-button' value='" + site.id + "' title='Detach the site from this server.'";
+        html += "class='btn btn-info btn-xs'>Detach me !</button></div>";
+        $(".site-bubble").append(html);
+      }
       if ((site.uid == currentUser) || site.uuid !== null) { 
         $(".gm-style-iw").parent().append("<div id='edit' value='"+site.id+"' title ='Edit site' class='control' style='position: absolute;overflow:none; right:12px;bottom:12px; color:#3F3F3F'><i class='fa fa-lg fa-pencil' style='color:rgba(171, 166, 166, 1)'></i></div>");
         $(".gm-style-iw").parent().append("<div id='delete' value='"+site.id+"' title ='Delete site' class='control' style='position: absolute;overflow:none; right:12px;bottom:27px; color:#3F3F3F'><i class='fa fa-lg fa-trash-o' style='color:rgba(171, 166, 166, 1)'></i></div>");

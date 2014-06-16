@@ -69,4 +69,31 @@ class AuthController extends BaseController {
 	    	Log::debug('Signature/n' . $signature);
     }
 
+    public function authModule() {
+    	$json = json_decode(Request::getContent(), true);
+    	$module = $json['token'];
+    	$site = $json['site'];
+    	Log::info('Auth module request: ');
+    	Log::info('Site: ' . $site);
+    	Log::info('Module: ' . $module);
+    	$privileges = DB::table('auth')->where('token','=', $module)->count();
+    	if ($privileges > 0)
+    		App::abort(400,'This module is allready linked to a site');
+
+		DB::table('auth')->insert(array('atlas_id' => $site, 'principal' => 
+						'module:'. $module, 'token' => $module, 'privileges' => 'STATS'));
+		Log::debug("Created auth");
+    }
+
+    public function deauthModule() {
+    	$module =  Input::get('uuid');
+    	Log::info('Deauth module request: ');
+    	Log::info('Module: ' . $module);
+    	$privileges = DB::table('auth')->where('token','=', $module)->count();
+    	if ($privileges < 0)
+    		App::abort(400,'This module is not linked to a site');
+		DB::table('auth')->where('token','=', $module)->delete();
+		Log::debug("Deleted auth");
+    }
+
 }

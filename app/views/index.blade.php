@@ -17,6 +17,7 @@
 <script type="text/javascript" src="js/user.js"></script>
 <script type="text/javascript" src="js/atlas.js"></script>
 <script type="text/javascript" src="js/tools.js"></script>
+<script type="text/javascript" src="js/module.js"></script>
 <script type="text/javascript" src="lib/js/yqlgeo.js"></script>
 <script type="text/javascript">
 var auth = null;

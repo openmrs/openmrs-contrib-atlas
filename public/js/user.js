@@ -127,7 +127,7 @@ function getCurrentLatLng() {
 function newSite(myPosition) {
   var site = {
     id: sites.length,
-    uuid: "",
+    uuid: null,
     contact: userName,
     uid: currentUser,
     name: userName + " Site",
@@ -299,8 +299,6 @@ function contentEditwindow(site) {
   html += "<div class='form-group'><input type='text' class='form-control input-sm'  placeholder='Contact' title='Contact' value='"+ site.contact + "' name='contact' id ='contact'></div>";
   html += "<div class='form-group'><input type='email' class='form-control input-sm' placeholder='Email' title='Email' value='"+ site.email + "' name='email' id='email'></div>";
   html += "<div class='form-group'><textarea class='form-control' value='' name='notes' rows='2' id='notes' placeholder='Notes'>"+ site.notes + "</textarea></div>";
-  if (module !== null)
-    html += "<div class='form-inline module'><input type='checkbox' id='module' class='form-control input-sm' title='Pick the site for this server.'> Pick the site for this server.</div>";
   html += "<div class='row'><div class='col-xs-8'>";
   html += "<select title='Site type' id='type' class='form-control input-sm'>"
   html += (site.type == "Clinical") ? "<option selected>" : "<option>"; 
