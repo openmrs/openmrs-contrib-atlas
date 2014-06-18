@@ -96,4 +96,15 @@ class AuthController extends BaseController {
 		Log::debug("Deleted auth");
     }
 
+    public function getAuthModule() {
+    	$module =  Input::get('uuid');
+    	Log::info('getAuth module request: ');
+    	Log::info('Module: ' . $module);
+    	$privileges = DB::table('auth')->where('token','=', $module)->get();
+		$content  = json_encode($privileges);
+		$response = Response::make($content, 200);
+		$response->header('Content-Type', 'application/json');
+		return $response;
+    }
+
 }

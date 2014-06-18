@@ -163,6 +163,9 @@ function deleteMarker(site) {
     sites[site].marker.setMap(null);
   }
   nextSite = 0;
+  if (sites[site].siteData.module === 1) {
+    site_module = null;
+  }
   var i = auth_site.indexOf(sites[site].siteData.uuid);
   if(i !== -1) {
     auth_site.splice(i, 1);
@@ -240,6 +243,10 @@ function eventSaveMarker() {
       })
       .done(function(response) {
         site.uuid = response;
+        if (module !== null && site_module === 0) {
+          site.module = 1;
+          site_module = 1;
+        }
         if (auth_site.indexOf(response) === -1)
           auth_site.push(response);
         if (auth_site.length > 0)

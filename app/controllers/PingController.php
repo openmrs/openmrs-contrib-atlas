@@ -139,6 +139,7 @@ class PingController extends BaseController {
 			'patients' => intval($json['patients']),
 			'encounters' => intval($json['encounters']),
 			'observations' => intval($json['observations']),
+			'atlas_version' => $json['atlasVersion'],
 			'date_created' => $date);
 
 		$site = DB::table('atlas')->where('id','=', $param['id'])->first();
@@ -260,12 +261,26 @@ class PingController extends BaseController {
 			$principal = 'openmrs_id:' . $user->uid; 
 			$auth = DB::table('auth')->where('atlas_id', '=', $param['id'])->where('principal','=', 
 					$principal)->first();
-				if ($auth == NULL) {
+			if ($auth == NULL) {
+				DB::table('auth')->insert(array('atlas_id' => $param['id'], 'principal' => 
+					$principal, 'token' => $user->uid, 'privileges' => 'ALL'));
+				Log::debug("Created auth");
+			}
+			if (Session::has('module')) {
+				// Add module authoritation if marker created in module
+				$module = Session::get('module');
+				Log::info('Module create a marker');
+		    	Log::info('Module UUID: ' . $module);
+		    	$privileges = DB::table('auth')->where('token','=', $module)->count();
+		    	if ($privileges > 0) {
+		    		log::info('This module is allready linked to a site');
+		    	} else {
 					DB::table('auth')->insert(array('atlas_id' => $param['id'], 'principal' => 
-						$principal, 'token' => $user->uid, 'privileges' => 'ALL'));
-					Log::debug("Created auth");
+						'module:'. $module, 'token' => $module, 'privileges' => 'STATS'));
+					Log::debug("Created auth for module");
 				}
 			}
+		}
 
 		return $param['id'];
 	}
