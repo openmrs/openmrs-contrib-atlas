@@ -561,7 +561,7 @@ function createInfoWindow(site, marker) {
       }
       if (site.module === 1) {
         html = "<div class='me-button'><button type='button' id='detach-button' value='" + site.id + "' title='Detach the site from this server.'";
-        html += "class='btn btn-info btn-xs'>Detach me !</button></div>";
+        html += "class='btn btn-info btn-xs'>This is not me.</button></div>";
         $(".site-bubble").append(html);
       }
       if ((site.uid == currentUser) || site.uuid !== null) { 
