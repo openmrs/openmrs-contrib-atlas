@@ -196,6 +196,9 @@ class PingController extends BaseController {
 			'longitude' => floatval($json['longitude']),
 			'name' => $json['name'],
 			'url' => $json['url'],
+			'patients' => intval($json['patients']),
+			'encounters' => intval($json['encounters']),
+			'observations' => intval($json['observations']),
 			'type' => $json['type'],
 			'image' => $json['image'],
 			'contact' => $json['contact'],
@@ -205,6 +208,10 @@ class PingController extends BaseController {
 			'atlas_version' => $json['atlasVersion'],
 			'date_created' => $date,
 			'created_by' => $user->principal);
+		
+		$param['patients'] = is_int($param['patients']) ? $param['patients'] : '';
+		$param['encounters'] = is_int($param['encounters']) ? $param['encounters'] : '';
+		$param['observations'] = is_int($param['observations']) ? $param['observations'] : '';
 
 		$privileges = DB::table('auth')->where('token','=', $user->uid)->where('atlas_id','=', $param['id'])
 		->where('privileges', '=', 'ALL')->first();

@@ -205,6 +205,9 @@ function eventSaveMarker() {
    $("#map_canvas").on("submit", "form", (function(e) {
     e.preventDefault();
     var id = $("#site").val();
+    var patients = $("#patients").val().trim();
+    var encounters = $("#encounters").val().trim();
+    var obs = $("#observations").val().trim();
     var image = $("#image").val();
     var name = $("#name").val().trim();
     var mail = $("#email").val().trim();
@@ -221,6 +224,9 @@ function eventSaveMarker() {
       site.email =  mail;
       site.url = url;
       site.date_changed = new Date().toString();
+      site.observations = obs;
+      site.patients = patients;
+      site.encounters = encounters;
       site.contact = contact;
       site.notes = notes;
       site.image = image;
@@ -306,6 +312,14 @@ function contentEditwindow(site) {
   html += "<div class='form-group'><input type='text' class='form-control input-sm'  placeholder='Contact' title='Contact' value='"+ site.contact + "' name='contact' id ='contact'></div>";
   html += "<div class='form-group'><input type='email' class='form-control input-sm' placeholder='Email' title='Email' value='"+ site.email + "' name='email' id='email'></div>";
   html += "<div class='form-group'><textarea class='form-control' value='' name='notes' rows='2' id='notes' placeholder='Notes'>"+ site.notes + "</textarea></div>";
+  html += "<div class='site-stat'>";
+  html += "<div class='form-inline'>Patients <input type='number' pattern='[0-9]' class='form-control input-sm' title='Number of patients' value='"+ site.patients + "' name='patients' id ='patients'></div>";
+  html += "<div class='form-inline'><br>Encounters <input type='number' pattern='[0-9]' class='form-control input-sm' title='Number of encounters' value='"+ site.encounters + "' name='encounters' id ='encounters'></div>";
+  html += "<div class='form-inline'><br>Observation <input type='number' pattern='[0-9]' class='form-control input-sm' title='Number of observations' value='"+ site.observations + "' name='obs' id ='observations'></div><br>";
+  if (module !== null)
+    html += "<div class='form-inline'><input type='checkbox' class='form-control input-sm' title='Automatically update from this server'> Automatically update.</div></div>";
+  html += "</div'>";
+  html += "<div class='form-group'><textarea class='form-control' value='' name='notes' rows='2' id='notes' placeholder='Notes'>"+ site.notes + "</textarea></div>";
   html += "<div class='row'><div class='col-xs-8'>";
   html += "<select title='Site type' id='type' class='form-control input-sm'>"
   html += (site.type == "Clinical") ? "<option selected>" : "<option>"; 
@@ -319,14 +333,7 @@ function contentEditwindow(site) {
   html += (site.type == "Other") ? "<option selected>" : "<option>"; 
   html += "Other</option>"
   html += "</select></div>";
-  html += "<div class=''><button type='submit' class='btn btn-primary'>Save</button></div></div></form></div>";
-            +"<option>Clinical</option>"
-            +"<option>Evaluation</option>"
-            +"<option>Development</option>"
-            +"<option>Research</option>"
-            +"<option>Other</option>"
-          +"</select></div>";
-            html += "<input type='hidden' id='site' value='"+site.id+"'/>";
+  html += "<input type='hidden' id='site' value='"+site.id+"'/>";
   html += "<div class=''><button type='submit' class='btn btn-primary'>Save</button></div></div></form></div></div>";
   return html;
 }

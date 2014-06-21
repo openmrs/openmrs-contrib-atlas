@@ -130,6 +130,7 @@ Route::get('module', array('as' => 'module', 'before' => 'module', function()
 		$list = json_encode($privileges);
 		Log::info('Authorized site: ' . $list);
 		Log::info('Authorized module: ' . $module);
+		Log::info('Module attached: ' . $site_module);
 		return View::make('index', array('user' => $user,
 		 'auth_site' => $list, 'module' =>  $module, 'site_module' => $site_module));
 	}

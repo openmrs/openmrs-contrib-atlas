@@ -113,7 +113,10 @@ span.site-type {
         margin-left: 3px;
         vertical-align: middle;
 }
-
+.site-stat input[type="number"] {
+    width: 100px;
+    float: right;
+}
 #site-update {
         color: rgba(141, 141, 141, 1);
         font-style: italic;
