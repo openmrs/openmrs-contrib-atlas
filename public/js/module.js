@@ -63,3 +63,10 @@ function detachMarker(id) {
     bootbox.alert( "Error deleting authorization - Please try again ! - " + jqXHR.statusText );
   });
 }
+
+function openDialogID(url,width,height) 
+{ 
+    var top =(screen.height - width)/2; 
+    var left = (screen.width - height)/2;
+    window.open(url+"#redirect-to","Sign In","toolbar=0,menubar=0,location=0,status=0,scrollbars=0,resizable=no,top="+top+",left="+left+",width="+width+",height="+height); 
+} 

@@ -118,7 +118,7 @@ ga('send', 'pageview');
         @if (!Session::has(module))
           {{ link_to_route('logout', 'Sign Out' )}}
         @else
-          {{ link_to_route('logout', 'Sign Out', null, array('target'=>'blank'))}}
+          {{ link_to_route('logout', 'Sign Out', array('uuid' => $module), array('target'=>'blank'))}}
         @endif
         </div>
         <div class="separatorDiv"></div>        
@@ -130,7 +130,7 @@ ga('send', 'pageview');
     @if (!Session::has(module))
       {{ link_to_route('login', 'Sign In')}}
     @else
-      {{ link_to_route('login', 'Sign In', null, array('target'=>'blank'))}}
+      {{ link_to_route('login', 'Sign In', null, array('onclick'=>'openDialogID(this.href,1100,500);return false;'))}}
     @endif
   </div>
   @endif

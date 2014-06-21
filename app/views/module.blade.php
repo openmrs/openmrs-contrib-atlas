@@ -22,16 +22,27 @@
 </style>
 <script type="text/javascript">
 $(document).ready(function() {
+	$('#buttonS').click(function() {
+		var NWin = popupWindowCenter($(this).prop('href'), '', 1000,500);
+		if (window.focus) 
+			NWin.focus();
+		return false;
+	});
 	$('#signin').modal({
-	  keyboard: false,
-	  backdrop: 'static'
+		keyboard: false,
+		backdrop: 'static'
 	});
 	$('#signin').modal('show');
 	$('#signin').on('hidden.bs.modal', function (e) {
 		$('#signin').modal('show');
-	})
-
+	});
 });
+function popupWindowCenter(URL,title,w,h){
+	var left = (screen.width/2)-(w/2);
+	var top = (screen.height/2)-(h/2);
+	var newWin = window.open (URL, title, 'toolbar=no, location=no,directories=no, status=no, menubar=no, scrollbars=no, resizable=no,copyhistory=no, width='+w+', height='+h+', top='+top+', left='+left);
+	return newWin;
+}
 </script>
 </head>
 <body>
@@ -43,7 +54,7 @@ $(document).ready(function() {
 	        <h3 class="modal-title">Sign In Required</h4>
       	</div>
       	<div class="modal-body">
-	        {{ link_to_route('login', 'Sign in with your OpenMRS ID', null, array('target'=>'blank', 'class'=>'btn btn-primary btn-block')) }}
+	        {{ link_to_route('login', 'Sign in with your OpenMRS ID', null, array('id'=>'buttonS', 'class'=>'btn btn-primary btn-block')) }}
       </div>
     </div>
   </div>

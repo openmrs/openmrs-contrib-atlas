@@ -95,7 +95,7 @@ Route::match(array('GET', 'POST'), 'admin', array(
 	'before' => 'isAdmin',
 	'uses' => 'AdminController@adminQuery'));
 
-Route::get('module/close', array('as' => 'close', function() {
+Route::get('close', array('as' => 'close', function() {
 	if (!Session::has('module'))
 		return Redirect::route('/');
 	return Response::view('close');
