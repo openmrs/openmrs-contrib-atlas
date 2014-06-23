@@ -207,6 +207,7 @@ class PingController extends BaseController {
 			'data' => json_encode($json['data']),
 			'atlas_version' => $json['atlasVersion'],
 			'date_created' => $date,
+			'show_counts' => $json['show_counts'],
 			'created_by' => $user->principal);
 		
 		$param['patients'] = is_int($param['patients']) ? $param['patients'] : '';
@@ -243,6 +244,7 @@ class PingController extends BaseController {
 				'notes' =>  $site->notes, 
 				'action' =>  'UPDATE', 
 				'email' => $site->email,
+				'show_counts' => $site->show_counts,
 				'data' =>  $site->data, 
 				'atlas_version' => $site->atlas_version,
 				'date_created' => $site->date_created,
@@ -328,6 +330,7 @@ class PingController extends BaseController {
 				'action' => 'DELETE', 
 				'atlas_version' => $site->atlas_version,
 				'date_created' => $site->date_created,
+				'show_counts' => $site->show_counts,
 				'created_by' => $site->created_by));
 			DB::table('auth')->where('atlas_id', '=', $id)->delete();
 			DB::table('atlas')->where('id', '=', $id)->delete();

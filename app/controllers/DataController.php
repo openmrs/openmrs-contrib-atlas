@@ -20,7 +20,7 @@ class DataController extends BaseController {
 		$sites = DB::table('atlas')
                      ->select(DB::raw('id as uuid,  latitude,
                      	longitude, name, url, type, image, patients, encounters, observations,
-                     	contact,email,notes,data,atlas_version,
+                     	contact,email,notes,data,atlas_version, show_counts,
                      	CASE WHEN date_changed IS NULL THEN "" ELSE date_changed END as date_changed,
                      	date_created'))->get();
 

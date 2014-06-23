@@ -132,6 +132,7 @@ function newSite(myPosition) {
     uid: currentUser,
     name: userName + " Site",
     email: userEmail,
+    show_counts: 1,
     notes: "",
     url: "",
     image: "",
@@ -205,9 +206,19 @@ function eventSaveMarker() {
    $("#map_canvas").on("submit", "form", (function(e) {
     e.preventDefault();
     var id = $("#site").val();
-    var patients = $("#patients").val().trim();
-    var encounters = $("#encounters").val().trim();
-    var obs = $("#observations").val().trim();
+    var site = sites[id].siteData;
+    if (module === null || site.module !== 1) {
+      var patients = $("#patients").val().trim();
+      var encounters = $("#encounters").val().trim();
+      var obs = $("#observations").val().trim();
+      site.observations = obs;
+      site.patients = patients;
+      site.encounters = encounters;
+    }
+    if (site.module == 1) {
+      var stats = $('#include-count').is(':checked') ? 1 : 0; 
+      site.show_counts = stats;
+    }
     var image = $("#image").val();
     var name = $("#name").val().trim();
     var mail = $("#email").val().trim();
@@ -218,7 +229,6 @@ function eventSaveMarker() {
     if(name === "" || id === "") {
       bootbox.alert("Site Name is missing !");
     } else {
-      var site = sites[id].siteData;
       var pos = sites[id].marker.getPosition();
       site.name = name;
       site.email =  mail;
@@ -277,12 +287,14 @@ var html = "<div class='site-bubble'>";
   if (site.url)
     html += "<div class='site-url'><a target='_blank' href='" + safeUrl(site.url) + "' title='" + site.url + "'>"
             + displayUrl(safeUrl(site.url)) + "</a></div>";
-  if (site.patients && site.patients !== "0")
-    html += "<div class='site-count'>" + addCommas(site.patients) + " patients</div>";
-  if (site.encounters && site.encounters !== "0")
-    html += "<div class='site-count'>" + addCommas(site.encounters) + " encounters</div>";
-  if (site.observations && site.observations !== "0")
-    html += "<div class='site-count'>" + addCommas(site.observations) + " observations</div>";
+  if (site.show_counts !== 0) {
+    if (site.patients && site.patients !== "0")
+      html += "<div class='site-count'>" + addCommas(site.patients) + " patients</div>";
+    if (site.encounters && site.encounters !== "0")
+      html += "<div class='site-count'>" + addCommas(site.encounters) + " encounters</div>";
+    if (site.observations && site.observations !== "0")
+      html += "<div class='site-count'>" + addCommas(site.observations) + " observations</div>";
+  }
   if (site.contact)
     html += "<div class='site-contact'><span class='site-label'>Contact:</span> " + site.contact + "</div>";
   if (site.email)
@@ -303,7 +315,7 @@ var html = "<div class='site-bubble'>";
 }
 
 function contentEditwindow(site) {
-  var html = "<div class='site-bubble bubble-form' style='width:200px'>";
+  var html = "<div class='site-bubble bubble-form' style='width:200px; margin-bottom:-5px;'>";
   html += "<form method='post' id='"+ site.id +"'>";
   html += "<div class='form-group'><input type='text' required='true' placeholder='Site Name' title='Site Name' class='form-control input-sm' value='"+ site.name + "' id='name' name='name'></div>";
   html += "<div class='form-group'>";
@@ -312,15 +324,22 @@ function contentEditwindow(site) {
   html += "<div class='form-group'><input type='text' class='form-control input-sm'  placeholder='Contact' title='Contact' value='"+ site.contact + "' name='contact' id ='contact'></div>";
   html += "<div class='form-group'><input type='email' class='form-control input-sm' placeholder='Email' title='Email' value='"+ site.email + "' name='email' id='email'></div>";
   html += "<div class='form-group'><textarea class='form-control' value='' name='notes' rows='2' id='notes' placeholder='Notes'>"+ site.notes + "</textarea></div>";
-  html += "<div class='site-stat'>";
-  html += "<div class='form-inline'>Patients <input type='number' pattern='[0-9]' class='form-control input-sm' title='Number of patients' value='"+ site.patients + "' name='patients' id ='patients'></div>";
-  html += "<div class='form-inline'><br>Encounters <input type='number' pattern='[0-9]' class='form-control input-sm' title='Number of encounters' value='"+ site.encounters + "' name='encounters' id ='encounters'></div>";
-  html += "<div class='form-inline'><br>Observation <input type='number' pattern='[0-9]' class='form-control input-sm' title='Number of observations' value='"+ site.observations + "' name='obs' id ='observations'></div><br>";
-  if (module !== null)
-    html += "<div class='form-inline'><input type='checkbox' class='form-control input-sm' title='Automatically update from this server'> Automatically update.</div></div>";
+  if (site.module !== 1) {
+    html += "<div class='site-stat'>";
+    html += "<div class='form-inline'>Patients <input type='number' pattern='[0-9]' class='form-control input-sm' title='Number of patients' value='"+ site.patients + "' name='patients' id ='patients'></div>";
+    html += "<div class='form-inline'><br>Encounters <input type='number' pattern='[0-9]' class='form-control input-sm' title='Number of encounters' value='"+ site.encounters + "' name='encounters' id ='encounters'></div>";
+    html += "<div class='form-inline'><br>Observations <input type='number' pattern='[0-9]' class='form-control input-sm' title='Number of observations' value='"+ site.observations + "' name='obs' id ='observations'></div><br>";
+  } else {
+    html += "<div class='site-stat disabled'>";
+    html += "<div class='form-inline'><label>Patients:</label> " + site.patients + "</div>";
+    html += "<div class='form-inline'><label>Encounters:</label> " + site.encounters + "</div>";
+    html += "<div class='form-inline'><label>Observations:</label> " + site.observations + "</div>";
+  }
+  if (site.module === 1) {
+    html += "<div class='form-inline' ><input type='checkbox' style='height:auto' id='include-count' class='form-control input-sm' title='Include counts in the bubble'> Include counts.</div></div>";
+  }
   html += "</div'>";
-  html += "<div class='form-group'><textarea class='form-control' value='' name='notes' rows='2' id='notes' placeholder='Notes'>"+ site.notes + "</textarea></div>";
-  html += "<div class='row'><div class='col-xs-8'>";
+  html += "<div class='row' style='margin-top:10px'><div class='col-xs-8'>";
   html += "<select title='Site type' id='type' class='form-control input-sm'>"
   html += (site.type == "Clinical") ? "<option selected>" : "<option>"; 
   html += "Clinical</option>"

@@ -485,45 +485,7 @@ versionCompare = function(left, right) {
 };
 
 function createInfoWindow(site, marker) {
-  var html = "<div class='site-bubble'>";
-  html += "<div class='site-name'>" + site.name + "</div>";
-  html += "<div class='site-panel'>";
-  if (site.image)
-    html += "<img class='site-image' src='" + site.image + "' width='80px' height='80px' alt='thumbnail' />";
-  if (site.url)
-    html += "<div class='site-url'><a target='_blank' href='" + safeUrl(site.url) + "' title='" + site.url + "'>"
-            + displayUrl(safeUrl(site.url)) + "</a></div>";
-  if (site.patients && site.patients !== "0")
-    html += "<div class='site-count'>" + addCommas(site.patients) + " patients</div>";
-  if (site.encounters && site.encounters !== "0")
-    html += "<div class='site-count'>" + addCommas(site.encounters) + " encounters</div>";
-  if (site.observations && site.observations !== "0")
-    html += "<div class='site-count'>" + addCommas(site.observations) + " observations</div>";
-  if (site.contact)
-    html += "<div class='site-contact'><span class='site-label'>Contact:</span> " + site.contact + "</div>";
-  if (site.email)
-    html += "<a href='mailto:"+ site.email + "' class='site-email'><img src='images/mail.png' width='15px' height='15px'/></a>";
-  html += "</div>";
-  if (site.notes)
-    html += "<fieldset class='site-notes'>" + site.notes + "</fieldset>";
-  if (site.type)
-    html += "<div class='site-type'><span class='site-type'>" + site.type + "</span>";
-  if (versionForSite(site))
-    html += "<span class='site-version'>" + versionForSite(site) + "</span></div>";
-  if (site.date_changed) {
-    var date_updated = dateChangedString(site);
-    html += "<div id='site-update'>Last Updated: " + date_updated + "</div>";
-  }
-  if (site_module !== 1 && site.uuid !== null && module !== null) {
-    html += "<div class='me-button'><button type='button' id='me-button' value='" + site.id + "' title='Pick the site for this server.'";
-    html += "class='btn btn-success btn-xs'>This is me !</button></div>";
-  }
-  if (site.module === 1) {
-    html += "<div class='me-button'><button type='button' id='detach-button' title='Detach the site from this server.'";
-    html += "class='btn btn-info btn-xs'>Detach me !</button></div>";
-  }
-  html += "<div style='height:2px'></div>";
-  html += "</div>";
+  var html = contentInfowindow(site);
   var infowindow = new google.maps.InfoWindow({
     content: html
   });
@@ -585,6 +547,10 @@ function createInfoWindow(site, marker) {
         sites[id].marker.setDraggable(true);
         $(".gm-style-iw").parent().append("<div id='undo' title ='Undo change' value='"+id+"' class='control' style='position: absolute;overflow:none; right:12px;bottom:10px; color:#3F3F3F'><i class='fa fa-lg fa-history' style='color:rgba(171, 166, 166, 1)'></i></div>");
         $(".gm-style-iw").parent().append("<div id='delete' title ='Delete site' value='"+id+"' class='control' style='position: absolute;overflow:none; right:12px;bottom:28px; color:#3F3F3F'><i class='fa fa-lg fa-trash-o' style='color:rgba(171, 166, 166, 1)'></i></div>");
+        if (site.module == 1  && site.show_counts == 1) {
+          $('#include-count').click();
+          $('input#include-count').attr('checked', true);
+        }
       });
     } 
   });

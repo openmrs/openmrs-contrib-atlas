@@ -22,6 +22,7 @@ $(function () {
       site_module = 1;
       sites[id].siteData = site;
       sites[id].infowindow.setContent(contentInfowindow(site));
+      sites[id].editwindow.setContent(contentEditwindow(site));
       repaintMarkers();
       bootbox.alert('The module is now linked to ' + site.name);
     })
@@ -36,6 +37,10 @@ $(function () {
     bootbox.confirm(detachDialog, function(result) {
       if (result) detachMarker(id);
     });
+  });
+
+  $("#map_canvas").on("click", "#include-count", function(e){
+    $(".site-stat").toggleClass("disabled");
   });
 });
 

@@ -117,6 +117,16 @@ span.site-type {
     width: 100px;
     float: right;
 }
+.site-stat input[type="checkbox"] {
+  margin-bottom: 15px;
+  margin-top: 0px;
+  top: 6px;
+  position: relative;
+}
+.site-bubble .disabled {
+	color: rgba(171, 166, 166, 1);
+	font-style: italic;
+}
 #site-update {
         color: rgba(141, 141, 141, 1);
         font-style: italic;

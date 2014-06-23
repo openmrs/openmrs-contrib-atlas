@@ -41,7 +41,8 @@ class RenameCreatedBy extends Migration {
 	        });
     	}
 		Schema::table("archive", function($table) {
-			$table->dropIfExists("created_by");
+			if (Schema::hasColumn('archive', 'created_by'))
+				$table->dropColumn("created_by");
 		});
 	}
 
