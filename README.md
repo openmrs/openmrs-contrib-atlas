@@ -70,7 +70,7 @@ sudo chmod -R ug+rw app/storage
 
  - Rename `env.local.php` to `.env.prod.php` and edit it with your own configuration (database, site_url, phantomJS bin, openmrs id secret).
 
- - Set correct prod hostame in `bootstrap/start.php` (`hostname` value)
+ - Set correct prod hostame in `bootstrap/start.php`  - :warning: It should be the same value as `hostname` UNIX command.
 
 ```php
 $env = $app->detectEnvironment(array(
@@ -78,9 +78,14 @@ $env = $app->detectEnvironment(array(
    'prod' => array('prod_hostame'),
 ));
 ```
- - Set correct server Timezone in app/config/app (ie. America/New_York)
+ - Set correct server Timezone in .env.prod.php (ie. America/New_York)
 ```php
- 'timezone' => 'America/New_York',
+ 'TIMEZONE' => 'America/New_York',
+```
+ - Set correct mysql server charset and collation in .env.prod.php (ie. latin1 & latin1_swedish_ci)
+```sh
+# To show the correct value:
+mysql> SHOW VARIABLES LIKE 'character\_set\_%';
 ```
 
 ### Install PhantomJS
@@ -109,9 +114,11 @@ crontab -u www-data -e
 ```
 ### Init Database
 - Seed atlas database with sql dump
-- Sync with latest schema using Laravel CLI :
+- Sync with latest schema using Laravel CLI - :warning: rw required to storage/
 ```
 cd /opt/atlas
+# User that executes artisan command should has writing rights to storage/ folder
+su www-data 
 php artisan migrate
 ```
 ### Create first screen captures
