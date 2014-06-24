@@ -39,6 +39,6 @@ return array(
 	|
 	*/
 
-	'timezone' => 'UTC',
-
+	'timezone' => getenv('TIMEZONE'),
+	
 );
