@@ -40,7 +40,7 @@ var images = [];
 var shadows = [];
 var fadeOverTime = true;
 var legendGroups = 0;
-var divSites ='<img src="http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png"><b>Sites</b>';
+var divSites ='<img src="https://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png"><b>Sites</b>';
 var divTypes ='<img src="images/group-dot.png"><b>Types</b>'
 var divVersions ='<img src="images/group-dot.png"><b>Versions</b>';
 

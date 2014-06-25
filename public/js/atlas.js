@@ -208,53 +208,53 @@ function Icons(){
   if (legendGroups === 0){
     icons = {
       Research: {
-        icon: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/green-dot.png",
+        icon: "https://maps.google.com/intl/en_us/mapfiles/ms/micons/green-dot.png",
         label: "Research"
       },
       Clinical: {
-        icon: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/purple-dot.png",
+        icon: "https://maps.google.com/intl/en_us/mapfiles/ms/micons/purple-dot.png",
         label: "Clinical"
       },
       Development: {
-        icon: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png",
+        icon: "https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png",
         label: "Development"
       },
       Evaluation: {
-        icon: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/yellow-dot.png",
+        icon: "https://maps.google.com/intl/en_us/mapfiles/ms/micons/yellow-dot.png",
         label: "Evaluation"
       },
       Other: {
-        icon: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png",
+        icon: "https://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png",
         label: "Other"
       }
     };
   } else if (legendGroups === 1) {
     icons = {
       1: {
-        icon: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/green-dot.png",
+        icon: "https://maps.google.com/intl/en_us/mapfiles/ms/micons/green-dot.png",
         label: version[0][0]
       },
       2: {
-        icon: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/yellow-dot.png",
+        icon: "https://maps.google.com/intl/en_us/mapfiles/ms/micons/yellow-dot.png",
         label: version[1][0]
       },
       3: {
-        icon: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png",
+        icon: "https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png",
         label: version[2][0]
       },
       Other: {
-        icon: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png",
+        icon: "https://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png",
         label: "Other"
       },
       Unknown: {
-        icon: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/purple.png",
+        icon: "https://maps.google.com/intl/en_us/mapfiles/ms/micons/purple.png",
         label: "Unknown"
       }
     };
   } else {
       icons = {
         Other: {
-          icon: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png",
+          icon: "https://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png",
           label: "Other"
         }
       };
@@ -308,7 +308,7 @@ function colorForSite(site) {
     }
   }
   if ((site.uid === currentUser || auth_site.indexOf(site.uuid) !== -1) && legendGroups === 2)
-      image.url = "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png";
+      image.url = "https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png";
   return image;
 }
 
