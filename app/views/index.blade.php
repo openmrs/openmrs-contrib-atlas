@@ -79,6 +79,7 @@ ga('send', 'pageview');
       <div class = "dropDownOptionsDiv screen" id="screen">
         <div class = "dropDownItemDiv screen" id="1024x768"><i class="fa fa-file-image-o"></i>1024x768</div>
         <div class = "dropDownItemDiv screen" id="1280x1024"><i class="fa fa-file-image-o"></i>1920x1080</div>
+        <div class = "dropDownItemDiv screen" id="3840x2160"><i class="fa fa-file-image-o"></i>3840x2160</div>
         <div class="separatorDiv"></div>
       </div>
   </div>

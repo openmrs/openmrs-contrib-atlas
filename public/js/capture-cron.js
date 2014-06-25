@@ -17,7 +17,7 @@ if (system.args.length < 1 ) {
 }
 
 page.viewportSize = { width: width, height: height };
-output = path + '/atlas' + legend + fade + '_' + width + 'x'+ height +'.png';
+output = path + '/atlas' + legend + fade + '_' + width + 'x'+ height +'.jpg';
 page.onError = function(msg, trace) {
     var msgStack = ['ERROR: ' + msg];
     if (trace && trace.length) {
@@ -65,6 +65,10 @@ page.open(address, function (status) {
 
                     $(".control").attr('hidden', 'true');
                     $(".gmnoprint").attr('hidden', 'true');
+                    if (param.height == "2160") {
+                      $("#map_canvas").gmap3('get').setZoom(4);
+                      console.log("Fit the map");
+                    }
                     $("#legend").removeAttr('hidden');
                     if (param.fade == "0")
                         clickElement($("#fadeCheckbox")[0]);
@@ -72,16 +76,16 @@ page.open(address, function (status) {
                         clickElement($("#legend1")[0]);
                     if (param.legend == "1")
                         clickElement($("#legend2")[0]);
-                }, { legend: legend , fade: fade});
+                }, { legend: legend , fade: fade, height: height});
 
                 setTimeout(function () {
                     console.log("Rendering to file...");
-                    page.render(output);
+                    page.render(output, {format: 'jpeg', quality: '95'});
                     queue[address] = 'done';
                     console.log("Succes !");
                     phantom.exit();
-                }, 20000);
+                }, 10000);
             }
-        },20000);                 
+        },10000);                 
     }
 });

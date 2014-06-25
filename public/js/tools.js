@@ -17,7 +17,7 @@ function initDownloadButton() {
   $("#download").mouseleave(function(){
     $("#screen").css("display", "none");
   });
-  $("#1024x768, #1280x1024").click(function(){
+  $("#1024x768, #1280x1024, #3840x2160").click(function(){
     $("#screen").css("display", "none");
   });
   $('#1024x768').click(function () {
@@ -26,6 +26,10 @@ function initDownloadButton() {
   });
   $('#1280x1024').click(function () {
     var url = "download?legend=" + legendGroups + "&size=1920x1080" + "&fade=" + fadeOverTime;
+    window.location = url ;
+  });
+  $('#3840x2160').click(function () {
+    var url = "download?legend=" + legendGroups + "&size=3840x2160" + "&fade=" + fadeOverTime;
     window.location = url ;
   });
   

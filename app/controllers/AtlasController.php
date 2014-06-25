@@ -12,7 +12,7 @@ class AtlasController extends BaseController {
 	 		App::abort(500, 'Missing parameters');
 	 	
     	$phantomjs = getenv('PHANTOM_PATH');
-		$filename = storage_path() . '/captures/capture_' . str_random(12) . '.png';
+		$filename = storage_path() . '/captures/capture_' . str_random(12) . '.jpg';
 		$legend = Input::get('legend');
 		$zoom = Input::get('zoom');
 		$lat = Input::get('lat');
@@ -34,7 +34,7 @@ class AtlasController extends BaseController {
 		shell_exec($command);
 
     	if ( file_exists($filename)) {
-    		$file = 'atlas_capture.png';
+    		$file = 'atlas_capture.jpg';
     		return Response::download($filename, $file);
 		} else {	
     		App::abort(500, 'Capture error');
@@ -49,10 +49,10 @@ class AtlasController extends BaseController {
 		$fade = 0;
 		if (Input::get('fade') === "true")
 			$fade = 1;
-		$requestedFile =  storage_path(). '/captures/atlas'. $legend . $fade . '_' . $size . '.png';
+		$requestedFile =  storage_path(). '/captures/atlas'. $legend . $fade . '_' . $size . '.jpg';
 
     	if ( file_exists($requestedFile)) {
-    		$file = 'atlas_capture' . $size . '.png';
+    		$file = 'openmrs_atlas_' . $size . '.jpg';
     		return Response::download($requestedFile, $file);
 		} else {	
     		App::abort(404, 'Image not found');
@@ -68,7 +68,7 @@ class AtlasController extends BaseController {
 		$height = Input::get('height');
 		$size = $width . 'x' . $height;
 		$siteURL = getenv('SITE_URL');
-		$filename =  storage_path(). '/captures/atlas'. $legend . '_' . $size . '.png';
+		$filename =  storage_path(). '/captures/atlas'. $legend . '_' . $size . '.jpg';
 		$path = storage_path(). '/captures';
 	 	$command = $phantomjs . ' ' . public_path() . '/js/capture-cron.js ' . $path .' '. $legend . ' '
 	 	 . $width . ' ' . $height . ' ' . $siteURL . ' > ' . storage_path(). '/phantomjs.log';
@@ -76,7 +76,7 @@ class AtlasController extends BaseController {
 		shell_exec($command);
 
     	if ( file_exists($filename)) {
-    		$file = 'atlas_capture.png';
+    		$file = 'atlas_capture.jpg';
     		return Response::download($filename, $file);
 		} else {	
     		App::abort(500, 'Capture error');

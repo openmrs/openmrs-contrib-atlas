@@ -67,7 +67,7 @@ class CaptureCommand extends Command {
 					$width = '1024';
 					$height = '768';
 					$size = $width . 'x' . $height;
-					$filename =  storage_path(). '/captures/atlas'. $legend . $fade .'_' . $size . '.png';
+					$filename =  storage_path(). '/captures/atlas'. $legend . $fade .'_' . $size . '.jpg';
 					if (file_exists($filename))
 						unlink($filename);
 
@@ -81,7 +81,23 @@ class CaptureCommand extends Command {
 					$width = '1920';
 					$height = '1080';
 					$size = $width . 'x' . $height;
-					$filename =  storage_path(). '/captures/atlas'. $legend . $fade . '_' . $size . '.png';
+
+					$filename =  storage_path(). '/captures/atlas'. $legend . $fade . '_' . $size . '.jpg';
+					if (file_exists($filename))
+						unlink($filename);
+
+				 	$command = $phantomjs . ' ' . public_path() . '/js/capture-cron.js ' . $path .' '. $legend . ' '
+				 	 . $width . ' ' . $height . ' ' . $siteURL . ' ' . $fade . ' > ' . storage_path(). '/phantomjs.log';
+				 	Log::info('Comand:' . $command);
+					shell_exec($command);
+					Log::info('Image created: ' . $filename);
+					$this->info('Image created: ' . $filename);
+
+					$width = '3840';
+					$height = '2160';
+					$size = $width . 'x' . $height;
+
+					$filename =  storage_path(). '/captures/atlas'. $legend . $fade . '_' . $size . '.jpg';
 					if (file_exists($filename))
 						unlink($filename);
 
