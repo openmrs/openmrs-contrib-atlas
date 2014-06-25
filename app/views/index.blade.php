@@ -56,6 +56,7 @@ $(document).ready(function() {
 
 setTimeout('initialize()', 500);
 </script>
+@if ( app()->env == 'prod')
 <script>
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function()
 { (i[r].q=i[r].q||[]).push(arguments)}
@@ -66,6 +67,7 @@ ga('create', 'UA-16695719-3', 'openmrs.org');
 ga('require', 'displayfeatures');
 ga('send', 'pageview');
 </script>
+@endif
 </head>
 <body>
   <div id="map_title"><img src="images/OpenMRS-logo.png" /></div>
