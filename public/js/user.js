@@ -301,12 +301,17 @@ function contentEditwindow(site) {
   html += "<input type='hidden' id='site' value='"+site.id+"'/></div>";
   html += "<div class='row'><div class='col-xs-8'>";
   html += "<select title='Site type' id='type' class='form-control input-sm'>"
-            +"<option>Clinical</option>"
-            +"<option>Evaluation</option>"
-            +"<option>Development</option>"
-            +"<option>Research</option>"
-            +"<option>Other</option>"
-          +"</select></div>";
+  html += (site.type == "Clinical") ? "<option selected>" : "<option>"; 
+  html += "Clinical</option>"
+  html += (site.type == "Evaluation") ? "<option selected>" : "<option>"; 
+  html += "Evaluation</option>"
+  html += (site.type == "Development") ? "<option selected>" : "<option>"; 
+  html += "Development</option>"
+  html += (site.type == "Research") ? "<option selected>" : "<option>"; 
+  html += "Research</option>"
+  html += (site.type == "Other") ? "<option selected>" : "<option>"; 
+  html += "Other</option>"
+  html += "</select></div>";
   html += "<div class=''><button type='submit' class='btn btn-primary'>Save</button></div></div></form></div>";
   return html;
 }
