@@ -382,7 +382,26 @@ span.site-version {
 #alert {
     font-size: 18px;
 }
-.help-modal h3 {
+.site-stats {
+    margin-left: 10px;
+}
+.fieldset {
+        clear: both;
+        border: 1px solid #EEE;
+        margin: 2px 0px 2px 0px;
+        padding: 1px 4px 1px 5px;
+        border-radius: 5px;
+        -webkit-border-radius: 5px;
+}
+.fieldset legend {
+        text-align: center;
+        border: 1px solid #e5e5e5;
+        border-radius: 5px;
+        font-size: 1em;
+        width: 140px;
+        padding: 3px;
+        margin-bottom: 5px;
+}.help-modal h3 {
     font size: 20px;
 }
 .help-modal .modal-dialog {

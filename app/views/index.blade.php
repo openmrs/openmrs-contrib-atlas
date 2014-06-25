@@ -85,12 +85,6 @@ ga('send', 'pageview');
   <div id="map_title"><img src="images/OpenMRS-logo.png" /></div>
   <div id="map_canvas" style="width:100%; height:100%"></div>
   <div id="legend" class="control"></div>
-  @if (Session::has(module) && $site_module == 0)
-  <div id="alert" class="alert alert-danger">
-  <button type="button" class="close" data-dismiss="alert" style="margin-top:-5px;margin-left:10px;" aria-hidden="true"> &times;</button>
-    Select your site or, if it's not already on the Atlas, create a new entry for this server<br>
-  </div>
-  @endif
   <div class="atlas-container control screen" id ="download">
       <div class="dropDownControl control"
         title="Click to download a screenshot" id ="down-screen">

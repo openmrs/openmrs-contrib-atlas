@@ -47,6 +47,12 @@ class DataController extends BaseController {
 				Log::info('Module auth site: ' . $id);
 				$site['module'] = 1;
 			}
+			if ($site['show_counts'] == 0 && $site['module'] != 1 && $privilegesM->atlas_id != $site['uuid']) {
+				Log::info('Counts are hidden for site: ' . $id);
+				$site['patients'] = 0;
+				$site['encounters'] = 0;
+				$site['observations'] = 0;
+			}
 			if (!in_array($site['uuid'], $privileges) && $user->role != 'ADMIN')
 				unset($site['uuid']);
 		    $major = 0;
