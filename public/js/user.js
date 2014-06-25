@@ -280,11 +280,10 @@ var html = "<div class='site-bubble'>";
     html += "<span class='site-version'>" + versionForSite(site) + "</span></div>";
   if (getFadeGroup(site) > 0)
     html += "<div class='site-fade'>Why is this site fading away?</div>";
-  /*
-   if (site.date_changed)
-    var date_update = new Date(site.date_changed);
-    html += "<div id="site-update">Last Updated: " + date_update.toLocaleDateString() + "</div>";
-  */
+  if (site.date_changed) {
+    var date_updated = dateChangedString(site);
+    html += "<div id='site-update'>Last Updated: " + date_updated + "</div>";
+  }
   html += "</div>";
   return html;
 }

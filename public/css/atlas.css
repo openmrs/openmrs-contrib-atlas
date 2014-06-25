@@ -115,12 +115,12 @@ span.site-type {
 }
 
 #site-update {
-        color: #AAA;
+        color: rgba(141, 141, 141, 1);
         font-style: italic;
-        margin-top: 10px;
+        margin-top: 5px;
         margin-left: 1px;
         text-align: left;
-        font-size: 0.7em;
+        font-size: 9px;
         vertical-align: bottom;
 }
 

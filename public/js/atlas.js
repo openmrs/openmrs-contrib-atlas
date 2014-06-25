@@ -386,6 +386,14 @@ function dateForSite(site) {
   return new Date(dateString).getTime();
 }
 
+function dateChangedString(site) {
+  var dateString = site.date_changed;
+  if (dateString === "0000-00-00 00:00:00")
+    dateString = site.date_created;
+  dateString = dateString.replace(/-/g, "/");
+  return new Date(dateString).toLocaleDateString();
+}
+
 function versionForSite(site) {
   if (site.version) {
     var version = site.version;
@@ -486,11 +494,10 @@ function createInfoWindow(site, marker) {
     html += "<div class='site-type'><span class='site-type'>" + site.type + "</span>";
   if (versionForSite(site))
     html += "<span class='site-version'>" + versionForSite(site) + "</span></div>";
-  /*
-   if (site.date_changed)
-    var date_update = new Date(site.date_changed);
-    html += "<div id='site-update'>Last Updated: " + date_update.toLocaleDateString() + "</div>";
-  */
+  if (site.date_changed) {
+    var date_updated = dateChangedString(site);
+    html += "<div id='site-update'>Last Updated: " + date_updated + "</div>";
+  }
   html += "<div style='height:2px'></div>";
   html += "</div>";
   var infowindow = new google.maps.InfoWindow({
