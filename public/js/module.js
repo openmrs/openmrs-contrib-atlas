@@ -24,6 +24,8 @@ $(function () {
       sites[id].infowindow.setContent(contentInfowindow(site));
       sites[id].editwindow.setContent(contentEditwindow(site));
       repaintMarkers();
+      if(window !== window.top)
+        parent.postMessage("update", "*");
       bootbox.alert('The module is now linked to ' + site.name);
     })
     .fail(function(jqXHR, textStatus, errorThrown) {
@@ -62,6 +64,8 @@ function detachMarker(id) {
     sites[id].siteData = site;
     sites[id].infowindow.setContent(contentInfowindow(site));
     repaintMarkers();
+    if(window !== window.top)
+      parent.postMessage("update", "*");
     bootbox.alert("Authorization delete");
   })
   .fail(function(jqXHR, textStatus, errorThrown) {

@@ -104,7 +104,12 @@ class AuthController extends BaseController {
 		$content  = json_encode($privileges);
 		$response = Response::make($content, 200);
 		$response->header('Content-Type', 'application/json');
-		return $response;
+		$response->headers->set('Access-Control-Allow-Origin', '*');
+	    $response->headers->set('Access-Control-Allow-Credentials', 'true');
+	    $response->headers->set('Access-Control-Allow-Headers', 'Authorization, X-Requested-With');
+	    $response->headers->set('Access-Control-Allow-Methods', 'GET');
+	    $response->headers->set('Allow', 'GET');
+	    return $response;
     }
 
 }
