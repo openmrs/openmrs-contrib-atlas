@@ -22,6 +22,7 @@
 </style>
 <script type="text/javascript">
 $(document).ready(function() {
+    parent.postMessage("update", "*");
 	$('#buttonS').click(function() {
 		var NWin = popupWindowCenter($(this).prop('href'), '', 1000,500);
 		if (window.focus) 

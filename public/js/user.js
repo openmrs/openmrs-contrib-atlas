@@ -287,7 +287,7 @@ var html = "<div class='site-bubble'>";
   if (site.url)
     html += "<div class='site-url'><a target='_blank' href='" + safeUrl(site.url) + "' title='" + site.url + "'>"
             + displayUrl(safeUrl(site.url)) + "</a></div>";
-  if (site.show_counts !== 0) {
+  if (site.show_counts == true) {
     if (site.patients && site.patients !== "0")
       html += "<div class='site-count'>" + addCommas(site.patients) + " patients</div>";
     if (site.encounters && site.encounters !== "0")
@@ -315,6 +315,9 @@ var html = "<div class='site-bubble'>";
 }
 
 function contentEditwindow(site) {
+  var patients = ('patients' in counts) ? counts.patients : site.patients;
+  var encounters = ('encounters' in counts) ? counts.encounters : site.encounters;
+  var observations = ('observations' in counts) ? counts.observations : site.observations;
   var html = "<div class='site-bubble bubble-form' style='width:200px; margin-bottom:0px;'>";
   html += "<form method='post' id='"+ site.id +"'>";
   html += "<div class='form-group'><input type='text' required='true' placeholder='Site Name' title='Site Name' class='form-control input-sm' value='"+ site.name + "' id='name' name='name'></div>";
@@ -332,9 +335,9 @@ function contentEditwindow(site) {
     html += "<fieldset class='fieldset'>";
     html += "<legend><div class='form-inline' ><input type='checkbox' checked style='height:auto;bottom: 2px;position:relative' id='include-count' class='form-control input-sm' title='Include counts in the bubble'> Display counts</div></legend>";
     html += "<div class='site-stat'>";
-    html += "<div class='form-inline'>" + site.patients + " patients</div>";
-    html += "<div class='form-inline'>" + site.encounters + " encounters</div>";
-    html += "<div class='form-inline'>" + site.observations + " observations</div>";
+    html += "<div class='form-inline'>" + patients + " patients</div>";
+    html += "<div class='form-inline'>" + encounters + " encounters</div>";
+    html += "<div class='form-inline'>" + observations + " observations</div>";
     html += "</div></fieldset>";
   }
   html += "<div class='row' style='margin-top:10px;'><div class='col-xs-8'>";

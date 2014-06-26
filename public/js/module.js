@@ -2,6 +2,8 @@ var detachDialog = "This will unlink this server from the site on the Atlas. The
 detachDialog += " updated by this server. <br> Are you sure you want to unlink this site?"
 
 $(function () {
+  if(window !== window.top)
+        parent.postMessage("update", "*");
   $("#map_canvas").on("click", "#me-button", function(e) {
     e.preventDefault();
     var id = $(this).val();

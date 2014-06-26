@@ -38,8 +38,10 @@ class PingController extends BaseController {
 				'notes' =>  $site->notes, 
 				'email' => $site->email,
 				'data' =>  $site->data, 
+				'show_counts' => $site->show_counts,
 				'atlas_version' => $site->atlas_version,
-				'date_created' => $site->date_created));
+				'date_created' => $site->date_created,
+				'created_by' => $site->created_by));
 			DB::table('auth')->where('atlas_id', '=', $id)->delete();
 			DB::table('atlas')->where('id', '=', $id)->delete();
 			Log::info("Deleted ".$deleteId." from ".$_SERVER['REMOTE_ADDR']);
@@ -99,8 +101,11 @@ class PingController extends BaseController {
 				'email' => $site->email,
 				'data' =>  $site->data, 
 				'action' =>  'UPDATE', 
+				'data' =>  $site->data,
+				'show_counts' => $site->show_counts,
 				'atlas_version' => $site->atlas_version,
-				'date_created' => $site->date_created));
+				'date_created' => $site->date_created,
+				'created_by' => $site->created_by));
 
 			unset($param['date_created']);
 			DB::table('atlas')->where('id', '=', $site->id)->update($param);
@@ -118,6 +123,67 @@ class PingController extends BaseController {
 		}
 		return 'SUCCES';
 	}
+
+	/**
+	 * Post Ping function - Handle Auto from Atlas Module 2.0
+	 *
+	 */
+	public function autoPostModule()
+	{
+		$this->createTable();
+		Log::debug("DATA received: " . Request::getContent());
+		$json = json_decode(Request::getContent(), true);
+		$date = new \DateTime;
+		$module = $json['id'];
+		Log::info('Module uuid: ' . $module);
+		$siteM = DB::table('auth')->where('token','=', $module)->first();
+		if ($siteM == NULL)
+			App::abort(403, 'Unauthorized');
+
+		$param = array(
+			'id' => $siteM->atlas_id,
+			'patients' => intval($json['patients']),
+			'encounters' => intval($json['encounters']),
+			'observations' => intval($json['observations']),
+			'data' => json_encode($json['data']),
+			'atlas_version' => $json['atlasVersion'],
+			'date_created' => $date);
+
+		$site = DB::table('atlas')->where('id','=', $param['id'])->first();
+		if ($site != null) {
+			DB::table('archive')->insert(array(
+				'archive_date' => $date, 
+				'site_uuid' => $site->id, 
+				'id' => Uuid::uuid4()->toString(), 
+				'action' =>  'UPDATE',  
+				'type' => $site->type,
+				'longitude' =>  $site->longitude, 
+				'latitude' =>  $site->latitude,
+				'name' =>  $site->name, 
+				'url' =>  $site->url, 
+				'image' =>  $site->image, 
+				'contact' =>  $site->contact, 
+				'changed_by' => 'module:' . $module, 
+				'patients' =>  $site->patients, 
+				'encounters' =>  $site->encounters, 
+				'observations' =>  $site->observations, 
+				'notes' =>  $site->notes, 
+				'email' => $site->email,
+				'show_counts' => $site->show_counts,
+				'data' =>  $site->data, 
+				'atlas_version' => $site->atlas_version,
+				'date_created' => $site->date_created,
+				'created_by' => $site->created_by));
+
+			unset($param['date_created']);
+			DB::table('atlas')->where('id', '=', $site->id)->update($param);
+			Log::debug("Updated ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
+		} else {
+			Log::debug("Site not found: ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
+		}
+		return 'SUCCES';
+	}
+
 	/**
 	 * Post Ping function - Handle Ping from Atlas Module 2.0
 	 *
@@ -162,7 +228,8 @@ class PingController extends BaseController {
 				'observations' =>  $site->observations, 
 				'notes' =>  $site->notes, 
 				'email' => $site->email,
-				'data' =>  $site->data, 
+				'data' =>  $site->data,
+				'show_counts' => $site->show_counts, 
 				'atlas_version' => $site->atlas_version,
 				'date_created' => $site->date_created));
 
@@ -207,7 +274,7 @@ class PingController extends BaseController {
 			'data' => json_encode($json['data']),
 			'atlas_version' => $json['atlasVersion'],
 			'date_created' => $date,
-			'show_counts' => $json['show_counts'],
+			'show_counts' => intval($json['show_counts']),
 			'created_by' => $user->principal);
 		
 		$param['patients'] = is_int($param['patients']) ? $param['patients'] : '';
@@ -248,6 +315,7 @@ class PingController extends BaseController {
 				'data' =>  $site->data, 
 				'atlas_version' => $site->atlas_version,
 				'date_created' => $site->date_created,
+				'show_counts' => $site->show_counts,
 				'created_by' => $site->created_by));
 			
 			unset($param['created_by']);

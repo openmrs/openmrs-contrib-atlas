@@ -516,12 +516,12 @@ function createInfoWindow(site, marker) {
       closeBubbles();
       infowindow.open(map,marker);
       sites[site.id].bubbleOpen = true;
-      if (site_module !== 1 && site.uuid !== null && module !== null) {
+      if (site_module !== 1 && site.uuid !== null && module !== null && currentUser !== "visitor") {
         html = "<div class='me-button'><button type='button' id='me-button' value='" + site.id + "' title='Pick the site for this server.'";
         html += "class='btn btn-success btn-xs'>This is me !</button></div>";
         $(".site-bubble").append(html);
       }
-      if (site.module === 1) {
+      if (site.module === 1 && currentUser !== "visitor") {
         html = "<div class='me-button'><button type='button' id='detach-button' value='" + site.id + "' title='Detach the site from this server.'";
         html += "class='btn btn-info btn-xs'>This is not me.</button></div>";
         $(".site-bubble").append(html);

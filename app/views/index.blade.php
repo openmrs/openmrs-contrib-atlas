@@ -22,6 +22,7 @@
 <script type="text/javascript">
 var auth = null;
 var module = null;
+var counts = {};
 var site_module = null;
 @if ( strlen($auth_site) > 30)
   auth = JSON.stringify({{ $auth_site }});
@@ -31,6 +32,15 @@ if (auth != null)
 else
   var auth_site = "";
 @if ( strlen($module) > 30)
+  @if (Input::has('patients'))
+  counts.patients = {{ Input::get('patients') }} ;
+  @endif
+  @if (Input::has('encounters'))
+  counts.encounters = {{ Input::get('encounters') }} ;
+  @endif
+  @if (Input::has('observations'))
+  counts.observations = {{ Input::get('observations') }} ;
+  @endif
   module = "{{ $module }}";
   site_module = {{ $site_module }};
 @endif

@@ -101,8 +101,13 @@ class AuthController extends BaseController {
     	Log::info('getAuth module request: ');
     	Log::info('Module: ' . $module);
     	$privileges = DB::table('auth')->where('token','=', $module)->get();
-		$content  = json_encode($privileges);
-		$response = Response::make($content, 200);
+		
+		if (!Session::has('user') && count($privileges) == 0) {
+			$response = Response::make("NOT_AUTHORIZED", 401);
+		} else {
+			$response = Response::json($privileges)->setCallback(Input::get('callback'));
+		}
+
 		$response->header('Content-Type', 'application/json');
 		$response->headers->set('Access-Control-Allow-Origin', '*');
 	    $response->headers->set('Access-Control-Allow-Credentials', 'true');

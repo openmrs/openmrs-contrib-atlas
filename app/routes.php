@@ -41,10 +41,6 @@ Route::delete('ping.php/atlas', array(
 	'before' => 'validateAtlasDelete',
 	'uses' => 'PingController@pingAtlasDelete'));
 
-Route::post('ping.php/module', array(
-	'before' => 'validateAtlasDelete',
-	'uses' => 'PingController@pingPostModule'));
-
 Route::post('ping.php', array(
 	'before' => 'validateJson',
 	'uses' => 'PingController@pingPost'));
@@ -116,6 +112,9 @@ Route::get('module/auth', array(
 
 Route::delete('module/auth', array(
 	'uses' => 'AuthController@deauthModule'));
+
+Route::post('module/ping.php', array(
+	'uses' => 'PingController@autoPostModule'));
 
 Route::get('module', array('as' => 'module', 'before' => 'module', function() 
 {
