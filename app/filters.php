@@ -162,8 +162,8 @@ Route::filter('validateAtlasDelete', function()
 Route::filter('isAdmin', function()
 {
 	if ( !Session::has(user) )
-		App::abort(403, 'Unauthorized Action - Not logged');
+		return Redirect::route('login');
 	$user = Session::get(user);
 	if ($user->role !== 'ADMIN')
-		App::abort(403, 'Unauthorized Action - Priveleges missing');
+		return Redirect::home();
 });

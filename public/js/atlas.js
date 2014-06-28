@@ -282,7 +282,7 @@ function colorForSite(site) {
       case null:
         image.url = icons.Unknown.icon;
         break;
-     }  
+     }
   } else if (legendGroups === 0){
     switch (site.type) {
       case "Research":

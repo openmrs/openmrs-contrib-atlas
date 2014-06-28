@@ -89,6 +89,9 @@ ga('send', 'pageview');
   <div class="atlas-container control logged" id ="login">
       <div class="dropDownControl" id="user"><span class="glyphicon glyphicon-user"></span> {{ $user->name }}</div>
       <div class = "dropDownOptionsDiv" id="logout">
+        @if ($user->role == 'ADMIN' && !Input::has('uuid'))
+        <div class = "dropDownItemDiv" id="admin"><span class="glyphicon glyphicon-wrench"></span> {{ link_to_route('admin', ' Admin' )}}</div>
+        @endif
         <div class = "dropDownItemDiv" id="locateMe"><img src="images/blue-dot.png">Locate Me</div>
         <div class = "dropDownItemDiv" id="editSite" @if(strlen($auth_site) < 5) hidden="true" @endif>
         <img src="images/blue-dot.png">Edit my site</div>

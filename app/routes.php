@@ -77,3 +77,8 @@ Route::get('screenshot', array(
 Route::get('download', array(
 	'as' => 'cron',
 	'uses' => 'AtlasController@downloadCapture'));
+
+Route::match(array('GET', 'POST'), 'admin', array(
+	'as' => 'admin',
+	'before' => 'isAdmin',
+	'uses' => 'AdminController@adminQuery'));
