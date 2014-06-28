@@ -139,8 +139,8 @@ function newSite(myPosition) {
     latitude: myPosition.lat(),
     longitude: myPosition.lng(),
     type:  "TBD",
-    date_changed: new Date().toLocaleString(),
-    date_created: new Date().toLocaleString()
+    date_changed: new Date().toString(),
+    date_created: new Date().toString()
   };
   return site;
 }

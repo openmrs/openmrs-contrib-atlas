@@ -351,7 +351,7 @@ function loadSites(json) {
     repaintMarkers();
     if (site.version)
       version.push(versionMajMinForSite(site));
-    if (site_module !== 1 && site.uuid !== null && module !== null && auth_site.length === 1)
+    if (site_module !== 1 &&  auth_site.indexOf(site.uuid) !== -1 && module !== null && auth_site.length === 1)
       uniqueMarker = marker;
     sites[site.id] = {"siteData": site, "marker":marker, "infowindow":infowindow, "editwindow":editwindow, "bubbleOpen":false,"editBubbleOpen":false, "fadeGroup":fadeGroup};
   }
@@ -516,12 +516,12 @@ function createInfoWindow(site, marker) {
       closeBubbles();
       infowindow.open(map,marker);
       sites[site.id].bubbleOpen = true;
-      if (site_module !== 1 && site.uuid !== null && module !== null && currentUser !== "visitor") {
+      if (site_module !== 1 && site.uuid !== null && module !== null && currentUser !== "visitor" && auth_site.indexOf(site.uuid) !== -1) {
         html = "<div class='me-button'><button type='button' id='me-button' value='" + site.id + "' title='Pick the site for this server.'";
         html += "class='btn btn-success btn-xs'>This is me !</button></div>";
         $(".site-bubble").append(html);
       }
-      if (site.module === 1 && currentUser !== "visitor") {
+      if (site.module === 1 && currentUser !== "visitor" && auth_site.indexOf(site.uuid) !== -1) {
         html = "<div class='me-button'><button type='button' id='detach-button' value='" + site.id + "' title='Detach the site from this server.'";
         html += "class='btn btn-info btn-xs'>This is not me.</button></div>";
         $(".site-bubble").append(html);
@@ -548,7 +548,6 @@ function createInfoWindow(site, marker) {
         $(".gm-style-iw").parent().append("<div id='undo' title ='Undo change' value='"+id+"' class='control' style='position: absolute;overflow:none; right:12px;bottom:10px; color:#3F3F3F'><i class='fa fa-lg fa-history' style='color:rgba(171, 166, 166, 1)'></i></div>");
         $(".gm-style-iw").parent().append("<div id='delete' title ='Delete site' value='"+id+"' class='control' style='position: absolute;overflow:none; right:12px;bottom:28px; color:#3F3F3F'><i class='fa fa-lg fa-trash-o' style='color:rgba(171, 166, 166, 1)'></i></div>");
         if (site.module == 1  && site.show_counts == 0) {
-          //$('#include-count').click();
           $('input#include-count').attr('checked', false);
           $(".site-stat").addClass("disabled");
         }
