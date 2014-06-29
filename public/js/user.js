@@ -142,6 +142,8 @@ function newSite(myPosition) {
     date_changed: new Date().toString(),
     date_created: new Date().toString()
   };
+  if (site_module === 0 && module !== null)
+    site.module = 1;
   return site;
 }
 
@@ -166,6 +168,8 @@ function deleteMarker(site) {
   nextSite = 0;
   if (sites[site].siteData.module === 1) {
     site_module = null;
+    if(window !== window.top)
+      parent.postMessage("update", "*");
   }
   var i = auth_site.indexOf(sites[site].siteData.uuid);
   if(i !== -1) {
@@ -262,6 +266,8 @@ function eventSaveMarker() {
         if (module !== null && site_module === 0) {
           site.module = 1;
           site_module = 1;
+          if(window !== window.top)
+            parent.postMessage("update", "*");
         }
         if (auth_site.indexOf(response) === -1)
           auth_site.push(response);

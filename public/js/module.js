@@ -3,7 +3,7 @@ detachDialog += " updated by this server. <br> Are you sure you want to unlink t
 
 $(function () {
   if(window !== window.top)
-        parent.postMessage("update", "*");
+    parent.postMessage("update", "*");
   $("#map_canvas").on("click", "#me-button", function(e) {
     e.preventDefault();
     var id = $(this).val();
