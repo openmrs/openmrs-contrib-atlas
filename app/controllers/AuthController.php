@@ -79,6 +79,9 @@ class AuthController extends BaseController {
     	$privileges = DB::table('auth')->where('token','=', $module)->count();
     	if ($privileges > 0)
     		App::abort(400,'This module is allready linked to a site');
+    	$isAllreadyLinked = DB::table('auth')->where('atlas_id','=', $site)->where('principal','like', '%module:%')->count();
+    	if ($isAllreadyLinked > 0)
+    		App::abort(400,'This site is allready linked to a module');
 
 		DB::table('auth')->insert(array('atlas_id' => $site, 'principal' => 
 						'module:'. $module, 'token' => $module, 'privileges' => 'STATS'));
