@@ -21,9 +21,9 @@
 <script type="text/javascript" src="lib/js/yqlgeo.js"></script>
 <script type="text/javascript">
 var auth = null;
-var module = null;
+var moduleUUID = null;
 var counts = {};
-var site_module = null;
+var moduleHasSite = null;
 @if ( strlen($auth_site) > 30)
   auth = JSON.stringify({{ $auth_site }});
 @endif
@@ -31,7 +31,7 @@ if (auth != null)
   var auth_site = JSON.parse(auth);
 else
   var auth_site = "";
-@if ( strlen($module) > 30)
+@if ( strlen($moduleUUID) > 30)
   @if (Input::has('patients'))
   counts.patients = {{ Input::get('patients') }} ;
   @endif
@@ -41,8 +41,8 @@ else
   @if (Input::has('observations'))
   counts.observations = {{ Input::get('observations') }} ;
   @endif
-  module = "{{ $module }}";
-  site_module = {{ $site_module }};
+  moduleUUID = "{{ $moduleUUID }}";
+  moduleHasSite = {{ $moduleHasSite }};
 @endif
 var siteSrc = "{{ getenv('SITE_SOURCE') }}";
 var currentUser;
@@ -71,7 +71,7 @@ $(document).ready(function() {
   if (currentUser == '') currentUser = 'visitor';
   userName = $('#user-name').val().trim();
   userEmail = $('#user-email').val().trim();
-  @if ( strlen($module) > 30)
+  @if ( strlen($moduleUUID) > 30)
     $("#legend1").click();
   @endif
  });
@@ -122,7 +122,7 @@ ga('send', 'pageview');
         @if (!Session::has(module))
           {{ link_to_route('logout', 'Sign Out' )}}
         @else
-          {{ link_to_route('logout', 'Sign Out', array('uuid' => $module), array('target'=>'blank'))}}
+          {{ link_to_route('logout', 'Sign Out', array('uuid' => $moduleUUID), array('target'=>'blank'))}}
         @endif
         </div>
         <div class="separatorDiv"></div>        

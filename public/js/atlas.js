@@ -169,7 +169,7 @@ function initialize() {
   var help = document.getElementById("help");
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(help);
 
-  if (module !== null) {
+  if (moduleUUID !== null) {
     var alert = document.getElementById("alert");
     map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(alert);
   }
@@ -314,12 +314,12 @@ function colorForSite(site) {
         break;
     }
   }
-  if ((site.uid === currentUser || auth_site.indexOf(site.uuid) !== -1) && legendGroups === 2 && site_module !== 1)
+  if ((site.uid === currentUser || auth_site.indexOf(site.uuid) !== -1) && legendGroups === 2 && moduleHasSite !== 1)
       image.url = "https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png";
-  if ((site.module === 1 && legendGroups === 2 && module !== null && site_module === 1)) {
+  if ((site.module === 1 && legendGroups === 2 && moduleUUID !== null && moduleHasSite === 1)) {
       image.url = "https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png";
   } else if ((site.uid === currentUser || auth_site.indexOf(site.uuid) !== -1) 
-    && legendGroups === 2 && (module === null || site_module === 0)) {
+    && legendGroups === 2 && (moduleUUID === null || moduleHasSite === 0)) {
     image.url = "https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png";
   }
   return image;
@@ -351,7 +351,7 @@ function loadSites(json) {
     repaintMarkers();
     if (site.version)
       version.push(versionMajMinForSite(site));
-    if (site_module !== 1 &&  auth_site.indexOf(site.uuid) !== -1 && module !== null && auth_site.length === 1)
+    if (moduleHasSite !== 1 &&  auth_site.indexOf(site.uuid) !== -1 && moduleUUID !== null && auth_site.length === 1)
       uniqueMarker = marker;
     sites[site.id] = {"siteData": site, "marker":marker, "infowindow":infowindow, "editwindow":editwindow, "bubbleOpen":false,"editBubbleOpen":false, "fadeGroup":fadeGroup};
   }
@@ -516,7 +516,7 @@ function createInfoWindow(site, marker) {
       closeBubbles();
       infowindow.open(map,marker);
       sites[site.id].bubbleOpen = true;
-      if (site_module !== 1 && site.uuid !== null && module !== null && currentUser !== "visitor" && auth_site.indexOf(site.uuid) !== -1) {
+      if (moduleHasSite !== 1 && site.uuid !== null && moduleUUID !== null && currentUser !== "visitor" && auth_site.indexOf(site.uuid) !== -1) {
         html = "<div class='me-button'><button type='button' id='me-button' value='" + site.id + "' title='Pick the site for this server.'";
         html += "class='btn btn-success btn-xs'>This is me !</button></div>";
         $(".site-bubble").append(html);

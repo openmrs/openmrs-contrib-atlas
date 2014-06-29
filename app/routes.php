@@ -118,23 +118,23 @@ Route::post('module/ping.php', array(
 
 Route::get('module', array('as' => 'module', 'before' => 'module', function() 
 {
-	$module = Input::get('uuid');
-	Session::set('module', $module);
-	$moduleSite = DB::table('auth')->where('token','=', $module)->first();
-	$site_module = ($moduleSite != NULL) ? 1 : 0;
+	$moduleUUID = Input::get('uuid');
+	Session::set('module', $moduleUUID);
+	$moduleAuth = DB::table('auth')->where('token','=', $moduleUUID)->first();
+	$moduleHasSite = ($moduleAuth != NULL) ? 1 : 0;
 	if (Session::has(user)) {
 		$user = Session::get(user);
 		Log::info('Logged user: ' . $user->uid);
 		$privileges = DB::table('auth')->where('token','=', $user->uid)->lists('atlas_id');
 		$list = json_encode($privileges);
 		Log::info('Authorized site: ' . $list);
-		Log::info('Authorized module: ' . $module);
-		Log::info('Module attached: ' . $site_module);
+		Log::info('Authorized module: ' . $moduleUUID);
+		Log::info('Module attached: ' . $moduleHasSite);
 		return View::make('index', array('user' => $user,
-		 'auth_site' => $list, 'module' =>  $module, 'site_module' => $site_module));
+		 'auth_site' => $list, 'moduleUUID' =>  $moduleUUID, 'moduleHasSite' => $moduleHasSite));
 	}
-	if ($moduleSite != NULL) {
-		return View::make('index', array('module' =>  $module, 'site_module' => $site_module));
+	if ($moduleAuth != NULL) {
+		return View::make('index', array('moduleUUID' =>  $moduleUUID, 'moduleHasSite' => $moduleHasSite));
 	}
-	return Redirect::route('module-login', array('uuid' => $module));
+	return Redirect::route('module-login', array('uuid' => $moduleUUID));
 }));

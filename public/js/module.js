@@ -10,18 +10,18 @@ $(function () {
     var site = sites[id].siteData;
     var auth = {
       site: site.uuid,
-      token: module
+      token: moduleUUID
     }
     var json = JSON.stringify(auth);
     $.ajax({
-      url: "module/auth?uuid=" + module,
+      url: "module/auth?uuid=" + moduleUUID,
       type: "POST",
       data: json,
       dataType: "text",
     })
     .done(function(response) {
       site.module = 1;
-      site_module = 1;
+      moduleHasSite = 1;
       sites[id].siteData = site;
       sites[id].infowindow.setContent(contentInfowindow(site));
       sites[id].editwindow.setContent(contentEditwindow(site));
@@ -56,13 +56,13 @@ function openBubble(uniqueMarker) {
 function detachMarker(id) {
   var site = sites[id].siteData;
   $.ajax({
-    url: "module/auth?uuid=" + module,
+    url: "module/auth?uuid=" + moduleUUID,
     type: "DELETE",
     dataType: "text",
   })
   .done(function(response) {
     site.module = 0;
-    site_module = 0;
+    moduleHasSite = 0;
     sites[id].siteData = site;
     sites[id].infowindow.setContent(contentInfowindow(site));
     repaintMarkers();
