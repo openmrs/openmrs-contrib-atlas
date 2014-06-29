@@ -85,8 +85,9 @@ Route::filter('validateJson', function()
 	if ($json == NULL) App::abort(400, 'Missing data');
 	if (!is_array($json)) App::abort(400, 'Unable to parse data');
 	if (!array_key_exists('id', $json)) App::abort(400, 'Missing id');
-	if (!array_key_exists('geolocation', $json)) App::abort(400, 'Missing geolocation');
-	if (!array_key_exists('name', $json)) App::abort(400, 'Missing name');
+	if (!array_key_exists('patients', $json)) App::abort(400, 'Missing patients');
+	if (!array_key_exists('encounters', $json)) App::abort(400, 'Missing encounters');
+	if (!array_key_exists('observations', $json)) App::abort(400, 'Missing observations');
 });
 
 Route::filter('validateCallback', function()
@@ -175,7 +176,7 @@ Route::filter('module', function()
 	if (strlen(Input::get('uuid')) < 30)
 		App::abort(500, 'Invalid parameters');
 });
-Route::when('module/*', 'module');
+Route::when('module/*', 'module', array('GET', 'DELETE'));
 
 Route::filter('module-auth', function()
 {
