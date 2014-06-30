@@ -93,13 +93,13 @@ ga('send', 'pageview');
         <div class = "dropDownItemDiv" id="editSite" @if(strlen($auth_site) < 5) hidden="true" @endif>
         <img src="images/blue-dot.png">Edit my site</div>
         <div class = "dropDownItemDiv" id="newSite"><img src="images/blue-dot.png">Add new site</div>
-        <div class = "dropDownItemDiv" id="logout"><span class="glyphicon glyphicon-log-out"></span> {{ link_to_route('logout', 'Logout' )}}</div>
+        <div class = "dropDownItemDiv" id="logout"><span class="glyphicon glyphicon-log-out"></span> {{ link_to_route('logout', 'Sign Out' )}}</div>
         <div class="separatorDiv"></div>        
       </div>          
   </div>
   @else
-    <div class="atlas-container loginControl dropDownControl control" title="Click to login with your OpenMRS ID" id ="login">
-    <span class="glyphicon glyphicon-log-in"></span> {{ link_to_route('login', 'Login' )}}
+    <div class="atlas-container loginControl dropDownControl control" title="Click to sign in with your OpenMRS ID" id ="login">
+    <span class="glyphicon glyphicon-log-in"></span> {{ link_to_route('login', 'Sign In' )}}
   </div>
   @endif
   <div class="atlas-container control login" id ="marker-groups">
