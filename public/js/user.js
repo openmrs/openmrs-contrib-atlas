@@ -168,7 +168,8 @@ function deleteMarker(site) {
   nextSite = 0;
   if (sites[site].siteData.module === 1) {
     moduleHasSite = 0;
-    if(window !== window.top)
+  }
+  if (moduleUUID !== null && window !== window.top) {
       parent.postMessage("update", "*");
   }
   var i = auth_site.indexOf(sites[site].siteData.uuid);

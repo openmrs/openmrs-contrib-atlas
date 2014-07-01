@@ -65,6 +65,7 @@ function detachMarker(id) {
     moduleHasSite = 0;
     sites[id].siteData = site;
     sites[id].infowindow.setContent(contentInfowindow(site));
+    sites[id].editwindow.setContent(contentEditwindow(site));
     repaintMarkers();
     if(window !== window.top)
       parent.postMessage("update", "*");
