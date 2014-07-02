@@ -322,9 +322,9 @@ var html = "<div class='site-bubble'>";
 }
 
 function contentEditwindow(site) {
-  var patients = ('patients' in counts) ? counts.patients : site.patients;
-  var encounters = ('encounters' in counts) ? counts.encounters : site.encounters;
-  var observations = ('observations' in counts) ? counts.observations : site.observations;
+  var patients = ('patients' in counts) ? counts.patients : ('patients' in site) ? site.patients : "?";
+  var encounters = ('encounters' in counts) ? counts.encounters : ('encounters' in site) ? site.encounters : "?";
+  var observations = ('observations' in counts) ? counts.observations : ('observations' in site) ? site.observations : "?";
   var html = "<div class='site-bubble bubble-form' style='width:200px; margin-bottom:0px;'>";
   html += "<form method='post' id='"+ site.id +"'>";
   html += "<div class='form-group'><input type='text' required='true' placeholder='Site Name' title='Site Name' class='form-control input-sm' value='"+ site.name + "' id='name' name='name'></div>";
