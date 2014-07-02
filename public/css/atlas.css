@@ -347,7 +347,9 @@ span.site-version {
     font-style: italic;
     color: rgba(141, 141, 141, 1);
     position: absolute;
-    right:12px;bottom:2px;
+    padding-bottom: 2px;
+    left:12px;
+    bottom:1px;
 }
 .toggle {
         cursor:pointer;
