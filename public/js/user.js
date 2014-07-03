@@ -217,6 +217,7 @@ function eventSaveMarker() {
       site.name = name;
       site.email =  mail;
       site.url = url;
+      site.date_changed = new Date().toString();
       site.contact = contact;
       site.notes = notes;
       site.image = image;
@@ -224,6 +225,7 @@ function eventSaveMarker() {
       site.longitude = pos.lng();
       site.latitude = pos.lat();
       sites[id].siteData = site;
+      sites[id].fadeGroup = getFadeGroup(site);
       sites[id].infowindow.setContent(contentInfowindow(site));
       sites[id].editwindow.setContent(contentEditwindow(site));
       sites[id].editwindow.close();
@@ -242,6 +244,7 @@ function eventSaveMarker() {
           auth_site.push(response);
         if (auth_site.length > 0)
           $("#editSite").attr("hidden", false);
+        repaintMarkers();
         //bootbox.alert("Marker saved");
       })
       .fail(function(jqXHR, textStatus, errorThrown) {
