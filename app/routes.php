@@ -78,6 +78,11 @@ Route::get('capture', array(
 	'before' => 'isAdmin',
 	'uses' => 'AtlasController@takeCapture'));
 
+Route::get('rss/{updates?}', array(
+	'as' => 'rss',
+	'uses' => 'AtlasController@rssGenerator'))
+->where('updates', 'updates|all');
+
 Route::get('screenshot', array(
 	'as' => 'download',
 	'uses' => 'AtlasController@cronCapture'));

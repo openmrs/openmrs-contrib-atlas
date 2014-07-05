@@ -31,3 +31,6 @@ nbdist/
 nbactions.xml
 nb-configuration.xml
 nbproject/
+
+## Local Config ##
+/app/config/local/app.php

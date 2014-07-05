@@ -82,4 +82,99 @@ class AtlasController extends BaseController {
     		App::abort(500, 'Capture error');
 		}
 	}
+
+	public function rssGenerator($updates = null)
+	{
+		if($updates == "updates")
+			$sites = DB::table('archive')->where('action', 'UPDATE')->take(100)->orderBy('archive_date', 'desc')->get();
+        else if($updates == "all")
+        	$sites = DB::table('archive')->take(100)->orderBy('archive_date', 'desc')->get();
+		else
+			$sites = DB::table('archive')->whereNotIn('action', array('UPDATE'))->orderBy('archive_date', 'desc')->take(100)->get();
+
+		foreach ($sites as $site) {
+			$site = (array)$site;
+		    $major = 0;
+		    $minor = 0;
+		    if ($site['show_counts'] == 0) {
+				$site['patients'] = 0;
+				$site['encounters'] = 0;
+				$site['observations'] = 0;
+			}
+		    $atlasVersion = json_decode($site['atlas_version']);
+		    if ($atlasVersion != null)
+		        list($major, $minor) = explode(".", $atlasVersion);
+		    if ($major >= 1 && $minor > 1) {
+		        unset($site['data']);
+		        //TODO
+		        $sitesList[] = $site;
+		    } else {
+		        $dataJson = json_decode($site['data'], true);
+		        $version = $dataJson['version'];
+		        $site['version'] = $version;
+		        unset($site['data']);
+		        $sitesList[] = $site;
+		    }
+		}
+
+		$feed = Feed::make();
+
+		$openmrs = new FeedPerson;
+		$openmrs->name('OpenMRS');
+		$openmrs->email('helpdesk@openmrs.org');
+
+		$logo = new FeedImage;
+		$logo->title('OpenMRS Atlas Feed');
+		$logo->imageUrl(asset('images/openmrs.gif'));
+		$logo->linkUrl(route('home'));
+
+		$feed->channel()->BaseURL(route('home'));
+		$feed->channel()->Title()->Add('text', 'OpenMRS Atlas Feed');
+		$feed->channel()->Author(0, $openmrs);
+		$feed->channel()->permalink(route('rss'));
+		$feed->channel()->Description()->Add('text', 'Latest updates on OpenMRS Atlas');
+		$feed->links()->add(new FeedLink('text', (route('home'))));
+		$feed->logo()->title('OpenMRS Atlas Feed')
+			->imageUrl(asset('images/openmrs.gif'))
+			->linkUrl(route('home'))->up()
+		    ->pubdate(time())
+		    ->permalink(route('rss'))
+		    ->baseurl(route('home'));
+
+		foreach ($sitesList as $site) {
+
+			$title = $site['name'];
+
+			if ($site['action'] === "ADD")
+				$title = $site['name'] . " joined the OpenMRS Atlas";
+			if ($site['action'] === "UPDATE")
+				$title = $site['name'] . " updated on OpenMRS Atlas";
+			if ($site['action'] === "DELETE")
+				$title = "OpenMRS Atlas bids farewell to " . $site['name'];
+
+			$dateCreated = new DateTime($site['date_created']);
+			$notes = ($site['notes'] == "") ? "" : "<br><b>Notes:</b> " . $site['notes'];
+			$url = ($site['url'] == ""  && filter_var($site['url'], FILTER_VALIDATE_URL)) ? "" : "<br><a href=\"".$site['url']."\">" . $site['url'] . "</a>";
+			$observations = preg_match("/^$|0/", $site['observations']) ? "" : "<br><b>Observation:</b> " . $site['observations'];
+			$encounters = preg_match("/^$|0/", $site['encounters']) ? "" : "<br><b>Encounters:</b> " . $site['encounters'];
+			$patients = preg_match("/^$|0/", $site['patients']) ? "" : "<br><b>Patients:</b> " . $site['patients'];
+			$counts = $encounters . $patients . $observations;
+			$site['version'] = ($site['version'] == "") ? "Unknown" : $site['version'];
+			
+			$content = '<b>OpenMRS Version :</b> ' . $site['version'] . $counts . $notes . "<br><b>Date created :</b> " . $dateCreated->format('Y-m-d H:i:s') . $url ;
+
+	        $date = new DateTime($site['archive_date']);
+			$feed->entry()->published($date->getTimeStamp())
+				->author()->name($site['contact'])->email($site['email'])->up()
+	            ->title($title)
+	            ->guid($site['id'])
+	            ->permalink(route('home') . '?site=' . $site['site_uuid'])
+	            ->category($site['type'])
+	            ->content()->add('html',$content)->up();
+		}
+		
+		$response = Response::make($feed->Rss20(), 200);
+		$response->header('Content-Type', 'application/rss+xml');
+		return $response;
+	}
 }
