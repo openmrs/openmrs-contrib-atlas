@@ -267,9 +267,9 @@ function eventSaveMarker() {
         if (moduleUUID !== null && moduleHasSite === 0) {
           site.module = 1;
           moduleHasSite = 1;
-          if(window !== window.top)
-            parent.postMessage("update", "*");
         }
+        if (moduleUUID !== null && site.module === 1)
+          parent.postMessage("save", "*");
         if (auth_site.indexOf(response) === -1)
           auth_site.push(response);
         if (auth_site.length > 0)
