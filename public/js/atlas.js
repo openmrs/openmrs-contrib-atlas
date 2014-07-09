@@ -165,7 +165,8 @@ function initialize() {
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(download);
   var markerGroups = document.getElementById("marker-groups");
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(markerGroups);
-
+  var help = document.getElementById("help");
+  map.controls[google.maps.ControlPosition.TOP_RIGHT].push(help);
   getJSON();
 }
 

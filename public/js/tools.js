@@ -8,6 +8,30 @@ $(function () {
      console.log(url);
     window.location = url ;
   });
+  var message = "<b><h3>About OpenMRS Atlas</h3></b>";
+  message += "This map is updated with information from OpenMRS users around the world."
+  message +=" To add or edit information, you’ll need a free <a href='https://id.openmrs.org/' target='_blank' >OpenMRS ID.</a>"
+  message += "<b><h3>Manually Add Information to Atlas</h3></b>";
+  message += "<ul><li>Click “Sign In” and provide your <a href='https://id.openmrs.org/' target='_blank' >OpenMRS ID</a> and password.</li><li>Click the user menu with your name that appears. Choose <b>“Add New Site”</b>.</li>"
+  message += "<li>Move the newly-created map marker and place it in the correct location."
+  message += "</li><li>Click on the marker, then click the <b><i class='fa fa-lg fa-pencil' style='color:rgba(171, 166, 166, 1)'></i> pencil icon</b> in the pop-up box to edit your information.</li><li>Click <b>Save</b> when finished.</li></ul>";
+  message += "<b><h3>Update Information Automatically from OpenMRS</h3></b>";
+  message += "<ul><li>If you don't already have the Atlas module installed, <a href='https://modules.openmrs.org/#/show/10/atlas' target='_blank'>download the Atlas Module </a>from OpenMRS Modules manually or through the OpenMRS Modules Administration screen."
+  message += "<li>Install the module, following the directions provide in the OpenMRS Modules Administration screen.";
+  message += "</li><li>In the OpenMRS Administration page, click on “OpenMRS Atlas” to <b>sign in with your OpenMRS ID</b> and add or update your information.</li></ul>";
+  $('#help').click(function () {
+    bootbox.dialog({
+      message: message,
+      className: "help-modal",
+      title: "<h2><span class='glyphicon glyphicon-question-sign'></span> <b>OpenMRS Atlas Help</b></h2>",
+      buttons: {
+        main: {
+          label: "Done",
+          className: "btn-primary",
+        }
+      }
+    });
+  });
 });
 
 function initDownloadButton() {

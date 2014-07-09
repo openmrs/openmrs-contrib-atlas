@@ -354,3 +354,15 @@ span.site-version {
 .toggle {
         cursor:pointer;
 }
+
+.help-modal h3 {
+    font size: 20px;
+}
+.help-modal .modal-dialog {
+    font-size: 0.95em;
+    width: 70%;
+}
+.help-modal .modal-body {
+    padding-top: 0px!important;
+    padding-bottom: 0px!important;
+}

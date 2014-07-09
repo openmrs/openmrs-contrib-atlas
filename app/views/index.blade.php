@@ -105,6 +105,9 @@ ga('send', 'pageview');
     <span class="glyphicon glyphicon-log-in"></span> {{ link_to_route('login', 'Sign In' )}}
   </div>
   @endif
+  <div class="atlas-container loginControl dropDownControl control" title="How to place my information on the Atlas" id ="help">
+  <span class="glyphicon glyphicon-question-sign"></span> Help
+  </div>
   <div class="atlas-container control login" id ="marker-groups">
       <div class="dropDownControl" id="legendSelected" title="Click to switch legend"></div>
       <div class = "dropDownOptionsDiv" id="legendChoice">
