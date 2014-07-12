@@ -271,8 +271,6 @@ class PingController extends BaseController {
 			'contact' => $json['contact'],
 			'email' => $json['email'],
 			'notes' => $json['notes'],
-			'data' => json_encode($json['data']),
-			'atlas_version' => $json['atlasVersion'],
 			'date_created' => $date,
 			'show_counts' => intval($json['show_counts']),
 			'created_by' => $user->principal);
