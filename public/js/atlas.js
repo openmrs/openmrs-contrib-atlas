@@ -165,6 +165,8 @@ function initialize() {
   google.maps.event.addListener(map, "click", function() {
     closeBubbles();
   });
+  var title = document.getElementById("map_title");
+  map.controls[google.maps.ControlPosition.TOP_LEFT].push(title);
   var login = document.getElementById("login");
   map.controls[google.maps.ControlPosition.TOP_RIGHT].push(login);
   var download = document.getElementById("download");

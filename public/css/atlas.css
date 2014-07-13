@@ -12,15 +12,12 @@ body {
         -ms-user-select: none;      /* IE 10+ */
         cursor: pointer;
 }
-#map_title {
-        font-size: 2em;
-        font-family: Arial, san-serif;
-        text-align: center; 
-        position: absolute;
-        z-index: 1;
-        left: 75px;
-        color: white;
-        text-shadow: 2px 2px #586575;
+#map_title{
+        background: url(../images/OMRSAtlas.svg);
+        background-size: contain;
+        background-repeat: no-repeat;
+        height: 120px;
+        width: 340px;   
 }
 #map_canvas {
         height: 100%;

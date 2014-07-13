@@ -122,7 +122,7 @@ ga('send', 'pageview');
 @endif
 </head>
 <body>
-  <div id="map_title"><img src="images/OpenMRS-logo.png" /></div>
+  <div id="map_title"></div>
   <div id="map_canvas" style="width:100%; height:100%"></div>
   <div id="legend" class="control"></div>
   <div class="atlas-container control screen" id ="download">
