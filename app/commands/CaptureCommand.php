@@ -48,9 +48,9 @@ class CaptureCommand extends Command {
 		$lastCreated = DB::table('atlas')->select('date_created')->orderBy('date_created', 'desc')->first();
 		$lastChanged = DB::table('archive')->select('archive_date')->orderBy('archive_date', 'desc')->first();
 
-		Log::info('Last updated: ' . $lastChanged->archive_date);
-		Log::info('Last created: ' . $lastCreated->date_created);
-		Log::info('Number of images: ' . count($rep));
+		Log::debug('Last updated: ' . $lastChanged->archive_date);
+		Log::debug('Last created: ' . $lastCreated->date_created);
+		Log::debug('Number of images: ' . count($rep));
 		$this->info('Last updated: ' . $lastChanged->archive_date);
 		$this->info('Last created: ' . $lastCreated->date_created);
 		$this->info('Number of images: ' . count($rep));
@@ -75,9 +75,9 @@ class CaptureCommand extends Command {
 
 				 	$command = $phantomjs . ' ' . public_path() . '/js/capture-cron.js ' . $path .' '. $legend . ' '
 				 	 . $width . ' ' . $height . ' ' . $siteURL . ' ' . $fade . ' > ' . storage_path(). '/phantomjs.log';
-				 	Log::info('Comand:' . $command);
+				 	Log::debug('Comand:' . $command);
 					shell_exec($command);
-					Log::info('Image created: ' . $filename);
+					Log::debug('Image created: ' . $filename);
 					$this->info('Image created: ' . $filename);
 
 					$width = '1920';
@@ -90,9 +90,9 @@ class CaptureCommand extends Command {
 
 				 	$command = $phantomjs . ' ' . public_path() . '/js/capture-cron.js ' . $path .' '. $legend . ' '
 				 	 . $width . ' ' . $height . ' ' . $siteURL . ' ' . $fade . ' > ' . storage_path(). '/phantomjs.log';
-				 	Log::info('Comand:' . $command);
+				 	Log::debug('Comand:' . $command);
 					shell_exec($command);
-					Log::info('Image created: ' . $filename);
+					Log::debug('Image created: ' . $filename);
 					$this->info('Image created: ' . $filename);
 
 					$width = '3840';
@@ -105,16 +105,16 @@ class CaptureCommand extends Command {
 
 				 	$command = $phantomjs . ' ' . public_path() . '/js/capture-cron.js ' . $path .' '. $legend . ' '
 				 	 . $width . ' ' . $height . ' ' . $siteURL . ' ' . $fade . ' > ' . storage_path(). '/phantomjs.log';
-				 	Log::info('Comand:' . $command);
+				 	Log::debug('Comand:' . $command);
 					shell_exec($command);
-					Log::info('Image created: ' . $filename);
+					Log::debug('Image created: ' . $filename);
 					$this->info('Image created: ' . $filename);
 				}
 			}
-			Log::info('Screeshot creation succesfull');
+			Log::debug('Screeshot creation succesfull');
 			$this->info('Screeshot creation succesfull');
 		} else {
-			Log::info('Screenshot are up to date');
+			Log::debug('Screenshot are up to date');
 			$this->info('Screenshot are up to date');
 		}
 
