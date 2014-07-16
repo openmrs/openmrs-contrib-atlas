@@ -22,7 +22,8 @@ class PingController extends BaseController {
 		if ($site != null) {
 			DB::table('archive')->insert(array(
 				'archive_date' => $date, 
-				'id' => $site->id, 
+				'site_uuid' => $site->id, 
+				'id' => Uuid::uuid4()->toString(), 
 				'type' => $site->type,
 				'longitude' =>  $site->longitude, 
 				'latitude' =>  $site->latitude,
@@ -81,7 +82,8 @@ class PingController extends BaseController {
 		if ($site != null) {
 			DB::table('archive')->insert(array(
 				'archive_date' => $date, 
-				'id' => $site->id, 
+				'site_uuid' => $site->id, 
+				'id' => Uuid::uuid4()->toString(), 
 				'type' => $site->type,
 				'longitude' =>  $site->longitude, 
 				'latitude' =>  $site->latitude,
@@ -96,6 +98,7 @@ class PingController extends BaseController {
 				'notes' =>  $site->notes, 
 				'email' => $site->email,
 				'data' =>  $site->data, 
+				'action' =>  'UPDATE', 
 				'atlas_version' => $site->atlas_version,
 				'date_created' => $site->date_created));
 
@@ -105,6 +108,12 @@ class PingController extends BaseController {
 		} else {
 			 // new implementation
 			DB::table('atlas')->insert($param);
+			//insert into archive
+			$param['action'] = "ADD";
+			$param['site_uuid'] = Uuid::uuid4()->toString();
+			$param['archive_date'] = $date;
+			DB::table('archive')->insert($param);
+			
 			Log::debug("Created ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
 		}
 		return 'SUCCES';
@@ -154,8 +163,9 @@ class PingController extends BaseController {
 		$site = DB::table('atlas')->where('id','=', $param['id'])->first();
 		if ($site != null) {
 			DB::table('archive')->insert(array(
+				'site_uuid' => $site->id, 
+				'id' => Uuid::uuid4()->toString(), 
 				'archive_date' => $date, 
-				'id' => $site->id, 
 				'type' => $site->type,
 				'longitude' =>  $site->longitude, 
 				'latitude' =>  $site->latitude,
@@ -168,6 +178,7 @@ class PingController extends BaseController {
 				'encounters' =>  $site->encounters, 
 				'observations' =>  $site->observations, 
 				'notes' =>  $site->notes, 
+				'action' =>  'UPDATE', 
 				'email' => $site->email,
 				'data' =>  $site->data, 
 				'atlas_version' => $site->atlas_version,
@@ -182,6 +193,13 @@ class PingController extends BaseController {
 		} else {
 			 // new implementation
 			DB::table('atlas')->insert($param);
+
+			//insert into archive
+			$param['action'] = "ADD";
+			$param['site_uuid'] = Uuid::uuid4()->toString();
+			$param['archive_date'] = $date;
+			DB::table('archive')->insert($param);
+
 			Log::debug("Created ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
 
 			$principal = 'openmrs_id:' . $user->uid; 
@@ -214,8 +232,8 @@ class PingController extends BaseController {
 
 		if ($site != null) {
 			DB::table('archive')->insert(array(
-				'archive_date' => $date, 
-				'id' => $site->id, 
+				'site_uuid' => $site->id, 
+				'id' => Uuid::uuid4()->toString(), 
 				'type' => $site->type,
 				'longitude' =>  $site->longitude, 
 				'latitude' =>  $site->latitude,
@@ -230,6 +248,7 @@ class PingController extends BaseController {
 				'notes' =>  $site->notes, 
 				'email' => $site->email,
 				'data' =>  $site->data, 
+				'action' => 'DELETE', 
 				'atlas_version' => $site->atlas_version,
 				'date_created' => $site->date_created,
 				'created_by' => $site->created_by));
