@@ -50,12 +50,14 @@ class CaptureCommand extends Command {
 
 		Log::info('Last updated: ' . $lastChanged->archive_date);
 		Log::info('Last created: ' . $lastCreated->date_created);
+		Log::info('Number of images: ' . count($rep));
 		$this->info('Last updated: ' . $lastChanged->archive_date);
 		$this->info('Last created: ' . $lastCreated->date_created);
+		$this->info('Number of images: ' . count($rep));
 
 		$dateCreated = new Datetime($lastCreated->date_created);
 		$dateChanged = new Datetime($lastChanged->archive_date);
-		if (count($rep) == 0 || $force ||  ($dateChanged > $date) ||  ($dateCreated > $date) ) {
+		if (count($rep) < 4 || $force ||  ($dateChanged > $date) ||  ($dateCreated > $date) ) {
 			$this->info('Generating screenshot');
 			$phantomjs = getenv('PHANTOM_PATH');
 			$siteURL = getenv('SITE_URL');
