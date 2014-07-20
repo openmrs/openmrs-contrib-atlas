@@ -98,7 +98,8 @@ function initialize() {
   $("#map_canvas").gmap3({
     map:{
       options:{
-        zoom: 4,
+        zoom: viewParam.zoom,
+        center: viewParam.position,
         minZoom: 2,
         mapTypeId: google.maps.MapTypeId.ROADMAP
       },

@@ -64,11 +64,19 @@ var divTypes ='<img src="images/group-dot.png"><b>Types</b>'
 var divVersions ='<img src="images/group-dot.png"><b>Versions</b>';
 var viewParam = {
   site : null,
+  position : null,
+  zoom : 3,
 };
 @if (Input::has('site'))
   viewParam.site = "{{ Input::get('site') }}";
 @endif
-
+@if (Input::has('zoom') && is_numeric(Input::get('zoom')))
+  viewParam.zoom = {{ Input::get('zoom') }};
+@endif
+@if (Input::has('position') && preg_match('/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),
+*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/', Input::get('position')))
+  viewParam.position = new google.maps.LatLng({{ Input::get('position') }});
+@endif
 $(document).ready(function() {
   initLegendChoice();
   initLoginButton();

@@ -67,10 +67,12 @@ function customizeView() {
         site =  val;
     });
     if (site) {
+      viewParam.position = site.marker.getPosition();
       setTimeout(function() {
         google.maps.event.trigger(site.marker, 'click');
-      }, 1000);
-      map.setCenter(site.marker.getPosition());
+      }, 1000);  
     }
   }
+  map.setZoom(viewParam.zoom);
+  map.setCenter(viewParam.position);
 }
