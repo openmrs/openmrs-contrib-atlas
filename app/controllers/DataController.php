@@ -18,7 +18,7 @@ class DataController extends BaseController {
 		$db_password = getenv('DB_PASSWORD');
 		$callback = Input::get('callback');
 		$sites = DB::table('atlas')
-                     ->select(DB::raw('id as uuid,  latitude,
+                     ->select(DB::raw('id as uuid, id as site_id,  latitude,
                      	longitude, name, url, type, image, patients, encounters, observations,
                      	contact,email,notes,data,atlas_version, show_counts,
                      	CASE WHEN date_changed IS NULL THEN "" ELSE date_changed END as date_changed,

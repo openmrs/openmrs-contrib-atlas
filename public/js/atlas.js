@@ -357,6 +357,7 @@ function loadSites(json) {
   }
   setTimeout('openBubble(uniqueMarker)', 800);
   map.fitBounds(bounds);
+  customizeView();
 }
 
 function repaintMarkers() {

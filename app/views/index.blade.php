@@ -62,6 +62,12 @@ var legendGroups = 0;
 var divSites ='<img src="https://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png"><b>Sites</b>';
 var divTypes ='<img src="images/group-dot.png"><b>Types</b>'
 var divVersions ='<img src="images/group-dot.png"><b>Versions</b>';
+var viewParam = {
+  site : null,
+};
+@if (Input::has('site'))
+  viewParam.site = "{{ Input::get('site') }}";
+@endif
 
 $(document).ready(function() {
   initLegendChoice();

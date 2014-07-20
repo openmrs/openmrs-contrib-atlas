@@ -58,3 +58,19 @@ function initDownloadButton() {
   });
   
 }
+
+function customizeView() {
+  if (viewParam.site !== null) {
+    var site;
+    sites.forEach(function(val, index) {
+      if (val.siteData.site_id === viewParam.site )
+        site =  val;
+    });
+    if (site) {
+      setTimeout(function() {
+        google.maps.event.trigger(site.marker, 'click');
+      }, 1000);
+      map.setCenter(site.marker.getPosition());
+    }
+  }
+}
