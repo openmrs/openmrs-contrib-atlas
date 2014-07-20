@@ -77,6 +77,21 @@ var viewParam = {
 *[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/', Input::get('position')))
   viewParam.position = new google.maps.LatLng({{ Input::get('position') }});
 @endif
+@if (Input::has('legend'))
+  switch("{{ Input::get('legend') }}") {
+    case "site" :
+      legendGroups = 2;
+      break;
+    case "type" :
+      legendGroups = 0;
+      break;
+    case "version" :
+      legendGroups = 1;
+      break;
+    default :
+      legendGroups = 0;
+  }
+@endif
 $(document).ready(function() {
   initLegendChoice();
   initLoginButton();
