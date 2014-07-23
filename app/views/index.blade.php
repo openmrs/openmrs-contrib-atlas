@@ -64,7 +64,7 @@ var divTypes ='<img src="images/group-dot.png"><b>Types</b>'
 var divVersions ='<img src="images/group-dot.png"><b>Versions</b>';
 var viewParam = {
   site : null,
-  position : null,
+  position : new google.maps.LatLng(15,15),
   zoom : 3,
 };
 @if (Input::has('site'))
@@ -169,6 +169,9 @@ ga('send', 'pageview');
   @endif
   <div class="atlas-container loginControl dropDownControl control" title="How to place my information on the Atlas" id ="help">
   <span class="glyphicon glyphicon-question-sign"></span> Help
+  </div>
+  <div tabindex="1" class="atlas-container loginControl dropDownControl control" title="Share this Atlas view" id ="share">
+  <span class="glyphicon glyphicon-share"></span> Share
   </div>
   <div class="atlas-container control login" id ="marker-groups">
       <div class="dropDownControl" id="legendSelected" title="Click to switch legend"></div>

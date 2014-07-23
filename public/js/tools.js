@@ -1,3 +1,5 @@
+var popoverTemplate = '<div class="popover"><div class="arrow"></div><div class="popover-content"></div></div>';
+
 $(function () {
   $('#create-capture').click(function () {
     var lat = map.getCenter().lat();
@@ -31,6 +33,26 @@ $(function () {
         }
       }
     });
+  });
+
+  $("#share").popover({
+    trigger: "manual",
+    template: popoverTemplate,
+    placement: "bottom",
+    html: "true",
+    content: function() {
+      return "<input type='text' id='shareURL' style='width: 250px' readonly value='"+getShareUrl()+"'><em>Copy link to your clipboard to share.</em>";
+    }
+  });
+  $("#share").on('shown.bs.popover', function () {
+    $("#shareURL").select();
+  });
+  $('#map_canvas').click(function () {
+    $("#share").popover("hide")
+  });
+  $("#share").click(function (e) {
+    e.stopPropagation();
+    $("#share").popover("toggle")
   });
 });
 
@@ -73,6 +95,42 @@ function customizeView() {
       }, 1000);  
     }
   }
-  map.setZoom(viewParam.zoom);
-  map.setCenter(viewParam.position);
+  setTimeout(function() {
+    map.setZoom(viewParam.zoom);
+    map.setCenter(viewParam.position);
+  }, 600);
+}
+
+function getLegend() {
+  switch(legendGroups) {
+      case 2 :
+        return "site";
+        break;
+      case 0 :
+        return "type";
+        break;
+      case 1 :
+        return "version";
+        break;
+      default :
+        return "type";
+  }
+}
+function getShareUrl(){
+  var site = getOpenBubble();
+  var lat = map.getCenter().lat();
+  var lng = map.getCenter().lng();
+  var zoom = map.getZoom();
+  var url = location.protocol + "//" + location.host + "?legend=" + getLegend() + "&zoom="
+   + zoom + "&position=" + lat + "," + lng ;
+  url = (site == null) ? url : (url + "&site=" + site);
+  return url;
+}
+function getOpenBubble(){
+  var site = null;
+  sites.forEach(function(val, index) {
+    if (val.bubbleOpen === true)
+      site = val.siteData.site_id;
+  });
+  return site;
 }
