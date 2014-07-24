@@ -6,12 +6,12 @@
 	"require": {
 		"laravel/framework": "4.1.*",
 		"rhumsaa/uuid": "~2.7",
-		"doctrine/dbal": "2.4.*",
-		"proger/feeder": "dev-master"
+		"doctrine/dbal": "2.4.*"
 	},
 	"autoload": {
 		"classmap": [
 			"app/commands",
+			"app/lib/rss",
 			"app/controllers",
 			"app/models",
 			"app/database/migrations",
