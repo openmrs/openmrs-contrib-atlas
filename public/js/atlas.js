@@ -69,6 +69,10 @@ function closeBubbles() {
   }
 }
 function initVersion() {
+  for (var key in version) {
+    if (existingVersion.indexOf(version[key]) === -1)
+      existingVersion.push(version[key])
+  }
  var i=0, x, count, item;
  while(i < version.length){
      count = 1;

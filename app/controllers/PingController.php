@@ -9,7 +9,7 @@ class PingController extends BaseController {
 
 	/**
 	 * Delete Ping function
-	 *
+	 * Deprecated - Maintain compatibility with Atlas Module 1.x
 	 */
 	public function pingDelete()
 	{    
@@ -52,7 +52,7 @@ class PingController extends BaseController {
 
 	/**
 	 * Post Ping function
-	 *
+	 * Deprecated - Maintain compatibility with Atlas Module 1.x
 	 */
 	public function pingPost()
 	{
@@ -62,6 +62,7 @@ class PingController extends BaseController {
 		$date = new \DateTime;
 		$id['id'] = $json['id'];
 
+		$openmrs_version = (empty($json['data'])) ? "" : $json['data']['version'];
 		$param = array(
 			'id' => $json['id'],
 			'latitude' => floatval($json['geolocation']['latitude']),
@@ -70,6 +71,7 @@ class PingController extends BaseController {
 			'url' => $json['url'],
 			'type' => $json['type'],
 			'image' => $json['image'],
+			'openmrs_version' => $openmrs_version,
 			'patients' => intval($json['patients']),
 			'encounters' => intval($json['encounters']),
 			'observations' => intval($json['observations']),
@@ -79,6 +81,8 @@ class PingController extends BaseController {
 			'data' => json_encode($json['data']),
 			'atlas_version' => $json['atlasVersion'],
 			'date_created' => $date);
+
+		
 
 		$site = DB::table('atlas')->where('id','=', $param['id'])->first();
 		if ($site != null) {
@@ -101,6 +105,7 @@ class PingController extends BaseController {
 				'email' => $site->email,
 				'data' =>  $site->data, 
 				'action' =>  'UPDATE', 
+				'openmrs_version' => $openmrs_version, 
 				'data' =>  $site->data,
 				'show_counts' => $site->show_counts,
 				'atlas_version' => $site->atlas_version,
@@ -140,11 +145,13 @@ class PingController extends BaseController {
 		if ($siteM == NULL)
 			App::abort(403, 'Unauthorized');
 
+		$openmrs_version = (empty($json['data'])) ? "" : $json['data']['version'];
 		$param = array(
 			'id' => $siteM->atlas_id,
 			'patients' => intval($json['patients']),
 			'encounters' => intval($json['encounters']),
 			'observations' => intval($json['observations']),
+			'openmrs_version' => $openmrs_version, 
 			'data' => json_encode($json['data']),
 			'atlas_version' => $json['atlasVersion'],
 			'date_created' => $date);
@@ -160,6 +167,7 @@ class PingController extends BaseController {
 				'longitude' =>  $site->longitude, 
 				'latitude' =>  $site->latitude,
 				'name' =>  $site->name, 
+				'openmrs_version' => $openmrs_version, 
 				'url' =>  $site->url, 
 				'image' =>  $site->image, 
 				'contact' =>  $site->contact, 
@@ -186,7 +194,7 @@ class PingController extends BaseController {
 
 	/**
 	 * Post Ping function - Handle Ping from Atlas Module 2.0
-	 *
+	 * Never Used and deprecated
 	 */
 	public function pingPostModule()
 	{
@@ -226,6 +234,7 @@ class PingController extends BaseController {
 				'patients' =>  $site->patients, 
 				'encounters' =>  $site->encounters, 
 				'observations' =>  $site->observations, 
+				'openmrs_version' => $openmrs_version,
 				'notes' =>  $site->notes, 
 				'email' => $site->email,
 				'data' =>  $site->data,
@@ -272,6 +281,7 @@ class PingController extends BaseController {
 			'email' => $json['email'],
 			'notes' => $json['notes'],
 			'date_created' => $date,
+			'openmrs_version' => $json['version'],
 			'show_counts' => intval($json['show_counts']),
 			'created_by' => $user->principal);
 		
@@ -311,6 +321,7 @@ class PingController extends BaseController {
 				'email' => $site->email,
 				'show_counts' => $site->show_counts,
 				'data' =>  $site->data, 
+				'openmrs_version' => $site->openmrs_version, 
 				'atlas_version' => $site->atlas_version,
 				'date_created' => $site->date_created,
 				'show_counts' => $site->show_counts,
@@ -394,6 +405,7 @@ class PingController extends BaseController {
 				'email' => $site->email,
 				'data' =>  $site->data, 
 				'action' => 'DELETE', 
+				'openmrs_version' => $site->openmrs_version, 
 				'atlas_version' => $site->atlas_version,
 				'date_created' => $site->date_created,
 				'show_counts' => $site->show_counts,

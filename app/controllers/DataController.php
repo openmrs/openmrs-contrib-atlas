@@ -20,7 +20,7 @@ class DataController extends BaseController {
 		$sites = DB::table('atlas')
                      ->select(DB::raw('id as uuid, id as site_id,  latitude,
                      	longitude, name, url, type, image, patients, encounters, observations,
-                     	contact,email,notes,data,atlas_version, show_counts,
+                     	contact,email,notes,data,atlas_version, show_counts, openmrs_version, 
                      	CASE WHEN date_changed IS NULL THEN "" ELSE date_changed END as date_changed,
                      	date_created'))->get();
 
@@ -55,6 +55,7 @@ class DataController extends BaseController {
 			}
 			if (!in_array($site['uuid'], $privileges) && $user->role != 'ADMIN')
 				unset($site['uuid']);
+			if ($site['openmrs_version'] == "" )
 		    $major = 0;
 		    $minor = 0;
 		    $atlasVersion = json_decode($site['atlas_version']);
@@ -64,11 +65,10 @@ class DataController extends BaseController {
 		        unset($site['data']);
 		        //TODO
 		        $newResult[] = $site;
-		        
 		    } else {
 		        $dataJson = json_decode($site['data'], true);
-		        $version = $dataJson['version'];
-		        $site['version'] = $version;
+		        $version = empty($dataJson['version']) ? "" : $dataJson['version'];
+		        $site['version'] = empty($site['openmrs_version']) ? $version : $site['openmrs_version'];
 		        unset($site['data']);
 		        $newResult[] = $site;
 		    }

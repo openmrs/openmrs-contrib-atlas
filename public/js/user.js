@@ -33,7 +33,14 @@ $(function () {
     bootbox.confirm("Are you sure ? Your site will be deleted", function(result) {
       if (result) deleteMarker(id);
     });
-  });  
+  });
+  $("#map_canvas").on("focus", "#version", function(e){
+    $("#version").html("");
+    $("#version").append("<option value=''></option>");
+    $(existingVersion).each(function (i) {
+        $("#version").append("<option value=\""+existingVersion[i]+"\">"+existingVersion[i]+"</option>");
+    });
+  });
 });
 
 function getGeolocation() {
@@ -134,6 +141,7 @@ function newSite(myPosition) {
     email: userEmail,
     show_counts: 1,
     notes: "",
+    version: "",
     url: "",
     image: "",
     latitude: myPosition.lat(),
@@ -216,9 +224,11 @@ function eventSaveMarker() {
       var patients = $("#patients").val().trim();
       var encounters = $("#encounters").val().trim();
       var obs = $("#observations").val().trim();
+      var version = $("select#version").val().trim();
       site.observations = obs;
       site.patients = patients;
       site.encounters = encounters;
+      site.version = version;
     }
     if (site.module == 1) {
       var stats = $('#include-count').is(':checked') ? 1 : 0; 
@@ -230,7 +240,7 @@ function eventSaveMarker() {
     var notes = $("#notes").val().trim();
     var contact =$("#contact").val().trim();
     var url  = $("#url").val().trim();
-    var type = $("select").val().trim();
+    var type = $("select#type").val().trim();
     if(name === "" || id === "") {
       bootbox.alert("Site Name is missing !");
     } else {
@@ -346,6 +356,12 @@ function contentEditwindow(site) {
     html += "<div class='form-inline'>" + encounters + " encounters</div>";
     html += "<div class='form-inline'>" + observations + " observations</div>";
     html += "</div></fieldset>";
+  }
+  if (site.module !== 1) {
+    html += "<div class='form-inline'> OpenMRS Version ";
+    html += "<select title='OpenMRS Version' id='version' class='form-control input-sm'></div>"
+    html += "<option selected>" + site.version + "</option>"; 
+    html += "</select></div>";
   }
   html += "<div class='row' style='margin-top:10px;'><div class='col-xs-8'>";
   html += "<select title='Site type' id='type' class='form-control input-sm'>"

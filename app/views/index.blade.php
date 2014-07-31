@@ -52,6 +52,7 @@ var nextSite = 0;
 var map;
 var sites = [];
 var types = [];
+var existingVersion = [];
 var version = [];
 var unknownVersion = 0;
 var otherVersion = 0;
