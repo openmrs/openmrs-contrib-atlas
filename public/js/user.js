@@ -315,7 +315,7 @@ var html = "<div class='site-bubble'>";
   if (site.contact)
     html += "<div class='site-contact'><span class='site-label'>Contact:</span> " + site.contact + "</div>";
   if (site.email)
-    html += "<a href='mailto:"+ site.email + " class='site-email'><img src='images/mail.png' width='15px' height='15px'/></a>";
+    html += "<a href='mailto:"+ site.email + "' class='site-email'><img src='images/mail.png' width='15px' height='15px'/></a>";
   html += "</div>";
   if (site.notes)
     html += "<fieldset class='site-notes'>" + site.notes + "</fieldset>";
