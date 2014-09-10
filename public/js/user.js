@@ -6,12 +6,9 @@ function initLoginButton() {
     $("#logout").css("display", "none");
   });
   $("#editSite, #newSite, #locateMe").click(function(){
-    $("#legendSelected").html(divSites); 
-    $("#legend1").html(divTypes); 
-    $("#legend2").html(divVersions); 
     legendGroups = 2;
-    initLegend();
     repaintMarkers();
+    initLegend();
     if ($(this).attr("id") === "locateMe")
       locateMe();
     if ($(this).attr("id") === "editSite") {

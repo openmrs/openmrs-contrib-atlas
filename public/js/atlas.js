@@ -5,20 +5,17 @@ var fadeHtml = "<div class='toggle' id='fadeInfo'> Sites that have not been upda
 fadeHtml += "Fading can be turned off through the controls on this page.</div>";
 var uniqueMarker = null;
 function initLegendChoice() {
-  $("#legendSelected").html(divTypes);
-  $("#legend2").html(divVersions);
-  $("#legend1").html(divSites);
   $("#fadeCheckbox").prop('checked', true);
-  $("#legendSelected").mouseover(function(){
+  $("#group-checkbox").prop('checked', true);
+  $("#groups").mouseover(function(){
     $("#legendChoice").css("display", "block");
   });
   $("#marker-groups").mouseleave(function(){
     $("#legendChoice").css("display", "none");
   });
-  $("#legend1, #legend2").click(function(){
+  $("#legend-type, #legend-version, #group-checkbox").click(function(){
     var clicked = $(this).attr("id");
     clickLegend(clicked);
-    $("#legendChoice").css("display", "none");
   });
   $("#fadeCheckbox").click(function(){
     fadeOverTime = !fadeOverTime;
@@ -26,28 +23,27 @@ function initLegendChoice() {
     repaintMarkers();  
   });
 }
+
 function clickLegend(id){
-  switch ($("#"+id).html()) {
-    case divVersions:
+  switch (id) {
+    case "legend-version":
       if (version.length > 0) {
-        $("#"+id).html($("#legendSelected").html());
-        $("#legendSelected").html(divVersions);
         legendGroups = 1;
       }
       break;
-    case divSites: 
-      $("#"+id).html($("#legendSelected").html());
-      $("#legendSelected").html(divSites); 
-      //controlText.innerHTML = "<b>Groups</b>";
-      legendGroups = 2;
+    case "group-checkbox":
+    case "legend-group": 
+      if (legendGroups !== 2) {
+        legendGroups = 2;
+      } else {
+        legendGroups = 0;
+      }
       break;
-    case divTypes:
-      $("#"+id).html($("#legendSelected").html());
-      $("#legendSelected").html(divTypes); 
-      //controlText.innerHTML = "<b>Groups</b>";
+    case "legend-type":
       legendGroups = 0;
       break;
   }
+  $("#legendChoice").css("display", "none");
   repaintMarkers();
   initLegend();
 }
@@ -382,6 +378,25 @@ function repaintMarkers() {
     } else {
       site.marker.setVisible(false);
     }
+  }
+  switch (legendGroups) {
+    case 1:
+        $("#legend-version").addClass("enabled");
+        $("#legend-type").removeClass("enabled");
+        $("#group-checkbox").prop('checked', true);
+        $("#legendChoice").css("display", "none");
+      break;
+    case 2: 
+      $("#group-checkbox").prop('checked', false);
+      $("#legend-type").removeClass("enabled");
+      $("#legend-version").removeClass("enabled");
+      break;
+    case 0:
+      $("#legend-type").addClass('enabled');
+      $("#legend-version").removeClass('enabled');
+      $("#group-checkbox").prop('checked', true);
+      $("#legendChoice").css("display", "none");
+      break;
   }
 }
 

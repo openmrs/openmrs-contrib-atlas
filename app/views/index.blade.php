@@ -60,9 +60,6 @@ var images = [];
 var shadows = [];
 var fadeOverTime = true;
 var legendGroups = 0;
-var divSites ='<img src="https://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png"><b>Sites</b>';
-var divTypes ='<img src="images/group-dot.png"><b>Types</b>'
-var divVersions ='<img src="images/group-dot.png"><b>Versions</b>';
 var viewParam = {
   site : null,
   position : new google.maps.LatLng(15,15),
@@ -94,6 +91,9 @@ var viewParam = {
   }
 @endif
 $(document).ready(function() {
+  @if ( strlen($moduleUUID) > 30)
+    legendGroups = 2;
+  @endif
   initLegendChoice();
   initLoginButton();
   initDownloadButton();
@@ -101,9 +101,6 @@ $(document).ready(function() {
   if (currentUser == '') currentUser = 'visitor';
   userName = $('#user-name').val().trim();
   userEmail = $('#user-email').val().trim();
-  @if ( strlen($moduleUUID) > 30)
-    $("#legend1").click();
-  @endif
  });
 
 setTimeout('initialize()', 500);
@@ -175,12 +172,13 @@ ga('send', 'pageview');
   <span class="glyphicon glyphicon-share"></span> Share
   </div>
   <div class="atlas-container control login" id ="marker-groups">
-      <div class="dropDownControl" id="legendSelected" title="Click to switch legend"></div>
+      <div class="dropDownControl enabled" id="groups" title="Click to switch legend"><img src="images/group-dot.png"><b> View</b></div>
       <div class = "dropDownOptionsDiv" id="legendChoice">
-          <div class = "dropDownItemDiv" id="legend1"></div>
-          <div class = "dropDownItemDiv" id="legend2"></div>
+          <div class = "dropDownItemDiv" id="legend-group"> <label><input type="checkbox" id="group-checkbox"><b>Group</b></label></div>
+          <div class = "dropDownItemDiv enabled" id="legend-type"><img src="images/group-dot.png"><b>Types</b></div>
+          <div class = "dropDownItemDiv" id="legend-version"><img src="images/group-dot.png"><b>Versions</b></div>
           <div class = "dropDownItemDiv" id="fade" title="Fade outdated sites over time.">
-            <label><input type="checkbox" id="fadeCheckbox"><b>Fade</b></label>
+            <label><input type="checkbox" id="fadeCheckbox"><b>Fading</b></label>
           </div>
       </div>          
   </div>     
