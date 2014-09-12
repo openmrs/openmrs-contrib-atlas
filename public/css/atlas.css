@@ -174,7 +174,7 @@ span.site-version {
         margin-top : 3px;
 }
 #groups {
-        width: 80px;
+        width: 83px;
 }
 #fade {
         border-top: solid 1px rgba(141, 141, 141, 1);
@@ -355,7 +355,7 @@ span.site-version {
     margin-top : -10px;
     margin-bottom: 5px;
 }
-#fade input[type=checkbox], #legend-group input[type=checkbox] {
+#fade input[type=checkbox], #legend-group input[type=checkbox], #legend-clusters input[type=checkbox] {
 -ms-transform: scale(0.8); /* IE */
   -moz-transform: scale(0.8); /* FF */
   -webkit-transform: scale(0.8); /* Safari and Chrome */
@@ -367,7 +367,7 @@ span.site-version {
   left: -3px;
   *overflow: hidden;
 }
-#fade label, #legend-group label {
+#fade label, #legend-group label, #legend-clusters label {
     display: block;
     padding-left: 15px;
     text-indent: -15px;

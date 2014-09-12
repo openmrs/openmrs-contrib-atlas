@@ -7,6 +7,7 @@ var uniqueMarker = null;
 function initLegendChoice() {
   $("#fadeCheckbox").prop('checked', true);
   $("#group-checkbox").prop('checked', true);
+  if(clustersEnabled) $("#clusters-checkbox").prop('checked', true);
   $("#groups").mouseover(function(){
     $("#legendChoice").css("display", "block");
   });
@@ -22,9 +23,25 @@ function initLegendChoice() {
     closeBubbles();
     repaintMarkers();  
   });
+  $("#clusters-checkbox").click(function(){
+    clustersEnabled = !clustersEnabled;
+    if (clustersEnabled) {
+      clusters.setMap(map);
+      $("#clusters-checkbox").prop('checked', true);
+    } else { 
+      clusters.setMap(null);
+      $("#clusters-checkbox").prop('checked', false);
+    }
+    legendGroups = 2;
+    repaintMarkers(); 
+    initLegend(); 
+  });
 }
 
 function clickLegend(id){
+  clustersEnabled = 0;
+  clusters.setMap(null);
+  $("#clusters-checkbox").prop('checked', false);
   switch (id) {
     case "legend-version":
       if (version.length > 0) {
@@ -106,6 +123,13 @@ function initialize() {
     }
   });
   map = $("#map_canvas").gmap3('get');
+  var markerClustererOptions = {
+    imagePath: "https://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerclusterer/images/m",
+    minimumClusterSize: 3,
+    gridSize: 30
+  };
+  clusters = new MarkerClusterer(map,null,markerClustererOptions);
+  clusters.setMap(null);
   images[0] = new google.maps.MarkerImage("atlas_sprite.png",
     // This marker is 20 pixels wide by 32 pixels tall.
     new google.maps.Size(20, 34),
@@ -217,7 +241,14 @@ function clearLegend(){
 }
 function Icons(){
   var icons;
-  if (legendGroups === 0){
+  if (clustersEnabled){
+    icons = {
+      Other: {
+        icon: "https://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerclustererplus/images/m1.png",
+        label: "Other"
+      }
+      };
+  } else if (legendGroups === 0){
     icons = {
       Research: {
         icon: "https://maps.google.com/intl/en_us/mapfiles/ms/micons/green-dot.png",
@@ -319,12 +350,13 @@ function colorForSite(site) {
         break;
     }
   }
-  if ((site.uid === currentUser || auth_site.indexOf(site.uuid) !== -1) && legendGroups === 2 && moduleHasSite !== 1)
+  if ((site.uid === currentUser || auth_site.indexOf(site.uuid) !== -1) && legendGroups === 2
+   && moduleHasSite !== 1  && !clustersEnabled)
       image.url = "https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png";
-  if ((site.module === 1 && legendGroups === 2 && moduleUUID !== null && moduleHasSite === 1)) {
+  if ((site.module === 1 && legendGroups === 2 && moduleUUID !== null && moduleHasSite === 1 && !clustersEnabled)) {
       image.url = "https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png";
   } else if ((site.uid === currentUser || auth_site.indexOf(site.uuid) !== -1) 
-    && legendGroups === 2 && (moduleUUID === null || moduleHasSite === 0)) {
+    && legendGroups === 2 && (moduleUUID === null || moduleHasSite === 0) && !clustersEnabled) {
     image.url = "https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png";
   }
   return image;
@@ -348,6 +380,7 @@ function loadSites(json) {
       site.uuid = null;
     var fadeGroup = getFadeGroup(site);
     var marker = createMarker(site, fadeGroup, bounds);
+    if (fadeGroup < 4) clusters.addMarker(marker);
     var editwindow = null;
     var infowindow = createInfoWindow(site, marker);
     if ((site.uid !== "" && site.uid === currentUser) || (auth_site.indexOf(site.uuid) !== -1) || site.uuid !== null)
@@ -385,17 +418,20 @@ function repaintMarkers() {
         $("#legend-type").removeClass("enabled");
         $("#group-checkbox").prop('checked', true);
         $("#legendChoice").css("display", "none");
+        clusters.setMap(null);
       break;
     case 2: 
       $("#group-checkbox").prop('checked', false);
       $("#legend-type").removeClass("enabled");
       $("#legend-version").removeClass("enabled");
+        if (clustersEnabled === 1) clusters.setMap(map);
       break;
     case 0:
       $("#legend-type").addClass('enabled');
       $("#legend-version").removeClass('enabled');
       $("#group-checkbox").prop('checked', true);
       $("#legendChoice").css("display", "none");
+      clusters.setMap(null);
       break;
   }
 }

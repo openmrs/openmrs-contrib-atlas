@@ -62,7 +62,7 @@ class CaptureCommand extends Command {
 			$phantomjs = getenv('PHANTOM_PATH');
 			$siteURL = getenv('SITE_URL');
 			$path = storage_path(). '/captures';
-			for ($i = 0; $i < 3; $i++) {
+			for ($i = 0; $i < 4; $i++) {
 				for ($j = 0; $j < 2; $j++) {
 					$legend = $i;
 					$fade = $j;

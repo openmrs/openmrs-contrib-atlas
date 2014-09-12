@@ -60,8 +60,8 @@ class AtlasController extends BaseController {
 	}
 
 	public function cronCapture()
-    {
-    	$phantomjs = getenv('PHANTOM_PATH');
+  {
+    $phantomjs = getenv('PHANTOM_PATH');
 		$legend = Input::get('legend');
 		$zoom = Input::get('zoom');
 		$width = Input::get('width');

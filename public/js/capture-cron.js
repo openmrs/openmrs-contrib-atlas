@@ -69,13 +69,20 @@ page.open(address, function (status) {
                       $("#map_canvas").gmap3('get').setZoom(4);
                       console.log("Fit the map");
                     }
+                    if (param.height == "768") {
+                      $("#map_canvas").gmap3('get').setZoom(2);
+                      console.log("Fit the map");
+                    }
                     $("#legend").removeAttr('hidden');
                     if (param.fade == "0")
-                        clickElement($("#fadeCheckbox")[0]);
-                    if (param.legend == "2")
-                        clickElement($("#legend1")[0]);
-                    if (param.legend == "1")
-                        clickElement($("#legend2")[0]);
+                      clickElement($("#fadeCheckbox")[0]);
+                    if (param.legend == "3") {
+                      clickElement($("#clusters-checkbox")[0]);
+                    } else if (param.legend == "2") {
+                      clickElement($("#group-checkbox")[0]);
+                    } else if (param.legend == "1") {
+                      clickElement($("#legend-version")[0]);
+                    }
                 }, { legend: legend , fade: fade, height: height});
 
                 setTimeout(function () {

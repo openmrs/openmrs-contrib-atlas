@@ -66,16 +66,20 @@ function initDownloadButton() {
   $("#1024x768, #1280x1024, #3840x2160").click(function(){
     $("#screen").css("display", "none");
   });
+  var legend;
   $('#1024x768').click(function () {
-    var url = "download?legend=" + legendGroups + "&size=1024x768" + "&fade=" + fadeOverTime;
+    legend = (clustersEnabled == true) ? 3 : legendGroups;
+    var url = "download?legend=" + legend + "&size=1024x768" + "&fade=" + fadeOverTime;
     window.location = url ;
   });
   $('#1280x1024').click(function () {
-    var url = "download?legend=" + legendGroups + "&size=1920x1080" + "&fade=" + fadeOverTime;
+    legend = (clustersEnabled == true) ? 3 : legendGroups;
+    var url = "download?legend=" + legend + "&size=1920x1080" + "&fade=" + fadeOverTime;
     window.location = url ;
   });
   $('#3840x2160').click(function () {
-    var url = "download?legend=" + legendGroups + "&size=3840x2160" + "&fade=" + fadeOverTime;
+    legend = (clustersEnabled == true) ? 3 : legendGroups;
+    var url = "download?legend=" + legend + "&size=3840x2160" + "&fade=" + fadeOverTime;
     window.location = url ;
   });
   
@@ -122,7 +126,7 @@ function getShareUrl(){
   var lng = map.getCenter().lng();
   var zoom = map.getZoom();
   var url = location.protocol + "//" + location.host + "?legend=" + getLegend() + "&zoom="
-   + zoom + "&position=" + lat + "," + lng ;
+   + zoom + "&position=" + lat + "," + lng + "&clusters=" + clustersEnabled;
   url = (site == null) ? url : (url + "&site=" + site);
   return url;
 }

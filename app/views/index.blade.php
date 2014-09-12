@@ -19,6 +19,7 @@
 <script type="text/javascript" src="js/tools.js"></script>
 <script type="text/javascript" src="js/module.js"></script>
 <script type="text/javascript" src="lib/js/yqlgeo.js"></script>
+<script type="text/javascript" src="https://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerclustererplus/src/markerclusterer_packed.js"></script>
 <script type="text/javascript">
 var auth = null;
 var moduleUUID = null;
@@ -50,6 +51,8 @@ var userEmail;
 var userName;
 var nextSite = 0;
 var map;
+var clusters;
+var clustersEnabled = 0;
 var sites = [];
 var types = [];
 var existingVersion = [];
@@ -89,6 +92,10 @@ var viewParam = {
     default :
       legendGroups = 0;
   }
+@endif
+@if (Input::get('clusters') == true)
+  clustersEnabled = 1;
+  legendGroups = 2;
 @endif
 $(document).ready(function() {
   @if ( strlen($moduleUUID) > 30)
@@ -179,6 +186,9 @@ ga('send', 'pageview');
           <div class = "dropDownItemDiv" id="legend-version"><img src="images/group-dot.png"><b>Versions</b></div>
           <div class = "dropDownItemDiv" id="fade" title="Fade outdated sites over time.">
             <label><input type="checkbox" id="fadeCheckbox"><b>Fading</b></label>
+          </div>
+          <div class = "dropDownItemDiv" id="legend-clusters" title="Enable markers clustering.">
+            <label><input type="checkbox" id="clusters-checkbox"><b>Clustering</b></label>
           </div>
       </div>          
   </div>     
