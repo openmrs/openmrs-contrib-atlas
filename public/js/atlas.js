@@ -607,9 +607,12 @@ function createInfoWindow(site, marker) {
         sites[id].marker.setDraggable(true);
         $(".gm-style-iw").parent().append("<div id='undo' title ='Undo change' value='"+id+"' class='control' style='position: absolute;overflow:none; right:12px;bottom:10px; color:#3F3F3F'><i class='fa fa-lg fa-history' style='color:rgba(171, 166, 166, 1)'></i></div>");
         $(".gm-style-iw").parent().append("<div id='delete' title ='Delete site' value='"+id+"' class='control' style='position: absolute;overflow:none; right:12px;bottom:28px; color:#3F3F3F'><i class='fa fa-lg fa-trash-o' style='color:rgba(171, 166, 166, 1)'></i></div>");
-        if (site.module == 1  && site.show_counts == 0) {
+        if (site.module == 1 && site.show_counts == 0) {
           $('input#include-count').attr('checked', false);
           $(".site-stat").addClass("disabled");
+        } else if (site.module == 1  && site.show_counts == 1) {
+          $(".site-stat").removeClass("disabled");
+          $('input#include-count').attr('checked', true);
         }
       });
     } 

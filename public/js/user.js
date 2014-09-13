@@ -231,6 +231,7 @@ function eventSaveMarker() {
       var stats = $('#include-count').is(':checked') ? 1 : 0; 
       site.show_counts = stats;
     }
+
     var image = $("#image").val();
     var name = $("#name").val().trim();
     var mail = $("#email").val().trim();
@@ -246,9 +247,6 @@ function eventSaveMarker() {
       site.email =  mail;
       site.url = url;
       site.date_changed = new Date().toString();
-      site.observations = obs;
-      site.patients = patients;
-      site.encounters = encounters;
       site.contact = contact;
       site.notes = notes;
       site.image = image;
@@ -275,8 +273,10 @@ function eventSaveMarker() {
           site.module = 1;
           moduleHasSite = 1;
         }
-        if (moduleUUID !== null && site.module === 1)
+        if (moduleUUID !== null && site.module === 1) {
           parent.postMessage("save", "*");
+        }
+
         if (auth_site.indexOf(response) === -1)
           auth_site.push(response);
         if (auth_site.length > 0)
@@ -345,9 +345,9 @@ function contentEditwindow(site) {
     html += "<div class='form-inline'>Patients <input type='number' pattern='[0-9]' class='form-control input-sm' title='Number of patients' value='"+ site.patients + "' name='patients' id ='patients'></div>";
     html += "<div class='form-inline'><br>Encounters <input type='number' pattern='[0-9]' class='form-control input-sm' title='Number of encounters' value='"+ site.encounters + "' name='encounters' id ='encounters'></div>";
     html += "<div class='form-inline'><br>Observations <input type='number' pattern='[0-9]' class='form-control input-sm' title='Number of observations' value='"+ site.observations + "' name='obs' id ='observations'></div></div><br>";
-  } else {
+  } else if (!(typeof counts.patients === "undefined") && countsEnabled) {
     html += "<fieldset class='fieldset'>";
-    html += "<legend><div class='form-inline' ><input type='checkbox' checked style='height:auto;bottom: 2px;position:relative' id='include-count' class='form-control input-sm' title='Include counts in the bubble'> Display counts</div></legend>";
+    html += "<legend><div class='form-inline' ><input type='checkbox' style='height:auto;bottom: 2px;position:relative' id='include-count' class='form-control input-sm' title='Include counts in the bubble'> Display counts</div></legend>";
     html += "<div class='site-stat'>";
     html += "<div class='form-inline'>" + patients + " patients</div>";
     html += "<div class='form-inline'>" + encounters + " encounters</div>";
