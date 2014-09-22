@@ -24,7 +24,7 @@
 var auth = null;
 var moduleUUID = null;
 var counts = {};
-var countsEnabled = 0;
+var countsEnabled = 1;
 var moduleHasSite = null;
 @if ( strlen($auth_site) > 30)
   auth = JSON.stringify({{ $auth_site }});
@@ -43,7 +43,7 @@ else
   @if (Input::has('observations'))
   counts.observations = {{ Input::get('observations') }} ;
   @endif
-  @if (Input::has('observations'))
+  @if (Input::has('sendCounts'))
   countsEnabled = {{ Input::get('sendCounts') }} ;
   @endif
   moduleUUID = "{{ $moduleUUID }}";
