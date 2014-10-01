@@ -28,7 +28,7 @@ return array(
 
     /* Ping Configuration */
     // needed to delete an entry
-    'PING_DELETE_SECRET' => 'secret'
+    'PING_DELETE_SECRET' => 'secret',
 
     /* API Key for ID Auth */
     'API_KEY' => '1234567890abcdef',

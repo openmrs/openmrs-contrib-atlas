@@ -57,6 +57,17 @@ App::error(function(Exception $exception, $code)
 	Log::error($exception);
 });
 
+
+/*
+|--------------------------------------------------------------------------
+| Application Proxy Configuration
+|-------------------------------------------------------------------------
+*/
+
+Request::setTrustedProxies(array(
+    '*' // IP address of the proxy.
+));
+
 /*
 |--------------------------------------------------------------------------
 | Maintenance Mode Handler
