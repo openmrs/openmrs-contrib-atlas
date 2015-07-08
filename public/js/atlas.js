@@ -554,7 +554,9 @@ function createInfoWindow(site, marker) {
     sites[site.id].bubbleOpen = false;
   });
   google.maps.event.addListener(infowindow, 'domready', function(){
-    $(".gm-style-iw").parent().append("<div class='site-fade' data-toggle='fade'>Why is this site fading away?</div>");
+    if ($(".gm-style-iw").parent().has(".site-fade").length == 0) {
+      $(".gm-style-iw").parent().append("<div class='site-fade' data-toggle='fade'>Why is this site fading away?</div>");
+    }
     $('.site-fade').tooltip({
       trigger: 'click hover', placement: 'bottom',
       html: true, title: fadeHtml,
@@ -567,6 +569,9 @@ function createInfoWindow(site, marker) {
     }
   }); 
   google.maps.event.addListener(marker, "click", function() {
+    $("#undo").remove();
+    $("#delete").remove();
+    $("#edit").remove();
     if (sites[site.id].editBubbleOpen) {
       sites[site.id].editwindow.close();
       sites[site.id].editBubbleOpen = false;
@@ -577,23 +582,31 @@ function createInfoWindow(site, marker) {
       closeBubbles();
       infowindow.open(map,marker);
       sites[site.id].bubbleOpen = true;
-      if (moduleHasSite !== 1 && site.uuid !== null && moduleUUID !== null && currentUser !== "visitor" && auth_site.indexOf(site.uuid) !== -1) {
+      $("#undo").remove();
+      if (moduleHasSite !== 1 && site.uuid !== null && moduleUUID !== null 
+          && currentUser !== "visitor" && auth_site.indexOf(site.uuid) !== -1
+          && $(".site-bubble").has("#me-button").length == 0) {
         html = "<div class='me-button'><button type='button' id='me-button' value='" + site.id + "' title='Pick the site for this server.'";
         html += "class='btn btn-success btn-xs'>This is me !</button></div>";
         $(".site-bubble").append(html);
-      } else if (site.module === 1 && moduleHasSite === 1 && currentUser !== "visitor" && auth_site.indexOf(site.uuid) !== -1) {
+      } else if (site.module === 1 && moduleHasSite === 1 && currentUser !== "visitor" 
+          && auth_site.indexOf(site.uuid) !== -1
+          && $(".site-bubble").has("#detach-button").length == 0) {
         html = "<div class='me-button'><button type='button' id='detach-button' value='" + site.id + "' title='Detach the site from this server.'";
         html += "class='btn btn-info btn-xs'>This is not me.</button></div>";
         $(".site-bubble").append(html);
       }
-      if ((site.uid == currentUser) || site.uuid !== null) { 
-        $(".gm-style-iw").parent().append("<div id='edit' value='"+site.id+"' title ='Edit site' class='control' style='position: absolute;overflow:none; right:12px;bottom:12px; color:#3F3F3F'><i class='fa fa-lg fa-pencil' style='color:rgba(171, 166, 166, 1)'></i></div>");
-        $(".gm-style-iw").parent().append("<div id='delete' value='"+site.id+"' title ='Delete site' class='control' style='position: absolute;overflow:none; right:12px;bottom:27px; color:#3F3F3F'><i class='fa fa-lg fa-trash-o' style='color:rgba(171, 166, 166, 1)'></i></div>");
-      } else {
-        if (currentUser !== "visitor") {
-          $(".gm-style-iw").parent().append("<div id='lock' style='position: absolute;overflow:none; right:13px;bottom:12px; color:#3F3F3F'><i data-toggle='tooltip' class='fa fa-lg fa-lock' style='color:rgba(171, 166, 166, 1)'></i></div>");
-          $('.fa-lock').tooltip({trigger: 'click hover', placement: 'right', html: true, title: lockHtml, delay: { show: 500, hide: 1200 }});
+      if ((site.uid == currentUser) || site.uuid !== null) {
+        if ( $(".gm-style-iw").parent().has("#edit").length == 0){
+          $("#lock").remove();
+          $(".gm-style-iw").parent().append("<div id='edit' value='"+site.id+"' title ='Edit site' class='control' style='position: absolute;overflow:none; right:12px;bottom:12px; color:#3F3F3F'><i class='fa fa-lg fa-pencil' style='color:rgba(171, 166, 166, 1)'></i></div>");
         }
+        if ($(".gm-style-iw").parent().has("#lock").length == 0) {
+          $(".gm-style-iw").parent().append("<div id='delete' value='"+site.id+"' title ='Delete site' class='control' style='position: absolute;overflow:none; right:12px;bottom:27px; color:#3F3F3F'><i class='fa fa-lg fa-trash-o' style='color:rgba(171, 166, 166, 1)'></i></div>");
+        }
+      } else {
+        $(".gm-style-iw").parent().append("<div id='lock' style='position: absolute;overflow:none; right:13px;bottom:12px; color:#3F3F3F'><i data-toggle='tooltip' class='fa fa-lg fa-lock' style='color:rgba(171, 166, 166, 1)'></i></div>");
+        $('.fa-lock').tooltip({trigger: 'click hover', placement: 'right', html: true, title: lockHtml, delay: { show: 500, hide: 1200 }});
       }
     }
     if ((site.uid === currentUser) || site.uuid !== null) {
@@ -605,8 +618,13 @@ function createInfoWindow(site, marker) {
         sites[id].editwindow.open(map,sites[id].marker);
         sites[id].editBubbleOpen = true;
         sites[id].marker.setDraggable(true);
-        $(".gm-style-iw").parent().append("<div id='undo' title ='Undo change' value='"+id+"' class='control' style='position: absolute;overflow:none; right:12px;bottom:10px; color:#3F3F3F'><i class='fa fa-lg fa-history' style='color:rgba(171, 166, 166, 1)'></i></div>");
-        $(".gm-style-iw").parent().append("<div id='delete' title ='Delete site' value='"+id+"' class='control' style='position: absolute;overflow:none; right:12px;bottom:28px; color:#3F3F3F'><i class='fa fa-lg fa-trash-o' style='color:rgba(171, 166, 166, 1)'></i></div>");
+        $("#edit").remove();
+        if ($(".gm-style-iw").parent().has("#undo").length == 0) {
+          $(".gm-style-iw").parent().append("<div id='undo' title ='Undo change' value='"+id+"' class='control' style='position: absolute;overflow:none; right:12px;bottom:10px; color:#3F3F3F'><i class='fa fa-lg fa-history' style='color:rgba(171, 166, 166, 1)'></i></div>");
+        }
+        if ($(".gm-style-iw").parent().has("#delete").length == 0) {
+          $(".gm-style-iw").parent().append("<div id='delete' title ='Delete site' value='"+id+"' class='control' style='position: absolute;overflow:none; right:12px;bottom:28px; color:#3F3F3F'><i class='fa fa-lg fa-trash-o' style='color:rgba(171, 166, 166, 1)'></i></div>");
+        }
         if (site.module == 1 && site.show_counts == 0) {
           $('input#include-count').attr('checked', false);
           $(".site-stat").addClass("disabled");
@@ -615,7 +633,7 @@ function createInfoWindow(site, marker) {
           $('input#include-count').attr('checked', true);
         }
       });
-    } 
+    }
   });
   return infowindow;
 }
