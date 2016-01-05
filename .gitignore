@@ -34,3 +34,5 @@ nbproject/
 
 ## Local Config ##
 /app/config/local/app.php
+
+.idea

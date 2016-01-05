@@ -153,7 +153,7 @@ span.site-version {
         */
 }
 
-#version {
+#version , #distro{
     margin-left: 10px;
     width: 70px;
 }

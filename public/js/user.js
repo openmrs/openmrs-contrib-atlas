@@ -193,7 +193,7 @@ function createEditInfoWindow(site, marker) {
   var html = contentEditwindow(site);
   var infowindow = new google.maps.InfoWindow({
     content: html,
-    maxWidth: 200
+    maxWidth: 300
   });
   google.maps.event.addListener(infowindow, "closeclick", function() {
     sites[site.id].editBubbleOpen = false;
@@ -222,6 +222,7 @@ function eventSaveMarker() {
       var encounters = $("#encounters").val().trim();
       var obs = $("#observations").val().trim();
       var version = $("select#version").val().trim();
+      site.distribution = $("select#distro").val().trim();
       site.observations = obs;
       site.patients = patients;
       site.encounters = encounters;
@@ -332,7 +333,7 @@ function contentEditwindow(site) {
   var patients = ('patients' in counts) ? counts.patients : ('patients' in site) ? site.patients : "?";
   var encounters = ('encounters' in counts) ? counts.encounters : ('encounters' in site) ? site.encounters : "?";
   var observations = ('observations' in counts) ? counts.observations : ('observations' in site) ? site.observations : "?";
-  var html = "<div class='site-bubble bubble-form' style='width:200px; margin-bottom:0px;'>";
+  var html = "<div class='site-bubble bubble-form' style='margin-bottom:0px;'>";
   html += "<form method='post' id='"+ site.id +"'>";
   html += "<div class='form-group'><input type='text' required='true' placeholder='Site Name' title='Site Name' class='form-control input-sm' value='"+ site.name + "' id='name' name='name'></div>";
   html += "<div class='form-group'><input type='url' class='form-control input-sm' placeholder='Site URL' title='Site URL' value='"+ site.url + "' name='url' id='url'></div>";
@@ -356,10 +357,15 @@ function contentEditwindow(site) {
   }
   if (site.module !== 1) {
     html += "<div class='form-inline'> OpenMRS Version ";
-    html += "<select title='OpenMRS Version' id='version' class='form-control input-sm'></div>"
+    html += "<select title='OpenMRS Version' id='version' class='form-control input-sm'>";
     html += "<option selected>" + site.version + "</option>"; 
     html += "</select></div>";
   }
+  html += "<div class='form-inline'> Distro ";
+  html += "<select title='Distribution' id='distro' class='form-control input-sm'>";
+  html += "<option value='1'>Bahmani</option>";
+  html += "<option value='2'>Kenya</option>";
+  html += "</select></div>";
   html += "<div class='row' style='margin-top:10px;'><div class='col-xs-8'>";
   html += "<select title='Site type' id='type' class='form-control input-sm'>"
   html += (site.type == "Clinical") ? "<option selected>" : "<option>"; 

@@ -283,7 +283,8 @@ class PingController extends BaseController {
 			'date_created' => $date,
 			'openmrs_version' => $json['version'],
 			'show_counts' => intval($json['show_counts']),
-			'created_by' => $user->principal);
+			'created_by' => $user->principal,
+			'distribution' => intval($json['distribution']));
 		
 		$param['patients'] = is_int($param['patients']) ? $param['patients'] : '';
 		$param['encounters'] = is_int($param['encounters']) ? $param['encounters'] : '';
@@ -325,8 +326,8 @@ class PingController extends BaseController {
 				'atlas_version' => $site->atlas_version,
 				'date_created' => $site->date_created,
 				'show_counts' => $site->show_counts,
-				'created_by' => $site->created_by));
-			
+				'created_by' => $site->created_by,
+				'distribution' => $site->distribution));
 			unset($param['created_by']);
 			unset($param['date_created']);
 
@@ -416,7 +417,7 @@ class PingController extends BaseController {
 		}
 	}
 
-	public function createTable() 
+	public function createTable()
 	{
 		if ( !Schema::hasTable('atlas') || !Schema::hasTable('admin') 
 			|| !Schema::hasTable('auth') || !Schema::hasTable('archive'))
