@@ -153,10 +153,20 @@ span.site-version {
         */
 }
 
-#version , #distro{
+#version{
     margin-left: 10px;
     width: 70px;
 }
+
+#distro {
+        margin-left:30px;
+        width: 100px;
+}
+
+#distroContainer {
+        margin-bottom:6px;
+}
+
 #legend {
         border-style: solid;
         border-width: 1.5px;

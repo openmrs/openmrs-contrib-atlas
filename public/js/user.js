@@ -40,6 +40,38 @@ $(function () {
   });
 });
 
+var  getDistributions = (
+  function () {
+    var distributions = null;
+
+    var fetchDistribution = function(){
+        $.ajax({
+                  url: "data.php/",
+                  type: "GET"
+                })
+                .done(function(response) {
+                  distributions = response;
+
+                })
+                .fail(function(jqXHR, textStatus, errorThrown) {
+                  bootbox.alert( "Error fetching distribution list" + jqXHR.statusText );
+                });
+    }
+
+
+    return function() {
+      if(distributions!= null){
+        return distributions;
+      }
+      return fetchDistribution()
+
+    };
+
+  }
+)();
+
+
+
 function getGeolocation() {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(function(position) {
@@ -333,7 +365,7 @@ function contentEditwindow(site) {
   var patients = ('patients' in counts) ? counts.patients : ('patients' in site) ? site.patients : "?";
   var encounters = ('encounters' in counts) ? counts.encounters : ('encounters' in site) ? site.encounters : "?";
   var observations = ('observations' in counts) ? counts.observations : ('observations' in site) ? site.observations : "?";
-  var html = "<div class='site-bubble bubble-form' style='margin-bottom:0px;'>";
+  var html = "<div class='site-bubble bubble-form' style='width:200px; margin-bottom:0px;'>";
   html += "<form method='post' id='"+ site.id +"'>";
   html += "<div class='form-group'><input type='text' required='true' placeholder='Site Name' title='Site Name' class='form-control input-sm' value='"+ site.name + "' id='name' name='name'></div>";
   html += "<div class='form-group'><input type='url' class='form-control input-sm' placeholder='Site URL' title='Site URL' value='"+ site.url + "' name='url' id='url'></div>";
@@ -341,6 +373,15 @@ function contentEditwindow(site) {
   html += "<div class='form-group'><input type='text' class='form-control input-sm'  placeholder='Contact' title='Contact' value='"+ site.contact + "' name='contact' id ='contact'></div>";
   html += "<div class='form-group'><input type='email' class='form-control input-sm' placeholder='Email' title='Email' value='"+ site.email + "' name='email' id='email'></div>";
   html += "<div class='form-group'><textarea class='form-control' value='' name='notes' rows='2' id='notes' placeholder='Notes'>"+ site.notes + "</textarea></div>";
+
+  html += "<div class='form-inline' id ='distroContainer'> <div class='form-group'>Distribution ";
+  html += "<select title='Distribution' id='distro' class='form-control input-sm'>";
+
+
+  html += "<option value='1'>Bahmani</option>";
+  html += "<option value='2'>Kenya</option>";
+  html += "</select> </div></div>";
+
   if (site.module !== 1) {
     html += "<div class='site-stat'>";
     html += "<div class='form-inline'>Patients <input type='number' pattern='[0-9]' class='form-control input-sm' title='Number of patients' value='"+ site.patients + "' name='patients' id ='patients'></div>";
@@ -361,11 +402,7 @@ function contentEditwindow(site) {
     html += "<option selected>" + site.version + "</option>"; 
     html += "</select></div>";
   }
-  html += "<div class='form-inline'> Distro ";
-  html += "<select title='Distribution' id='distro' class='form-control input-sm'>";
-  html += "<option value='1'>Bahmani</option>";
-  html += "<option value='2'>Kenya</option>";
-  html += "</select></div>";
+
   html += "<div class='row' style='margin-top:10px;'><div class='col-xs-8'>";
   html += "<select title='Site type' id='type' class='form-control input-sm'>"
   html += (site.type == "Clinical") ? "<option selected>" : "<option>"; 
