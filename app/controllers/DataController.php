@@ -75,8 +75,6 @@ class DataController extends BaseController {
 		}
 
 		$contents = json_encode($newResult);
-		if ($callback)
-			$contents = $callback . "(" . $contents ." );";
 		$response = Response::make($contents, 200);
 		$response->header('Content-Type', 'application/json');
 		return $response;

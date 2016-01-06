@@ -202,15 +202,19 @@ function initialize() {
     var alert = document.getElementById("alert");
     map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(alert);
   }
-  getJSON();
+  getMarkerSites();
 }
 
-function getJSON() {
-  var script = document.createElement("script");
-  script.setAttribute("src", siteSrc);
-  script.setAttribute("id", "jsonScript");
-  script.setAttribute("type", "text/javascript");
-  document.documentElement.firstChild.appendChild(script);
+function getMarkerSites() {
+  $.ajax({url:"/markerSites"})
+    .always(function(data, textStatus){
+      if(textStatus != "success"){
+        bootbox.alert( "Error fetching data for sites ! - " + data.statusText );
+        return;
+      }
+      loadSites(data);
+    })
+
 }
 
 function initLegend(){

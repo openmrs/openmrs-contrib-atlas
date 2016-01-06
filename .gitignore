@@ -36,3 +36,4 @@ nbproject/
 /app/config/local/app.php
 
 .idea
+*.iml

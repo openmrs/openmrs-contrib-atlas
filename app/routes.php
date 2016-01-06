@@ -45,8 +45,7 @@ Route::post('ping.php', array(
 	'before' => 'validateJson',
 	'uses' => 'PingController@pingPost'));
 
-Route::get('data.php', array(
-	'before' => 'validateCallback',
+Route::get('markerSites', array(
 	'uses' => 'DataController@getData'));
 
 Route::get('auth/multipass/callback', array(

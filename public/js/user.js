@@ -40,38 +40,6 @@ $(function () {
   });
 });
 
-var  getDistributions = (
-  function () {
-    var distributions = null;
-
-    var fetchDistribution = function(){
-        $.ajax({
-                  url: "data.php/",
-                  type: "GET"
-                })
-                .done(function(response) {
-                  distributions = response;
-
-                })
-                .fail(function(jqXHR, textStatus, errorThrown) {
-                  bootbox.alert( "Error fetching distribution list" + jqXHR.statusText );
-                });
-    }
-
-
-    return function() {
-      if(distributions!= null){
-        return distributions;
-      }
-      return fetchDistribution()
-
-    };
-
-  }
-)();
-
-
-
 function getGeolocation() {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(function(position) {
