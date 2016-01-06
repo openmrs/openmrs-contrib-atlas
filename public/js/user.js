@@ -344,10 +344,12 @@ function contentEditwindow(site) {
 
   html += "<div class='form-inline' id ='distroContainer'> <div class='form-group'>Distribution ";
   html += "<select title='Distribution' id='distro' class='form-control input-sm'>";
+    html += "<option selected disabled> -- Select -- </option>"
+    getDistributions().forEach(function(distribution){
+        var isSelected = site.distribution ==  distribution.id ? "selected" : "";
+        html += "<option " + isSelected + " value =" + distribution.id + ">" + distribution.name + "</option>";
+    });
 
-
-  html += "<option value='1'>Bahmani</option>";
-  html += "<option value='2'>Kenya</option>";
   html += "</select> </div></div>";
 
   if (site.module !== 1) {
