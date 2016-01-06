@@ -7,16 +7,21 @@
  */
 class DataController extends BaseController {
 
+	public function getDistributions(){
+		$distributions = DB::table('distributions')->get();
+		$contents = json_encode($distributions);
+		$response = Response::make($contents, 200);
+		$response->header('Content-Type', 'application/json');
+		return $response;
+	}
+
 	/**
 	 * GET all markers as a JSON Object
 	 *
 	 */
 	public function getData()
 	{
-		$db_dsn = getenv('DB_DNS');
-		$db_username = getenv('DB_USERNAME');
-		$db_password = getenv('DB_PASSWORD');
-		$callback = Input::get('callback');
+
 		$sites = DB::table('atlas')
                      ->select(DB::raw('id as uuid, id as site_id,  latitude,
                      	longitude, name, url, type, image, patients, encounters, observations,

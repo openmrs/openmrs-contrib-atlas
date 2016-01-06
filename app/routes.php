@@ -48,6 +48,9 @@ Route::post('ping.php', array(
 Route::get('markerSites', array(
 	'uses' => 'DataController@getData'));
 
+Route::get('distributions', array(
+	'uses' => 'DataController@getDistributions'));
+
 Route::get('auth/multipass/callback', array(
 	'before' => 'multipass',
 	'uses' => 'AuthController@decodeMultipass'));
