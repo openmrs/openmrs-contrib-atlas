@@ -26,8 +26,8 @@ $app = new Illuminate\Foundation\Application;
 
 $env = $app->detectEnvironment(array(
 
-	'local' => array('INabhishej.local'),
-	'prod' => array('atlas-server'),
+	'local' => array('INsaloniv.local'),
+	'prod' => array('INsaloniv.local'),
 	'staged' => array('staged-server'),
 
 ));
