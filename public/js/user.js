@@ -337,7 +337,7 @@ function contentEditwindow(site) {
   var patients = ('patients' in counts) ? counts.patients : ('patients' in site) ? site.patients : "?";
   var encounters = ('encounters' in counts) ? counts.encounters : ('encounters' in site) ? site.encounters : "?";
   var observations = ('observations' in counts) ? counts.observations : ('observations' in site) ? site.observations : "?";
-  var html = "<div class='site-bubble bubble-form' style='width:200px; margin-bottom:0px;'>";
+  var html = "<div class='site-bubble bubble-form'>";
   html += "<form method='post' id='"+ site.id +"'>";
   html += "<div class='form-group'><input type='text' required='true' placeholder='Site Name' title='Site Name' class='form-control input-sm' value='"+ site.name + "' id='name' name='name'></div>";
   html += "<div class='form-group'><input type='url' class='form-control input-sm' placeholder='Site URL' title='Site URL' value='"+ site.url + "' name='url' id='url'></div>";
@@ -358,7 +358,7 @@ function contentEditwindow(site) {
 
   html += "</select></div>";
 
-  html += "<div class='form-group'><input type='text' id='otherDistributionName' placeholder='enter name (optional)' class='form-control input-sm soft-hidden'></div>";
+  html += "<div class='form-group soft-hidden'><input type='text' id='otherDistributionName' placeholder='enter name (optional)' class='form-control input-sm'></div>";
 
 
   if (site.module !== 1) {
