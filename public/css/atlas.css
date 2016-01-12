@@ -158,15 +158,6 @@ span.site-version {
     width: 70px;
 }
 
-#distro {
-        margin-left:30px;
-        width: 100px;
-}
-
-#distroContainer {
-        margin-bottom:6px;
-}
-
 #legend {
         border-style: solid;
         border-width: 1.5px;
@@ -189,7 +180,7 @@ span.site-version {
 #fade {
         border-top: solid 1px rgba(141, 141, 141, 1);
 }
-// Dropdown Control
+ /*Dropdown Control*/
 #marker-groups {
         padding-bottom: 1px;
 }
@@ -248,8 +239,8 @@ span.site-version {
         background-origin: initial;
         background-clip: initial;
         background-color: rgb(255, 255, 255);
-        background-position: initial initial;
-        background-repeat: initial initial;
+        background-position: initial;
+        background-repeat: initial;
         z-index: 2;
 }   
 .dropDownOptionsDiv{
@@ -423,7 +414,7 @@ span.site-version {
         padding: 3px;
         margin-bottom: 5px;
 }.help-modal h3 {
-    font size: 20px;
+    font-size: 20px;
 }
 .help-modal .modal-dialog {
     font-size: 0.95em;
@@ -442,4 +433,8 @@ span.site-version {
 }
 #legend-version, #legend-type {
     margin-left : 7px;
+}
+
+.soft-hidden{
+    display: none;
 }

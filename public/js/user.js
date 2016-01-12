@@ -329,6 +329,10 @@ var html = "<div class='site-bubble'>";
   return html;
 }
 
+var manageOtherDistribution = function(selectedValue){
+  selectedValue === 'Other' ?  $('#otherDistributionName').show(): $('#otherDistributionName').hide();
+};
+
 function contentEditwindow(site) {
   var patients = ('patients' in counts) ? counts.patients : ('patients' in site) ? site.patients : "?";
   var encounters = ('encounters' in counts) ? counts.encounters : ('encounters' in site) ? site.encounters : "?";
@@ -342,15 +346,20 @@ function contentEditwindow(site) {
   html += "<div class='form-group'><input type='email' class='form-control input-sm' placeholder='Email' title='Email' value='"+ site.email + "' name='email' id='email'></div>";
   html += "<div class='form-group'><textarea class='form-control' value='' name='notes' rows='2' id='notes' placeholder='Notes'>"+ site.notes + "</textarea></div>";
 
-  html += "<div class='form-inline' id ='distroContainer'> <div class='form-group'>Distribution ";
-  html += "<select title='Distribution' id='distro' class='form-control input-sm'>";
-    html += "<option selected disabled> -- Select -- </option>"
-    getDistributions().forEach(function(distribution){
-        var isSelected = site.distribution ==  distribution.id ? "selected" : "";
-        html += "<option " + isSelected + " value =" + distribution.id + ">" + distribution.name + "</option>";
-    });
+  html += "<div class='form-group'>";
+  html += "<select title='Distribution' id='distributions' class='form-control input-sm' onchange='manageOtherDistribution(this.value)'>";
+  html += "<option selected disabled> -- Select Distribution -- </option>";
+  getDistributions().forEach(function(distribution){
+      var isSelected = site.distribution ==  distribution.id ? "selected" : "";
+      html += "<option " + isSelected + " value =" + distribution.id + ">" + distribution.name + "</option>";
+  });
 
-  html += "</select> </div></div>";
+  html += "<option>Other</option>";
+
+  html += "</select></div>";
+
+  html += "<div class='form-group'><input type='text' id='otherDistributionName' placeholder='enter name (optional)' class='form-control input-sm soft-hidden'></div>";
+
 
   if (site.module !== 1) {
     html += "<div class='site-stat'>";
