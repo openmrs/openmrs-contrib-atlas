@@ -57,7 +57,9 @@ class PingController extends BaseController {
 	public function pingPost()
 	{
 		$this->createTable();
+
 		Log::debug("DATA received: " . Request::getContent());
+
 		$json = json_decode(Request::getContent(), true);
 		$date = new \DateTime;
 		$id['id'] = $json['id'];
@@ -255,84 +257,52 @@ class PingController extends BaseController {
 	 * Handle Post Ping from Atlas Server
 	 *
 	 */
+
+
+	/**
+	 * @param $user
+	 * @param $param
+	 * @param $privileges
+	 */
+	private function managePrivileges($user, $param)
+	{
+		$privileges = DB::table('auth')->where('token', '=', $user->uid)->where('atlas_id', '=', $param['id'])
+			->where('privileges', '=', 'ALL')->first();
+
+		if ($user->role == 'ADMIN' && $privileges == NULL) {
+			$privileges = new Privileges(array('token' => $user->uid,
+				'principal' => 'admin:' . $user->uid,
+				'privileges' => 'ADMIN'));
+		}
+		Log::debug("Privileges: " . $privileges->principal . "/" . $privileges->privileges);
+		return $privileges;
+	}
+
 	public function pingAtlas()
 	{
+		$requestContent = Request::getContent();
+		Log::debug("DATA received: " . $requestContent);
 
 		$this->createTable();
 		$user = Session::get(user);
 		$date = new \DateTime;
 
-		Log::debug("DATA received: " . Request::getContent());
-		$json = json_decode(Request::getContent(), true);
-		$id['id'] = ($json['uuid'] != '') ? $json['uuid'] : Uuid::uuid4()->toString();
 
-		$param = array(
-			'id' => $id['id'],
-			'latitude' => floatval($json['latitude']),
-			'longitude' => floatval($json['longitude']),
-			'name' => $json['name'],
-			'url' => $json['url'],
-			'patients' => intval($json['patients']),
-			'encounters' => intval($json['encounters']),
-			'observations' => intval($json['observations']),
-			'type' => $json['type'],
-			'image' => $json['image'],
-			'contact' => $json['contact'],
-			'email' => $json['email'],
-			'notes' => $json['notes'],
-			'date_created' => $date,
-			'openmrs_version' => $json['version'],
-			'show_counts' => intval($json['show_counts']),
-			'created_by' => $user->principal,
-			'distribution' => intval($json['distribution']));
-		
-		$param['patients'] = is_int($param['patients']) ? $param['patients'] : '';
-		$param['encounters'] = is_int($param['encounters']) ? $param['encounters'] : '';
-		$param['observations'] = is_int($param['observations']) ? $param['observations'] : '';
+		$param = $this->getParamArray($requestContent, $user, $date);
 
-		$privileges = DB::table('auth')->where('token','=', $user->uid)->where('atlas_id','=', $param['id'])
-		->where('privileges', '=', 'ALL')->first();
-
-		if ($user->role == 'ADMIN' && $privileges == NULL) {
-			$privileges = new Privileges(array('token' => $user->uid, 
-	  				'principal' => 'admin:' . $user->uid,
-	  				'privileges' => 'ADMIN'));
-		}
-		Log::debug("Privileges: " . $privileges->principal . "/" . $privileges->privileges);
+		$privileges = $this->managePrivileges($user, $param);
 
 		$site = DB::table('atlas')->where('id','=', $param['id'])->first();
-		if ($site != null) {
-			DB::table('archive')->insert(array(
-				'site_uuid' => $site->id, 
-				'id' => Uuid::uuid4()->toString(), 
-				'archive_date' => $date, 
-				'type' => $site->type,
-				'longitude' =>  $site->longitude, 
-				'latitude' =>  $site->latitude,
-				'name' =>  $site->name, 
-				'url' =>  $site->url, 
-				'image' =>  $site->image, 
-				'contact' =>  $site->contact, 
-				'changed_by' => $privileges->principal, 
-				'patients' =>  $site->patients, 
-				'encounters' =>  $site->encounters, 
-				'observations' =>  $site->observations, 
-				'notes' =>  $site->notes, 
-				'action' =>  'UPDATE', 
-				'email' => $site->email,
-				'show_counts' => $site->show_counts,
-				'data' =>  $site->data, 
-				'openmrs_version' => $site->openmrs_version, 
-				'atlas_version' => $site->atlas_version,
-				'date_created' => $site->date_created,
-				'show_counts' => $site->show_counts,
-				'created_by' => $site->created_by,
-				'distribution' => $site->distribution));
-			unset($param['created_by']);
-			unset($param['date_created']);
+
+		$doSiteExists = $site != null;
+
+		if ($doSiteExists) {
+			$this->archiveExistingSite($site, $date, $privileges->principal, $param);
 
 			DB::table('atlas')->where('id', '=', $site->id)->update($param);
+
 			Log::debug("Updated ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
+
 		} else {
 			 // new implementation
 			DB::table('atlas')->insert($param);
@@ -346,13 +316,13 @@ class PingController extends BaseController {
 			Log::debug("Created ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
 
 			$principal = 'openmrs_id:' . $user->uid; 
-			$auth = DB::table('auth')->where('atlas_id', '=', $param['id'])->where('principal','=', 
+			/*$auth = DB::table('auth')->where('atlas_id', '=', $param['id'])->where('principal','=',
 					$principal)->first();
-			if ($auth == NULL) {
+			if ($auth == NULL) {*/
 				DB::table('auth')->insert(array('atlas_id' => $param['id'], 'principal' => 
 					$principal, 'token' => $user->uid, 'privileges' => 'ALL'));
 				Log::debug("Created auth");
-			}
+			//}
 			if (Session::has('module')) {
 				// Add module authoritation if marker created in module
 				$module = Session::get('module');
@@ -424,5 +394,66 @@ class PingController extends BaseController {
 			
 			Artisan::call('migrate', ['--path'=> "app/database/migrations"]);
 			Log::info('Database Updated');
+	}
+
+	/**
+	 * @param $site
+	 * @param $date
+	 * @param $privileges
+	 * @param $param
+	 */
+	private function archiveExistingSite($site, $date, $changedBy, $param)
+	{
+		DB::table('archive')->insert(array(
+			'site_uuid' => $site->id,
+			'id' => Uuid::uuid4()->toString(),
+			'archive_date' => $date,
+			'type' => $site->type,
+			'longitude' => $site->longitude,
+			'latitude' => $site->latitude,
+			'name' => $site->name,
+			'url' => $site->url,
+			'image' => $site->image,
+			'contact' => $site->contact,
+			'changed_by' => $changedBy,
+			'patients' => $site->patients,
+			'encounters' => $site->encounters,
+			'observations' => $site->observations,
+			'notes' => $site->notes,
+			'action' => 'UPDATE',
+			'email' => $site->email,
+			'show_counts' => $site->show_counts,
+			'data' => $site->data,
+			'openmrs_version' => $site->openmrs_version,
+			'atlas_version' => $site->atlas_version,
+			'date_created' => $site->date_created,
+			'show_counts' => $site->show_counts,
+			'created_by' => $site->created_by,
+			'distribution' => $site->distribution));
+		unset($param['created_by']);
+		unset($param['date_created']);
+	}
+
+	private function getParamArray($content, $user, $date){
+		$json = json_decode($content, true);
+		return array(
+			'id' => ($json['uuid'] != '') ? $json['uuid'] : Uuid::uuid4()->toString(),
+			'latitude' => floatval($json['latitude']),
+			'longitude' => floatval($json['longitude']),
+			'name' => $json['name'],
+			'url' => $json['url'],
+			'patients' => intval($json['patients']),
+			'encounters' => intval($json['encounters']),
+			'observations' => intval($json['observations']),
+			'type' => $json['type'],
+			'image' => $json['image'],
+			'contact' => $json['contact'],
+			'email' => $json['email'],
+			'notes' => $json['notes'],
+			'date_created' => $date,
+			'openmrs_version' => $json['version'],
+			'show_counts' => intval($json['show_counts']),
+			'created_by' => $user->principal,
+			'distribution' => intval($json['distribution']));
 	}
 }
