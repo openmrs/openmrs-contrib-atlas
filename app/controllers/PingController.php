@@ -294,49 +294,36 @@ class PingController extends BaseController {
 
 		$site = DB::table('atlas')->where('id','=', $param['id'])->first();
 
-		$doSiteExists = $site != null;
+		$isExistingSite = $site != null;
 
-		if ($doSiteExists) {
-			$this->archiveExistingSite($site, $date, $privileges->principal, $param);
+		if ($isExistingSite) {
+			$siteArray = new ArrayObject($site);
+			$this->archiveExistingSite($siteArray->getArrayCopy(), $date, $privileges->principal, "UPDATE");
+
+			unset($param['created_by']);
+			unset($param['date_created']);
 
 			DB::table('atlas')->where('id', '=', $site->id)->update($param);
 
 			Log::debug("Updated ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
 
-		} else {
-			 // new implementation
+		}
+
+		if(!$isExistingSite){
 			DB::table('atlas')->insert($param);
 
-			//insert into archive
-			$param['action'] = "ADD";
-			$param['site_uuid'] = Uuid::uuid4()->toString();
-			$param['archive_date'] = $date;
-			DB::table('archive')->insert($param);
-
+			$this->archiveExistingSite($param, $date, $privileges->principal, "ADD");
 			Log::debug("Created ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
 
-			$principal = 'openmrs_id:' . $user->uid; 
-			/*$auth = DB::table('auth')->where('atlas_id', '=', $param['id'])->where('principal','=',
-					$principal)->first();
-			if ($auth == NULL) {*/
-				DB::table('auth')->insert(array('atlas_id' => $param['id'], 'principal' => 
-					$principal, 'token' => $user->uid, 'privileges' => 'ALL'));
-				Log::debug("Created auth");
-			//}
-			if (Session::has('module')) {
-				// Add module authoritation if marker created in module
-				$module = Session::get('module');
-				Log::info('Module create a marker');
-		    	Log::info('Module UUID: ' . $module);
-		    	$privileges = DB::table('auth')->where('token','=', $module)->count();
-		    	if ($privileges > 0) {
-		    		log::info('This module is allready linked to a site');
-		    	} else {
-					DB::table('auth')->insert(array('atlas_id' => $param['id'], 'principal' => 
-						'module:'. $module, 'token' => $module, 'privileges' => 'STATS'));
-					Log::debug("Created auth for module");
-				}
-			}
+			$principal = 'openmrs_id:' . $user->uid;
+			DB::table('auth')->insert(array('atlas_id' => $param['id'], 'principal' =>
+				$principal, 'token' => $user->uid, 'privileges' => 'ALL'));
+			Log::debug("Created auth");
+
+		}
+
+		if(!$isExistingSite && Session::has('module')){
+			$this->createAuthForModule($param);
 		}
 
 		return $param['id'];
@@ -396,42 +383,21 @@ class PingController extends BaseController {
 			Log::info('Database Updated');
 	}
 
-	/**
-	 * @param $site
-	 * @param $date
-	 * @param $privileges
-	 * @param $param
-	 */
-	private function archiveExistingSite($site, $date, $changedBy, $param)
+
+	private function archiveExistingSite($site, $date, $changedBy, $action)
 	{
-		DB::table('archive')->insert(array(
-			'site_uuid' => $site->id,
-			'id' => Uuid::uuid4()->toString(),
-			'archive_date' => $date,
-			'type' => $site->type,
-			'longitude' => $site->longitude,
-			'latitude' => $site->latitude,
-			'name' => $site->name,
-			'url' => $site->url,
-			'image' => $site->image,
-			'contact' => $site->contact,
-			'changed_by' => $changedBy,
-			'patients' => $site->patients,
-			'encounters' => $site->encounters,
-			'observations' => $site->observations,
-			'notes' => $site->notes,
-			'action' => 'UPDATE',
-			'email' => $site->email,
-			'show_counts' => $site->show_counts,
-			'data' => $site->data,
-			'openmrs_version' => $site->openmrs_version,
-			'atlas_version' => $site->atlas_version,
-			'date_created' => $site->date_created,
-			'show_counts' => $site->show_counts,
-			'created_by' => $site->created_by,
-			'distribution' => $site->distribution));
-		unset($param['created_by']);
-		unset($param['date_created']);
+		$row = $site;
+		$row["action"] = $action;
+		$row["archive_date"] = $date;
+		$row["changed_by"] = $changedBy;
+		$row["site_uuid"] = $site['id'];
+		$row["id"] = Uuid::uuid4()->toString();
+
+		//$site is row to update from atlas table, which contains extra column "date_changed"
+		unset($row["date_changed"]);
+
+		DB::table('archive')->insert($row);
+
 	}
 
 	private function getParamArray($content, $user, $date){
@@ -455,5 +421,26 @@ class PingController extends BaseController {
 			'show_counts' => intval($json['show_counts']),
 			'created_by' => $user->principal,
 			'distribution' => intval($json['distribution']));
+	}
+
+	/**
+	 * @param $param
+	 */
+	private function createAuthForModule($param)
+	{
+		$module = Session::get('module');
+
+		Log::info('Module create a marker');
+		Log::info('Module UUID: ' . $module);
+
+		$doesAuthExist = DB::table('auth')->where('token', '=', $module)->count() > 0;
+
+		if ($doesAuthExist) {
+			log::info('Auth for this module exists for the site');
+		}
+
+		DB::table('auth')->insert(array('atlas_id' => $param['id'], 'principal' =>
+			'module:' . $module, 'token' => $module, 'privileges' => 'STATS'));
+		Log::debug("Created auth for module");
 	}
 }

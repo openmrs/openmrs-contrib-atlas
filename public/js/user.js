@@ -222,7 +222,7 @@ function eventSaveMarker() {
       var encounters = $("#encounters").val().trim();
       var obs = $("#observations").val().trim();
       var version = $("select#version").val().trim();
-      site.distribution = $("select#distributions").val().trim();
+      site.distribution = parseInt($("select#distributions").val().trim());
       site.otherDistributionName = $("#otherDistributionName").val().trim();
       site.observations = obs;
       site.patients = patients;
