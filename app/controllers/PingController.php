@@ -278,17 +278,62 @@ class PingController extends BaseController {
 		return $privileges;
 	}
 
+	private function manageExistingDistributions($nonStandardDistributionName, $existingDistribution){
+		$existingDistributionId = $existingDistribution->id;
+		$existingDistributionIsStandard = $existingDistribution->is_standard;
+
+		if(is_null($existingDistributionId) && !is_null($nonStandardDistributionName)){
+			$distributionId = DB::table('distributions')->insertGetId(
+				["name" => $nonStandardDistributionName]
+			);
+			return $distributionId;
+		}
+		
+		if(is_null($existingDistributionId) && is_null($nonStandardDistributionName)){
+			return null;
+		}
+		
+		if(!is_null($existingDistributionId) && !is_null($nonStandardDistributionName)){
+			if($existingDistributionIsStandard){
+				$distributionId = DB::table('distributions')->insertGetId(
+					["name" => $nonStandardDistributionName]
+				);
+				return $distributionId;
+			}
+
+			if(!$existingDistributionIsStandard){
+				DB::table('distributions')->where('id', '=', $existingDistributionId)->update(['name'=>$nonStandardDistributionName]);
+				return $existingDistributionId;
+			}
+			
+		}
+		if(!is_null($existingDistributionId) && is_null($nonStandardDistributionName)){
+
+			if($existingDistributionIsStandard){
+				return null;
+			}
+
+			if(!$existingDistributionIsStandard){
+
+				DB::table('distributions')->where('id', '=', $existingDistributionId)->delete();
+
+			}
+		}
+
+	}
 	public function pingAtlas()
 	{
 		$requestContent = Request::getContent();
 		Log::debug("DATA received: " . $requestContent);
+
+		$json = json_decode($requestContent, true);
 
 		$this->createTable();
 		$user = Session::get(user);
 		$date = new \DateTime;
 
 
-		$param = $this->getParamArray($requestContent, $user, $date);
+		$param = $this->getParamArray($json, $user, $date);
 
 		$privileges = $this->managePrivileges($user, $param);
 
@@ -296,30 +341,41 @@ class PingController extends BaseController {
 
 		$isExistingSite = $site != null;
 
+		$nonStandardDistributionName = $this->getSanitisedString($json['otherDistributionName']);
+		$isOtherDistributionSelected = is_string($param['distribution']) && 'other' == strtolower($param['distribution']);
+		$existingDistribution = null;
+		if($isOtherDistributionSelected){
+			$existingDistribution = DB::table('distributions')-> where('id', '=', $site->distribution)->first();
+			$param['distribution'] = $this->manageExistingDistributions($nonStandardDistributionName, $existingDistribution);
+		}
+
 		if ($isExistingSite) {
 			$siteArray = new ArrayObject($site);
-			$this->archiveExistingSite($siteArray->getArrayCopy(), $date, $privileges->principal, "UPDATE");
+			$this->archiveSite($siteArray->getArrayCopy(), $date, $privileges->principal, "UPDATE");
 
 			unset($param['created_by']);
 			unset($param['date_created']);
 
+
 			DB::table('atlas')->where('id', '=', $site->id)->update($param);
+
+
 
 			Log::debug("Updated ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
 
 		}
 
 		if(!$isExistingSite){
+
 			DB::table('atlas')->insert($param);
 
-			$this->archiveExistingSite($param, $date, $privileges->principal, "ADD");
+			$this->archiveSite($param, $date, $privileges->principal, "ADD");
 			Log::debug("Created ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
 
 			$principal = 'openmrs_id:' . $user->uid;
 			DB::table('auth')->insert(array('atlas_id' => $param['id'], 'principal' =>
 				$principal, 'token' => $user->uid, 'privileges' => 'ALL'));
 			Log::debug("Created auth");
-
 		}
 
 		if(!$isExistingSite && Session::has('module')){
@@ -327,6 +383,11 @@ class PingController extends BaseController {
 		}
 
 		return $param['id'];
+	}
+
+	private function getSanitisedString($value){
+		$value = is_string($value) ? trim($value) : null;
+		return empty($value) ? null : $value;
 	}
 
 	public function pingAtlasDelete() {
@@ -383,8 +444,7 @@ class PingController extends BaseController {
 			Log::info('Database Updated');
 	}
 
-
-	private function archiveExistingSite($site, $date, $changedBy, $action)
+	private function archiveSite($site, $date, $changedBy, $action)
 	{
 		$row = $site;
 		$row["action"] = $action;
@@ -400,8 +460,8 @@ class PingController extends BaseController {
 
 	}
 
-	private function getParamArray($content, $user, $date){
-		$json = json_decode($content, true);
+	private function getParamArray($json, $user, $date){
+
 		return array(
 			'id' => ($json['uuid'] != '') ? $json['uuid'] : Uuid::uuid4()->toString(),
 			'latitude' => floatval($json['latitude']),
@@ -420,7 +480,8 @@ class PingController extends BaseController {
 			'openmrs_version' => $json['version'],
 			'show_counts' => intval($json['show_counts']),
 			'created_by' => $user->principal,
-			'distribution' => intval($json['distribution']));
+			'distribution' => $json['distribution']
+		);
 	}
 
 	/**
@@ -442,5 +503,22 @@ class PingController extends BaseController {
 		DB::table('auth')->insert(array('atlas_id' => $param['id'], 'principal' =>
 			'module:' . $module, 'token' => $module, 'privileges' => 'STATS'));
 		Log::debug("Created auth for module");
+	}
+
+
+	private function manageDistribution($isOtherDistributionSelected, $nonStandardDistributionName)
+	{
+		$isOtherDistributionNameProvided = $isOtherDistributionSelected && !is_null($nonStandardDistributionName);
+
+		if (!$isOtherDistributionNameProvided) {
+			return null;
+		}
+
+		if ($isOtherDistributionNameProvided) {
+			$distributionId = DB::table('distributions')->insertGetId(
+				["name" => $nonStandardDistributionName]
+			);
+			return  $distributionId;
+		}
 	}
 }

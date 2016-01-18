@@ -222,7 +222,7 @@ function eventSaveMarker() {
       var encounters = $("#encounters").val().trim();
       var obs = $("#observations").val().trim();
       var version = $("select#version").val().trim();
-      site.distribution = parseInt($("select#distributions").val().trim());
+      site.distribution = $("select#distributions").val();
       site.otherDistributionName = $("#otherDistributionName").val().trim();
       site.observations = obs;
       site.patients = patients;
@@ -362,6 +362,7 @@ function contentEditwindow(site) {
     }
   });
 
+  html += "<option>Other</option>"
   html += "</select></div>";
 
   html += "<div class='form-group " + distributionNameContainerClass +"' id='otherDistributionNameContainer'><input type='text' id='otherDistributionName' placeholder='enter name (optional)' class='form-control input-sm'></div>";
