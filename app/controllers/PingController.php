@@ -316,7 +316,6 @@ class PingController extends BaseController {
             $distributionId = DB::table('distributions')->insertGetId(
 				["name" => $nonStandardDistributionName]
 			);
-
             $param['distribution'] = $distributionId;
         }
 
@@ -327,8 +326,9 @@ class PingController extends BaseController {
 
         if ($isExistingSite) {
 
+            $archiveDistribution = $doesDistributionExists ? $existingDistribution->name : null;
 			$siteArray = new ArrayObject($site);
-			$this->archiveSite($siteArray->getArrayCopy(), $date, $privileges->principal, "UPDATE");
+			$this->archiveSite($siteArray->getArrayCopy(), $date, $privileges->principal, "UPDATE", $archiveDistribution);
 
 			unset($param['created_by']);
 			unset($param['date_created']);
@@ -337,9 +337,6 @@ class PingController extends BaseController {
 			Log::debug("Updated ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
 
 			if(!$isNonstandardNamePresent && $doesDistributionExists && !$existingDistribution->is_standard){
-                DB::table('archive')->where('distribution', '=', $existingDistribution->id)->update(
-                    ['distribution' => null]
-                );
 				DB::table('distributions')->where('id', '=', $existingDistribution->id)->delete();
 			}
 		}
@@ -348,7 +345,9 @@ class PingController extends BaseController {
 
 			DB::table('atlas')->insert($param);
 
-			$this->archiveSite($param, $date, $privileges->principal, "ADD");
+            $newDistribution = DB::table('distributions')-> where('id', '=', $param['distribution'])->first();
+            $archiveDistribution = is_null($newDistribution) ? null : $newDistribution->name;
+			$this->archiveSite($param, $date, $privileges->principal, "ADD", $archiveDistribution);
 			Log::debug("Created ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
 
 			$principal = 'openmrs_id:' . $user->uid;
@@ -423,7 +422,7 @@ class PingController extends BaseController {
 			Log::info('Database Updated');
 	}
 
-	private function archiveSite($site, $date, $changedBy, $action)
+	private function archiveSite($site, $date, $changedBy, $action, $archiveDistribution)
 	{
 		$row = $site;
 		$row["action"] = $action;
@@ -431,6 +430,7 @@ class PingController extends BaseController {
 		$row["changed_by"] = $changedBy;
 		$row["site_uuid"] = $site['id'];
 		$row["id"] = Uuid::uuid4()->toString();
+        $row['distribution'] = $archiveDistribution;
 
 		//$site is row to update from atlas table, which contains extra column "date_changed"
 		unset($row["date_changed"]);

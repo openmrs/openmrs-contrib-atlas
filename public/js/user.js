@@ -336,13 +336,63 @@ var manageOtherDistribution = function(element){
   selectedText === 'other' ?  $('#nonStandardDistributionNameContainer').slideDown(50): $('#nonStandardDistributionNameContainer').slideUp(50);
 };
 
+var createOptionsForDistributionSelectBox = function(siteDistributionId, attributes) {
+  var selectionForOther = '';
+
+  var html = "<option selected disabled> -- Select Distribution -- </option>";
+
+  getDistributions().forEach(function (distribution){
+
+      if('other' == siteDistributionId){
+        selectionForOther = "selected";
+        attributes.containerClass = "";
+      }
+
+      if(!distribution.is_standard && distribution.id == siteDistributionId){
+        selectionForOther = "selected";
+        attributes.name = distribution.name;
+        attributes.containerClass = "";
+      }
+
+      if(distribution.is_standard ){
+        var selected = siteDistributionId == distribution.id ? "selected" : "";
+        html += "<option " + selected + " value =" + distribution.id + ">" + distribution.name + "</option>";
+      }
+    });
+
+  html += "<option value='other' "+ selectionForOther + ">Other</option>";
+
+  return html;
+};
+
+var createNonStandardDistributionInput = function(nonStandardDistribution) {
+
+  var html = "<div class='form-group " + nonStandardDistribution.containerClass + "' id='nonStandardDistributionNameContainer'>";
+  html += "<input type='text' id='nonStandardDistributionName' placeholder='Enter name' class='form-control input-sm' value='" + nonStandardDistribution.name + "'></div>";
+  return html;
+};
+
+var createDistributionSelectBox = function(siteDistributionId, nonStandardDistributionName) {
+
+  var nonStandardDistribution ={
+      containerClass : "soft-hidden",
+      name : nonStandardDistributionName
+  };
+
+  var html = "<div class='form-group'>";
+  html += "<select title='Distribution' id='distributions' class='form-control input-sm' onchange='manageOtherDistribution(this)'>";
+  html += createOptionsForDistributionSelectBox(siteDistributionId, nonStandardDistribution);
+  html += "</select></div>";
+  html += createNonStandardDistributionInput(nonStandardDistribution);
+
+  return html;
+};
+
 function contentEditwindow(site) {
   var patients = ('patients' in counts) ? counts.patients : ('patients' in site) ? site.patients : "?";
   var encounters = ('encounters' in counts) ? counts.encounters : ('encounters' in site) ? site.encounters : "?";
   var observations = ('observations' in counts) ? counts.observations : ('observations' in site) ? site.observations : "?";
-  var distributionNameContainerClass = "soft-hidden";
-  var otherSelected = '';
-  var nonStandardDistributionNameValue = null;
+
   var html = "<div class='site-bubble bubble-form'>";
   html += "<form method='post' id='"+ site.id +"'>";
   html += "<div class='form-group'><input type='text' required='true' placeholder='Site Name' title='Site Name' class='form-control input-sm' value='"+ site.name + "' id='name' name='name'></div>";
@@ -352,27 +402,7 @@ function contentEditwindow(site) {
   html += "<div class='form-group'><input type='email' class='form-control input-sm' placeholder='Email' title='Email' value='"+ site.email + "' name='email' id='email'></div>";
   html += "<div class='form-group'><textarea class='form-control' value='' name='notes' rows='2' id='notes' placeholder='Notes'>"+ site.notes + "</textarea></div>";
 
-  html += "<div class='form-group'>";
-  html += "<select title='Distribution' id='distributions' class='form-control input-sm' onchange='manageOtherDistribution(this)'>";
-  html += "<option selected disabled> -- Select Distribution -- </option>";
-  getDistributions().forEach(function(distribution){
-
-    if(!distribution.is_standard && distribution.id == site.distribution){
-        otherSelected = "selected";
-        nonStandardDistributionNameValue = distribution.name;
-        distributionNameContainerClass = "";
-      }
-
-    if(distribution.is_standard ){
-      var selected = site.distribution == distribution.id ? "selected" : "";
-      html += "<option " + selected + " value =" + distribution.id + ">" + distribution.name + "</option>";
-    }
-  });
-
-  html += "<option "+ otherSelected + ">Other</option>";
-  html += "</select></div>";
-
-  html += "<div class='form-group " + distributionNameContainerClass +"' id='nonStandardDistributionNameContainer'><input type='text' id='nonStandardDistributionName' placeholder='enter name (optional)' class='form-control input-sm' value="+ nonStandardDistributionNameValue+"></div>";
+  html += createDistributionSelectBox(site.distribution, site.nonStandardDistributionName);
 
 
   if (site.module !== 1) {
