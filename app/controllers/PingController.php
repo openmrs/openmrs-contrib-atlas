@@ -56,7 +56,7 @@ class PingController extends BaseController {
 	 */
 	public function pingPost()
 	{
-		$this->createTable();
+		$this->createTableIfNotPresent();
 
 		Log::debug("DATA received: " . Request::getContent());
 
@@ -137,7 +137,7 @@ class PingController extends BaseController {
 	 */
 	public function autoPostModule()
 	{
-		$this->createTable();
+		$this->createTableIfNotPresent();
 		Log::debug("DATA received: " . Request::getContent());
 		$json = json_decode(Request::getContent(), true);
 		$date = new \DateTime;
@@ -200,7 +200,7 @@ class PingController extends BaseController {
 	 */
 	public function pingPostModule()
 	{
-		$this->createTable();
+		$this->createTableIfNotPresent();
 		Log::debug("DATA received: " . Request::getContent());
 		$json = json_decode(Request::getContent(), true);
 		$date = new \DateTime;
@@ -283,14 +283,13 @@ class PingController extends BaseController {
 		$requestContent = Request::getContent();
 		Log::debug("DATA received: " . $requestContent);
 
-		$json = json_decode($requestContent, true);
-
-		$this->createTable();
+		$this->createTableIfNotPresent();
 		$user = Session::get(user);
 		$date = new \DateTime;
 
-
+		$json = json_decode($requestContent, true);
 		$param = $this->getParamArray($json, $user, $date);
+        $nonStandardDistributionName = $this->getSanitisedString($json['nonStandardDistributionName']);
 
 		$privileges = $this->managePrivileges($user, $param);
 
@@ -298,63 +297,9 @@ class PingController extends BaseController {
 
         $isExistingSite = $site != null;
 
-        $isOtherDistributionSelected = is_string($param['distribution']) && 'other' == strtolower($param['distribution']);
-        $nonStandardDistributionName = $this->getSanitisedString($json['nonStandardDistributionName']);
-		$isNonstandardNamePresent = !is_null($nonStandardDistributionName);
-
-		$existingDistribution = null;
-		if($isExistingSite){
-			$existingDistribution = DB::table('distributions')-> where('id', '=', $site->distribution)->first();
-		}
-		$doesDistributionExists = !is_null($existingDistribution);
-
-        if(!$isNonstandardNamePresent && $isOtherDistributionSelected){
-            $param['distribution'] = null;
-        }
-
-        if($isNonstandardNamePresent && (!$doesDistributionExists || ($doesDistributionExists && $existingDistribution->is_standard))){
-            $distributionId = DB::table('distributions')->insertGetId(
-				["name" => $nonStandardDistributionName]
-			);
-            $param['distribution'] = $distributionId;
-        }
-
-        if($isNonstandardNamePresent && $doesDistributionExists && !$existingDistribution->is_standard){
-            DB::table('distributions')->where('id', '=', $existingDistribution->id)->update(['name'=>$nonStandardDistributionName]);
-            $param['distribution'] = $existingDistribution->id;
-        }
-
-        if ($isExistingSite) {
-
-            $archiveDistribution = $doesDistributionExists ? $existingDistribution->name : null;
-			$siteArray = new ArrayObject($site);
-			$this->archiveSite($siteArray->getArrayCopy(), $date, $privileges->principal, "UPDATE", $archiveDistribution);
-
-			unset($param['created_by']);
-			unset($param['date_created']);
-
-			DB::table('atlas')->where('id', '=', $site->id)->update($param);
-			Log::debug("Updated ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
-
-			if(!$isNonstandardNamePresent && $doesDistributionExists && !$existingDistribution->is_standard){
-				DB::table('distributions')->where('id', '=', $existingDistribution->id)->delete();
-			}
-		}
-
-		if(!$isExistingSite){
-
-			DB::table('atlas')->insert($param);
-
-            $newDistribution = DB::table('distributions')-> where('id', '=', $param['distribution'])->first();
-            $archiveDistribution = is_null($newDistribution) ? null : $newDistribution->name;
-			$this->archiveSite($param, $date, $privileges->principal, "ADD", $archiveDistribution);
-			Log::debug("Created ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
-
-			$principal = 'openmrs_id:' . $user->uid;
-			DB::table('auth')->insert(array('atlas_id' => $param['id'], 'principal' =>
-				$principal, 'token' => $user->uid, 'privileges' => 'ALL'));
-			Log::debug("Created auth");
-		}
+        $isExistingSite ?
+            $this->updateExistingSite($site, $date, $privileges, $param, $nonStandardDistributionName):
+            $this->createNewSite($param, $date, $privileges, $user, $nonStandardDistributionName);
 
 		if(!$isExistingSite && Session::has('module')){
 			$this->createAuthForModule($param);
@@ -413,7 +358,7 @@ class PingController extends BaseController {
 		}
 	}
 
-	public function createTable()
+	public function createTableIfNotPresent()
 	{
 		if ( !Schema::hasTable('atlas') || !Schema::hasTable('admin') 
 			|| !Schema::hasTable('auth') || !Schema::hasTable('archive'))
@@ -483,4 +428,78 @@ class PingController extends BaseController {
 			'module:' . $module, 'token' => $module, 'privileges' => 'STATS'));
 		Log::debug("Created auth for module");
 	}
+
+    /**
+     * @param $doesDistributionExists
+     * @param $existingDistribution
+     * @param $site
+     * @param $date
+     * @param $privileges
+     * @param $param
+     * @param $isNonStandardNamePresent
+     * @return null
+     */
+    private function updateExistingSite($site, $date, $privileges, $param, $nonStandardDistributionName)
+    {
+        $existingDistribution = DB::table('distributions')-> where('id', '=', $site->distribution)->first();
+
+        if($nonStandardDistributionName && $existingDistribution && $existingDistribution->is_standard){
+            $param['distribution'] = DB::table('distributions')->insertGetId(
+                ["name" => $nonStandardDistributionName]
+            );
+        }
+
+        if($nonStandardDistributionName && $existingDistribution && !$existingDistribution->is_standard){
+            DB::table('distributions')->where('id', '=', $existingDistribution->id)->update(['name'=>$nonStandardDistributionName]);
+            $param['distribution'] = $existingDistribution->id;
+        }
+
+        $archiveDistribution = $existingDistribution ? $existingDistribution->name : null;
+        $siteArray = new ArrayObject($site);
+        $this->archiveSite($siteArray->getArrayCopy(), $date, $privileges->principal, "UPDATE", $archiveDistribution);
+
+        unset($param['created_by']);
+        unset($param['date_created']);
+
+        DB::table('atlas')->where('id', '=', $site->id)->update($param);
+        Log::debug("Updated " . $param['id'] . " from " . $_SERVER['REMOTE_ADDR']);
+
+        if (is_null($nonStandardDistributionName) && $existingDistribution && !$existingDistribution->is_standard) {
+            DB::table('distributions')->where('id', '=', $existingDistribution->id)->delete();
+        }
+    }
+
+    /**
+     * @param $param
+     * @param $date
+     * @param $privileges
+     * @param $user
+     */
+    private function createNewSite($param, $date, $privileges, $user, $nonStandardDistributionName)
+    {
+        if($nonStandardDistributionName){
+            $param['distribution'] = DB::table('distributions')->insertGetId(
+                ["name" => $nonStandardDistributionName]
+            );
+        }
+
+        DB::table('atlas')->insert($param);
+
+        $this->archiveSite($param, $date, $privileges->principal, "ADD", $nonStandardDistributionName);
+        Log::debug("Created " . $param['id'] . " from " . $_SERVER['REMOTE_ADDR']);
+
+        $this->createAuthForUser($param, $user);
+    }
+
+    /**
+     * @param $param
+     * @param $user
+     */
+    private function createAuthForUser($param, $user)
+    {
+        $principal = 'openmrs_id:' . $user->uid;
+        DB::table('auth')->insert(array('atlas_id' => $param['id'], 'principal' =>
+            $principal, 'token' => $user->uid, 'privileges' => 'ALL'));
+        Log::debug("Created auth");
+    }
 }

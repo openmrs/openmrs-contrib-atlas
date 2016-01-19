@@ -222,7 +222,7 @@ function eventSaveMarker() {
       var encounters = $("#encounters").val().trim();
       var obs = $("#observations").val().trim();
       var version = $("select#version").val().trim();
-      site.distribution = $("select#distributions").val();
+      site.distribution = $("select#distributions").val() == "other" ? null : $("select#distributions").val();
       site.nonStandardDistributionName = $("#nonStandardDistributionName").val().trim();
       site.observations = obs;
       site.patients = patients;
@@ -343,21 +343,23 @@ var createOptionsForDistributionSelectBox = function(siteDistributionId, attribu
 
   getDistributions().forEach(function (distribution){
 
-      if('other' == siteDistributionId){
+    if(distribution.is_standard ){
+      var selected = siteDistributionId == distribution.id ? "selected" : "";
+      html += "<option " + selected + " value =" + distribution.id + ">" + distribution.name + "</option>";
+    }
+
+    if(!siteDistributionId && attributes.name != ""){
         selectionForOther = "selected";
         attributes.containerClass = "";
       }
 
-      if(!distribution.is_standard && distribution.id == siteDistributionId){
-        selectionForOther = "selected";
-        attributes.name = distribution.name;
-        attributes.containerClass = "";
-      }
+    if(!distribution.is_standard && distribution.id == siteDistributionId){
+      selectionForOther = "selected";
+      attributes.name = distribution.name;
+      attributes.containerClass = "";
+    }
 
-      if(distribution.is_standard ){
-        var selected = siteDistributionId == distribution.id ? "selected" : "";
-        html += "<option " + selected + " value =" + distribution.id + ">" + distribution.name + "</option>";
-      }
+
     });
 
   html += "<option value='other' "+ selectionForOther + ">Other</option>";
@@ -376,7 +378,7 @@ var createDistributionSelectBox = function(siteDistributionId, nonStandardDistri
 
   var nonStandardDistribution ={
       containerClass : "soft-hidden",
-      name : nonStandardDistributionName
+      name : nonStandardDistributionName || ""
   };
 
   var html = "<div class='form-group'>";
