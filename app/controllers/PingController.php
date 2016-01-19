@@ -299,7 +299,7 @@ class PingController extends BaseController {
         $isExistingSite = $site != null;
 
         $isOtherDistributionSelected = is_string($param['distribution']) && 'other' == strtolower($param['distribution']);
-        $nonStandardDistributionName = $this->getSanitisedString($json['otherDistributionName']);
+        $nonStandardDistributionName = $this->getSanitisedString($json['nonStandardDistributionName']);
 		$isNonstandardNamePresent = !is_null($nonStandardDistributionName);
 
 		$existingDistribution = null;

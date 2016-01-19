@@ -223,7 +223,7 @@ function eventSaveMarker() {
       var obs = $("#observations").val().trim();
       var version = $("select#version").val().trim();
       site.distribution = $("select#distributions").val();
-      site.otherDistributionName = $("#otherDistributionName").val().trim();
+      site.nonStandardDistributionName = $("#nonStandardDistributionName").val().trim();
       site.observations = obs;
       site.patients = patients;
       site.encounters = encounters;
@@ -333,7 +333,7 @@ var html = "<div class='site-bubble'>";
 var manageOtherDistribution = function(element){
   var index =  element.selectedIndex;
   var selectedText = element.options[index].text.toLowerCase();
-  selectedText === 'other' ?  $('#otherDistributionNameContainer').slideDown(50): $('#otherDistributionNameContainer').slideUp(50);
+  selectedText === 'other' ?  $('#nonStandardDistributionNameContainer').slideDown(50): $('#nonStandardDistributionNameContainer').slideUp(50);
 };
 
 function contentEditwindow(site) {
@@ -341,6 +341,8 @@ function contentEditwindow(site) {
   var encounters = ('encounters' in counts) ? counts.encounters : ('encounters' in site) ? site.encounters : "?";
   var observations = ('observations' in counts) ? counts.observations : ('observations' in site) ? site.observations : "?";
   var distributionNameContainerClass = "soft-hidden";
+  var otherSelected = '';
+  var nonStandardDistributionNameValue = null;
   var html = "<div class='site-bubble bubble-form'>";
   html += "<form method='post' id='"+ site.id +"'>";
   html += "<div class='form-group'><input type='text' required='true' placeholder='Site Name' title='Site Name' class='form-control input-sm' value='"+ site.name + "' id='name' name='name'></div>";
@@ -354,18 +356,23 @@ function contentEditwindow(site) {
   html += "<select title='Distribution' id='distributions' class='form-control input-sm' onchange='manageOtherDistribution(this)'>";
   html += "<option selected disabled> -- Select Distribution -- </option>";
   getDistributions().forEach(function(distribution){
-      var isSelected = site.distribution ===  distribution.id ? "selected" : "";
-      html += "<option " + isSelected + " value =" + distribution.id + ">" + distribution.name + "</option>";
 
-    if(isSelected ===  "selected" && distribution.name.toLowerCase() === "other"){
-      distributionNameContainerClass = "";
+    if(!distribution.is_standard && distribution.id == site.distribution){
+        otherSelected = "selected";
+        nonStandardDistributionNameValue = distribution.name;
+        distributionNameContainerClass = "";
+      }
+
+    if(distribution.is_standard ){
+      var selected = site.distribution == distribution.id ? "selected" : "";
+      html += "<option " + selected + " value =" + distribution.id + ">" + distribution.name + "</option>";
     }
   });
 
-  html += "<option>Other</option>"
+  html += "<option "+ otherSelected + ">Other</option>";
   html += "</select></div>";
 
-  html += "<div class='form-group " + distributionNameContainerClass +"' id='otherDistributionNameContainer'><input type='text' id='otherDistributionName' placeholder='enter name (optional)' class='form-control input-sm'></div>";
+  html += "<div class='form-group " + distributionNameContainerClass +"' id='nonStandardDistributionNameContainer'><input type='text' id='nonStandardDistributionName' placeholder='enter name (optional)' class='form-control input-sm' value="+ nonStandardDistributionNameValue+"></div>";
 
 
   if (site.module !== 1) {
