@@ -32,7 +32,7 @@ ClassLoader::addDirectories(array(
 */
 
 $logFile = 'atlas.log';
-Log::useDailyFiles(storage_path().'/logs/'.$logFile, 7, 'warning');
+Log::useDailyFiles(storage_path() . '/logs/' . $logFile, 2, Config::get('app.log-level'));
 
 if (App::environment() == 'local') {
 	$monolog = Log::getMonolog();
