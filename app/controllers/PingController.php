@@ -329,32 +329,19 @@ class PingController extends BaseController {
 		Log::debug("Privileges: " . $privileges->principal . "/" . $privileges->privileges);
 
 		if ($site != null) {
-			DB::table('archive')->insert(array(
-				'site_uuid' => $site->id, 
-				'id' => Uuid::uuid4()->toString(), 
-				'type' => $site->type,
-				'longitude' =>  $site->longitude, 
-				'latitude' =>  $site->latitude,
-				'name' =>  $site->name, 
-				'url' =>  $site->url, 
-				'image' =>  $site->image, 
-				'contact' =>  $site->contact, 
-				'changed_by' =>  $privileges->principal, 
-				'patients' =>  $site->patients, 
-				'encounters' =>  $site->encounters, 
-				'observations' =>  $site->observations, 
-				'notes' =>  $site->notes, 
-				'email' => $site->email,
-				'data' =>  $site->data, 
-				'action' => 'DELETE', 
-				'openmrs_version' => $site->openmrs_version, 
-				'atlas_version' => $site->atlas_version,
-				'date_created' => $site->date_created,
-				'show_counts' => $site->show_counts,
-				'created_by' => $site->created_by));
+
+			$existingDistribution = DB::table('distributions')->where('id', '=', $site->distribution)->first();
+			$archiveDistribution = $existingDistribution ? $existingDistribution->name : null;
+			$siteArray = new ArrayObject($site);
+			$this->archiveSite($siteArray->getArrayCopy(), $date, $privileges->principal, "DELETE", $archiveDistribution);
+
 			DB::table('auth')->where('atlas_id', '=', $id)->delete();
 			DB::table('atlas')->where('id', '=', $id)->delete();
-			Log::info("Deleted ".$deleteId." from ".$_SERVER['REMOTE_ADDR']);
+			Log::info("Deleted ".$id." from ".$_SERVER['REMOTE_ADDR']);
+
+			if($existingDistribution && !$existingDistribution->is_standard){
+				DB::table('distributions')->where('id', '=', $existingDistribution->id)->delete();
+			}
 		}
 	}
 
@@ -477,15 +464,20 @@ class PingController extends BaseController {
      */
     private function createNewSite($param, $date, $privileges, $user, $nonStandardDistributionName)
     {
-        if($nonStandardDistributionName){
-            $param['distribution'] = DB::table('distributions')->insertGetId(
+		if($nonStandardDistributionName){
+			$param['distribution'] = DB::table('distributions')->insertGetId(
                 ["name" => $nonStandardDistributionName]
             );
-        }
+		}
 
-        DB::table('atlas')->insert($param);
+		DB::table('atlas')->insert($param);
 
-        $this->archiveSite($param, $date, $privileges->principal, "ADD", $nonStandardDistributionName);
+		$archiveDistribution = $nonStandardDistributionName;
+		if(is_null($archiveDistribution)){
+			$archiveDistribution = DB::table('distributions')->select('name')->where('id','=',$param['distribution'])->first()->name;
+		}
+        $this->archiveSite($param, $date, $privileges->principal, "ADD", $archiveDistribution);
+
         Log::debug("Created " . $param['id'] . " from " . $_SERVER['REMOTE_ADDR']);
 
         $this->createAuthForUser($param, $user);
