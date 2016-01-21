@@ -26,11 +26,13 @@ $app = new Illuminate\Foundation\Application;
 
 $env = $app->detectEnvironment(array(
 
-	'local' => array('INsaloniv.local'),
-	'prod' => array('INsaloniv.local'),
+	'local' => array(gethostname()),
+	'prod' => array('atlas-server'),
 	'staged' => array('staged-server'),
 
 ));
+
+
 
 /*
 |--------------------------------------------------------------------------
