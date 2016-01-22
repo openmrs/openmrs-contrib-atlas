@@ -159,38 +159,22 @@ class PingController extends BaseController {
 			'date_created' => $date);
 
 		$site = DB::table('atlas')->where('id','=', $param['id'])->first();
-		if ($site != null) {
-			DB::table('archive')->insert(array(
-				'archive_date' => $date, 
-				'site_uuid' => $site->id, 
-				'id' => Uuid::uuid4()->toString(), 
-				'action' =>  'UPDATE',  
-				'type' => $site->type,
-				'longitude' =>  $site->longitude, 
-				'latitude' =>  $site->latitude,
-				'name' =>  $site->name, 
-				'openmrs_version' => $openmrs_version, 
-				'url' =>  $site->url, 
-				'image' =>  $site->image, 
-				'contact' =>  $site->contact, 
-				'changed_by' => 'module:' . $module, 
-				'patients' =>  $site->patients, 
-				'encounters' =>  $site->encounters, 
-				'observations' =>  $site->observations, 
-				'notes' =>  $site->notes, 
-				'email' => $site->email,
-				'show_counts' => $site->show_counts,
-				'data' =>  $site->data, 
-				'atlas_version' => $site->atlas_version,
-				'date_created' => $site->date_created,
-				'created_by' => $site->created_by));
 
-			unset($param['date_created']);
-			DB::table('atlas')->where('id', '=', $site->id)->update($param);
-			Log::debug("Updated ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
-		} else {
+		if(!$site){
 			Log::debug("Site not found: ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
+			return;
 		}
+
+		$distributionName = DB::table('distributions')->select('name')->where('id','=',$site->distribution)->first()->name;
+		$changedBy = 'module:' . $module;
+		$siteArray = new ArrayObject($site);
+		$this->archiveSite($siteArray->getArrayCopy(), $date, $changedBy, "UPDATE", $distributionName);
+
+		unset($param['date_created']);
+		DB::table('atlas')->where('id', '=', $site->id)->update($param);
+
+		Log::debug("Updated ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
+
 		return 'SUCCES';
 	}
 
@@ -286,7 +270,6 @@ class PingController extends BaseController {
 		$this->createTableIfNotPresent();
 		$user = Session::get(user);
 		$date = new \DateTime;
-
 		$json = json_decode($requestContent, true);
 		$param = $this->getParamArray($json, $user, $date);
         $nonStandardDistributionName = $this->getSanitisedString($json['nonStandardDistributionName']);
