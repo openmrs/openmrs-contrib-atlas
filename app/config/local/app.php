@@ -26,7 +26,7 @@ return array(
 	|
 	*/
 
-	'url' => 'http://openmrsatlas.local',
+	'url' => 'http://localhost/atlas',
 
 	/*
 	|--------------------------------------------------------------------------
