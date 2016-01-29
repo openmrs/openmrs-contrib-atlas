@@ -78,8 +78,7 @@ var viewParam = {
 @if (Input::has('zoom') && is_numeric(Input::get('zoom')))
   viewParam.zoom = {{ Input::get('zoom') }};
 @endif
-@if (Input::has('position') && preg_match('/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),
-*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/', Input::get('position')))
+@if (Input::has('position') && preg_match('/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/', Input::get('position')))
   viewParam.position = new google.maps.LatLng({{ Input::get('position') }});
 @endif
 @if (Input::has('legend'))
@@ -164,7 +163,6 @@ ga('send', 'pageview');
         @endif
         </div>
         <div class="separatorDiv"></div>        
-      </div>          
   </div>
   @else
     <div class="atlas-container loginControl dropDownControl control" title="Click to sign in with your OpenMRS ID" id ="login">
@@ -201,4 +199,5 @@ ga('send', 'pageview');
   <input type="hidden" id="user-id" value="{{ $user->uid }} " />
   <input type="hidden" id="user-name" value="{{ $user->name }} " />
   <input type="hidden" id="user-email" value="{{ $user->email }} " />
+</body>
 </html>

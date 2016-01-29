@@ -193,7 +193,7 @@ function createEditInfoWindow(site, marker) {
   var html = contentEditwindow(site);
   var infowindow = new google.maps.InfoWindow({
     content: html,
-    maxWidth: 200
+    maxWidth: 300
   });
   google.maps.event.addListener(infowindow, "closeclick", function() {
     sites[site.id].editBubbleOpen = false;
@@ -222,6 +222,8 @@ function eventSaveMarker() {
       var encounters = $("#encounters").val().trim();
       var obs = $("#observations").val().trim();
       var version = $("select#version").val().trim();
+      site.distribution = $("select#distributions").val() == "other" ? null : $("select#distributions").val();
+      site.nonStandardDistributionName = $("#nonStandardDistributionName").val().trim();
       site.observations = obs;
       site.patients = patients;
       site.encounters = encounters;
@@ -311,9 +313,19 @@ var html = "<div class='site-bubble'>";
   }
   if (site.contact)
     html += "<div class='site-contact'><span class='site-label'>Contact:</span> " + site.contact + "</div>";
+
   if (site.email)
     html += "<a href='mailto:"+ site.email + "' class='site-email'><img src='images/mail.png' width='15px' height='15px'/></a>";
   html += "</div>";
+  if(site.distribution){
+
+    getDistributions().forEach(function (distribution){
+      if(distribution.id == site.distribution){
+        html +="<div><span class='site-label'>Distribution:</span> " + distribution.name + "</div>";
+      }
+    });
+
+  }
   if (site.notes)
     html += "<fieldset class='site-notes'>" + site.notes + "</fieldset>";
   if (site.type)
@@ -328,11 +340,72 @@ var html = "<div class='site-bubble'>";
   return html;
 }
 
+var manageOtherDistribution = function(element){
+  var index =  element.selectedIndex;
+  var selectedText = element.options[index].text.toLowerCase();
+  selectedText === 'other' ?  $('#nonStandardDistributionNameContainer').slideDown(50): $('#nonStandardDistributionNameContainer').slideUp(50);
+};
+
+var createOptionsForDistributionSelectBox = function(siteDistributionId, attributes) {
+  var selectionForOther = '';
+
+  var html = "<option selected disabled> -- Select Distribution -- </option>";
+
+  getDistributions().forEach(function (distribution){
+
+    if(distribution.is_standard ){
+      var selected = siteDistributionId == distribution.id ? "selected" : "";
+      html += "<option " + selected + " value =" + distribution.id + ">" + distribution.name + "</option>";
+    }
+
+    if(!siteDistributionId && attributes.name != ""){
+        selectionForOther = "selected";
+        attributes.containerClass = "";
+      }
+
+    if(!distribution.is_standard && distribution.id == siteDistributionId){
+      selectionForOther = "selected";
+      attributes.name = distribution.name;
+      attributes.containerClass = "";
+    }
+
+
+    });
+
+  html += "<option value='other' "+ selectionForOther + ">Other</option>";
+
+  return html;
+};
+
+var createNonStandardDistributionInput = function(nonStandardDistribution) {
+
+  var html = "<div class='form-group " + nonStandardDistribution.containerClass + "' id='nonStandardDistributionNameContainer'>";
+  html += "<input type='text' id='nonStandardDistributionName' placeholder='Enter name' class='form-control input-sm' value='" + nonStandardDistribution.name + "'></div>";
+  return html;
+};
+
+var createDistributionSelectBox = function(siteDistributionId, nonStandardDistributionName) {
+
+  var nonStandardDistribution ={
+      containerClass : "soft-hidden",
+      name : nonStandardDistributionName || ""
+  };
+
+  var html = "<div class='form-group'>";
+  html += "<select title='Distribution' id='distributions' class='form-control input-sm' onchange='manageOtherDistribution(this)'>";
+  html += createOptionsForDistributionSelectBox(siteDistributionId, nonStandardDistribution);
+  html += "</select></div>";
+  html += createNonStandardDistributionInput(nonStandardDistribution);
+
+  return html;
+};
+
 function contentEditwindow(site) {
   var patients = ('patients' in counts) ? counts.patients : ('patients' in site) ? site.patients : "?";
   var encounters = ('encounters' in counts) ? counts.encounters : ('encounters' in site) ? site.encounters : "?";
   var observations = ('observations' in counts) ? counts.observations : ('observations' in site) ? site.observations : "?";
-  var html = "<div class='site-bubble bubble-form' style='width:200px; margin-bottom:0px;'>";
+
+  var html = "<div class='site-bubble bubble-form'>";
   html += "<form method='post' id='"+ site.id +"'>";
   html += "<div class='form-group'><input type='text' required='true' placeholder='Site Name' title='Site Name' class='form-control input-sm' value='"+ site.name + "' id='name' name='name'></div>";
   html += "<div class='form-group'><input type='url' class='form-control input-sm' placeholder='Site URL' title='Site URL' value='"+ site.url + "' name='url' id='url'></div>";
@@ -340,6 +413,10 @@ function contentEditwindow(site) {
   html += "<div class='form-group'><input type='text' class='form-control input-sm'  placeholder='Contact' title='Contact' value='"+ site.contact + "' name='contact' id ='contact'></div>";
   html += "<div class='form-group'><input type='email' class='form-control input-sm' placeholder='Email' title='Email' value='"+ site.email + "' name='email' id='email'></div>";
   html += "<div class='form-group'><textarea class='form-control' value='' name='notes' rows='2' id='notes' placeholder='Notes'>"+ site.notes + "</textarea></div>";
+
+  html += createDistributionSelectBox(site.distribution, site.nonStandardDistributionName);
+
+
   if (site.module !== 1) {
     html += "<div class='site-stat'>";
     html += "<div class='form-inline'>Patients <input type='number' pattern='[0-9]' class='form-control input-sm' title='Number of patients' value='"+ site.patients + "' name='patients' id ='patients'></div>";
@@ -356,10 +433,11 @@ function contentEditwindow(site) {
   }
   if (site.module !== 1) {
     html += "<div class='form-inline'> OpenMRS Version ";
-    html += "<select title='OpenMRS Version' id='version' class='form-control input-sm'></div>"
+    html += "<select title='OpenMRS Version' id='version' class='form-control input-sm'>";
     html += "<option selected>" + site.version + "</option>"; 
     html += "</select></div>";
   }
+
   html += "<div class='row' style='margin-top:10px;'><div class='col-xs-8'>";
   html += "<select title='Site type' id='type' class='form-control input-sm'>"
   html += (site.type == "Clinical") ? "<option selected>" : "<option>"; 
