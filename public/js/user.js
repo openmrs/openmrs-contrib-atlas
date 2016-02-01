@@ -324,12 +324,7 @@ var html = "<div class='site-bubble'>";
   html += "</div>";
 
   if(site.distribution){
-    distributions.forEach(function (distribution){
-      if(distribution.id == site.distribution){
-        html +="<div><span class='site-label'>Distribution:</span> " + distribution.name + "</div>";
-        return false;
-      }
-    });
+    html += getDistributionInfo(site.distribution);
   }
 
   if (site.notes)
@@ -346,12 +341,10 @@ var html = "<div class='site-bubble'>";
   return html;
 }
 
-
 function contentEditwindow(site) {
   var patients = ('patients' in counts) ? counts.patients : ('patients' in site) ? site.patients : "?";
   var encounters = ('encounters' in counts) ? counts.encounters : ('encounters' in site) ? site.encounters : "?";
   var observations = ('observations' in counts) ? counts.observations : ('observations' in site) ? site.observations : "?";
-
   var html = "<div class='site-bubble bubble-form'>";
   html += "<form method='post' id='"+ site.id +"'>";
   html += "<div class='form-group'><input type='text' required='true' placeholder='Site Name' title='Site Name' class='form-control input-sm' value='"+ site.name + "' id='name' name='name'></div>";

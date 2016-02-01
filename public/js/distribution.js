@@ -11,6 +11,17 @@ function getAJAXCallForDistributions(){
         })
 }
 
+function getDistributionInfo(distributionId) {
+    var html = '';
+    distributions.forEach(function (distribution) {
+        if (distribution.id == distributionId) {
+            html = "<div><span class='site-label'>Distribution:</span> " + distribution.name + "</div>";
+            return false;
+        }
+    });
+    return html;
+}
+
 function getDistributionId(distributionName) {
     var distributionId = null;
     distributions.forEach(function (distribution) {
