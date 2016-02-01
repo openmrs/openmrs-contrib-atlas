@@ -413,7 +413,10 @@ class PingController extends BaseController {
     {
         $existingDistribution = DB::table('distributions')-> where('id', '=', $site->distribution)->first();
 
-        if($nonStandardDistributionName && $existingDistribution && $existingDistribution->is_standard){
+		$newDistributionFromBlank = $nonStandardDistributionName && !$existingDistribution;
+		$newDistributionFromStandard = $nonStandardDistributionName && $existingDistribution && $existingDistribution->is_standard;
+
+        if($newDistributionFromBlank || $newDistributionFromStandard){
             $param['distribution'] = DB::table('distributions')->insertGetId(
                 ["name" => $nonStandardDistributionName]
             );

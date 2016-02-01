@@ -14,6 +14,7 @@
 <script type="text/javascript" src="lib/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="lib/js/gmap3.min.js"></script>
 <script type="text/javascript" src="lib/js/bootbox.min.js"></script>
+<script type="text/javascript" src="js/distribution.js"></script>
 <script type="text/javascript" src="js/user.js"></script>
 <script type="text/javascript" src="js/atlas.js"></script>
 <script type="text/javascript" src="js/tools.js"></script>
