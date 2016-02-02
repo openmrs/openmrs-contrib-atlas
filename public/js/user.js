@@ -223,7 +223,7 @@ function saveMarker(e) {
       var encounters = $("#encounters").val().trim();
       var obs = $("#observations").val().trim();
       var version = $("select#version").val().trim();
-      site.distribution = $("select#distributions").val() == "other" ? null : $("select#distributions").val();
+      site.distribution = getSelectedDistributionValue();
       site.nonStandardDistributionName = $("#nonStandardDistributionName").val().trim();
       site.observations = obs;
       site.patients = patients;

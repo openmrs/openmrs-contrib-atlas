@@ -33,9 +33,10 @@ Route::delete('ping.php', array(
 	'before' => 'secret',
 	'uses' => 'PingController@pingDelete'));
 
+//This handles create and update of marker site. Could not separate create and update for backward compatibility (especially with Atlas Module)
 Route::post('ping.php/atlas', array(
 	'before' => 'validateAtlasJson',
-	'uses' => 'PingController@pingAtlas'));
+	'uses' => 'MarkerSiteController@save'));
 
 Route::delete('ping.php/atlas', array(
 	'before' => 'validateAtlasDelete',

@@ -4,7 +4,6 @@ lockHtml += "http%3A%2F%2Fgo.openmrs.org%2Fhelpdesk&url_id=04c52b64769a7567d21db
 var fadeHtml = "<div class='toggle' id='fadeInfo'> Sites that have not been updated for more than six months will begin to fade away. ";
 fadeHtml += "Fading can be turned off through the controls on this page.</div>";
 var uniqueMarker = null;
-var distributions = null;
 
 function initLegendChoice() {
     $("#fadeCheckbox").prop('checked', true);
@@ -209,7 +208,7 @@ function initialize() {
 }
 
 function getDistributionsAndMarkers(){
-    getAJAXCallForDistributions()
+    makeAJAXCallForDistributions()
         .always(function(){
             getMarkerSites();
         });
