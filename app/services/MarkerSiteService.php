@@ -1,24 +1,48 @@
 <?php
 
-
 class MarkerSiteService
 {
-
-    public static function archiveSite($site, $date, $changedBy, $action, $archiveDistribution)
+    private $authService;
+    public function __construct($authService)
     {
-        $row = $site;
-        $row["action"] = $action;
-        $row["archive_date"] = $date;
-        $row["changed_by"] = $changedBy;
-        $row["site_uuid"] = $site['id'];
-        $row["id"] = Uuid::uuid4()->toString();
-        $row['distribution'] = $archiveDistribution;
-
-        //$site is row to update from atlas table, which contains extra column "date_changed"
-        unset($row["date_changed"]);
-
-        DB::table('archive')->insert($row);
-
+        $this->authService = $authService;
     }
 
+    public function save($markerSite, $nonStandardDistributionName){
+
+        if($nonStandardDistributionName){
+            $markerSite->distribution = Distribution::create(["name" => $nonStandardDistributionName])->id ;
+        }
+
+        return $markerSite->id ?
+            $this->updateSite($markerSite, $nonStandardDistributionName):
+            $this->createNewSite($markerSite, $nonStandardDistributionName);
+    }
+
+    private function createNewSite($markerSite)
+    {
+        $markerSite->id = Uuid::uuid4()->toString();
+
+        $markerSite->save();
+        Log::debug("Created " . $markerSite->id . " from " . $_SERVER['REMOTE_ADDR']);
+
+        $this->authService->createAuth($markerSite->id);
+
+        return $markerSite;
+    }
+
+    private function updateSite($markerSite)
+    {
+        $existingSite = MarkerSite::find($markerSite->id);
+        $existingDistribution = Distribution::find($existingSite->distribution);
+
+        $existingSite->update($markerSite->toArray());
+        Log::debug("Updated " . $markerSite->id . " from " . $_SERVER['REMOTE_ADDR']);
+
+        if($existingDistribution && !$existingDistribution->is_standard){
+            Distribution::destroy($existingDistribution->id);
+        }
+
+        return $existingSite;
+    }
 }

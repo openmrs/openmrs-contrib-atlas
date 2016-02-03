@@ -158,22 +158,20 @@ class PingController extends BaseController {
 			'atlas_version' => $json['atlasVersion'],
 			'date_created' => $date);
 
-		$site = DB::table('atlas')->where('id','=', $param['id'])->first();
+		$site = MarkerSite::find($param['id']);
 
 		if(!$site){
 			Log::debug("Site not found: ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
 			return;
 		}
 
-		$distributionName = DB::table('distributions')->select('name')->where('id','=',$site->distribution)->first()->name;
-		$changedBy = 'module:' . $module;
-		$siteArray = new ArrayObject($site);
-		MarkerSiteService::archiveSite($siteArray->getArrayCopy(), $date, $changedBy, "UPDATE", $distributionName);
-
-		unset($param['date_created']);
-		DB::table('atlas')->where('id', '=', $site->id)->update($param);
-
+		$site->update($param);
 		Log::debug("Updated ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
+
+		$distroService = new DistributionService();
+		$authService = new AuthorizationService();
+		$auditService = new AuditService($distroService, $authService);
+		$auditService->auditModuleSite($site, $module);
 
 		return 'SUCCES';
 	}
@@ -241,7 +239,7 @@ class PingController extends BaseController {
 		$id = Input::get('id');
 		$user = Session::get(user);
 		$date = new \DateTime;
-		$site = DB::table('atlas')->where('id','=', $id)->first();
+		$site = MarkerSite::find($id);
 		$privileges = DB::table('auth')->where('token','=', $user->uid)->where('atlas_id','=', $param['id'])
 		->where('privileges', '=', 'ALL')->first();
 
@@ -254,15 +252,16 @@ class PingController extends BaseController {
 
 		if ($site != null) {
 
-			$existingDistribution = DB::table('distributions')->where('id', '=', $site->distribution)->first();
-			$archiveDistribution = $existingDistribution ? $existingDistribution->name : null;
-			$siteArray = new ArrayObject($site);
-			MarkerSiteService::archiveSite($siteArray->getArrayCopy(), $date, $privileges->principal, "DELETE", $archiveDistribution);
+			$distroService = new DistributionService();
+			$authService = new AuthorizationService();
+			$auditService = new AuditService($distroService, $authService);
+			$auditService->auditDeletedSite($site);
 
 			DB::table('auth')->where('atlas_id', '=', $id)->delete();
 			DB::table('atlas')->where('id', '=', $id)->delete();
 			Log::info("Deleted ".$id." from ".$_SERVER['REMOTE_ADDR']);
 
+			$existingDistribution = Distribution::find($site->distribution);
 			if($existingDistribution && !$existingDistribution->is_standard){
 				DB::table('distributions')->where('id', '=', $existingDistribution->id)->delete();
 			}

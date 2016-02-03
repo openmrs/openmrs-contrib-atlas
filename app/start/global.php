@@ -17,8 +17,9 @@ ClassLoader::addDirectories(array(
 	app_path().'/controllers',
 	app_path().'/models',
 	app_path().'/database/seeds',
+	app_path().'/util',
 	app_path().'/services',
-	app_path().'/util'
+	app_path().'/builders',
 
 ));
 

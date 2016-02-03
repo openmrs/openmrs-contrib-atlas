@@ -3,8 +3,7 @@
 class MarkerSite extends Eloquent
 {
     protected $table = 'atlas';
-    protected $fillable = array(
-                            'id',
+    protected $fillable = array('id',
                             'latitude',
                             'longitude',
                             'name',
@@ -18,7 +17,6 @@ class MarkerSite extends Eloquent
                             'email',
                             'notes',
                             'date_created',
-                            'date_changed',
                             'openmrs_version',
                             'show_counts',
                             'created_by',
@@ -26,5 +24,5 @@ class MarkerSite extends Eloquent
                         );
 
     public $timestamps = false;
-
+    public $incrementing = false;
 }
