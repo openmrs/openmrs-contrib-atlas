@@ -20,7 +20,9 @@ class MarkerSite extends Eloquent
                             'openmrs_version',
                             'show_counts',
                             'created_by',
-                            'distribution'
+                            'distribution',
+                            'data',
+                            'atlas_version'
                         );
 
     public $timestamps = false;

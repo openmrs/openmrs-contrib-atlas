@@ -3,7 +3,7 @@
 class MarkerSiteService
 {
     private $authService;
-    public function __construct($authService)
+    public function __construct(AuthorizationService $authService)
     {
         $this->authService = $authService;
     }
@@ -44,5 +44,23 @@ class MarkerSiteService
         }
 
         return $existingSite;
+    }
+
+    public function deleteSite(&$markerSite){
+
+        $distribution = Distribution::find($markerSite->distribution);
+
+        Authorization::where('atlas_id', '=', $markerSite->id)->delete();
+        Log::info("Deleted authorization ".$markerSite->id." from ".$_SERVER['REMOTE_ADDR']);
+
+        Log::info("Deleting Site".$markerSite->id." from ".$_SERVER['REMOTE_ADDR']);
+        $markerSite->delete();
+        Log::info("Deleted Site");
+
+        if($distribution && !$distribution->is_standard){
+            Log::info("Deleting distribution ".$distribution->id." from ".$_SERVER['REMOTE_ADDR']);
+            $distribution->delete();
+            Log::info("Deleted Distribution");
+        }
     }
 }

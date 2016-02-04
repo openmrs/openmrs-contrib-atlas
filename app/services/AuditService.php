@@ -4,7 +4,7 @@ class AuditService
 {
     private $authService;
     private $distroService;
-    function __construct($distroService, $authService) {
+    function __construct(DistributionService $distroService, AuthorizationService $authService) {
         $this->distroService = $distroService;
         $this->authService = $authService;
     }

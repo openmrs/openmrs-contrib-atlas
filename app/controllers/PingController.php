@@ -132,51 +132,6 @@ class PingController extends BaseController {
 	}
 
 	/**
-	 * Post Ping function - Handle Auto from Atlas Module 2.0
-	 *
-	 */
-	public function autoPostModule()
-	{
-		$this->createTableIfNotPresent();
-		Log::debug("DATA received: " . Request::getContent());
-		$json = json_decode(Request::getContent(), true);
-		$date = new \DateTime;
-		$module = $json['id'];
-		Log::info('Module uuid: ' . $module);
-		$siteM = DB::table('auth')->where('token','=', $module)->first();
-		if ($siteM == NULL)
-			App::abort(403, 'Unauthorized');
-
-		$openmrs_version = (empty($json['data'])) ? "" : $json['data']['version'];
-		$param = array(
-			'id' => $siteM->atlas_id,
-			'patients' => intval($json['patients']),
-			'encounters' => intval($json['encounters']),
-			'observations' => intval($json['observations']),
-			'openmrs_version' => $openmrs_version, 
-			'data' => json_encode($json['data']),
-			'atlas_version' => $json['atlasVersion'],
-			'date_created' => $date);
-
-		$site = MarkerSite::find($param['id']);
-
-		if(!$site){
-			Log::debug("Site not found: ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
-			return;
-		}
-
-		$site->update($param);
-		Log::debug("Updated ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
-
-		$distroService = new DistributionService();
-		$authService = new AuthorizationService();
-		$auditService = new AuditService($distroService, $authService);
-		$auditService->auditModuleSite($site, $module);
-
-		return 'SUCCES';
-	}
-
-	/**
 	 * Post Ping function - Handle Ping from Atlas Module 2.0
 	 * Never Used and deprecated
 	 */
@@ -233,39 +188,6 @@ class PingController extends BaseController {
 			Log::debug("Site not found: ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
 		}
 		return 'SUCCES';
-	}
-
-	public function pingAtlasDelete() {
-		$id = Input::get('id');
-		$user = Session::get(user);
-		$date = new \DateTime;
-		$site = MarkerSite::find($id);
-		$privileges = DB::table('auth')->where('token','=', $user->uid)->where('atlas_id','=', $param['id'])
-		->where('privileges', '=', 'ALL')->first();
-
-		if ($user->role == 'ADMIN' && $privileges == NULL) {
-			$privileges = new Authorization(array('token' => $user->uid,
-	  				'principal' => 'admin:' . $user->uid,
-	  				'privileges' => 'ADMIN'));
-		}
-		Log::debug("Privileges: " . $privileges->principal . "/" . $privileges->privileges);
-
-		if ($site != null) {
-
-			$distroService = new DistributionService();
-			$authService = new AuthorizationService();
-			$auditService = new AuditService($distroService, $authService);
-			$auditService->auditDeletedSite($site);
-
-			DB::table('auth')->where('atlas_id', '=', $id)->delete();
-			DB::table('atlas')->where('id', '=', $id)->delete();
-			Log::info("Deleted ".$id." from ".$_SERVER['REMOTE_ADDR']);
-
-			$existingDistribution = Distribution::find($site->distribution);
-			if($existingDistribution && !$existingDistribution->is_standard){
-				DB::table('distributions')->where('id', '=', $existingDistribution->id)->delete();
-			}
-		}
 	}
 
 	public function createTableIfNotPresent()

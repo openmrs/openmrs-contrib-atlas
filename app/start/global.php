@@ -60,7 +60,16 @@ App::error(function(Exception $exception, $code)
 	Log::error($exception);
 });
 
+App::error(function(ModelNotFoundException $e)
+{
+	Log::debug($e->getModel() + "not found:  from ".$_SERVER['REMOTE_ADDR']);
+	Log::error($e);
+	if(strcmp($e->getModel(), "Authorization")){
+		return Response::make('Unauthorised', 403);
+	}
 
+	return Response::make('Not Found', 404);
+});
 /*
 |--------------------------------------------------------------------------
 | Application Proxy Configuration

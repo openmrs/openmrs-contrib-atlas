@@ -68,4 +68,9 @@ class AuthorizationService
 
         Log::debug("Created auth for module");
     }
+
+    public function getAuthourizedModule($token){
+        Log::info("Token = ".$token);
+        return Authorization::where('token','=', $token)->firstOrFail();
+    }
 }

@@ -26,4 +26,18 @@ class MarkerSiteBuilder
             'distribution' => $json['distribution']
         ));
     }
+
+    public static function &buildForModule($json){
+
+        $markerSite = MarkerSite::findOrFail($json['atlas_id']);
+        $markerSite->patients = intval($json['patients']);
+        $markerSite->encounters = intval($json['encounters']);
+        $markerSite->observations = intval($json['observations']);
+        $markerSite->openmrs_version = (empty($json['data'])) ? "" : $json['data']['version'];
+        $markerSite->data = json_encode($json['data']);
+        $markerSite->atlas_version = $json['atlasVersion'];
+        $markerSite->date_created = new DateTime();
+
+        return $markerSite;
+    }
 }

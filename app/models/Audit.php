@@ -24,7 +24,9 @@ class Audit extends Eloquent
                                 'changed_by',
                                 'archive_date',
                                 'action',
-                                'distribution_name');
+                                'distribution_name',
+                                'data',
+                                'atlas_version');
     public $timestamps = false;
     public $incremental = false;
 }
