@@ -1,9 +1,9 @@
 var getCachedDistributions = null;
 
-function makeAJAXCallForDistributions(){
+function fetchDistributions(){
 
     return $.ajax({
-            url: "distributions",
+            url: URI.distributions,
             type: "GET"
         })
         .done(function (distributions) {
@@ -12,11 +12,11 @@ function makeAJAXCallForDistributions(){
             })();
         })
         .fail(function (jqXHR) {
-            bootbox.alert("Error fetching distribution list" + jqXHR.statusText);
+            bootbox.alert(errorMEssages.failMessage + jqXHR.statusText);
         })
 }
 
-function getDistributionInfo(distributionId) {
+function createHtmlForDistributionInfo(distributionId) {
     var html = '';
     getCachedDistributions().forEach(function (distribution) {
         if (distribution.id == distributionId) {
@@ -27,25 +27,10 @@ function getDistributionInfo(distributionId) {
     return html;
 }
 
-function getDistributionId(distributionName) {
-    var distributionId = null;
-    getCachedDistributions().forEach(function (distribution) {
-        if (distribution.name === distributionName) {
-            distributionId = distribution.id;
-            return false;
-        }
+function getDistribution(distributionName) {
+    return getCachedDistributions().find(function(distribution){
+        return distribution.name === distributionName
     });
-    return distributionId;
-}
-
-function getDistributionsAndUpdateInfoWindow(site, infowindow) {
-        makeAJAXCallForDistributions()
-            .done(function (response) {
-                site.distribution = getDistributionId(site.nonStandardDistributionName);
-            })
-            .always(function () {
-                infowindow.setContent(contentInfowindow(site));
-            })
 }
 
 function manageOtherDistribution(element){
@@ -56,32 +41,31 @@ function manageOtherDistribution(element){
         $('#nonStandardDistributionNameContainer').slideDown(constants.SLIDE_TIME_IN_MILLIS):
         $('#nonStandardDistributionNameContainer').slideUp(constants.SLIDE_TIME_IN_MILLIS);
         $('#nonStandardDistributionName').removeAttr('value');
-};
+}
 
 function createOptionsForDistributionSelectBox(siteDistributionId, attributes) {
-    var selectionForOther = '';
+    var html = new Option(" -- Select Distribution --", null, true, true).getHtml();
 
-    var html = "<option selected disabled> -- Select Distribution -- </option>";
-
+    var isOtherSelected = false;
     getCachedDistributions().forEach(function (distribution){
         if(distribution.is_standard ){
-            var selected = siteDistributionId == distribution.id ? "selected" : "";
-            html += "<option " + selected + " value =" + distribution.id + ">" + distribution.name + "</option>";
+            var isSelected = siteDistributionId == distribution.id;
+            html += new Option(distribution.name, distribution.id, isSelected).getHtml();
         }
 
-        if(!siteDistributionId && attributes.name != ""){
-            selectionForOther = "selected";
-            attributes.containerClass = "";
+        if(!siteDistributionId && attributes.name != constants.EMPTY_STRING){
+            isOtherSelected = true;
+            attributes.containerClass = constants.EMPTY_STRING;
         }
 
         if(!distribution.is_standard && distribution.id == siteDistributionId){
-            selectionForOther = "selected";
+            isOtherSelected = true;
             attributes.name = distribution.name;
-            attributes.containerClass = "";
+            attributes.containerClass = constants.EMPTY_STRING;
         }
     });
 
-    html += "<option value='"+constants.OTHER.value+"' "+ selectionForOther + ">"+constants.OTHER.displayName+"</option>";
+    html+= new Option(constants.OTHER.displayName, constants.OTHER.value, isOtherSelected).getHtml();
 
     return html;
 }
@@ -97,7 +81,7 @@ function createDistributionSelectBox(siteDistributionId, nonStandardDistribution
 
     var nonStandardDistribution ={
         containerClass : "soft-hidden",
-        name : nonStandardDistributionName || ""
+        name : nonStandardDistributionName || constants.EMPTY_STRING
     };
 
     var html = "<div class='form-group'>";

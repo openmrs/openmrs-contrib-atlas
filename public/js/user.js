@@ -286,7 +286,13 @@ function saveMarker(e) {
           $("#editSite").attr("hidden", false);
 
           if (site.distribution == null && site.nonStandardDistributionName != null) {
-              getDistributionsAndUpdateInfoWindow(site, sites[id].infowindow);
+            fetchDistributions()
+                .done(function () {
+                  site.distribution = getDistribution(site.nonStandardDistributionName).id;
+                })
+                .always(function () {
+                  sites[id].infowindow.setContent(contentInfowindow(site));
+                });
           }
 
         repaintMarkers();
@@ -324,7 +330,7 @@ var html = "<div class='site-bubble'>";
   html += "</div>";
 
   if(site.distribution){
-    html += getDistributionInfo(site.distribution);
+    html += createHtmlForDistributionInfo(site.distribution);
   }
 
   if (site.notes)

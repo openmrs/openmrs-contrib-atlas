@@ -204,17 +204,13 @@ function initialize() {
         map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(alert);
     }
 
-    getDistributionsAndMarkers();
-}
-
-function getDistributionsAndMarkers(){
-    makeAJAXCallForDistributions()
+    fetchDistributions()
         .always(function(){
-            getMarkerSites();
+            fetchMarkerSites();
         });
 }
 
-function getMarkerSites() {
+function fetchMarkerSites() {
     $.ajax({url: "/markerSites"})
         .always(function (data, textStatus) {
             if (textStatus != "success") {
