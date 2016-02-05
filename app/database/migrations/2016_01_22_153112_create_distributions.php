@@ -15,6 +15,8 @@ class CreateDistributions extends Migration {
 		Schema::create('distributions', function($table){
 			$table->increments('id');
 			$table->string('name', 50);
+			$table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP'));
+			$table->timestamp('updated_at')->default(DB::raw('CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP'));
 			$table->boolean('is_standard')->default(false);
 		});
 
@@ -24,7 +26,7 @@ class CreateDistributions extends Migration {
 		});
 
 		Schema::table('archive', function($table){
-			$table->string('distribution')->nullable()->default(null);
+			$table->string('distribution_name')->nullable()->default(null);
 		});
 	}
 
@@ -42,7 +44,7 @@ class CreateDistributions extends Migration {
 		}
 		if(Schema::hasTable('archive') && Schema::hasColumn('archive','distribution')){
 			Schema::table('archive', function($table){
-				$table->dropColumn('distribution');
+				$table->dropColumn('distribution_name');
 			});
 		}
 
