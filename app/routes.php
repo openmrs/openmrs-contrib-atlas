@@ -40,7 +40,7 @@ Route::post('ping.php/atlas', array(
 
 Route::delete('ping.php/atlas', array(
 	'before' => 'validateAtlasDelete',
-	'uses' => 'MarkerSiteController@pingAtlasDelete'));
+	'uses' => 'MarkerSiteController@delete'));
 
 Route::post('ping.php', array(
 	'before' => 'validateJson',

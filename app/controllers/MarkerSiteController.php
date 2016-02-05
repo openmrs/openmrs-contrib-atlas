@@ -54,7 +54,7 @@ class MarkerSiteController extends BaseController
         return 'SUCCES';
     }
 
-    public function pingAtlasDelete(){
+    public function delete(){
         $markerSite = MarkerSite::findOrFail(Input::get('id'));
         $this->auditService->auditDeletedSite($markerSite);
         $this->markerSiteService->deleteSite($markerSite);
