@@ -40,7 +40,8 @@ class MarkerSiteService
         $existingSite->update($markerSite->toArray());
         Log::debug("Updated " . $markerSite->id . " from " . $_SERVER['REMOTE_ADDR']);
 
-        if($existingDistribution && !$existingDistribution->is_standard){
+        //Remove NonStandard Distribution as no marker site would be refering it
+        if($existingDistribution && $existingDistribution->isNonStandard()){
             Distribution::destroy($existingDistribution->id);
         }
 

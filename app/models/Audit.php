@@ -2,6 +2,8 @@
 
 class Audit extends Eloquent
 {
+    //TODO: The table name is archive because of legacy reasons. Its playing role of capturing audit log.
+    //TODO:To refactor, 'archive' needs to be changed at every place where it has been referenced.
     protected $table = 'archive';
     protected $fillable = array('site_uuid',
                                 'id',
