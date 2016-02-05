@@ -1,3 +1,23 @@
+var constants = {
+
+    OTHER :{
+        displayName : 'Other',
+        value : 'other'
+    },
+    SLIDE_TIME_IN_MILLIS : 50,
+    ATTR_FOR_SELECTED : 'selected',
+    EMPTY_STRING : ""
+};
+
+var URI = {
+    distributions : "distributions"
+};
+
+var errorMessages ={
+    failMessage : "Error fetching distribution list"
+};
+
+
 var getCachedDistributions = null;
 
 function fetchDistributions(){
@@ -12,7 +32,7 @@ function fetchDistributions(){
             })();
         })
         .fail(function (jqXHR) {
-            bootbox.alert(errorMEssages.failMessage + jqXHR.statusText);
+            bootbox.alert(errorMessages.failMessage + jqXHR.statusText);
         })
 }
 
