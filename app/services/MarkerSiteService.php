@@ -12,6 +12,7 @@ class MarkerSiteService
 
         if($nonStandardDistributionName){
             $markerSite->distribution = Distribution::create(["name" => $nonStandardDistributionName])->id ;
+            Log::info("created new distribution ".$nonStandardDistributionName);
         }
 
         return $markerSite->id ?

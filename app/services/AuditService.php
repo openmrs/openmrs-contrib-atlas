@@ -28,6 +28,7 @@ class AuditService
     }
 
     private function audit($markerSite, $action){
+        Log::info("Auditing " . $markerSite->id. "for ". $action);
         $data = $this->getAuditData($markerSite);
         $data["action"] = $action;
         Audit::create($data);
