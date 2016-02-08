@@ -15,7 +15,7 @@ function initLegendChoice() {
     $("#marker-groups").mouseleave(function () {
         $("#legendChoice").css("display", "none");
     });
-    $("#legend-type, #legend-version, #group-checkbox").click(function () {
+    $("#legend-type, #legend-version, #legend-distribution, #group-checkbox").click(function () {
         var clicked = $(this).attr("id");
         clickLegend(clicked);
     });
@@ -59,6 +59,9 @@ function clickLegend(id) {
             break;
         case "legend-type":
             legendGroups = 0;
+            break;
+        case "legend-distribution":
+            legendGroups = 3;
             break;
     }
     $("#legendChoice").css("display", "none");
@@ -249,6 +252,16 @@ function clearLegend() {
 }
 function Icons() {
     var icons;
+    var iconsUri = [
+        "https://maps.google.com/intl/en_us/mapfiles/ms/micons/green-dot.png",
+        "https://maps.google.com/intl/en_us/mapfiles/ms/micons/purple-dot.png",
+        "https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png",
+        "https://maps.google.com/intl/en_us/mapfiles/ms/micons/ltblue-dot.png",
+        "https://maps.google.com/intl/en_us/mapfiles/ms/micons/yellow-dot.png",
+        "https://maps.google.com/intl/en_us/mapfiles/ms/micons/orange-dot.png",
+        "https://maps.google.com/intl/en_us/mapfiles/ms/micons/pink-dot.png",
+        "https://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png"
+    ];
     if (clustersEnabled) {
         icons = {
             Other: {
@@ -301,6 +314,23 @@ function Icons() {
                 icon: "https://maps.google.com/intl/en_us/mapfiles/ms/micons/purple.png",
                 label: "Unknown"
             }
+        };
+    } else if (legendGroups === 3){
+        icons = {};
+        var iconsUriIndex = 0;
+        getCachedDistributions().forEach(function(distribution){
+            if(distribution.is_standard){
+                icons[distribution.id] = {
+                    icon : iconsUri[iconsUriIndex++],
+                    label : distribution.name
+                }
+            }
+
+        });
+
+        icons.Other = {
+            icon : "https://maps.google.com/intl/en_us/mapfiles/ms/micons/purple.png",
+            label : "Other"
         };
     } else {
         icons = {
@@ -357,6 +387,9 @@ function colorForSite(site) {
                 image.url = icons.Other.icon;
                 break;
         }
+    } else if (legendGroups === 3){
+        var key = icons.hasOwnProperty(site.distribution) ? site.distribution : "Other";
+        image.url = icons[key].icon;
     }
     if ((site.uid === currentUser || auth_site.indexOf(site.uuid) !== -1) && legendGroups === 2
         && moduleHasSite !== 1 && !clustersEnabled)
@@ -428,27 +461,29 @@ function repaintMarkers() {
             site.marker.setVisible(false);
         }
     }
+    $("#group-checkbox").prop('checked', false);
+    $("#legend-type").removeClass("enabled");
+    $("#legend-version").removeClass("enabled");
+    $("#legend-distribution").removeClass("enabled");
+    $("#legendChoice").css("display", "none");
     switch (legendGroups) {
         case 1:
             $("#legend-version").addClass("enabled");
-            $("#legend-type").removeClass("enabled");
             $("#group-checkbox").prop('checked', true);
-            $("#legendChoice").css("display", "none");
             clusters.setMap(null);
             break;
         case 2:
-            $("#group-checkbox").prop('checked', false);
-            $("#legend-type").removeClass("enabled");
-            $("#legend-version").removeClass("enabled");
             if (clustersEnabled === 1) clusters.setMap(map);
             break;
         case 0:
             $("#legend-type").addClass('enabled');
-            $("#legend-version").removeClass('enabled');
             $("#group-checkbox").prop('checked', true);
-            $("#legendChoice").css("display", "none");
             clusters.setMap(null);
             break;
+        case 3:
+            $("#legend-distribution").addClass('enabled');
+            $("#group-checkbox").prop('checked', true);
+            clusters.setMap(null);
     }
 }
 

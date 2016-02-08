@@ -186,8 +186,9 @@ ga('send', 'pageview');
       <div class="dropDownControl enabled" id="groups" title="Click to switch legend"><img src="images/group-dot.png"><b> View</b></div>
       <div class = "dropDownOptionsDiv" id="legendChoice">
           <div class = "dropDownItemDiv" id="legend-group"> <label><input type="checkbox" id="group-checkbox"><b>Group</b></label></div>
-          <div class = "dropDownItemDiv enabled" id="legend-type"><img src="images/group-dot.png"><b>Types</b></div>
-          <div class = "dropDownItemDiv" id="legend-version"><img src="images/group-dot.png"><b>Versions</b></div>
+          <div class = "dropDownItemDiv enabled group-item" id="legend-type"><img src="images/group-dot.png"><b>Types</b></div>
+          <div class = "dropDownItemDiv group-item" id="legend-version"><img src="images/group-dot.png"><b>Versions</b></div>
+          <div class = "dropDownItemDiv group-item" id="legend-distribution"><img src="images/group-dot.png"><b>Distributions</b></div>
           <div class = "dropDownItemDiv" id="fade" title="Fade outdated sites over time.">
             <label><input type="checkbox" id="fadeCheckbox"><b>Fading</b></label>
           </div>

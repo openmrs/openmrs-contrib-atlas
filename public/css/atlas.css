@@ -431,7 +431,7 @@ span.site-version {
 .popover-content input[type="text"] {
 	margin-bottom:5px!important;
 }
-#legend-version, #legend-type {
+.group-item{
     margin-left : 7px;
 }
 
