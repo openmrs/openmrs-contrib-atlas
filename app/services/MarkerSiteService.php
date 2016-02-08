@@ -69,7 +69,9 @@ class MarkerSiteService
         $markerSite->delete();
         Log::info("Deleted Site");
 
-        if($distribution && !$distribution->is_standard){
+        Log::info("Distribution name=" . $distribution->name . " id=". $distribution->id. " standard=". $distribution->is_standard);
+
+        if($distribution && $distribution->isNonStandard()){
             Log::info("Deleting distribution ".$distribution->id." from ".$_SERVER['REMOTE_ADDR']);
             $distribution->delete();
             Log::info("Deleted Distribution");

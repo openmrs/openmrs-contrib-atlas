@@ -285,7 +285,7 @@ function saveMarker(e) {
         if (auth_site.length > 0)
           $("#editSite").attr("hidden", false);
 
-          if (site.distribution == null && site.nonStandardDistributionName != null) {
+          if (site.distribution == null && (site.nonStandardDistributionName != null && site.nonStandardDistributionName != "")) {
             fetchDistributions()
                 .done(function () {
                   site.distribution = getDistribution(site.nonStandardDistributionName).id;

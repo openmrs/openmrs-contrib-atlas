@@ -318,14 +318,21 @@ function Icons() {
     } else if (legendGroups === 3){
         icons = {};
         var iconsUriIndex = 0;
-        getCachedDistributions().forEach(function(distribution){
-            if(distribution.is_standard){
-                icons[distribution.id] = {
-                    icon : iconsUri[iconsUriIndex++],
-                    label : distribution.name
-                }
-            }
+        var standardDistributions = getCachedDistributions().filter(function( distribution ){
+            return distribution.is_standard;
+        });
 
+        sites.forEach(function(site){
+            var siteDistribution = standardDistributions.find(function(distribution){
+                return distribution.id == site.siteData.distribution;
+            });
+            if(siteDistribution){
+                icons[siteDistribution.id] = {
+                    icon : iconsUri[iconsUriIndex++],
+                    label : siteDistribution.name
+                };
+                iconsUriIndex = iconsUriIndex % iconsUri.length;
+            }
         });
 
         icons.Other = {
