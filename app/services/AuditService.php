@@ -10,9 +10,16 @@ class AuditService
     }
 
     public function auditSavedSite($markerSite){
-        $isSiteExisting = Audit::where('site_uuid', '=', $markerSite->id)->count() > 0;
-        $action = $isSiteExisting ? "UPDATE": "ADD";
-        $this->audit($markerSite, $action);
+        DB::beginTransaction();
+        try{
+            $isSiteExisting = Audit::where('site_uuid', '=', $markerSite->id)->count() > 0;
+            $action = $isSiteExisting ? "UPDATE": "ADD";
+            $this->audit($markerSite, $action);
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollback();
+        }
+
     }
 
     public function auditModuleSite($markerSite, $module){

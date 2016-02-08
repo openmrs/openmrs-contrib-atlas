@@ -3,21 +3,31 @@
 class MarkerSiteService
 {
     private $authService;
+
     public function __construct(AuthorizationService $authService)
     {
         $this->authService = $authService;
     }
 
-    public function save($markerSite, $nonStandardDistributionName){
+    public function save($markerSite, $nonStandardDistributionName)
+    {
+        DB::beginTransaction();
+        try {
+            if ($nonStandardDistributionName) {
+                $markerSite->distribution = Distribution::create(["name" => $nonStandardDistributionName])->id;
+                Log::info("created new distribution " . $nonStandardDistributionName);
+            }
 
-        if($nonStandardDistributionName){
-            $markerSite->distribution = Distribution::create(["name" => $nonStandardDistributionName])->id ;
-            Log::info("created new distribution ".$nonStandardDistributionName);
+            $markerSite = $markerSite->id ?
+                $this->updateSite($markerSite, $nonStandardDistributionName) :
+                $this->createNewSite($markerSite, $nonStandardDistributionName);
+            DB::commit();
+
+            return $markerSite;
+        } catch (Exception $e) {
+            DB::rollback();
         }
 
-        return $markerSite->id ?
-            $this->updateSite($markerSite, $nonStandardDistributionName):
-            $this->createNewSite($markerSite, $nonStandardDistributionName);
     }
 
     private function createNewSite($markerSite)
