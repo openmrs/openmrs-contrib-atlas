@@ -28,12 +28,18 @@ function fetchDistributions(){
         })
         .done(function (distributions) {
             getCachedDistributions = (function(){
-                return function(){ return distributions};
+                return function(){ return sortedDistributions(distributions)};
             })();
         })
         .fail(function (jqXHR) {
             bootbox.alert(errorMessages.failMessage + jqXHR.statusText);
         })
+}
+
+function sortedDistributions(distributions){
+    return distributions.sort(function(distro1, distro2){
+        return distro1.name.localeCompare(distro2.name);
+    });
 }
 
 function createHtmlForDistributionInfo(distributionId) {
@@ -47,12 +53,17 @@ function createHtmlForDistributionInfo(distributionId) {
     return html;
 }
 
-function getDistribution(distributionName) {
+function getDistributionByName(distributionName) {
     return getCachedDistributions().find(function(distribution){
         return distribution.name === distributionName
     });
 }
 
+function getDistributionById(id){
+    return getCachedDistributions().find(function(distribution){
+        return distribution.id == id;
+    });
+}
 function manageOtherDistribution(element){
     var index =  element.selectedIndex;
     var selectedText = element.options[index].text.toLowerCase();

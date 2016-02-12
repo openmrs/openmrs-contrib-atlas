@@ -288,7 +288,7 @@ function saveMarker(e) {
           if (site.distribution == null && (site.nonStandardDistributionName != null && site.nonStandardDistributionName != "")) {
             fetchDistributions()
                 .done(function () {
-                  site.distribution = getDistribution(site.nonStandardDistributionName).id;
+                  site.distribution = getDistributionByName(site.nonStandardDistributionName).id;
                 })
                 .always(function () {
                   sites[id].infowindow.setContent(contentInfowindow(site));

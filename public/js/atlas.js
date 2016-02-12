@@ -317,6 +317,7 @@ function Icons() {
         };
     } else if (legendGroups === 3){
         icons = {};
+        var legendMarkers = [];
         var iconsUriIndex = 0;
         var standardDistributions = getCachedDistributions().filter(function( distribution ){
             return distribution.is_standard;
@@ -327,13 +328,25 @@ function Icons() {
                 return distribution.id == site.siteData.distribution;
             });
             if(siteDistribution){
-                icons[siteDistribution.id] = {
+                legendMarkers.push({
                     icon : iconsUri[iconsUriIndex++],
                     label : siteDistribution.name
-                };
+                });
                 iconsUriIndex = iconsUriIndex % iconsUri.length;
             }
         });
+
+        legendMarkers = legendMarkers.sort(function(marker1, marker2){
+            return marker1.label.localeCompare(marker2.label);
+        });
+
+        for(var index = 0; index < legendMarkers.length; index++){
+            var marker = legendMarkers[index];
+            icons[marker.label] = {
+                icon: marker.icon,
+                label: marker.label
+            };
+        }
 
         icons.Other = {
             icon : "https://maps.google.com/intl/en_us/mapfiles/ms/micons/purple.png",
@@ -395,7 +408,8 @@ function colorForSite(site) {
                 break;
         }
     } else if (legendGroups === 3){
-        var key = icons.hasOwnProperty(site.distribution) ? site.distribution : "Other";
+        var distribution = getDistributionById(site.distribution);
+        var key = distribution && icons.hasOwnProperty(distribution.name) ? distribution.name : "Other";
         image.url = icons[key].icon;
     }
     if ((site.uid === currentUser || auth_site.indexOf(site.uuid) !== -1) && legendGroups === 2
@@ -409,6 +423,8 @@ function colorForSite(site) {
     }
     return image;
 }
+
+
 
 function loadVersion(json) {
     for (i = 0; i < json.length; i++) {
