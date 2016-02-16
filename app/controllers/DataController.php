@@ -7,20 +7,25 @@
  */
 class DataController extends BaseController {
 
+	public function getDistributions(){
+		$distributions = DB::table('distributions')->get();
+		$contents = json_encode($distributions);
+		$response = Response::make($contents, 200);
+		$response->header('Content-Type', 'application/json');
+		return $response;
+	}
+
 	/**
 	 * GET all markers as a JSON Object
 	 *
 	 */
 	public function getData()
 	{
-		$db_dsn = getenv('DB_DNS');
-		$db_username = getenv('DB_USERNAME');
-		$db_password = getenv('DB_PASSWORD');
-		$callback = Input::get('callback');
+
 		$sites = DB::table('atlas')
                      ->select(DB::raw('id as uuid, id as site_id,  latitude,
                      	longitude, name, url, type, image, patients, encounters, observations,
-                     	contact,email,notes,data,atlas_version, show_counts, openmrs_version, 
+                     	contact,email,notes,data,atlas_version, show_counts, openmrs_version, distribution,
                      	CASE WHEN date_changed IS NULL THEN "" ELSE date_changed END as date_changed,
                      	date_created'))->get();
 
@@ -75,8 +80,6 @@ class DataController extends BaseController {
 		}
 
 		$contents = json_encode($newResult);
-		if ($callback)
-			$contents = $callback . "(" . $contents ." );";
 		$response = Response::make($contents, 200);
 		$response->header('Content-Type', 'application/json');
 		return $response;

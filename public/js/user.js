@@ -23,7 +23,9 @@ function initLoginButton() {
   });
 }
 $(function () {
-  eventSaveMarker();
+  $("#map_canvas").on("submit", "form", (function(e) {
+        saveMarker(e);
+    }));
   $("#map_canvas").on("click", "#delete", function(e){
     e.preventDefault();
     var id = $(this).attr("value");
@@ -193,7 +195,7 @@ function createEditInfoWindow(site, marker) {
   var html = contentEditwindow(site);
   var infowindow = new google.maps.InfoWindow({
     content: html,
-    maxWidth: 200
+    maxWidth: 300
   });
   google.maps.event.addListener(infowindow, "closeclick", function() {
     sites[site.id].editBubbleOpen = false;
@@ -210,10 +212,9 @@ function createEditInfoWindow(site, marker) {
     });
   }
   return infowindow;
-} 
+}
 
-function eventSaveMarker() {
-   $("#map_canvas").on("submit", "form", (function(e) {
+function saveMarker(e) {
     e.preventDefault();
     var id = $("#site").val();
     var site = sites[id].siteData;
@@ -222,6 +223,8 @@ function eventSaveMarker() {
       var encounters = $("#encounters").val().trim();
       var obs = $("#observations").val().trim();
       var version = $("select#version").val().trim();
+      site.distribution = getSelectedDistributionValue();
+      site.nonStandardDistributionName = $("#nonStandardDistributionName").val().trim();
       site.observations = obs;
       site.patients = patients;
       site.encounters = encounters;
@@ -281,6 +284,17 @@ function eventSaveMarker() {
           auth_site.push(response);
         if (auth_site.length > 0)
           $("#editSite").attr("hidden", false);
+
+          if (site.distribution == null && (site.nonStandardDistributionName != null && site.nonStandardDistributionName != "")) {
+            fetchDistributions()
+                .done(function () {
+                  site.distribution = getDistributionByName(site.nonStandardDistributionName).id;
+                })
+                .always(function () {
+                  sites[id].infowindow.setContent(contentInfowindow(site));
+                });
+          }
+
         repaintMarkers();
         //bootbox.alert("Marker saved");
       })
@@ -289,7 +303,6 @@ function eventSaveMarker() {
       });
     }
     return false;
-  }));
 }
 
 function contentInfowindow(site) {
@@ -311,9 +324,15 @@ var html = "<div class='site-bubble'>";
   }
   if (site.contact)
     html += "<div class='site-contact'><span class='site-label'>Contact:</span> " + site.contact + "</div>";
+
   if (site.email)
     html += "<a href='mailto:"+ site.email + "' class='site-email'><img src='images/mail.png' width='15px' height='15px'/></a>";
   html += "</div>";
+
+  if(site.distribution){
+    html += createHtmlForDistributionInfo(site.distribution);
+  }
+
   if (site.notes)
     html += "<fieldset class='site-notes'>" + site.notes + "</fieldset>";
   if (site.type)
@@ -332,7 +351,7 @@ function contentEditwindow(site) {
   var patients = ('patients' in counts) ? counts.patients : ('patients' in site) ? site.patients : "?";
   var encounters = ('encounters' in counts) ? counts.encounters : ('encounters' in site) ? site.encounters : "?";
   var observations = ('observations' in counts) ? counts.observations : ('observations' in site) ? site.observations : "?";
-  var html = "<div class='site-bubble bubble-form' style='width:200px; margin-bottom:0px;'>";
+  var html = "<div class='site-bubble bubble-form'>";
   html += "<form method='post' id='"+ site.id +"'>";
   html += "<div class='form-group'><input type='text' required='true' placeholder='Site Name' title='Site Name' class='form-control input-sm' value='"+ site.name + "' id='name' name='name'></div>";
   html += "<div class='form-group'><input type='url' class='form-control input-sm' placeholder='Site URL' title='Site URL' value='"+ site.url + "' name='url' id='url'></div>";
@@ -340,6 +359,9 @@ function contentEditwindow(site) {
   html += "<div class='form-group'><input type='text' class='form-control input-sm'  placeholder='Contact' title='Contact' value='"+ site.contact + "' name='contact' id ='contact'></div>";
   html += "<div class='form-group'><input type='email' class='form-control input-sm' placeholder='Email' title='Email' value='"+ site.email + "' name='email' id='email'></div>";
   html += "<div class='form-group'><textarea class='form-control' value='' name='notes' rows='2' id='notes' placeholder='Notes'>"+ site.notes + "</textarea></div>";
+
+  html += createDistributionSelectBox(site.distribution, site.nonStandardDistributionName);
+
   if (site.module !== 1) {
     html += "<div class='site-stat'>";
     html += "<div class='form-inline'>Patients <input type='number' pattern='[0-9]' class='form-control input-sm' title='Number of patients' value='"+ site.patients + "' name='patients' id ='patients'></div>";
@@ -356,10 +378,11 @@ function contentEditwindow(site) {
   }
   if (site.module !== 1) {
     html += "<div class='form-inline'> OpenMRS Version ";
-    html += "<select title='OpenMRS Version' id='version' class='form-control input-sm'></div>"
+    html += "<select title='OpenMRS Version' id='version' class='form-control input-sm'>";
     html += "<option selected>" + site.version + "</option>"; 
     html += "</select></div>";
   }
+
   html += "<div class='row' style='margin-top:10px;'><div class='col-xs-8'>";
   html += "<select title='Site type' id='type' class='form-control input-sm'>"
   html += (site.type == "Clinical") ? "<option selected>" : "<option>"; 

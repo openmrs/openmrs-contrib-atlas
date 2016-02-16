@@ -33,21 +33,24 @@ Route::delete('ping.php', array(
 	'before' => 'secret',
 	'uses' => 'PingController@pingDelete'));
 
+//This handles create and update of marker site. Could not separate create and update for backward compatibility (especially with Atlas Module)
 Route::post('ping.php/atlas', array(
 	'before' => 'validateAtlasJson',
-	'uses' => 'PingController@pingAtlas'));
+	'uses' => 'MarkerSiteController@save'));
 
 Route::delete('ping.php/atlas', array(
 	'before' => 'validateAtlasDelete',
-	'uses' => 'PingController@pingAtlasDelete'));
+	'uses' => 'MarkerSiteController@delete'));
 
 Route::post('ping.php', array(
 	'before' => 'validateJson',
 	'uses' => 'PingController@pingPost'));
 
-Route::get('data.php', array(
-	'before' => 'validateCallback',
+Route::get('markerSites', array(
 	'uses' => 'DataController@getData'));
+
+Route::get('distributions', array(
+	'uses' => 'DataController@getDistributions'));
 
 Route::get('auth/multipass/callback', array(
 	'before' => 'multipass',
@@ -119,7 +122,7 @@ Route::delete('module/auth', array(
 	'uses' => 'AuthController@deauthModule'));
 
 Route::post('module/ping.php', array(
-	'uses' => 'PingController@autoPostModule'));
+	'uses' => 'MarkerSiteController@autoPostModule'));
 
 Route::get('module', array('as' => 'module', 'before' => 'module', function() 
 {

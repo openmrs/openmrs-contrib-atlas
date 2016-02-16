@@ -14,6 +14,8 @@
 <script type="text/javascript" src="lib/js/bootstrap.min.js"></script>
 <script type="text/javascript" src="lib/js/gmap3.min.js"></script>
 <script type="text/javascript" src="lib/js/bootbox.min.js"></script>
+<script type="text/javascript" src="js/htmlObjects/select.js"></script>
+<script type="text/javascript" src="js/distribution.js"></script>
 <script type="text/javascript" src="js/user.js"></script>
 <script type="text/javascript" src="js/atlas.js"></script>
 <script type="text/javascript" src="js/tools.js"></script>
@@ -78,8 +80,7 @@ var viewParam = {
 @if (Input::has('zoom') && is_numeric(Input::get('zoom')))
   viewParam.zoom = {{ Input::get('zoom') }};
 @endif
-@if (Input::has('position') && preg_match('/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),
-*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/', Input::get('position')))
+@if (Input::has('position') && preg_match('/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?),*[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/', Input::get('position')))
   viewParam.position = new google.maps.LatLng({{ Input::get('position') }});
 @endif
 @if (Input::has('legend'))
@@ -164,7 +165,6 @@ ga('send', 'pageview');
         @endif
         </div>
         <div class="separatorDiv"></div>        
-      </div>          
   </div>
   @else
     <div class="atlas-container loginControl dropDownControl control" title="Click to sign in with your OpenMRS ID" id ="login">
@@ -186,8 +186,9 @@ ga('send', 'pageview');
       <div class="dropDownControl enabled" id="groups" title="Click to switch legend"><img src="images/group-dot.png"><b> View</b></div>
       <div class = "dropDownOptionsDiv" id="legendChoice">
           <div class = "dropDownItemDiv" id="legend-group"> <label><input type="checkbox" id="group-checkbox"><b>Group</b></label></div>
-          <div class = "dropDownItemDiv enabled" id="legend-type"><img src="images/group-dot.png"><b>Types</b></div>
-          <div class = "dropDownItemDiv" id="legend-version"><img src="images/group-dot.png"><b>Versions</b></div>
+          <div class = "dropDownItemDiv enabled group-item" id="legend-type"><img src="images/group-dot.png"><b>Types</b></div>
+          <div class = "dropDownItemDiv group-item" id="legend-version"><img src="images/group-dot.png"><b>Versions</b></div>
+          <div class = "dropDownItemDiv group-item" id="legend-distribution"><img src="images/group-dot.png"><b>Distributions</b></div>
           <div class = "dropDownItemDiv" id="fade" title="Fade outdated sites over time.">
             <label><input type="checkbox" id="fadeCheckbox"><b>Fading</b></label>
           </div>
@@ -201,4 +202,5 @@ ga('send', 'pageview');
   <input type="hidden" id="user-id" value="{{ $user->uid }} " />
   <input type="hidden" id="user-name" value="{{ $user->name }} " />
   <input type="hidden" id="user-email" value="{{ $user->email }} " />
+</body>
 </html>

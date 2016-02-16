@@ -17,6 +17,9 @@ ClassLoader::addDirectories(array(
 	app_path().'/controllers',
 	app_path().'/models',
 	app_path().'/database/seeds',
+	app_path().'/util',
+	app_path().'/services',
+	app_path().'/builders',
 
 ));
 
@@ -32,7 +35,7 @@ ClassLoader::addDirectories(array(
 */
 
 $logFile = 'atlas.log';
-Log::useDailyFiles(storage_path().'/logs/'.$logFile, 7, 'warning');
+Log::useDailyFiles(storage_path() . '/logs/' . $logFile, 7, Config::get('app.log-level'));
 
 if (App::environment() == 'local') {
 	$monolog = Log::getMonolog();
@@ -56,7 +59,6 @@ App::error(function(Exception $exception, $code)
 {
 	Log::error($exception);
 });
-
 
 /*
 |--------------------------------------------------------------------------

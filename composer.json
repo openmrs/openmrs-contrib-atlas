@@ -6,7 +6,8 @@
 	"require": {
 		"laravel/framework": "4.1.*",
 		"rhumsaa/uuid": "~2.7",
-		"doctrine/dbal": "2.4.*"
+		"doctrine/dbal": "2.4.*",
+		"phpunit/phpunit": "4.0.*"
 	},
 	"autoload": {
 		"classmap": [

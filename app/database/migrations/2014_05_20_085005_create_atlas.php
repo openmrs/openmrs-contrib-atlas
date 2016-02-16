@@ -28,7 +28,7 @@ class CreateAtlas extends Migration {
 	        $table->text('notes')->nullable();
 	        $table->text('data')->nullable();
 	        $table->string('atlas_version', 50)->nullable();
-	        $table->timestamp('date_created');
+	        $table->timestamp('date_created')->default(DB::raw('CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP'));
 	        $table->timestamp('date_changed')->default(DB::raw('CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP'));
     	});
 
@@ -48,8 +48,8 @@ class CreateAtlas extends Migration {
 	        $table->text('notes')->nullable();
 	        $table->text('data')->nullable();
 	        $table->string('atlas_version', 50)->nullable();
-	        $table->timestamp('date_created');
-	        $table->timestamp('date_changed');
+	        $table->timestamp('date_created')->default(DB::raw('CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP'));
+	        $table->timestamp('date_changed')->default(DB::raw('CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP'));
 	        $table->timestamp('archive_date')->default(DB::raw('CURRENT_TIMESTAMP'));
     	});
 	}
