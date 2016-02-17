@@ -320,7 +320,7 @@ function Icons() {
         var legendMarkers = [];
         var iconsUriIndex = 0;
         var standardDistributions = getCachedDistributions().filter(function( distribution ){
-            return distribution.is_standard;
+            return distribution.is_standard == true;
         });
 
         sites.forEach(function(site){
@@ -347,6 +347,7 @@ function Icons() {
                 label: marker.label
             };
         }
+
 
         icons.Other = {
             icon : "https://maps.google.com/intl/en_us/mapfiles/ms/micons/purple.png",

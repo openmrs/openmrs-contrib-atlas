@@ -15,7 +15,7 @@ return array(
 
 	'debug' => true,
 	'log' => 'daily',
-	'log-level' => 'debug',
+	'log-level' => 'warning',
 
 
 	/*
