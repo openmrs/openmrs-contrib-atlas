@@ -79,7 +79,8 @@ function createOptionsForDistributionSelectBox(siteDistributionId, attributes) {
 
     var isOtherSelected = false;
     getCachedDistributions().forEach(function (distribution){
-        if(distribution.is_standard ){
+        //is_standard value is returned as "0" or 0 based on MySql version so it is equated to true to make it compatible with all versions
+        if(distribution.is_standard == true){
             var isSelected = siteDistributionId == distribution.id;
             html += new Option(distribution.name, distribution.id, isSelected).getHtml();
         }
@@ -89,7 +90,7 @@ function createOptionsForDistributionSelectBox(siteDistributionId, attributes) {
             attributes.containerClass = constants.EMPTY_STRING;
         }
 
-        if(!distribution.is_standard && distribution.id == siteDistributionId){
+        if(distribution.is_standard != true && distribution.id == siteDistributionId){
             isOtherSelected = true;
             attributes.name = distribution.name;
             attributes.containerClass = constants.EMPTY_STRING;
