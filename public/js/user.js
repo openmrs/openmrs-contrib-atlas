@@ -146,8 +146,8 @@ function newSite(myPosition) {
     latitude: myPosition.lat(),
     longitude: myPosition.lng(),
     type:  "TBD",
-    date_changed: new Date().toString(),
-    date_created: new Date().toString()
+    date_changed: new Date().toDateString(),
+    date_created: new Date().toDateString()
   };
   if (moduleHasSite !== 1 && moduleUUID !== null)
     site.module = 1;
@@ -249,7 +249,7 @@ function saveMarker(e) {
       site.name = name;
       site.email =  mail;
       site.url = url;
-      site.date_changed = new Date().toString();
+      site.date_changed = new Date().toDateString();
       site.contact = contact;
       site.notes = notes;
       site.image = image;
