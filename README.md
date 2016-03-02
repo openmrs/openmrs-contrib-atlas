@@ -1,5 +1,5 @@
-OpenMRS Atlas Server 2.0
-=====================
+OpenMRS Atlas Server 2.2
+========================
 
 OpenMRS Atlas Module lets implementations create and manage their bubble on the OpenMRS Atlas
 For instructions on how to use the module, see the Atlas Module wiki page.
