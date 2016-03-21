@@ -124,6 +124,12 @@ php artisan migrate
 ### Create first screen captures
 `php artisan screen-capture --force`
 
+# To add a new distribution option to distribution dropdown list
+1. create a new migration using "migrate:make" command.
+2. Add the name of new distribution and set is_standard to true.
+    for reference see this file "app/database/migrations/2016_02_17_170405_insert_distributions.php"
+
+
 Let's started ! 
 
 ## Directory Description
