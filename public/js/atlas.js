@@ -128,7 +128,7 @@ function initialize() {
     });
     map = $("#map_canvas").gmap3('get');
     var markerClustererOptions = {
-        imagePath: "https://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerclusterer/images/m",
+        imagePath: "https://googlemaps.github.io/js-marker-clusterer/images/m1.png",
         minimumClusterSize: 3,
         gridSize: 30
     };
