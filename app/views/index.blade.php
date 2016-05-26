@@ -21,7 +21,7 @@
 <script type="text/javascript" src="js/tools.js"></script>
 <script type="text/javascript" src="js/module.js"></script>
 <script type="text/javascript" src="lib/js/yqlgeo.js"></script>
-<script type="text/javascript" src="https://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerclustererplus/src/markerclusterer_packed.js"></script>
+<script type="text/javascript" src="https://googlemaps.github.io/js-marker-clusterer/src/markerclusterer.js"></script>
 <script type="text/javascript">
 var auth = null;
 var moduleUUID = null;
