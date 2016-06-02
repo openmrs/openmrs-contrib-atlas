@@ -5,9 +5,9 @@
 	"license": "MIT",
 	"require": {
 		"laravel/framework": "4.1.*",
-		"rhumsaa/uuid": "~2.7",
 		"doctrine/dbal": "2.4.*",
-		"phpunit/phpunit": "4.0.*"
+		"phpunit/phpunit": "4.0.*",
+		"ramsey/uuid": "^2.9"
 	},
 	"autoload": {
 		"classmap": [
