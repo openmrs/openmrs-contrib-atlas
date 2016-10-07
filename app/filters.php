@@ -157,7 +157,7 @@ Route::filter('validateAtlasDelete', function()
 	$privileges = DB::table('auth')->where('token','=', $token)->where('atlas_id','=',$id)
 	->where('privileges', '=', 'ALL')->first();
 	if ($privileges == NULL && $user->role !== 'ADMIN')
-		App::abort(403, 'Unauthorized Action - Priveleges missing');
+		App::abort(403, 'Unauthorized Action - Privileges missing');
 });
 
 Route::filter('isAdmin', function()
