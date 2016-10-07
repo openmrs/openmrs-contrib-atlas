@@ -111,8 +111,8 @@ class CaptureCommand extends Command {
 					$this->info('Image created: ' . $filename);
 				}
 			}
-			Log::debug('Screeshot creation succesfull');
-			$this->info('Screeshot creation succesfull');
+			Log::debug('Screenshot creation succesfull');
+			$this->info('Screenshot creation succesfull');
 		} else {
 			Log::debug('Screenshot are up to date');
 			$this->info('Screenshot are up to date');
@@ -139,7 +139,7 @@ class CaptureCommand extends Command {
 	protected function getOptions()
 	{
 		return array(
-			array('force', null, InputOption::VALUE_NONE, 'Force screnshot update', null)
+			array('force', null, InputOption::VALUE_NONE, 'Force screenshot update', null)
 		);
 	}
 
