@@ -128,7 +128,7 @@ class PingController extends BaseController {
 			
 			Log::debug("Created ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
 		}
-		return 'SUCCES';
+		return 'SUCCESS';
 	}
 
 	/**
@@ -187,7 +187,7 @@ class PingController extends BaseController {
 		} else {
 			Log::debug("Site not found: ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
 		}
-		return 'SUCCES';
+		return 'SUCCESS';
 	}
 
 	public function createTableIfNotPresent()
