@@ -54,7 +54,7 @@ class AuthController extends BaseController {
 	  			$user->role = 'ADMIN';
 
 			Log::info('User stored in session: ' . $user->uid);
-			Log::info('User Rolen: ' . $user->role);
+			Log::info('User Role: ' . $user->role);
 	  		// Log User
 			Auth::login($user);
 			Session::put('user', $user);
