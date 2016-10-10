@@ -1,7 +1,7 @@
 OpenMRS Atlas Server 2.2
 ========================
 
-OpenMRS Atlas Module lets implementations create and manage their bubble on the OpenMRS Atlas
+OpenMRS Atlas Module lets implementations create and manage their bubble on the OpenMRS Atlas. 
 For instructions on how to use the module, see the Atlas Module wiki page.
 
 Altas Server 2.0 has been refactored with Laravel PHP Framework.
@@ -11,7 +11,7 @@ Altas Server 2.0 has been refactored with Laravel PHP Framework.
 - Apache2
 - Mysql
 - PHP >= 5.4, php5-mcypt, php5-mysql
-- url rewriting and mod_rewrite enabled on apache
+- url rewriting and mod_rewrite enabled on Apache
 - PhantomJS >= 1.9.7 (require : libicu48, fontconfig, mscorefont)
 - Composer
 
@@ -41,7 +41,7 @@ DocumentRoot /opt/atlas/public
    allow from all
 </Directory>
 
-# Restart Aapche
+# Restart Apache
 sudo service apache2 restart
 ```
 ## Project configuration
@@ -59,7 +59,7 @@ composer install
 curl -sS https://getcomposer.org/installer | php
 php composer.phar install
 ```
-### Configure you envrionnement
+### Configure you environment
 
 - Add writting rights to app/storage (www-data for Apache)
 
