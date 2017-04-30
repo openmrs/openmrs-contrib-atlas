@@ -76,19 +76,10 @@ Route::get('login', array('as' => 'login', function()
     return Redirect::to($idServer.'/authenticate/atlas');
 }));
 
-Route::get('capture', array(
-	'as' => 'capture',
-	'before' => 'isAdmin',
-	'uses' => 'AtlasController@takeCapture'));
-
 Route::get('rss/{updates?}', array(
 	'as' => 'rss',
 	'uses' => 'AtlasController@rssGenerator'))
 ->where('updates', 'updates|all');
-
-Route::get('screenshot', array(
-	'as' => 'download',
-	'uses' => 'AtlasController@cronCapture'));
 
 Route::get('download', array(
 	'as' => 'cron',
