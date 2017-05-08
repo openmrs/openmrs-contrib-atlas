@@ -19,6 +19,8 @@ class CaptureCommand extends Command {
 	 * @var string
 	 */
 	protected $description = 'Generate HD screenshot.';
+	
+	const PHANTOM_TIMEOUT_SECONDS = '120'; // Safety timeout for phatomjs invocations
 
 	/**
 	 * Create a new command instance.
@@ -73,7 +75,7 @@ class CaptureCommand extends Command {
 					if (file_exists($filename))
 						unlink($filename);
 
-				 	$command = $phantomjs . ' ' . public_path() . '/js/capture-cron.js ' . $path .' '. $legend . ' '
+				 	$command = 'timeout ' .  self::PHANTOM_TIMEOUT_SECONDS . ' ' . $phantomjs . ' --ssl-protocol=any ' . public_path() . '/js/capture-cron.js ' . $path .' '. $legend . ' '
 				 	 . $width . ' ' . $height . ' ' . $siteURL . ' ' . $fade . ' > ' . storage_path(). '/phantomjs.log';
 				 	Log::debug('Comand:' . $command);
 					shell_exec($command);
@@ -88,7 +90,7 @@ class CaptureCommand extends Command {
 					if (file_exists($filename))
 						unlink($filename);
 
-				 	$command = $phantomjs . ' ' . public_path() . '/js/capture-cron.js ' . $path .' '. $legend . ' '
+				 	$command = 'timeout ' .  self::PHANTOM_TIMEOUT_SECONDS . ' ' . $phantomjs . ' --ssl-protocol=any ' . public_path() . '/js/capture-cron.js ' . $path .' '. $legend . ' '
 				 	 . $width . ' ' . $height . ' ' . $siteURL . ' ' . $fade . ' > ' . storage_path(). '/phantomjs.log';
 				 	Log::debug('Comand:' . $command);
 					shell_exec($command);
@@ -103,7 +105,7 @@ class CaptureCommand extends Command {
 					if (file_exists($filename))
 						unlink($filename);
 
-				 	$command = $phantomjs . ' ' . public_path() . '/js/capture-cron.js ' . $path .' '. $legend . ' '
+				 	$command = 'timeout ' .  self::PHANTOM_TIMEOUT_SECONDS . ' ' . $phantomjs . ' --ssl-protocol=any ' . public_path() . '/js/capture-cron.js ' . $path .' '. $legend . ' '
 				 	 . $width . ' ' . $height . ' ' . $siteURL . ' ' . $fade . ' > ' . storage_path(). '/phantomjs.log';
 				 	Log::debug('Comand:' . $command);
 					shell_exec($command);

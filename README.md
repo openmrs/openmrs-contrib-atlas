@@ -110,7 +110,7 @@ sudo apt-get install ttf-mscorefonts-installer
 crontab -u www-data -e
 
 #And add this line to end of file:
-*/8 * * * * /usr/bin/php /var/www/openmrs-contrib-atlas/artisan screen-capture
+0 * * * * /usr/bin/php /var/www/openmrs-contrib-atlas/artisan screen-capture
 ```
 ### Init Database
 - Seed atlas database with sql dump
