@@ -14,7 +14,7 @@ return array(
 	*/
 
 	'debug' => true,
-    
+
     /*
 	|--------------------------------------------------------------------------
 	| Application URL
@@ -40,5 +40,5 @@ return array(
 	*/
 
 	'timezone' => getenv('TIMEZONE'),
-	
+
 );

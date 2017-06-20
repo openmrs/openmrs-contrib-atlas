@@ -12,7 +12,7 @@ class PingController extends BaseController {
 	 * Deprecated - Maintain compatibility with Atlas Module 1.x
 	 */
 	public function pingDelete()
-	{    
+	{
 
 		$id = Input::get('id');
 		$user = Session::get(user);
@@ -21,23 +21,23 @@ class PingController extends BaseController {
 
 		if ($site != null) {
 			DB::table('archive')->insert(array(
-				'archive_date' => $date, 
-				'site_uuid' => $site->id, 
-				'id' => Uuid::uuid4()->toString(), 
+				'archive_date' => $date,
+				'site_uuid' => $site->id,
+				'id' => Uuid::uuid4()->toString(),
 				'type' => $site->type,
-				'longitude' =>  $site->longitude, 
+				'longitude' =>  $site->longitude,
 				'latitude' =>  $site->latitude,
-				'name' =>  $site->name, 
-				'url' =>  $site->url, 
-				'image' =>  $site->image, 
-				'contact' =>  $site->contact, 
-				'changed_by' =>  'module:' . $_SERVER['REMOTE_ADDR'], 
-				'patients' =>  $site->patients, 
-				'encounters' =>  $site->encounters, 
-				'observations' =>  $site->observations, 
-				'notes' =>  $site->notes, 
+				'name' =>  $site->name,
+				'url' =>  $site->url,
+				'image' =>  $site->image,
+				'contact' =>  $site->contact,
+				'changed_by' =>  'module:' . $_SERVER['REMOTE_ADDR'],
+				'patients' =>  $site->patients,
+				'encounters' =>  $site->encounters,
+				'observations' =>  $site->observations,
+				'notes' =>  $site->notes,
 				'email' => $site->email,
-				'data' =>  $site->data, 
+				'data' =>  $site->data,
 				'show_counts' => $site->show_counts,
 				'atlas_version' => $site->atlas_version,
 				'date_created' => $site->date_created,
@@ -84,30 +84,30 @@ class PingController extends BaseController {
 			'atlas_version' => $json['atlasVersion'],
 			'date_created' => $date);
 
-		
+
 
 		$site = DB::table('atlas')->where('id','=', $param['id'])->first();
 		if ($site != null) {
 			DB::table('archive')->insert(array(
-				'archive_date' => $date, 
-				'site_uuid' => $site->id, 
-				'id' => Uuid::uuid4()->toString(), 
+				'archive_date' => $date,
+				'site_uuid' => $site->id,
+				'id' => Uuid::uuid4()->toString(),
 				'type' => $site->type,
-				'longitude' =>  $site->longitude, 
+				'longitude' =>  $site->longitude,
 				'latitude' =>  $site->latitude,
-				'name' =>  $site->name, 
-				'url' =>  $site->url, 
-				'image' =>  $site->image, 
-				'contact' =>  $site->contact, 
-				'changed_by' => 'module:' . $_SERVER['REMOTE_ADDR'], 
-				'patients' =>  $site->patients, 
-				'encounters' =>  $site->encounters, 
-				'observations' =>  $site->observations, 
-				'notes' =>  $site->notes, 
+				'name' =>  $site->name,
+				'url' =>  $site->url,
+				'image' =>  $site->image,
+				'contact' =>  $site->contact,
+				'changed_by' => 'module:' . $_SERVER['REMOTE_ADDR'],
+				'patients' =>  $site->patients,
+				'encounters' =>  $site->encounters,
+				'observations' =>  $site->observations,
+				'notes' =>  $site->notes,
 				'email' => $site->email,
-				'data' =>  $site->data, 
-				'action' =>  'UPDATE', 
-				'openmrs_version' => $openmrs_version, 
+				'data' =>  $site->data,
+				'action' =>  'UPDATE',
+				'openmrs_version' => $openmrs_version,
 				'data' =>  $site->data,
 				'show_counts' => $site->show_counts,
 				'atlas_version' => $site->atlas_version,
@@ -125,7 +125,7 @@ class PingController extends BaseController {
 			$param['site_uuid'] = Uuid::uuid4()->toString();
 			$param['archive_date'] = $date;
 			DB::table('archive')->insert($param);
-			
+
 			Log::debug("Created ".$param['id']." from ".$_SERVER['REMOTE_ADDR']);
 		}
 		return 'SUCCESS';
@@ -158,26 +158,26 @@ class PingController extends BaseController {
 		$site = DB::table('atlas')->where('id','=', $param['id'])->first();
 		if ($site != null) {
 			DB::table('archive')->insert(array(
-				'archive_date' => $date, 
-				'site_uuid' => $site->id, 
-				'id' => Uuid::uuid4()->toString(), 
-				'action' =>  'UPDATE',  
+				'archive_date' => $date,
+				'site_uuid' => $site->id,
+				'id' => Uuid::uuid4()->toString(),
+				'action' =>  'UPDATE',
 				'type' => $site->type,
-				'longitude' =>  $site->longitude, 
+				'longitude' =>  $site->longitude,
 				'latitude' =>  $site->latitude,
-				'name' =>  $site->name, 
-				'url' =>  $site->url, 
-				'image' =>  $site->image, 
-				'contact' =>  $site->contact, 
-				'changed_by' => 'module:' . $_SERVER['REMOTE_ADDR'], 
-				'patients' =>  $site->patients, 
-				'encounters' =>  $site->encounters, 
-				'observations' =>  $site->observations, 
+				'name' =>  $site->name,
+				'url' =>  $site->url,
+				'image' =>  $site->image,
+				'contact' =>  $site->contact,
+				'changed_by' => 'module:' . $_SERVER['REMOTE_ADDR'],
+				'patients' =>  $site->patients,
+				'encounters' =>  $site->encounters,
+				'observations' =>  $site->observations,
 				'openmrs_version' => $openmrs_version,
-				'notes' =>  $site->notes, 
+				'notes' =>  $site->notes,
 				'email' => $site->email,
 				'data' =>  $site->data,
-				'show_counts' => $site->show_counts, 
+				'show_counts' => $site->show_counts,
 				'atlas_version' => $site->atlas_version,
 				'date_created' => $site->date_created));
 
@@ -192,9 +192,9 @@ class PingController extends BaseController {
 
 	public function createTableIfNotPresent()
 	{
-		if ( !Schema::hasTable('atlas') || !Schema::hasTable('admin') 
+		if ( !Schema::hasTable('atlas') || !Schema::hasTable('admin')
 			|| !Schema::hasTable('auth') || !Schema::hasTable('archive'))
-			
+
 			Artisan::call('migrate', ['--path'=> "app/database/migrations"]);
 			Log::info('Database Updated');
 	}

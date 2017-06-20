@@ -18,7 +18,7 @@ class AtlasController extends BaseController {
     	if ( file_exists($requestedFile)) {
     		$file = 'openmrs_atlas_' . $size . '.jpg';
     		return Response::download($requestedFile, $file);
-		} else {	
+		} else {
     		App::abort(404, 'Image not found');
 		}
 	}
@@ -101,7 +101,7 @@ class AtlasController extends BaseController {
 			$patients = preg_match("/^$|0/", $site['patients']) ? "" : "<br><b>Patients:</b> " . $site['patients'];
 			$counts = $encounters . $patients . $observations;
 			$site['version'] = ($site['version'] == "") ? "Unknown" : $site['version'];
-			
+
 			$content = '<b>OpenMRS Version :</b> ' . $site['version'] . $counts . $notes . "<br><b>Date created :</b> " . $dateCreated->format('Y-m-d H:i:s') . $url ;
 
 	        $date = new DateTime($site['archive_date']);
@@ -113,7 +113,7 @@ class AtlasController extends BaseController {
 	            ->category($site['type'])
 	            ->content()->add('html',$content)->up();
 		}
-		
+
 		$response = Response::make($feed->Rss20(), 200);
 		$response->header('Content-Type', 'application/rss+xml');
 		return $response;

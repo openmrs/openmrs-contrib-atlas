@@ -200,7 +200,7 @@ function createEditInfoWindow(site, marker) {
   google.maps.event.addListener(infowindow, "closeclick", function() {
     sites[site.id].editBubbleOpen = false;
   });
-  if ((site.uid == currentUser) || (site.uuid) !== null) { 
+  if ((site.uid == currentUser) || (site.uuid) !== null) {
     $("#map_canvas").on("click", "#undo", function(e){
       e.preventDefault();
       var id = $(this).attr("value");
@@ -231,7 +231,7 @@ function saveMarker(e) {
       site.version = version;
     }
     if (site.module == 1) {
-      var stats = $('#include-count').is(':checked') ? 1 : 0; 
+      var stats = $('#include-count').is(':checked') ? 1 : 0;
       site.show_counts = stats;
     }
 
@@ -337,7 +337,7 @@ var html = "<div class='site-bubble'>";
     html += "<fieldset class='site-notes'>" + site.notes + "</fieldset>";
   if (site.type)
     html += "<div class='site-type'><span class='site-type'>" + site.type + "</span>";
-  if (versionForSite(site))  
+  if (versionForSite(site))
     html += "<span class='site-version'>" + versionForSite(site) + "</span></div>";
   if (site.date_changed) {
     var date_updated = dateChangedString(site);
@@ -379,21 +379,21 @@ function contentEditwindow(site) {
   if (site.module !== 1) {
     html += "<div class='form-inline'> OpenMRS Version ";
     html += "<select title='OpenMRS Version' id='version' class='form-control input-sm'>";
-    html += "<option selected>" + site.version + "</option>"; 
+    html += "<option selected>" + site.version + "</option>";
     html += "</select></div>";
   }
 
   html += "<div class='row' style='margin-top:10px;'><div class='col-xs-8'>";
   html += "<select title='Site type' id='type' class='form-control input-sm'>"
-  html += (site.type == "Clinical") ? "<option selected>" : "<option>"; 
+  html += (site.type == "Clinical") ? "<option selected>" : "<option>";
   html += "Clinical</option>"
-  html += (site.type == "Evaluation") ? "<option selected>" : "<option>"; 
+  html += (site.type == "Evaluation") ? "<option selected>" : "<option>";
   html += "Evaluation</option>"
-  html += (site.type == "Development") ? "<option selected>" : "<option>"; 
+  html += (site.type == "Development") ? "<option selected>" : "<option>";
   html += "Development</option>"
-  html += (site.type == "Research") ? "<option selected>" : "<option>"; 
+  html += (site.type == "Research") ? "<option selected>" : "<option>";
   html += "Research</option>"
-  html += (site.type == "Other") ? "<option selected>" : "<option>"; 
+  html += (site.type == "Other") ? "<option selected>" : "<option>";
   html += "Other</option>"
   html += "</select></div>";
   html += "<input type='hidden' id='site' value='"+site.id+"'/>";

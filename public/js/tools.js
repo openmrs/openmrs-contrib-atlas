@@ -82,7 +82,7 @@ function initDownloadButton() {
     var url = "download?legend=" + legend + "&size=3840x2160" + "&fade=" + fadeOverTime;
     window.location = url ;
   });
-  
+
 }
 
 function customizeView() {
@@ -96,7 +96,7 @@ function customizeView() {
       viewParam.position = site.marker.getPosition();
       setTimeout(function() {
         google.maps.event.trigger(site.marker, 'click');
-      }, 1000);  
+      }, 1000);
     }
   }
   setTimeout(function() {

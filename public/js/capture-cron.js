@@ -49,7 +49,7 @@ page.open(address, function (status) {
                 console.log("Page loading succesfull");
                 console.log("Beautify atlas...");
                 page.evaluate(function(param) {
-                    
+
                     var clickElement = function (el){
                         var ev = document.createEvent("MouseEvent");
                         ev.initMouseEvent(
@@ -93,6 +93,6 @@ page.open(address, function (status) {
                     phantom.exit();
                 }, 10000);
             }
-        },10000);                 
+        },10000);
     }
 });

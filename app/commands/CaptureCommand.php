@@ -19,7 +19,7 @@ class CaptureCommand extends Command {
 	 * @var string
 	 */
 	protected $description = 'Generate HD screenshot.';
-	
+
 	const PHANTOM_TIMEOUT_SECONDS = '120'; // Safety timeout for phatomjs invocations
 
 	/**
@@ -42,11 +42,11 @@ class CaptureCommand extends Command {
 		$force = $this->option('force');
 		$path = storage_path(). '/captures';
 		$rep = scandir($path);
-		
+
 		$date = new Datetime();
 		$date = $date->modify('-10 minute');
 		$this->info('Last checked: ' . $date->format('Y-m-d H:i:s'));
-		
+
 		$lastCreated = DB::table('atlas')->select('date_created')->orderBy('date_created', 'desc')->first();
 		$lastChanged = DB::table('archive')->select('archive_date')->orderBy('archive_date', 'desc')->first();
 

@@ -33,7 +33,7 @@ class CreateAtlas extends Migration {
     	});
 
     	Schema::create('archive', function($table) {
-	        $table->string('id', 38);	
+	        $table->string('id', 38);
 	        $table->string('latitude', 50);
 	        $table->string('longitude', 50);
 	        $table->string('name', 1024);

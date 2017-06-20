@@ -11,7 +11,7 @@
 |
 */
 
-Route::get('/', array('as' => 'home', function() 
+Route::get('/', array('as' => 'home', function()
 {
 	if (Session::has('module')) {
 		Log::info('Old session from module');
@@ -115,7 +115,7 @@ Route::delete('module/auth', array(
 Route::post('module/ping.php', array(
 	'uses' => 'MarkerSiteController@autoPostModule'));
 
-Route::get('module', array('as' => 'module', 'before' => 'module', function() 
+Route::get('module', array('as' => 'module', 'before' => 'module', function()
 {
 	$moduleUUID = Input::get('uuid');
 	Session::set('module', $moduleUUID);

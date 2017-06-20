@@ -28,7 +28,7 @@ class AuthController extends BaseController {
     		Log::info('Signature OK');
 	    	// Replace _ with / and - with +
 	    	$token = preg_replace('/_/', '/', $token);
-	    	$token = preg_replace('/\-/', '+', $token); 
+	    	$token = preg_replace('/\-/', '+', $token);
 	    	$token = base64_decode($token);
 
 	    	// Decrypt Token
@@ -36,7 +36,7 @@ class AuthController extends BaseController {
 	  		mcrypt_generic_init($cipher, $key, $iv);
 
 	  		$decrypted = mdecrypt_generic($cipher,$token);
-	  		
+
 	  		// Remove invisble character
 	 	    $decrypted = trim($decrypted, "\x00..\x1F");
 	  		$userToken  = json_decode($decrypted);
@@ -44,7 +44,7 @@ class AuthController extends BaseController {
 
 	  		//Create User
 	  		$user = new \Illuminate\Auth\GenericUser(
-	  			array('uid' => $userToken->uid, 
+	  			array('uid' => $userToken->uid,
 	  				'name' => $userToken->user_name,
 	  				'email' => $userToken->user_email,
 	  				'principal' => 'openmrs_id:' . $userToken->uid,
@@ -83,7 +83,7 @@ class AuthController extends BaseController {
     	if ($isAllreadyLinked > 0)
     		App::abort(400,'This site is allready linked to a module');
 
-		DB::table('auth')->insert(array('atlas_id' => $site, 'principal' => 
+		DB::table('auth')->insert(array('atlas_id' => $site, 'principal' =>
 						'module:'. $module, 'token' => $module, 'privileges' => 'STATS'));
 		Log::debug("Created auth");
     }
@@ -104,7 +104,7 @@ class AuthController extends BaseController {
     	Log::info('getAuth module request: ');
     	Log::info('Module: ' . $module);
     	$privileges = DB::table('auth')->where('token','=', $module)->get();
-		
+
 		if (!Session::has('user') && count($privileges) == 0) {
 			$response = Response::make("NOT_AUTHORIZED", 401);
 		} else {

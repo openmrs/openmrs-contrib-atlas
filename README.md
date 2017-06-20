@@ -1,7 +1,7 @@
 OpenMRS Atlas Server 2.2
 ========================
 
-OpenMRS Atlas Module lets implementations create and manage their bubble on the OpenMRS Atlas. 
+OpenMRS Atlas Module lets implementations create and manage their bubble on the OpenMRS Atlas.
 For instructions on how to use the module, see the Atlas Module wiki page.
 
 Altas Server 2.0 has been refactored with Laravel PHP Framework.
@@ -63,7 +63,7 @@ php composer.phar install
 
 - Add writting rights to app/storage (www-data for Apache)
 
-```sh 
+```sh
 sudo chown -R www-data:www-data app/storage
 sudo chmod -R ug+rw app/storage
 ```
@@ -118,7 +118,7 @@ crontab -u www-data -e
 ```
 cd /opt/atlas
 # User that executes artisan command should has writing rights to storage/ folder
-su www-data 
+su www-data
 php artisan migrate
 ```
 ### Create first screen captures
@@ -130,10 +130,10 @@ php artisan migrate
     for reference see this file "app/database/migrations/2016_02_17_170405_insert_distributions.php"
 
 
-Let's started ! 
+Let's started !
 
 ## Directory Description
-- `public/` : images, css, and js files 
+- `public/` : images, css, and js files
 - `app/views/` : blade template and views
 - `app/controllers/` : controllers
 - `app/storage/` : logs, sessions, ...

@@ -91,7 +91,7 @@ class DataController extends BaseController {
 		return true;
 	}
 
-	private function validateResult($result) 
+	private function validateResult($result)
 	{
 		 if (!$result) App::abort(500, 'Unable to retrieve data. Please try again later.');
 		 return true;

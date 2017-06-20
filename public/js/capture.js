@@ -48,7 +48,7 @@ page.open(address, function (status) {
                 console.log("Page loading succesfull");
                 console.log("Beautify atlas...");
                 page.evaluate(function(param) {
-                    
+
                     var clickElement = function (el){
                         var ev = document.createEvent("MouseEvent");
                         ev.initMouseEvent(
@@ -65,7 +65,7 @@ page.open(address, function (status) {
                     $(".control").attr('hidden', 'true');
                     var latlng = new google.maps.LatLng(param.lat, param.lng);
                     var map = $("#map_canvas").gmap3('get');
-                    map.setZoom(param.zoom); 
+                    map.setZoom(param.zoom);
                     map.setCenter(latlng);
                     $(".gmnoprint").attr('hidden', 'true');
                     $("#legend").removeAttr('hidden');
@@ -83,6 +83,6 @@ page.open(address, function (status) {
                     phantom.exit();
                 }, 20000);
             }
-        },20000);                 
+        },20000);
     }
 });

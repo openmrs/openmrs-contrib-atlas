@@ -31,7 +31,7 @@ var moduleHasSite = null;
 @if ( strlen($auth_site) > 30)
   auth = JSON.stringify({{ $auth_site }});
 @endif
-if (auth != null) 
+if (auth != null)
   var auth_site = JSON.parse(auth);
 else
   var auth_site = "";
@@ -157,14 +157,14 @@ ga('send', 'pageview');
         <div class = "dropDownItemDiv" id="editSite" @if(strlen($auth_site) < 5) hidden="true" @endif>
         <img src="images/blue-dot.png">Edit my site</div>
         <div class = "dropDownItemDiv" id="newSite"><img src="images/blue-dot.png">Add new site</div>
-        <div class = "dropDownItemDiv" id="logout"><span class="glyphicon glyphicon-log-out"></span> 
+        <div class = "dropDownItemDiv" id="logout"><span class="glyphicon glyphicon-log-out"></span>
         @if (!Session::has(module))
           {{ link_to_route('logout', 'Sign Out' )}}
         @else
           {{ link_to_route('logout', 'Sign Out', array('uuid' => $moduleUUID), array('target'=>'blank'))}}
         @endif
         </div>
-        <div class="separatorDiv"></div>        
+        <div class="separatorDiv"></div>
   </div>
   @else
     <div class="atlas-container loginControl dropDownControl control" title="Click to sign in with your OpenMRS ID" id ="login">
@@ -195,8 +195,8 @@ ga('send', 'pageview');
           <div class = "dropDownItemDiv" id="legend-clusters" title="Enable markers clustering.">
             <label><input type="checkbox" id="clusters-checkbox"><b>Clustering</b></label>
           </div>
-      </div>          
-  </div>     
+      </div>
+  </div>
   <div id='atlas-hidden-latitude' style='hidden:true;'></div>
   <div id='atlas-hidden-longitude' style='hidden:true;'></div>
   <input type="hidden" id="user-id" value="{{ $user->uid }} " />

@@ -17,7 +17,7 @@ body {
         background-size: contain;
         background-repeat: no-repeat;
         height: 120px;
-        width: 340px;   
+        width: 340px;
 }
 #map_canvas {
         height: 100%;
@@ -242,7 +242,7 @@ span.site-version {
         background-position: initial;
         background-repeat: initial;
         z-index: 2;
-}   
+}
 .dropDownOptionsDiv{
         background-color: white;
         z-index: 0;
@@ -257,8 +257,8 @@ span.site-version {
         border-right-color: rgb(113, 123, 135);
         border-bottom-color: rgb(113, 123, 135);
         border-left-color: rgb(113, 123, 135);
-        border-image: initial; 
-        border-top-width: 0px; 
+        border-image: initial;
+        border-top-width: 0px;
         border-top-style: initial;
         border-top-color: initial;
         font-weight: bold;
@@ -295,7 +295,7 @@ span.site-version {
         font-size: 11px;
         margin-top: 6px;
         margin-left: 4px;
-}   
+}
 .logged {
         min-width: 110px;
 }

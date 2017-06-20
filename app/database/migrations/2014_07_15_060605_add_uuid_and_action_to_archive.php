@@ -32,7 +32,7 @@ class AddUuidAndActionToArchive extends Migration {
 			$table->primary('id');
 			$table->enum('action', array('DELETE', 'UPDATE', 'ADD'))->nullable();
     	});
-    	
+
     }
 
 	/**

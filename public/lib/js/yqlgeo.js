@@ -24,14 +24,14 @@ var yqlgeo = function(){
         } else {
           getFromText(args[0]);
         }
-      } 
+      }
     }
     var lat = args[0];
     var lon = args[1];
     if(typeof lat.join !== undefined && args[0][1]){
       lat = args[0][0];
       lon = args[0][1];
-    };    
+    };
     if(isFinite(lat) && isFinite(lon)){
       if(lat > -90 && lat < 90 &&
          lon > -180 && lon < 180){

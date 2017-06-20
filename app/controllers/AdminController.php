@@ -3,7 +3,7 @@
 class AdminController extends BaseController {
 
     /**
-     *  Administration 
+     *  Administration
      */
 
     public function adminQuery()
@@ -28,12 +28,12 @@ class AdminController extends BaseController {
     			if (starts_with($query, array('select', 'show', 'describe'))) {
                     $result = DB::select($query);
 		    		Log::info('Result size: ' . count($result));
-		    		$info = "Query executed successfully.";	
-		    		
+		    		$info = "Query executed successfully.";
+
 		    		if (count($result) < 1) {
 		    			$result = null;
 		    			$info = "Success - Result set is empty.";
-		    		} else 
+		    		} else
 		    			$columns = array_keys((array)head($result));
 
     			} else if (DB::statement($query))
@@ -41,7 +41,7 @@ class AdminController extends BaseController {
 
     			else
     				$error = "Unknown error executing your query.";
-    			
+
     		} else {
     			$error = 'Error : Your query is empty.';
     		}
