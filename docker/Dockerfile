@@ -8,11 +8,10 @@ RUN apt-get update \
      libfreetype6 libfreetype6-dev libfontconfig1 libfontconfig1-dev \
   && mkdir ${APP_ROOT}
 
-ADD https://codeload.github.com/openmrs/openmrs-contrib-atlas/tar.gz/master /tmp/atlas.tar.gz
+ADD ../ /var/www/html/atlas
 ADD https://bitbucket.org/ariya/phantomjs/downloads/${PHANTOM_JS}.tar.bz2 ${PHANTOM_JS}.tar.bz2
 
-RUN tar -zx -C ${APP_ROOT} -f /tmp/atlas.tar.gz --strip-components=1 \
-  && tar -xvjf ${PHANTOM_JS}.tar.bz2 \
+RUN && tar -xvjf ${PHANTOM_JS}.tar.bz2 \
   && mv ${PHANTOM_JS} /usr/local/share/phantomjs \
   && ln -sf /usr/local/share/phantomjs/bin/phantomjs /usr/local/bin/ \
   && chown -R www-data:www-data ${APP_ROOT}/app/storage \
@@ -31,6 +30,7 @@ RUN phpenmod mysqli mcrypt \
   && rm ${PHANTOM_JS}.tar.bz2 \
   && rm /tmp/atlas.tar.gz \
   && rm /var/www/html/index.html \
+  && rm -r ${APP_ROOT}/.git* || echo ".git Doesnot exist" \
   && rm -r ${APP_ROOT}/docker || echo "No Docker Here :D"
 
 WORKDIR ${APP_ROOT}
