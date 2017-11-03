@@ -19,7 +19,7 @@ RUN tar -xvjf ${PHANTOM_JS}.tar.bz2 \
   && sed -i s/atlas-server/localhost/g ${APP_ROOT}/bootstrap/start.php
 
 COPY ./docker/config/000-default.conf /etc/apache2/sites-available/000-default.conf
-COPY ./docker/config/.env.local.php ${APP_ROOT}
+COPY ./docker/config/env.local.php ${APP_ROOT}/.env.local.php
 COPY ./docker/config/init-script.sh /usr/bin/
 
 RUN phpenmod mysqli mcrypt \
