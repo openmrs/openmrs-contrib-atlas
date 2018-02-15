@@ -140,3 +140,4 @@ Let's started !
 - `app/routes.php` : routing config
 - `app/filters.php` : routing filters
 
+## [Atlas 3.0 module](https://github.com/ShekharReddy4/openmrs-contrib-atlas-node)
