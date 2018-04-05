@@ -7,7 +7,7 @@ module.exports = function(connection) {
 
         connection.query("SELECT * FROM distributions", function (error, rows, field) {
             if(!!error){
-                console.log('error');
+                console.log(error);
             }
             else{
                 //var data  = JSON.stringify(rows);

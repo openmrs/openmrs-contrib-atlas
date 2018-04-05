@@ -4,9 +4,10 @@ var mysql = require('mysql');
 var connection = mysql.createConnection({
     
     //set the variables as per your db credentials
-    host     : '127.0.0.1',
-    user     : 'root',
-    database : 'atlas'
+    host     : 'db' ,
+    user     : 'atlas' ,
+    password : 'iamatlas' ,
+    database : 'atlasdb'
 });
 
 //get the connection
