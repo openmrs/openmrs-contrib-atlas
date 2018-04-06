@@ -2,12 +2,12 @@ var mysql = require('mysql');
 
 // set the mysql properties
 var connection = mysql.createConnection({
-    
+
     //set the variables as per your db credentials
-    host     : 'db' ,
-    user     : 'atlas' ,
-    password : 'iamatlas' ,
-    database : 'atlasdb'
+    host     : process.env.DB_HOST || 'db' ,
+    user     : process.env.DB_USERNAME || 'atlas' ,
+    password : process.env.DB_PASSWORD || 'iamatlas' ,
+    database : process.env.DB_NAME || 'atlasdb'
 });
 
 //get the connection

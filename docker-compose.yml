@@ -2,7 +2,7 @@
 version: '3'
 services:
   db:
-    image: mysql:latest
+    image: mysql:5.6
     environment:
        MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-mysqlfordocker}
        MYSQL_DATABASE: ${DB_NAME:-atlasdb}
@@ -13,10 +13,13 @@ services:
     restart: always
     healthcheck:
       test: "exit 0"
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+
 
   atlas:
     build: ./
-    image: openmrs/atlas:production
+    image: openmrs/atlas:local
     depends_on:
       - db
     environment:
@@ -31,28 +34,12 @@ services:
       ID_HOST: "http://localhost:3000"
       SITE_URL: "http://localhost:3000"
     ports:
-      - 3000:3001
+      - 3000:3000
     volumes:
       - atlas-storage:/var/www/html/atlas/app/storage
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/markerSites/"]
-
-  backup:
-    image: openmrs/cron-backup
-    depends_on:
-      - db
-    volumes:
-      - mysql-data:/mysql_data
-      - atlas-storage:/atlas-storage
-      - ${BACKUP_DIR-./backups}:/backup
-    environment:
-      - DIRS=/mysql_data:atlas_mysql,/atlas-storage:atlas_storage
-      - SCHEDULE=0 0 * * *
-    restart: always
-    healthcheck:
-      test: "exit 0"
-
 volumes:
   mysql-data:
   atlas-storage:

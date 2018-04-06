@@ -1,7 +1,7 @@
 FROM node:8-alpine
-WORKDIR ./
-COPY package*.json ./
+EXPOSE 3000
+WORKDIR /
+COPY . /
 RUN npm install --only=production
-COPY . ./
-EXPOSE 3001
-CMD ["npm", "start"]
+RUN chmod a+x /docker/entrypoint.sh
+CMD ["/docker/entrypoint.sh"]
