@@ -4,16 +4,16 @@ var mysql = require('mysql');
 var connection = mysql.createConnection({
     
     //set the variables as per your db credentials
-    host     : 'localhost',
-    user     : 'root',
-    password : 'root',
-    database : 'atlas'
+    host     : 'db' ,
+    user     : 'atlas' ,
+    password : 'iamatlas' ,
+    database : 'atlasdb'
 });
 
 //get the connection
 connection.connect(function (error) {
     if(!!error){
-        console.log('Error');
+        console.log(error);
     }else{
         console.log('connected');
     }
