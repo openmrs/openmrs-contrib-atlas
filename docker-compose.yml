@@ -16,7 +16,6 @@ services:
     volumes:
       - ./db:/docker-entrypoint-initdb.d
 
-
   atlas:
     build: ./
     image: openmrs/atlas:local
@@ -27,12 +26,7 @@ services:
       DB_NAME: ${DB_NAME:-atlasdb}
       DB_USERNAME: ${DB_USERNAME:-atlas}
       DB_PASSWORD: ${DB_PASSWORD:-iamatlas}
-      TIME_ZONE: "America/New_York"
-      PING_DELETE_SECRET: "secret"
-      API_KEY: "1234567890abcdef"
-      SITE_KEY: "localhost"
-      ID_HOST: "http://localhost:3000"
-      SITE_URL: "http://localhost:3000"
+      SESSION_SECRET: ${SESSION_SECRET:-supersecret}
     ports:
       - 3000:3000
     volumes:
