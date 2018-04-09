@@ -452,8 +452,6 @@ function loadSites(json) {
         var infowindow = createInfoWindow(site, marker);
         if ((site.uid !== "" && site.uid === currentUser) || (auth_site.indexOf(site.uuid) !== -1) || site.uuid !== null)
             editwindow = createEditInfoWindow(site, marker);
-        initLegend();
-        repaintMarkers();
         if (site.version)
             version.push(versionMajMinForSite(site));
         if (moduleHasSite !== 1 && auth_site.indexOf(site.uuid) !== -1 && moduleUUID !== null && auth_site.length === 1)
@@ -467,6 +465,8 @@ function loadSites(json) {
             "editBubbleOpen": false,
             "fadeGroup": fadeGroup
         };
+        initLegend();
+        repaintMarkers();
     }
     setTimeout('openBubble(uniqueMarker)', 800);
     map.fitBounds(bounds);
