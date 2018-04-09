@@ -536,7 +536,7 @@ function dateForSite(site) {
     var dateString = site.date_changed;
     if (dateString === "0000-00-00 00:00:00")
         dateString = site.date_created;
-    dateString = dateString.replace(/-/g, "/");
+    // dateString = dateString.replace(/-/g, "/");
     return new Date(dateString).getTime();
 }
 
@@ -544,8 +544,8 @@ function dateChangedString(site) {
     var dateString = site.date_changed;
     if (dateString === "0000-00-00 00:00:00")
         dateString = site.date_created;
-    dateString = dateString.replace(/-/g, "/");
-    return new Date(dateString).toLocaleDateString();
+    // dateString = dateString.replace(/-/g, "/");
+    return new Date(dateString).toLocaleDateString("en-us", { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 function versionForSite(site) {
