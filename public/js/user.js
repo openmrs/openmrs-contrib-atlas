@@ -309,11 +309,11 @@ function contentInfowindow(site) {
   var html = "<div class='site-bubble'>";
   html += "<div class='site-name'>" + site.name + "</div>";
   html += "<div class='site-panel'>";
-  if (site.image)
-    html += "<img class='site-image' src='" + site.image + "' width='80px' height='80px' alt='thumbnail' />";
+  //if (site.image) #TODO
+    //html += "<img class='site-image' src='" + site.image + "' width='80px' height='80px' alt='thumbnail' />";
   if (site.url)
     html += "<div class='site-url'><a target='_blank' href='" + safeUrl(site.url) + "' title='" + site.url + "'>"
-        + displayUrl(safeUrl(site.url)) + "</a></div>";
+        + displayUrl(safeUrl(site.url)) + " rel='nofollow'</a></div>";
   if (site.show_counts == true) {
     if (site.patients && site.patients !== "0")
       html += "<div class='site-count'>" + addCommas(site.patients) + " patients</div>";

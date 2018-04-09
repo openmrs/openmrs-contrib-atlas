@@ -57,9 +57,11 @@ UNLOCK TABLES;
 
 LOCK TABLES `atlas` WRITE;
 /*!40000 ALTER TABLE `atlas` DISABLE KEYS */;
-INSERT INTO `atlas` VALUES ('00d688cb-1710-467f-83fa-07a1f52669e6','39.77864','-86.17785','Regenstrief Institute','http://www.regenstrief.org/','Research','',0,0,0,'Burke Mamlin','','','','2012-11-11 20:45:05','2012-11-12 01:45:05','2014-05-23 17:48:33','burke',1,'',NULL),
-('f422e050-dd12-4807-9850-2703b7699600','-30.054213','27.854214','Partners In Health','http://www.pih.org/','Clinical','',0,0,0,'Darius Jazayeri','','','','2013-06-28 13:10:23','2012-11-11 20:15:05','2014-05-23 12:18:33','darius',1,'',NULL),
-('faad3839-02fc-476c-a303-28536c83656f','13.6552','-9.0256','Mali Health Organizing Project','http://www.malihealth.org/','Clinical','',0,0,0,'','','','','2012-11-11 20:45:05','2012-11-11 20:15:05','0000-00-00 00:00:00','',1,'',NULL);
+INSERT INTO `atlas` VALUES ('00d688cb-1710-467f-83fa-07a1f52669e6','39.77864','-86.17785','Regenstrief Institute','http://www.regenstrief.org/','Research','',0,0,0,'Burke Mamlin','','','','2012-11-11 20:45:05','2012-11-12 01:45:05','2017-05-23 17:48:33','burke',1,'',NULL),
+('f422e050-dd12-4807-9850-2703b7699600','-30.054213','27.854214','Partners In Health','http://www.pih.org/','Clinical','',0,0,0,'Darius Jazayeri','','','','2013-06-28 13:10:23','2012-11-11 20:15:05','2016-01-23 12:18:33','darius',1,'',NULL),
+('faad3839-02fc-476c-a303-28536c83656f','13.6552','-9.0256','Mali Health Organizing Project','http://www.malihealth.org/','Clinical','',0,0,0,'','','','','2012-11-11 20:45:05','2012-11-11 20:15:05','2013-11-11 20:15:05','',1,'',NULL),
+('faad3839-02fc-476c-a303-28536c83644f','13.6552','9.0256','Other test','http://www.google.org/','Clinical','',0,0,0,'','','','','2013-11-11 20:45:05','2013-11-11 20:15:05','2014-11-11 20:15:05','',1,'',NULL),
+('zzad3839-02fc-476c-a303-28536c83644f','13.6552','59.0256','Téstè mañana','http://www.google-test.org/','Clinical','',0,0,0,'','','','','2015-11-11 20:45:05','2015-11-11 20:15:05','2016-11-05 20:15:05','',1,'',NULL);
 /*!40000 ALTER TABLE `atlas` ENABLE KEYS */;
 UNLOCK TABLES;
 
