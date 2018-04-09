@@ -29,11 +29,8 @@ services:
       SESSION_SECRET: ${SESSION_SECRET:-supersecret}
     ports:
       - 3000:3000
-    volumes:
-      - atlas-storage:/var/www/html/atlas/app/storage
     restart: always
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/markerSites/"]
 volumes:
   mysql-data:
-  atlas-storage:
