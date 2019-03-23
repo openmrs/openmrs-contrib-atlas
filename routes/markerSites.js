@@ -28,7 +28,7 @@ module.exports = function(connection) {
 
     });
 
-    /*Get a specific marker with uid parameter*/
+    /* Get a specific marker with uid parameter */
     router.get('/marker/:id', function (req, res, next) {
 
         var id=req.params['id'];
@@ -46,6 +46,7 @@ module.exports = function(connection) {
         })
     });
 
+    /* Get markers based on type, openmrs_version and distribution */
     router.get('/markers', function (req, res, next) {
 
         var types=req.query['type'];
@@ -65,7 +66,7 @@ module.exports = function(connection) {
         })
     });
 
-    //POST /marker/:id
+    /* Create new marker */
     router.post('/marker/', isAuthenticated, function (req, res, next) {
         var id=uuid.v4();
         var latitude=req.body.latitude;
@@ -103,6 +104,7 @@ module.exports = function(connection) {
         });
     });
 
+    /* Update marker with given id */
     router.post('/marker/:id', isAuthenticated, function (req, res, next) {
 
         var id=req.params['id'];
@@ -130,6 +132,22 @@ module.exports = function(connection) {
         console.log(id+"    "+latitude+longitude+name+url+type+image+patients+encounters+date_changed+"           "+date_created);
 
         connection.query('UPDATE atlas SET latitude=?,longitude=?,name=?,url=?,type=?,image=?,patients=?,encounters=?,observations=?,contact=?,email=?,notes=?,data=?,atlas_version=?,date_created=?,date_changed=?,created_by=?,show_counts=?,openmrs_version=?,distribution=? WHERE id =?', [latitude,longitude,name,url,type,image,patients,encounters,observations,contact,email,notes,data,atlas_verison,date_created,date_changed,created_by,show_counts,openmrs_version,distribution,id], function (error, rows,field) {
+            if(!!error){
+                console.log(error);
+            }
+            else {
+                res.setHeader('Content-Type', 'application/json');
+                res.json(id);
+            }
+        });
+    });
+
+    /* Delete marker with given id */
+    router.delete('/marker/:id', isAuthenticated, function(req, res, next) {
+
+        var id=req.params['id'];
+
+        connection.query('DELETE FROM atlas WHERE id =?', [id], function (error, rows,field) {
             if(!!error){
                 console.log(error);
             }
