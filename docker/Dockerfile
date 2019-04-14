@@ -8,18 +8,13 @@ RUN apt-get update \
      libfreetype6 libfreetype6-dev libfontconfig1 libfontconfig1-dev \
   && mkdir ${APP_ROOT}
 
-ADD ./ /var/www/html/atlas
 ADD https://bitbucket.org/ariya/phantomjs/downloads/${PHANTOM_JS}.tar.bz2 ${PHANTOM_JS}.tar.bz2
 
 RUN tar -xvjf ${PHANTOM_JS}.tar.bz2 \
   && mv ${PHANTOM_JS} /usr/local/share/phantomjs \
-  && ln -sf /usr/local/share/phantomjs/bin/phantomjs /usr/local/bin/ \
-  && chown -R www-data:www-data ${APP_ROOT}/app/storage \
-  && chmod -R ug+rw ${APP_ROOT}/app/storage \
-  && sed -i s/atlas-server/localhost/g ${APP_ROOT}/bootstrap/start.php
+  && ln -sf /usr/local/share/phantomjs/bin/phantomjs /usr/local/bin/
 
 COPY ./docker/config/000-default.conf /etc/apache2/sites-available/000-default.conf
-COPY ./docker/config/env.local.php ${APP_ROOT}/.env.local.php
 COPY ./docker/config/init-script.sh /usr/bin/
 
 RUN phpenmod mysqli mcrypt \
@@ -28,11 +23,18 @@ RUN phpenmod mysqli mcrypt \
   && echo "ServerName localhost" | tee /etc/apache2/conf-available/fqdn.conf \
   && a2enconf fqdn \
   && rm ${PHANTOM_JS}.tar.bz2 \
-  && rm /var/www/html/index.html \
-  && rm -r ${APP_ROOT}/.git* || echo ".git Doesnot exist" \
-  && rm -r ${APP_ROOT}/docker || echo "No Docker Here :D"
+  && rm /var/www/html/index.html 
 
-RUN "/usr/bin/composer install"
+ADD ./ ${APP_ROOT}
+COPY ./docker/config/env.local.php ${APP_ROOT}/.env.local.php
+
+RUN chown -R www-data:www-data ${APP_ROOT}/app/storage \
+&& chmod -R ug+rw ${APP_ROOT}/app/storage \
+&& sed -i s/atlas-server/localhost/g ${APP_ROOT}/bootstrap/start.php \
+&& rm -r ${APP_ROOT}/.git* || echo ".git Doesnot exist" \
+&& rm -r ${APP_ROOT}/docker || echo "No Docker Here :D" \
+&& cd ${APP_ROOT} && /usr/bin/composer install
+
 
 WORKDIR ${APP_ROOT}
 EXPOSE 80
