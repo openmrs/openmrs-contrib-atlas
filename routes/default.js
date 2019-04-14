@@ -8,11 +8,12 @@ module.exports = function(){
         res.render('index', {
             title: 'OpenMRS Atlas',
             isAuth: req.session,
-            user: req.session.user
+            user: req.session.user,
+            google_maps_api_key:  process.env.GOOGLE_MAPS_JS_API_KEY || 'NO_API',
+
         });
 
     });
-    
+
     return router;
 };
-
