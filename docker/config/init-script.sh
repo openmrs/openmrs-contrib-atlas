@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-/usr/bin/composer install
 
 : "${APACHE_CONFDIR:=/etc/apache2}"
 : "${APACHE_ENVVARS:=$APACHE_CONFDIR/envvars}"

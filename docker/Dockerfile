@@ -32,6 +32,8 @@ RUN phpenmod mysqli mcrypt \
   && rm -r ${APP_ROOT}/.git* || echo ".git Doesnot exist" \
   && rm -r ${APP_ROOT}/docker || echo "No Docker Here :D"
 
+RUN "/usr/bin/composer install"
+
 WORKDIR ${APP_ROOT}
 EXPOSE 80
 CMD ["/usr/bin/init-script.sh"]
