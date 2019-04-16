@@ -214,7 +214,7 @@ function initialize() {
 }
 
 function fetchMarkerSites() {
-    $.ajax({url: "/markerSites"})
+    $.ajax({url: "/visibleMarkerSites"})
         .always(function (data, textStatus) {
             if (textStatus != "success") {
                 bootbox.alert("Error fetching data for sites ! - " + data.statusText);

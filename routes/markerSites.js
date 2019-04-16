@@ -28,6 +28,22 @@ module.exports = function(connection) {
 
     });
 
+    /* GET all visible markerSites */
+    router.get('/visibleMarkerSites', function(req, res, next) {
+
+        connection.query("SELECT * FROM atlas WHERE date_changed > CURDATE() - INTERVAL 2 YEAR", function (error, rows, field) {
+            if(!!error){
+                console.log(error);
+            }
+            else{
+                //var data  = JSON.stringify(rows);
+                res.setHeader('Content-Type', 'application/json');
+                res.json(rows);
+            }
+        });
+
+    });
+    
     /* Get a specific marker with uid parameter */
     router.get('/marker/:id', function (req, res, next) {
 
