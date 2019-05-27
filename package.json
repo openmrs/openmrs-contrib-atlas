@@ -12,11 +12,14 @@
     "ejs": "~2.5.5",
     "express": "~4.13.1",
     "express-session": "^1.14.0",
+    "ldapjs": "^1.0.2",
+    "log4js": "^4.2.0",
     "morgan": "~1.6.1",
     "mysql": "^2.11.1",
     "request": "^2.72.0",
     "rss": "^1.2.1",
     "serve-favicon": "~2.3.0",
     "uuid": "^2.0.2"
-  }
+  },
+  "devDependencies": {}
 }
