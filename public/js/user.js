@@ -6,16 +6,17 @@ function initLoginButton() {
     $("#logout").css("display", "none");
   });
   $("#editSite, #newSite, #locateMe").click(function(){
-    legendGroups = 2;
-    repaintMarkers();
+    //legendGroups = 2;
+    //repaintMarkers();
     initLegend();
     if ($(this).attr("id") === "locateMe")
       locateMe();
     if ($(this).attr("id") === "editSite") {
       getMarkerPosition(nextSite, function (result) {
+        //increments nextSite, and loops back to 0 when nextSite is equal to auth_site.length 
+        nextSite = (nextSite+1)%auth_site.length;
         map.setCenter(result);
         map.setZoom(8);
-        nextSite = (nextSite < auth_site.length - 1) ? nextSite+1 : 0;
       });
     }
     if ($(this).attr("id") === "newSite")
@@ -88,9 +89,10 @@ function locateMe()  {
 }
 
 function getMarkerPosition(nextSite, callback)  {
-  for(i = 1; i < sites.length; i++) {
-    if (sites[i].siteData.uuid == auth_site[nextSite]){
-      callback(sites[i].marker.getPosition());
+  var ids = Object.keys(sites);
+  for(var i = 0; i < ids.length; i++) {
+    if (sites[ids[i]].siteData.id == auth_site[nextSite]){
+      callback(sites[ids[i]].marker.getPosition());
     }
   }
   return null;
@@ -155,10 +157,10 @@ function newSite(myPosition) {
 }
 
 function deleteMarker(site) {
-  var deleted = sites[site].siteData.uuid;
+  var deleted = site;
   if  (deleted !== "" && deleted !== null) {
     $.ajax({
-      url: "ping.php/atlas?id="+deleted,
+      url: "/marker/"+deleted,
       type: "DELETE",
       dataType: "text",
     })
@@ -189,7 +191,7 @@ function deleteMarker(site) {
   }
   if (auth_site.length === 0)
     $("#editSite").attr("hidden", true);
-}
+  }
 
 function createEditInfoWindow(site, marker) {
   var html = contentEditwindow(site);
@@ -212,6 +214,10 @@ function createEditInfoWindow(site, marker) {
     });
   }
   return infowindow;
+}
+
+function isValidMarkerId(markerId) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(markerId);  
 }
 
 function saveMarker(e) {
@@ -256,21 +262,31 @@ function saveMarker(e) {
     site.type = type;
     site.longitude = pos.lng();
     site.latitude = pos.lat();
+    site.uid = currentUser;
     sites[id].siteData = site;
     sites[id].fadeGroup = getFadeGroup(site);
-    sites[id].infowindow.setContent(contentInfowindow(site));
-    sites[id].editwindow.setContent(contentEditwindow(site));
     sites[id].editwindow.close();
     sites[id].editBubbleOpen = false;
     sites[id].marker.setDraggable(false);
     var json = JSON.stringify(site);
     $.ajax({
-      url: "ping.php/atlas",
+      //If marker id is a uuid, its an update request to '/marker/[id]'
+      //else it is an add request to '/marker'
+      url: "/marker/"+(isValidMarkerId(id)?id:""),
       type: "POST",
       data: json,
       dataType: "text",
     })
         .done(function(response) {
+          response = response.substring(1,response.length-1);
+          if(!isValidMarkerId(id)) {
+            sites[response] = sites[id];
+            sites[response].siteData.id = response;
+            delete sites[id];
+          }
+          sites[response].infowindow.setContent(contentInfowindow(sites[response].siteData));
+          sites[response].editwindow.setContent(contentEditwindow(sites[response].siteData));
+
           site.uuid = response;
           if (moduleUUID !== null && moduleHasSite === 0) {
             site.module = 1;
@@ -284,7 +300,8 @@ function saveMarker(e) {
             auth_site.push(response);
           if (auth_site.length > 0)
             $("#editSite").attr("hidden", false);
-
+          repaintMarkers();
+          bootbox.alert("Marker saved");
           if (site.distribution == null && (site.nonStandardDistributionName != null && site.nonStandardDistributionName != "")) {
             fetchDistributions()
                 .done(function () {
@@ -295,8 +312,6 @@ function saveMarker(e) {
                 });
           }
 
-          repaintMarkers();
-          //bootbox.alert("Marker saved");
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
           bootbox.alert( "Error saving your marker - Please try again ! - " + jqXHR.statusText );
@@ -342,6 +357,10 @@ function contentInfowindow(site) {
   if (site.date_changed) {
     var date_updated = dateChangedString(site);
     html += "<div id='site-update'>Last Updated: " + date_updated + "</div>";
+  }
+  if(site.uid == currentUser) {
+    html += "<div id='edit' value='" + site.id + "' title ='Edit site' class='control' style='position: absolute;overflow:none; right:12px;bottom:12px; color:#3F3F3F'><i class='fa fa-lg fa-pencil' style='color:rgba(171, 166, 166, 1)'></i></div>";
+    html += "<div id='delete' value='" + site.id + "' title ='Delete site' class='control' style='position: absolute;overflow:none; right:12px;bottom:27px; color:#3F3F3F'><i class='fa fa-lg fa-trash-o' style='color:rgba(171, 166, 166, 1)'></i></div>";
   }
   html += "</div>";
   return html;

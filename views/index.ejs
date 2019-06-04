@@ -24,16 +24,11 @@
   <script type="text/javascript" src="https://googlemaps.github.io/js-marker-clusterer/src/markerclusterer.js"></script>
   <script type="text/javascript">
 
-    var auth = null;
+    var auth_site = [];
     var moduleUUID = null;
     var counts = {};
     var countsEnabled = 1;
     var moduleHasSite = null;
-
-    if (auth != null)
-      var auth_site = JSON.parse(auth);
-    else
-      var auth_site = "";
 
     var currentUser;
     var userEmail;
@@ -115,10 +110,26 @@
       initDownloadButton();
 
       currentUser = $('#user-id').val().trim();
-      if (currentUser == '') currentUser = 'visitor';
       userName = $('#user-name').val().trim();
       userEmail = $('#user-email').val().trim();
 
+      //If user is logged in
+      if(currentUser != "visitor") {
+        $.ajax({url: "/marker/uid/"+currentUser})
+          .always(function (data, textStatus) {
+              if (textStatus != "success") {
+                  bootbox.alert("Error fetching data for sites ! - " + data.statusText);
+                  return;
+              }
+              auth_site = data;
+              for(i = 0; i < auth_site.length; i++) {
+                auth_site[i] = auth_site[i].id;
+              }
+              if (auth_site.length === 0) {
+                $("#editSite").attr("hidden", true);
+              }
+          });
+      }
     });
 
     setTimeout('initialize()', 500);
@@ -198,9 +209,9 @@
 
 <div id='atlas-hidden-latitude' style='hidden:true;'></div>
 <div id='atlas-hidden-longitude' style='hidden:true;'></div>
-<input type="hidden" id="user-id" value= <% if(user != null){user.uid}%> />
-<input type="hidden" id="user-name" value= <% if(user != null){user.name}%> />
-<input type="hidden" id="user-email" value= <% if(user != null){user.email}%> />
+<input type="hidden" id="user-id" value= <%= user?user.uid:"visitor" %> />
+<input type="hidden" id="user-name" value= <%= user?user.cn:"" %> />
+<input type="hidden" id="user-email" value= <%= user?user.mail:"" %> />
 
 </body>
 
