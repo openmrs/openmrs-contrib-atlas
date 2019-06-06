@@ -90,9 +90,12 @@ OpenMRS-contrib-atlas-node is the server code written in nodejs for [OpenMRS ATL
 
 ### Running using docker
   - Install docker and docker-compose
+
+  - TODO: explain how to start ldap
+
 ```
 $ docker-compose build
-$ docker-compose up
+$ docker-compose up -d
 ```
   - Fire up your browser to check http://localhost:3000
 

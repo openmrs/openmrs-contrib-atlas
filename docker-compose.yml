@@ -26,7 +26,17 @@ services:
       DB_NAME: ${DB_NAME:-atlasdb}
       DB_USERNAME: ${DB_USERNAME:-atlas}
       DB_PASSWORD: ${DB_PASSWORD:-iamatlas}
-      SESSION_SECRET: ${SESSION_SECRET:-supersecret}
+      LDAP_URI: ${LDAP_URI:-ldap://localhost:3389}
+      LDAP_USER: ${LDAP_USER:-atlas}
+      LDAP_PASSWORD: ${LDAP_PASSWORD:-atlas}
+      LDAP_USERS_GROUP: ${LDAP_USERS_GROUP:-atlas-users}
+      LDAP_ADMIN_GROUP: ${LDAP_ADMIN_GROUP:-atlas-administrators}
+      MAIL_HOST: ${MAIL_HOST:-smtp.mandrillapp.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_AUTH: ${MAIL_AUTH:-true}
+      MAIL_USER: ${MAIL_USER:-infrastructure@openmrs.org}
+      MAIL_PASS: ${MAIL_PASS:-magic}
+      GOOGLE_MAPS_JS_API_KEY: ${GOOGLE_MAPS_JS_API_KEY:-XXXXXXXXXXX_XXXXXX-XXXXXXXXXXX-XXXXXXXX}
     ports:
       - 3000:3000
     restart: always
