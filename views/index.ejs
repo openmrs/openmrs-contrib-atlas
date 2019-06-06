@@ -115,7 +115,7 @@
 
       //If user is logged in
       if(currentUser != "visitor") {
-        $.ajax({url: "/marker/uid/"+currentUser})
+        $.ajax({url: "/markers?username="+currentUser})
           .always(function (data, textStatus) {
               if (textStatus != "success") {
                   bootbox.alert("Error fetching data for sites ! - " + data.statusText);
