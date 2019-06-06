@@ -221,7 +221,6 @@ function fetchMarkerSites() {
                 return;
             }
             loadSites(data);
-            console.log(data);
         })
 }
 
@@ -443,6 +442,7 @@ function loadSites(json) {
     loadVersion(json);
     for (i = 0; i < json.length; i++) {
         var site = json[i];
+        site.uid = json[i].created_by;
         if (!site.hasOwnProperty("uuid"))
             site.uuid = null;
         var fadeGroup = getFadeGroup(site);
@@ -648,8 +648,6 @@ function createInfoWindow(site, marker) {
     });
     google.maps.event.addListener(marker, "click", function () {
         $("#undo").remove();
-        $("#delete").remove();
-        $("#edit").remove();
         if (sites[site.id].editBubbleOpen) {
             sites[site.id].editwindow.close();
             sites[site.id].editBubbleOpen = false;
@@ -702,7 +700,6 @@ function createInfoWindow(site, marker) {
                 sites[id].editwindow.open(map, sites[id].marker);
                 sites[id].editBubbleOpen = true;
                 sites[id].marker.setDraggable(true);
-                $("#edit").remove();
                 if ($(".gm-style-iw").parent().has("#undo").length == 0) {
                     $(".gm-style-iw").parent().append("<div id='undo' title ='Undo change' value='" + id + "' class='control' style='position: absolute;overflow:none; right:12px;bottom:10px; color:#3F3F3F'><i class='fa fa-lg fa-history' style='color:rgba(171, 166, 166, 1)'></i></div>");
                 }
