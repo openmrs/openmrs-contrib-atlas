@@ -25,6 +25,7 @@ OpenMRS-contrib-atlas-node is the server code written in nodejs for [OpenMRS ATL
     ```git
     npm install -g nodemon
     ```
+- Get a Google Maps JS API key from the [Google API console](https://console.developers.google.com/).
 
 ## SetUp repo
 
@@ -79,6 +80,7 @@ OpenMRS-contrib-atlas-node is the server code written in nodejs for [OpenMRS ATL
         export DB_USERNAME='root'
         export DB_PASSWORD='root'
         export DB_NAME='atlasdb'
+        export GOOGLE_MAPS_JS_API_KEY='GOOGLE_MAPS_JS_API_KEY'
         ```
   - Navigate to the project root directory and run the nodemon
 
@@ -89,6 +91,8 @@ OpenMRS-contrib-atlas-node is the server code written in nodejs for [OpenMRS ATL
   - Fire up your browser to check http://localhost:3000
 
 ### Running using docker
+  - Insert your Google Maps JS API key in the environment variables in docker-compose.yml . 
+
   - Install docker and docker-compose
 
   - TODO: explain how to start ldap
