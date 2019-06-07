@@ -20,10 +20,18 @@ module.exports = function(connection) {
         }
     }
 
-    /* GET all the markerSites */
-    router.get('/markerSites', function(req, res, next) {
+    /* GET all the markers */
+    router.get('/markers', function(req, res, next) {
 
-        connection.query("SELECT * FROM atlas", function (error, rows, field) {
+        var query="SELECT * FROM atlas";
+
+        //filter by username
+        var username=req.query['username'];
+        if(username) {
+            query += " WHERE created_by='"+username+"'";
+        }
+
+        connection.query(query, function (error, rows, field) {
             if(!!error){
                 console.log(error);
             }
@@ -37,26 +45,7 @@ module.exports = function(connection) {
 
     });
 
-    /* Get a specific marker with uid parameter */
-    router.get('/marker/uid/:uid', function (req, res, next) {
-
-        var uid=req.params['uid'];
-        console.log(uid);
-        connection.query('select * from atlas where created_by=?',[uid], function (error, rows, field) {
-
-            if(!!error){
-                console.log(error);
-            }
-            else {
-                res.setHeader('Content-Type', 'application/json');
-                filterMarkerIds(req, rows);
-                res.json(rows);
-                //connection.end();
-            }
-        })
-    });
-
-    /* Get a specific marker with uid parameter */
+    /* Get a specific marker with id parameter */
     router.get('/marker/:id', function (req, res, next) {
 
         var id=req.params['id'];
