@@ -28,6 +28,7 @@ app.use(cookieParser());
 app.use(expressSession(
     {
         secret: process.env.SESSION_SECRET || 'secret',
+        name: 'atlasCookie',
         saveUninitialized:false,
         resave:false
     }));
