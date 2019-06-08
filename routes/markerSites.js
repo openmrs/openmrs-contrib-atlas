@@ -124,7 +124,7 @@ module.exports = function(connection) {
     });
 
     /* Update marker with given id */
-    router.post('/marker/:id', isAuthenticated, function (req, res, next) {
+    router.patch('/marker/:id', isAuthenticated, function (req, res, next) {
         req.body = JSON.parse(Object.keys(req.body)[0]);
         var id=req.params['id'];
         var latitude=req.body.latitude;
