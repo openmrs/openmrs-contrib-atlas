@@ -12,5 +12,10 @@ module.exports = {
       "baseDn": "ou=users,dc=openmrs,dc=org",
       "rdn": "uid",
     },
+    "group": {
+      "baseDn": "ou=groups,dc=openmrs,dc=org",
+      "member": "member",
+      "rdn": "cn",
+    }
   },
 };

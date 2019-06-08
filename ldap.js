@@ -6,6 +6,7 @@ const log = require('log4js').getLogger();
 const conf = require('./conf.example.js');
 const serverAttr = conf.ldap.server;
 const userAttr = conf.ldap.user;
+const groupAttr = conf.ldap.group;
 
 
 // ldap connection url
@@ -27,6 +28,38 @@ const client = ldap.createClient({
     failAfter: Infinity,
   },
 });
+
+const ATLAS_ADMIN_LDAP_GROUP = "atlas-admin";
+
+/* Private functions */
+
+// Helper function that gets the groups that the user belongs to
+const searchGroups = (username, cb) => {
+  const base = groupAttr.baseDn;
+  const options = {
+    filter: `(${groupAttr.member}=${userAttr.rdn}=${username},${userAttr.baseDn})`,
+    scope: 'sub',
+    attributes: [groupAttr.rdn],
+  };
+
+  client.search(base, options, (err, res) => {
+    if (err) {
+      return cb(err);
+    }
+    const groups = [];
+    res.on('searchEntry', entry => {
+      groups.push(entry.object[groupAttr.rdn]);
+    });
+    res.on('error', err => {
+      log.error(err);
+      return cb(err);
+    });
+    res.on('end', result => {
+      log.debug(`ldap search ended with status: ${result.status}`);
+      return cb(null, groups);
+    });
+  });
+};
 
 /* Public API functions */
 
@@ -83,7 +116,14 @@ exports.getUser = (username, cb) => {
       if (!ret.length) {
         return cb(null, null);
       } else {
-        return cb(null, ret[0]);
+        searchGroups(ret[0].uid, function(err, groups) {
+          if(err) {
+            return cb(null, null);
+          } else {
+            ret[0].admin = groups.indexOf(ATLAS_ADMIN_LDAP_GROUP) !== -1
+            return cb(null, ret[0]);
+          }
+        });
       }
     });
   });
