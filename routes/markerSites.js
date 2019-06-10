@@ -38,7 +38,8 @@ module.exports = function(connection) {
             else{
                 //var data  = JSON.stringify(rows);
                 res.setHeader('Content-Type', 'application/json');
-                filterMarkerIds(req, rows);
+                //If user is logged in and is admin, don't filter marker ids. Else, do it.
+                if(!(req.session.user && req.session.user.admin)) filterMarkerIds(req, rows);
                 res.json(rows);
             }
         });
@@ -57,7 +58,8 @@ module.exports = function(connection) {
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
-                filterMarkerIds(req, rows);
+                //If user is logged in and is admin, don't filter marker ids. Else, do it.
+                if(!(req.session.user && req.session.user.admin)) filterMarkerIds(req, rows);
                 res.json(rows);
                 //connection.end();
             }
@@ -78,7 +80,8 @@ module.exports = function(connection) {
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
-                filterMarkerIds(req, rows);
+                //If user is logged in and is admin, don't filter marker ids. Else, do it.
+                if(!(req.session.user && req.session.user.admin)) filterMarkerIds(req, rows);
                 res.json(rows);
                 //connection.end();
             }
@@ -147,10 +150,15 @@ module.exports = function(connection) {
         var show_counts=req.body.show_counts;
         var openmrs_version=req.body.openmrs_version?req.body.openmrs_version:"unknown";
         var distribution=req.body.distribution;
+        var query = 'UPDATE atlas SET latitude=?,longitude=?,name=?,url=?,type=?,image=?,patients=?,encounters=?,observations=?,contact=?,email=?,notes=?,data=?,atlas_version=?,date_created=?,date_changed=?,created_by=?,show_counts=?,openmrs_version=?,distribution=? WHERE id =?';
+        // If the user is not admin, we have to check whether the marker belongs to the user
+        if(!req.session.user.admin) {
+            query += ' AND created_by=\''+req.session.user.uid+'\'';
+        }
 
         console.log(id+"    "+latitude+longitude+name+url+type+image+patients+encounters+date_changed+"           "+date_created);
 
-        connection.query('UPDATE atlas SET latitude=?,longitude=?,name=?,url=?,type=?,image=?,patients=?,encounters=?,observations=?,contact=?,email=?,notes=?,data=?,atlas_version=?,date_created=?,date_changed=?,created_by=?,show_counts=?,openmrs_version=?,distribution=? WHERE id =? AND created_by=?', [latitude,longitude,name,url,type,image,patients,encounters,observations,contact,email,notes,data,atlas_verison,date_created,date_changed,created_by,show_counts,openmrs_version,distribution,id,req.session.user.uid], function (error, rows,field) {
+        connection.query(query, [latitude,longitude,name,url,type,image,patients,encounters,observations,contact,email,notes,data,atlas_verison,date_created,date_changed,created_by,show_counts,openmrs_version,distribution,id], function (error, rows,field) {
             if(!!error){
                 console.log(error);
             }
@@ -188,8 +196,13 @@ module.exports = function(connection) {
     router.delete('/marker/:id', isAuthenticated, function(req, res, next) {
 
         var id=req.params['id'];
+        // If the user is not admin, we have to check whether the marker belongs to the user
+        var query = 'DELETE FROM atlas WHERE id =?';
+        if(!req.session.user.admin) {
+            query += ' AND created_by=\''+req.session.user.uid+'\'';
+        }
 
-        connection.query('DELETE FROM atlas WHERE id =? AND created_by=?', [id, req.session.user.uid], function (error, rows,field) {
+        connection.query(query, [id], function (error, rows,field) {
             if(!!error){
                 console.log(error);
             }

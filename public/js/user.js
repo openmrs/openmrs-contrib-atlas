@@ -202,7 +202,7 @@ function createEditInfoWindow(site, marker) {
   google.maps.event.addListener(infowindow, "closeclick", function() {
     sites[site.id].editBubbleOpen = false;
   });
-  if ((site.uid == currentUser) || (site.uuid) !== null) {
+  if ((site.uid == currentUser) || isAdmin || (site.uuid) !== null) {
     $("#map_canvas").on("click", "#undo", function(e){
       e.preventDefault();
       var id = $(this).attr("value");
@@ -358,7 +358,7 @@ function contentInfowindow(site) {
     var date_updated = dateChangedString(site);
     html += "<div id='site-update'>Last Updated: " + date_updated + "</div>";
   }
-  if(site.uid == currentUser) {
+  if(site.uid == currentUser || isAdmin) {
     html += "<div id='edit' value='" + site.id + "' title ='Edit site' class='control' style='position: absolute;overflow:none; right:12px;bottom:12px; color:#3F3F3F'><i class='fa fa-lg fa-pencil' style='color:rgba(171, 166, 166, 1)'></i></div>";
     html += "<div id='delete' value='" + site.id + "' title ='Delete site' class='control' style='position: absolute;overflow:none; right:12px;bottom:27px; color:#3F3F3F'><i class='fa fa-lg fa-trash-o' style='color:rgba(171, 166, 166, 1)'></i></div>";
   }

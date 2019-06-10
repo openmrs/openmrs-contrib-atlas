@@ -112,6 +112,8 @@
       currentUser = $('#user-id').val().trim();
       userName = $('#user-name').val().trim();
       userEmail = $('#user-email').val().trim();
+      isAdmin = $('#user-admin').val();
+      isAdmin = (isAdmin == 'true'); // converting string to boolean
 
       //If user is logged in
       if(currentUser != "visitor") {
@@ -212,6 +214,7 @@
 <input type="hidden" id="user-id" value= <%= user?user.uid:"visitor" %> />
 <input type="hidden" id="user-name" value= <%= user?user.cn:"" %> />
 <input type="hidden" id="user-email" value= <%= user?user.mail:"" %> />
+<input type="hidden" id="user-admin" value= <%= user?(user.admin?"true":"false"):"false" %> />
 
 </body>
 
