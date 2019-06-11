@@ -44,6 +44,20 @@ CREATE TABLE `versions` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Dumping data for table `types`
+--
+
+LOCK TABLES `types` WRITE;
+/*!40000 ALTER TABLE `types` DISABLE KEYS */;
+INSERT INTO `types` VALUES (1,'Research','https://maps.google.com/intl/en_us/mapfiles/ms/micons/green-dot.png'),
+(2,'Clinical','https://maps.google.com/intl/en_us/mapfiles/ms/micons/purple-dot.png'),
+(3,'Development','https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png'),
+(4,'Evaluation','https://maps.google.com/intl/en_us/mapfiles/ms/micons/yellow-dot.png'),
+(5,'Other','https://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png');
+/*!40000 ALTER TABLE `types` ENABLE KEYS */;
+UNLOCK TABLES;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
