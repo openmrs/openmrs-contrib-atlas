@@ -1,17 +1,55 @@
-<div>
-    <h1>Login</h1>
-    <% if(error) { %>
-        <p style="color:red;"><%= error %></p>
-    <% } %>
-    <form class="form" action="/login" method="post">
-        <div class="field">
-            <input class="text" type="text" placeholder="Username" name="username">
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html;" charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>OpenMRS Atlas - Sign in</title>
+        <link rel="shortcut icon" href="/favicon.ico">
+        <link rel="stylesheet" href="/lib/css/font-awesome.min.css">
+        <link rel="stylesheet" href="/lib/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/css/login.css">
+
+        <script src="/lib/js/jquery-1.11.1.min.js"></script>
+        <script src="/lib/js/bootstrap.min.js"></script>
+        <script id="globalnav-script" src="https://id.openmrs.org/globalnav/js/app-optimized.js" type="text/javascript"></script>
+
+    </head>
+    <body>
+        <div class="nodisp" id="uname">login</div>
+        <noscript><h3>JavaScript is required to properly use OpenMRS ID.</h3></noscript>
+        <div class="clearfix" id="header">
+            <div class="container">
+                <header class="col-md-5 col-md-offset-1">
+                    <a href="/"><img id="logo" src="/images/OpenMRS-logo.png" alt="OpenMRS Community"></a>
+                </header>
+            </div>
         </div>
-        <div class="field">
-            <input class="text" type="password" placeholder="Password" name="password">
+        <div id="headline">
+            <div class="container"><h1 class="col-md-8 col-md-offset-1">Sign In with your OpenMRS ID <small>Don't have an OpenMRS ID yet? <a href="https://id.openmrs.org/signup">Sign up</a>.</small></h1></div>
         </div>
-        <button class="button" name="submit">Submit</button>
-    </form>
-    <a href="/"><button class="button">Back</button></a>
-</div>
-  
+        <div class="content container" id="content">
+            <div class="col-md-10 col-md-offset-1 col-sm-10 col-sm-offset-0 col-xs-10 col-xs-offset-1" id="main">
+                <div class="panel">
+                    <form class="validate" id="login-form" action="/login" method="post">
+                        <input id="redirect-to" type="hidden" name="destination">
+                        <div class="row-item form-group">
+                            <div class="input-wrapper col-md-5">
+                                <input class="required" type="text" name="username" placeholder="OpenMRS ID">
+                                <label class="error">Forgot?</label>
+                            </div>
+                        </div>
+                        <div class="row-item form-group thin">
+                            <div class="input-wrapper col-md-5">
+                                <input class="required" type="password" name="password" placeholder="Password">
+                                <label class="error">Forgot?</label>
+                            </div>
+                        </div>
+                        <div class="row-item thin"><h5><a href="https://id.openmrs.org/reset">Forgot your password?</a></h5></div>
+                        <div class="row-item"><input class="btn btn-success col-md-3" type="submit" value="Sign in"></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="clear"></div>
+    </body>
+</html>
