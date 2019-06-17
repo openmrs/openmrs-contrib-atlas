@@ -422,7 +422,7 @@ function loadSites(json) {
         if (fadeGroup < 4) clusters.addMarker(marker);
         var editwindow = null;
         var infowindow = createInfoWindow(site, marker);
-        if ((site.uid !== "" && site.uid === currentUser) || (auth_site.indexOf(site.uuid) !== -1) || site.uuid !== null)
+        if ((site.uid !== "" && site.uid === currentUser) || isAdmin || (auth_site.indexOf(site.uuid) !== -1) || site.uuid !== null)
             editwindow = createEditInfoWindow(site, marker);
         if (site.version)
             version.push(versionMajMinForSite(site));
@@ -644,7 +644,7 @@ function createInfoWindow(site, marker) {
                 html += "class='btn btn-info btn-xs'>This is not me.</button></div>";
                 $(".site-bubble").append(html);
             }
-            if ((site.uid == currentUser) || site.uuid !== null) {
+            if ((site.uid == currentUser) || isAdmin || site.uuid !== null) {
                 if ($(".gm-style-iw").parent().has("#edit").length == 0) {
                     $("#lock").remove();
                     $(".gm-style-iw").parent().append("<div id='edit' value='" + site.id + "' title ='Edit site' class='control' style='position: absolute;overflow:none; right:12px;bottom:12px; color:#3F3F3F'><i class='fa fa-lg fa-pencil' style='color:rgba(171, 166, 166, 1)'></i></div>");
@@ -663,7 +663,7 @@ function createInfoWindow(site, marker) {
                 });
             }
         }
-        if ((site.uid === currentUser) || site.uuid !== null) {
+        if ((site.uid === currentUser) || isAdmin || site.uuid !== null) {
             $("#map_canvas").on("click", "#edit", function (e) {
                 //e.preventDefault();
                 var id = $(this).attr("value");
