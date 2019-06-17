@@ -211,6 +211,8 @@ function initialize() {
         .always(function(){
             fetchMarkerSites();
         });
+    fetchTypes();
+    fetchVersions();
 }
 
 function fetchMarkerSites() {
@@ -263,35 +265,21 @@ function Icons() {
         "https://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png"
     ];
     if (clustersEnabled) {
+        var other = getCachedTypes().find(function(type) { return type.name=='Other'; });
         icons = {
             Other: {
-                icon: "https://googlemaps.github.io/js-marker-clusterer/images/m1.png",
-                label: "Other"
+                icon: other.icon,
+                label: other.name
             }
         };
     } else if (legendGroups === 0) {
-        icons = {
-            Research: {
-                icon: "https://maps.google.com/intl/en_us/mapfiles/ms/micons/green-dot.png",
-                label: "Research"
-            },
-            Clinical: {
-                icon: "https://maps.google.com/intl/en_us/mapfiles/ms/micons/purple-dot.png",
-                label: "Clinical"
-            },
-            Development: {
-                icon: "https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png",
-                label: "Development"
-            },
-            Evaluation: {
-                icon: "https://maps.google.com/intl/en_us/mapfiles/ms/micons/yellow-dot.png",
-                label: "Evaluation"
-            },
-            Other: {
-                icon: "https://maps.google.com/intl/en_us/mapfiles/ms/micons/red-dot.png",
-                label: "Other"
-            }
-        };
+        icons = {};
+        getCachedTypes().forEach(function(type) {
+            icons[type.name] = {
+                icon: type.icon,
+                label: type.name
+            };
+        });
     } else if (legendGroups === 1) {
         icons = {
             1: {
@@ -387,28 +375,12 @@ function colorForSite(site) {
                 break;
         }
     } else if (legendGroups === 0) {
-        switch (site.type) {
-            case "Research":
-                types.Research = 1;
-                image.url = icons.Research.icon;
-                break;
-            case "Clinical":
-                types.Clinical = 1;
-                image.url = icons.Clinical.icon;
-                break;
-            case "Development":
-                types.Development = 1;
-                image.url = icons.Development.icon;
-                break;
-            case "Evaluation":
-                types.Evaluation = 1;
-                image.url = icons.Evaluation.icon;
-                break;
-            case "Other":
-                types.Other = 1;
-                image.url = icons.Other.icon;
-                break;
-        }
+        getCachedTypes().forEach(function(type) {
+            if(site.type == type.name) {
+                types[type.name] = 1;
+                image.url = icons[type.name].icon;
+            }
+        });
     } else if (legendGroups === 3){
         var distribution = getDistributionById(site.distribution);
         var key = distribution && icons.hasOwnProperty(distribution.name) ? distribution.name : "Other";

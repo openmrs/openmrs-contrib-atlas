@@ -399,22 +399,19 @@ function contentEditwindow(site) {
   if (site.module !== 1) {
     html += "<div class='form-inline'> OpenMRS Version ";
     html += "<select title='OpenMRS Version' id='version' class='form-control input-sm'>";
-    html += "<option selected>" + site.version + "</option>";
+    getCachedVersions().forEach(function (version) {
+      html += (site.version == version.version) ? "<option selected>" : "<option>";
+      html += version.version+"</option>"  
+    });
     html += "</select></div>";
   }
 
   html += "<div class='row' style='margin-top:10px;'><div class='col-xs-8'>";
   html += "<select title='Site type' id='type' class='form-control input-sm'>"
-  html += (site.type == "Clinical") ? "<option selected>" : "<option>";
-  html += "Clinical</option>"
-  html += (site.type == "Evaluation") ? "<option selected>" : "<option>";
-  html += "Evaluation</option>"
-  html += (site.type == "Development") ? "<option selected>" : "<option>";
-  html += "Development</option>"
-  html += (site.type == "Research") ? "<option selected>" : "<option>";
-  html += "Research</option>"
-  html += (site.type == "Other") ? "<option selected>" : "<option>";
-  html += "Other</option>"
+  getCachedTypes().forEach(function (type) {
+    html += (site.type == type.name) ? "<option selected>" : "<option>";
+    html += type.name+"</option>"  
+  });
   html += "</select></div>";
   html += "<input type='hidden' id='site' value='"+site.id+"'/>";
   html += "<div class=''><button type='submit' class='btn btn-primary'>Save</button></div></div></form></div></div>";
