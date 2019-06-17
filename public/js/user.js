@@ -269,17 +269,18 @@ function saveMarker(e) {
     sites[id].editBubbleOpen = false;
     sites[id].marker.setDraggable(false);
     var json = JSON.stringify(site);
+    var isUpdateRequest = isValidMarkerId(id);
     $.ajax({
-      //If marker id is a uuid, its an update request to '/marker/[id]'
-      //else it is an add request to '/marker'
-      url: "/marker/"+(isValidMarkerId(id)?id:""),
-      type: "POST",
+      //If marker id is a uuid, its an PATCH update request to '/marker/[id]'
+      //else it is an POST create request to '/marker'
+      url: "/marker" + (isUpdateRequest ? "/"+id : ""),
+      type: isUpdateRequest?"PATCH":"POST",
       data: json,
       dataType: "text",
     })
         .done(function(response) {
           response = response.substring(1,response.length-1);
-          if(!isValidMarkerId(id)) {
+          if(!isUpdateRequest) {
             sites[response] = sites[id];
             sites[response].siteData.id = response;
             delete sites[id];
