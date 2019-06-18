@@ -1,0 +1,63 @@
+<% include ../partials/header %>
+
+<script>
+
+function fetchTypes() {
+    $.ajax({url: "/types"})
+        .always(function (data, textStatus) {
+            if (textStatus != "success") {
+                return;
+            }
+
+            var table = document.getElementsByTagName("tbody")[0];
+            table.innerHTML = "";
+            data.forEach(function(type) {
+                var rowElem = table.insertRow(0);
+                var row = "<tr>";
+                row += "<td>"+type.id+"</td>";
+                row += "<td>"+type.name+"</td>";
+                row += "<td><a href='"+type.icon+"'>"+type.icon.substring(0,Math.min(40,type.icon.length))+"...</a></td>";
+                row += "<td><a href='/admin/types/"+type.id+"'><i class='fa fa-pencil-square-o fa-2x' id='edit' aria-hidden='true' style='margin: 5px;'></i></a> \
+                    <i class='fa fa-trash-o fa-2x' id='delete' onclick='deleteType("+type.id+")' aria-hidden='true'></i></td>";
+                row += "</tr>";
+                rowElem.innerHTML = row;
+                table.appendChild(rowElem);
+            });
+    })
+}
+
+fetchTypes();
+
+function deleteType(id) {
+    $.ajax({
+      url: "/types/"+id,
+      type: "DELETE",
+      dataType: "text",
+    })
+        .done(function(response) {
+            fetchTypes();
+        })
+        .fail(function(jqXHR, textStatus, errorThrown) {
+          bootbox.alert( "Error deleting type - Please try again ! - " + jqXHR.statusText );
+          return;
+        });
+}
+
+</script>
+
+<div class="container">
+    <div class="jumbotron">
+        <a href="/admin/types/new"><button class="btn btn-primary">Create new type</button></a>
+        <table class="table table-bordered" id="typestable">
+            <thead>
+                <th>ID</th>
+                <th>Name</th> 
+                <th>Icon</th>
+                <th>Operations</th>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+  
+<% include ../partials/footer %>
