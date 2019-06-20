@@ -169,6 +169,9 @@
     <!--@if ($user->role == 'ADMIN' && !Input::has('uuid'))
     <div class = "dropDownItemDiv" id="admin"><span class="glyphicon glyphicon-wrench"></span> {{ link_to_route('admin', ' Admin' )}}</div>
     @endif -->
+    <% if (user.admin) { %>
+      <a href="/admin"><div class = "dropDownItemDiv" id="adminPage"><span class="glyphicon glyphicon-user"></span>Admin Page</div></a>
+    <% } %>
     <div class = "dropDownItemDiv" id="locateMe"><img src="images/blue-dot.png">Locate Me</div>
     <div class = "dropDownItemDiv" id="editSite" >
     <img src="images/blue-dot.png">Edit my site</div>
