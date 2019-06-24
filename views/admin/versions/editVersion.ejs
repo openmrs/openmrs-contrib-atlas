@@ -1,0 +1,67 @@
+<% include ../partials/header %>
+
+<div class="container">
+    <div class="jumbotron">
+        <h2>Edit Version</h2>
+
+        <form class="form-horizontal" role="form">
+            <div class="form-group">
+                <label class="col-lg-2 control-label">Version</label>
+                <div class="col-lg-10">
+                    <input type="text" class="form-control" placeholder="version" name="version" id="version">
+                </div>
+            </div>
+            <input type="hidden" id="versionid" name="versionid" value="<%= id %>">
+                
+            <div class="form-group">
+                <div class="col-lg-offset-2 col-lg-10">
+                    <button type="submit" id="submit" class="btn btn-primary">Save Version</button>
+                </div>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<script>
+
+function fetchVersion() {
+    var versionid = document.getElementById("versionid").value;
+    $.ajax({url: "/version/"+versionid})
+        .always(function (data, textStatus) {
+            if (textStatus != "success") {
+                return;
+            }
+            document.getElementById("version").value = data[0].version;
+    });
+}
+
+fetchVersion();
+
+$("#submit").click(function (e) {
+    e.preventDefault();
+    var submitbtn = document.getElementById("submit");
+    submitbtn.disabled = true;
+
+    var id = $("#versionid").val();
+    var version = $("#version").val().trim();
+    var json = JSON.stringify({ version: version });
+    $.ajax({
+      url: "/version/"+id,
+      type: "PATCH",
+      data: json,
+      dataType: "text",
+    })
+    .done(function (response) {
+        submitbtn.disabled = false;
+        console.log(response);
+    })
+    .fail(function (jqXHR) {
+        submitbtn.disabled = false;
+        console.log("Error saving version - Please try again ! - " + jqXHR.statusText);
+    });
+});
+
+</script>
+        
+<% include ../partials/footer %>

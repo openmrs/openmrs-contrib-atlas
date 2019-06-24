@@ -24,6 +24,23 @@ module.exports = function () {
     //Page to edit a type
     router.get('/admin/types/:id', function (req, res) {
         if(req.session.authenticated && req.session.user.admin) res.render('admin/types/editType', { id: req.params['id'] });
+    });
+    
+    //Page to view all versions
+    router.get('/admin/versions', function (req, res) {
+        if(req.session.authenticated && req.session.user.admin) res.render('admin/versions/versions');
+        else res.send(401);
+    });
+
+    //Page to create a new version
+    router.get('/admin/versions/new', function (req, res) {
+        if(req.session.authenticated && req.session.user.admin) res.render('admin/versions/newVersion');
+        else res.send(401);
+    });
+    
+    //Page to edit a version
+    router.get('/admin/versions/:id', function (req, res) {
+        if(req.session.authenticated && req.session.user.admin) res.render('admin/versions/editVersion', { id: req.params['id'] });
         else res.send(401);
     });
     

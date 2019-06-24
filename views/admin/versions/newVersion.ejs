@@ -1,0 +1,52 @@
+<% include ../partials/header %>
+
+<div class="container">
+    <div class="jumbotron">
+        <h2>Create New Version</h2>
+
+        <form class="form-horizontal" role="form">
+            <div class="form-group">
+                <label class="col-lg-2 control-label">Version</label>
+                <div class="col-lg-10">
+                    <input type="text" class="form-control" placeholder="version" name="version" id="version">
+                </div>
+            </div>
+                
+            <div class="form-group">
+                <div class="col-lg-offset-2 col-lg-10">
+                    <button type="submit" id="submit" class="btn btn-primary">Create Version</button>
+                </div>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<script>
+
+$("#submit").click(function (e) {
+    e.preventDefault();
+    var submitbtn = document.getElementById("submit");
+    submitbtn.disabled = true;
+
+    var version = $("#version").val().trim();
+    var json = JSON.stringify({ version: version });
+    $.ajax({
+      url: "/version",
+      type: "POST",
+      data: json,
+      dataType: "text",
+    })
+    .done(function (response) {
+        console.log(response);
+        window.location.href = "/admin/versions";
+    })
+    .fail(function (jqXHR) {
+        submitbtn.disabled = false;
+        console.log("Error creating version - Please try again ! - " + jqXHR.statusText);
+    });
+});
+
+</script>
+
+<% include ../partials/footer %>
