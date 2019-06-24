@@ -1,16 +1,9 @@
 var express = require('express');
 var router = express.Router();
 var uuid = require('uuid');
+var utils = require('../utils.js');
 
 module.exports = function(connection) {
-    /* Middleware to check whether the user is logged in */
-    function isAuthenticated(req, res, next) {
-        if(req.session.authenticated) {
-            return next();
-        } else {
-            res.redirect("/login");
-        }
-    };
 
     function filterMarkerIds(req, markers) {
         for(var i = 0; i < markers.length; i++) {
@@ -91,7 +84,7 @@ module.exports = function(connection) {
     });
 
     /* Create new marker */
-    router.post('/marker/', isAuthenticated, function (req, res, next) {
+    router.post('/marker/', utils.isAuthenticated, function (req, res, next) {
         req.body = JSON.parse(Object.keys(req.body)[0]);
         var id=uuid.v4();
         var latitude=req.body.latitude;
@@ -129,7 +122,7 @@ module.exports = function(connection) {
     });
 
     /* Update marker with given id */
-    router.patch('/marker/:id', isAuthenticated, function (req, res, next) {
+    router.patch('/marker/:id', utils.isAuthenticated, function (req, res, next) {
         req.body = JSON.parse(Object.keys(req.body)[0]);
         var id=req.params['id'];
         var latitude=req.body.latitude;
@@ -172,7 +165,7 @@ module.exports = function(connection) {
     });
 
     /* Update marker with given id (called by atlas module) */
-    router.post('/module/ping.php', isAuthenticated, function (req, res, next) {
+    router.post('/module/ping.php', utils.isAuthenticated, function (req, res, next) {
         console.log(req.body);
         var id=req.body.id;
         var patients=req.body.patients;
@@ -195,7 +188,7 @@ module.exports = function(connection) {
     });
 
     /* Delete marker with given id */
-    router.delete('/marker/:id', isAuthenticated, function(req, res, next) {
+    router.delete('/marker/:id', utils.isAuthenticated, function(req, res, next) {
 
         var id=req.params['id'];
         // If the user is not admin, we have to check whether the marker belongs to the user
@@ -216,7 +209,7 @@ module.exports = function(connection) {
     });
 
     /* Delete marker with given id (called by atlas module) */
-    router.delete('/module', isAuthenticated, function(req, res, next) {
+    router.delete('/module', utils.isAuthenticated, function(req, res, next) {
 
         var id=req.query['id'];
         var secret=req.query['secret'];
