@@ -46,7 +46,7 @@ module.exports = function(connection) {
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
-                res.json(id);
+                res.json(rows.id);
             }
         });
     });
