@@ -30,16 +30,17 @@ fetchTypes();
 
 function deleteType(id) {
     $.ajax({
-      url: "/types/"+id,
+      url: "/type/"+id,
       type: "DELETE",
       dataType: "text",
     })
         .done(function(response) {
+            console.log("Marker Type deleted successfully!");
             fetchTypes();
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
-          bootbox.alert( "Error deleting type - Please try again ! - " + jqXHR.statusText );
-          return;
+            console.log( "Error deleting type - Please try again ! - " + jqXHR.statusText );
+            return;
         });
 }
 

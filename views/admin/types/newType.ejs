@@ -4,7 +4,7 @@
     <div class="jumbotron">
         <h2>Create New Type</h2>
 
-        <form class="form-horizontal" action="/type" method="post" role="form">
+        <form class="form-horizontal" role="form">
             <div class="form-group">
                 <label class="col-lg-2 control-label">Name</label>
                 <div class="col-lg-10">
@@ -20,7 +20,7 @@
                 
             <div class="form-group">
                 <div class="col-lg-offset-2 col-lg-10">
-                    <button type="submit" class="btn btn-primary">Create Type</button>
+                    <button type="submit" id="submit" class="btn btn-primary">Create Type</button>
                 </div>
             </div>
         </form>
@@ -28,4 +28,32 @@
     </div>
 </div>
   
+<script>
+
+$("#submit").click(function (e) {
+    e.preventDefault();
+    var submitbtn = document.getElementById("submit");
+    submitbtn.disabled = true;
+
+    var name = $("#name").val().trim();
+    var icon = $("#icon").val().trim();
+    var json = JSON.stringify({ name: name, icon: icon });
+    $.ajax({
+      url: "/type",
+      type: "POST",
+      data: json,
+      dataType: "text",
+    })
+    .done(function (response) {
+        console.log(response);
+        window.location.href = "/admin/types";
+    })
+    .fail(function (jqXHR) {
+        submitbtn.disabled = false;
+        console.log("Error creating marker type - Please try again ! - " + jqXHR.statusText);
+    });
+});
+
+</script>
+
 <% include ../partials/footer %>
