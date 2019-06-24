@@ -8,7 +8,7 @@ module.exports = function(app, db) {
 
     importRoute('default');
     importRoute('distributions');
-    importRoute('markerSites');
+    importRoute('markers');
     importRoute('types');
     importRoute('versions');
     importRoute('authentication');
