@@ -23,15 +23,39 @@ module.exports = function(connection) {
     /* GET all the markers */
     router.get('/markers', function(req, res, next) {
 
-        var query="SELECT * FROM atlas";
+        var query = "SELECT * FROM atlas";
 
-        //filter by username
-        var username=req.query['username'];
-        if(username) {
-            query += " WHERE created_by='"+username+"'";
-        }
+        //filter by url
+        var criteria = [
+            {
+                param: 'username',
+                col: 'created_by',
+            },
+            {
+                param: 'type',
+                col: 'type',
+            },
+            {
+                param: 'versions',
+                col: 'openmrs_version',
+            },
+            {
+                param: 'dists',
+                col: 'distribution',
+            },
+        ]
 
-        connection.query(query, function (error, rows, field) {
+        //if parameter exists in the url
+        //push it into params, and add column name to sql query
+        var params = [];
+        criteria.forEach(function(crit) {
+            if(req.query[crit.param]) {
+                query += (params.length === 0? ' WHERE ':' AND ')+crit.col+"=?";
+                params.push(req.query[crit.param]);
+            }
+        });
+
+        connection.query(query, params, function (error, rows, field) {
             if(!!error){
                 console.log(error);
             }
@@ -52,28 +76,6 @@ module.exports = function(connection) {
         var id=req.params['id'];
         console.log(id);
         connection.query('select * from atlas where id=?',[id], function (error, rows, field) {
-
-            if(!!error){
-                console.log(error);
-            }
-            else {
-                res.setHeader('Content-Type', 'application/json');
-                //If user is logged in and is admin, don't filter marker ids. Else, do it.
-                if(!(req.session.user && req.session.user.admin)) filterMarkerIds(req, rows);
-                res.json(rows);
-                //connection.end();
-            }
-        })
-    });
-
-    /* Get markers based on type, openmrs_version and distribution */
-    router.get('/markers', function (req, res, next) {
-
-        var types=req.query['type'];
-        var versions=req.query['versions'];
-        var dists=req.query['dists'];
-        //console.log(types+versions+dists);
-        connection.query('select * from atlas where type=? and openmrs_version=? and distribution=?',[types,versions,dists], function (error, rows, field) {
 
             if(!!error){
                 console.log(error);
