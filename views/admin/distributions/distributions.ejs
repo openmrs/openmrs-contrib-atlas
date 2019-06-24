@@ -1,0 +1,66 @@
+<% include ../partials/header %>
+
+<script>
+
+function fetchDistributions() {
+    $.ajax({url: "/distributions"})
+        .always(function (data, textStatus) {
+            if (textStatus != "success") {
+                return;
+            }
+
+            var table = document.getElementsByTagName("tbody")[0];
+            table.innerHTML = "";
+            data.forEach(function(distribution) {
+                var rowElem = table.insertRow(0);
+                var row = "<tr>";
+                row += "<td>"+distribution.id+"</td>";
+                row += "<td>"+distribution.name+"</td>";
+                row += "<td>"+distribution.created_at+"</td>";
+                row += "<td>"+distribution.is_standard+"</td>";
+                row += "<td><a href='/admin/distributions/"+distribution.id+"'><i class='fa fa-pencil-square-o fa-2x' id='edit' aria-hidden='true' style='margin: 5px;'></i></a> \
+                    <i class='fa fa-trash-o fa-2x' id='delete' onclick='deleteDistribution("+distribution.id+")' aria-hidden='true'></i></td>";
+                row += "</tr>";
+                rowElem.innerHTML = row;
+                table.appendChild(rowElem);
+            });
+    })
+}
+
+fetchDistributions();
+
+function deleteDistribution(id) {
+    $.ajax({
+      url: "/distribution/"+id,
+      type: "DELETE",
+      dataType: "text",
+    })
+        .done(function(response) {
+            console.log(response);
+            fetchDistributions();
+        })
+        .fail(function(jqXHR, textStatus, errorThrown) {
+          console.log( "Error deleting distribution - Please try again ! - " + jqXHR.statusText );
+          return;
+        });
+}
+
+</script>
+
+<div class="container">
+    <div class="jumbotron">
+        <a href="/admin/distributions/new"><button class="btn btn-primary">Create new distribution</button></a>
+        <table class="table table-bordered" id="distributionstable">
+            <thead>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Created at</th>
+                <th>Is Standard</th>
+                <th>Operations</th>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+  
+<% include ../partials/footer %>

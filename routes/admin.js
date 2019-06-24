@@ -41,6 +41,23 @@ module.exports = function () {
     //Page to edit a version
     router.get('/admin/versions/:id', function (req, res) {
         if(req.session.authenticated && req.session.user.admin) res.render('admin/versions/editVersion', { id: req.params['id'] });
+    });
+
+    //Page to view all distributions
+    router.get('/admin/distributions', function (req, res) {
+        if(req.session.authenticated && req.session.user.admin) res.render('admin/distributions/distributions');
+        else res.send(401);
+    });
+
+    //Page to create a new distribution
+    router.get('/admin/distributions/new', function (req, res) {
+        if(req.session.authenticated && req.session.user.admin) res.render('admin/distributions/newDistribution');
+        else res.send(401);
+    });
+    
+    //Page to edit a distribution
+    router.get('/admin/distributions/:id', function (req, res) {
+        if(req.session.authenticated && req.session.user.admin) res.render('admin/distributions/editDistribution', { id: req.params['id'] });
         else res.send(401);
     });
     
