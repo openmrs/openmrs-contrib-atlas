@@ -1,0 +1,76 @@
+<% include ../partials/header %>
+
+<div class="container">
+    <div class="jumbotron">
+        <h2>Edit Distribution</h2>
+
+        <form class="form-horizontal" role="form">
+            <div class="form-group">
+                <label class="col-lg-2 control-label">Name</label>
+                <div class="col-lg-10">
+                    <input type="text" class="form-control" placeholder="name" name="name" id="name">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-lg-2 control-label">Is Standard?</label>
+                <div class="col-lg-10" id="isstandard">
+                    <input type="checkbox" name="is_standard" id="is_standard">
+                </div>
+            </div>
+            <input type="hidden" id="distributionid" name="distributionid" value="<%= id %>">
+                
+            <div class="form-group">
+                <div class="col-lg-offset-2 col-lg-10">
+                    <button type="submit" id="submit" class="btn btn-primary">Save Distribution</button>
+                </div>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<script>
+
+function fetchDistribution() {
+    var distributionid = document.getElementById("distributionid").value;
+    $.ajax({url: "/distribution/"+distributionid})
+        .always(function (data, textStatus) {
+            if (textStatus != "success") {
+                return;
+            }
+            document.getElementById("name").value = data[0].name;
+            if(data[0].is_standard === 1) document.getElementById('is_standard').checked = true;
+    });
+}
+
+fetchDistribution();
+
+$("#submit").click(function (e) {
+    e.preventDefault();
+    var submitbtn = document.getElementById("submit");
+    submitbtn.disabled = true;
+
+    var id = $("#distributionid").val();
+    var name = $("#name").val().trim();
+    var is_standard = $('#is_standard').is(':checked') ? 1 : 0;
+    var json = JSON.stringify({ name: name, is_standard: is_standard });
+    console.log(json);
+    $.ajax({
+      url: "/distribution/"+id,
+      type: "PATCH",
+      data: json,
+      dataType: "text",
+    })
+    .done(function (response) {
+        console.log(response);
+        submitbtn.disabled = false;
+    })
+    .fail(function (jqXHR) {
+        submitbtn.disabled = false;
+        console.log("Error saving distribution - Please try again ! - " + jqXHR.statusText);
+    });
+});
+
+</script>
+        
+<% include ../partials/footer %>
