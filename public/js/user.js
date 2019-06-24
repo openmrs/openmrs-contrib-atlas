@@ -228,6 +228,9 @@ function saveMarker(e) {
     var patients = $("#patients").val().trim();
     var encounters = $("#encounters").val().trim();
     var obs = $("#observations").val().trim();
+    if(patients==='') patients=0;
+    if(encounters==='') encounters=0;
+    if(obs==='') obs=0;
     var version = $("select#version").val().trim();
     site.distribution = getSelectedDistributionValue();
     site.nonStandardDistributionName = $("#nonStandardDistributionName").val().trim();
@@ -240,7 +243,7 @@ function saveMarker(e) {
     var stats = $('#include-count').is(':checked') ? 1 : 0;
     site.show_counts = stats;
   }
-
+  
   var image = $("#image").val();
   var name = $("#name").val().trim();
   var mail = $("#email").val().trim();
@@ -330,7 +333,7 @@ function contentInfowindow(site) {
   if (site.url)
     html += "<div class='site-url'><a target='_blank' rel='nofollow' href='" + safeUrl(site.url) + "' title='" + site.url + "'>"
         + displayUrl(safeUrl(site.url)) + "</a></div>";
-  if (site.show_counts == true) {
+  if (site.show_counts == true || isAdmin) {
     if (site.patients && site.patients !== "0")
       html += "<div class='site-count'>" + addCommas(site.patients) + " patients</div>";
     if (site.encounters && site.encounters !== "0")
@@ -368,9 +371,6 @@ function contentInfowindow(site) {
 }
 
 function contentEditwindow(site) {
-  var patients = ('patients' in counts) ? counts.patients : ('patients' in site) ? site.patients : "?";
-  var encounters = ('encounters' in counts) ? counts.encounters : ('encounters' in site) ? site.encounters : "?";
-  var observations = ('observations' in counts) ? counts.observations : ('observations' in site) ? site.observations : "?";
   var html = "<div class='site-bubble bubble-form'>";
   html += "<form method='post' id='"+ site.id +"'>";
   html += "<div class='form-group'><input type='text' required='true' placeholder='Site Name' title='Site Name' class='form-control input-sm' value='"+ site.name + "' id='name' name='name'></div>";
@@ -381,7 +381,7 @@ function contentEditwindow(site) {
   html += "<div class='form-group'><textarea class='form-control' value='' name='notes' rows='2' id='notes' placeholder='Notes'>"+ site.notes + "</textarea></div>";
 
   html += createDistributionSelectBox(site.distribution, site.nonStandardDistributionName);
-
+  
   if (site.module !== 1) {
     html += "<div class='site-stat'>";
     html += "<div class='form-inline'>Patients <input type='number' pattern='[0-9]' class='form-control input-sm' title='Number of patients' value='"+ site.patients + "' name='patients' id ='patients'></div>";
@@ -396,6 +396,7 @@ function contentEditwindow(site) {
     html += "<div class='form-inline'>" + observations + " observations</div>";
     html += "</div></fieldset>";
   }
+
   if (site.module !== 1) {
     html += "<div class='form-inline'> OpenMRS Version ";
     html += "<select title='OpenMRS Version' id='version' class='form-control input-sm'>";

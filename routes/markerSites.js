@@ -13,10 +13,20 @@ module.exports = function(connection) {
         }
     }
 
+    var show_counts_query = "SELECT * FROM atlas";
+
+    var no_counts_query = "SELECT id,latitude,longitude,name,url,type,image,show_counts, \
+    IF(show_counts, patients, null) AS patients, \
+    IF(show_counts, encounters, null) AS encounters, \
+    IF(show_counts, observations, null) as observations, \
+    contact,email,notes,data,atlas_version,openmrs_version,distribution,date_created,date_changed,created_by FROM atlas";
+
     /* GET all the markers */
     router.get('/markers', function(req, res, next) {
 
-        var query = "SELECT * FROM atlas";
+        var query = "";
+        if(req.session.authenticated && req.session.user.admin) query = show_counts_query;
+        else query = no_counts_query;
 
         //filter by url
         var criteria = [
@@ -66,9 +76,13 @@ module.exports = function(connection) {
     /* Get a specific marker with id parameter */
     router.get('/marker/:id', function (req, res, next) {
 
+        var query = "";
+        if(req.session.authenticated && req.session.user.isAdmin) query = show_counts_query;
+        else query = no_counts_query;
+
         var id=req.params['id'];
         console.log(id);
-        connection.query('select * from atlas where id=?',[id], function (error, rows, field) {
+        connection.query(query+' where id=?',[id], function (error, rows, field) {
 
             if(!!error){
                 console.log(error);
