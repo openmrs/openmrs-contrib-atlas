@@ -72,7 +72,7 @@ module.exports = function(connection) {
 
         var id=req.params['id'];
 
-        connection.query('DELETE FROM version WHERE id =?', [id], function (error, rows,field) {
+        connection.query('DELETE FROM versions WHERE id =?', [id], function (error, rows,field) {
             if(!!error){
                 console.log(error);
             }
