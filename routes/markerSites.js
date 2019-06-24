@@ -85,6 +85,10 @@ module.exports = function(connection) {
 
     /* Create new marker */
     router.post('/marker/', utils.isAuthenticated, function (req, res, next) {
+
+        //If authenticated user is not the owner of the marker or an admin, return 401 (Unauthorized)
+        if(req.session.user.uid != req.body.uid && !req.session.user.admin) return res.send(401);
+
         req.body = JSON.parse(Object.keys(req.body)[0]);
         var id=uuid.v4();
         var latitude=req.body.latitude;
@@ -123,6 +127,10 @@ module.exports = function(connection) {
 
     /* Update marker with given id */
     router.patch('/marker/:id', utils.isAuthenticated, function (req, res, next) {
+
+        //If authenticated user is not the owner of the marker or an admin, return 401 (Unauthorized)
+        if(req.session.user.uid != req.body.uid && !req.session.user.admin) return res.send(401);
+
         req.body = JSON.parse(Object.keys(req.body)[0]);
         var id=req.params['id'];
         var latitude=req.body.latitude;
