@@ -142,7 +142,7 @@ function newSite(myPosition) {
     email: userEmail,
     show_counts: 1,
     notes: "",
-    version: "",
+    openmrs_version: "",
     url: "",
     image: "",
     latitude: myPosition.lat(),
@@ -237,7 +237,7 @@ function saveMarker(e) {
     site.observations = obs;
     site.patients = patients;
     site.encounters = encounters;
-    site.version = version;
+    site.openmrs_version = version;
   }
   if (site.module == 1) {
     var stats = $('#include-count').is(':checked') ? 1 : 0;
@@ -401,7 +401,7 @@ function contentEditwindow(site) {
     html += "<div class='form-inline'> OpenMRS Version ";
     html += "<select title='OpenMRS Version' id='version' class='form-control input-sm'>";
     getCachedVersions().forEach(function (version) {
-      html += (site.version == version.version) ? "<option selected>" : "<option>";
+      html += (site.openmrs_version == version.version) ? "<option selected>" : "<option>";
       html += version.version+"</option>"  
     });
     html += "</select></div>";
