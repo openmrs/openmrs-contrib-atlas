@@ -34,13 +34,6 @@ $(function () {
       if (result) deleteMarker(id);
     });
   });
-  $("#map_canvas").on("focus", "#version", function(e){
-    $("#version").html("");
-    $("#version").append("<option value=''></option>");
-    $(existingVersion).each(function (i) {
-      $("#version").append("<option value=\""+existingVersion[i]+"\">"+existingVersion[i]+"</option>");
-    });
-  });
 });
 
 function getGeolocation() {
