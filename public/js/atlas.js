@@ -311,7 +311,9 @@ function Icons() {
             return distribution.is_standard == true;
         });
 
-        sites.forEach(function(site){
+        Object.keys(sites).forEach(function(siteid){
+            var site = sites[siteid];
+            
             var siteDistribution = standardDistributions.find(function(distribution){
                 return distribution.id == site.siteData.distribution;
             });
