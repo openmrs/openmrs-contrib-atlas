@@ -1,7 +1,7 @@
 var lockHtml = "<div class='toggle' id='lockInfo'>You cannot modify this site. If you wish to claim ownership of this site, please contact the ";
 lockHtml += "<a href='http://cl.openmrs.org/track/click.php?u=30039905&id=c4087a259d664e978fd6f3630b9188bb&url=";
 lockHtml += "http%3A%2F%2Fgo.openmrs.org%2Fhelpdesk&url_id=04c52b64769a7567d21db835fcd45f51f99842bd' target='_blank'> OpenMRS HelpDesk.</a></div>";
-var fadeHtml = "<div class='toggle' id='fadeInfo'> Sites that have not been updated for more than six months will begin to fade away. ";
+var fadeHtml = "<div class='toggle' id='fadeInfo'> Sites that have not been updated for more than a year will begin to fade away. ";
 fadeHtml += "Fading can be turned off through the controls on this page.</div>";
 var uniqueMarker = null;
 
@@ -540,7 +540,7 @@ function versionMajMinForSite(site) {
 
 function getFadeGroup(site) {
     var ageInMonths = Math.max(0, (new Date().getTime() - dateForSite(site)) / 2592000000); // milliseconds in 30 days
-    var fadeGroup = Math.floor(ageInMonths / 6);
+    var fadeGroup = ageInMonths <= 12 ? 0 : Math.floor((ageInMonths-6) / 6); // after 1 year, +1 every 6 months
     return Math.min(fadeGroup, 4); // higher index == more transparent (max is 4)
 }
 
