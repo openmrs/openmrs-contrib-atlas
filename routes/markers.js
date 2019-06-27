@@ -123,7 +123,7 @@ module.exports = function(connection) {
         var date_changed=new Date().toISOString().slice(0, 19).replace('T', ' ');
         var created_by=req.body.uid;
         var show_counts=req.body.show_counts;
-        var openmrs_version=req.body.openmrs_version?req.body.openmrs_version:"unknown";
+        var openmrs_version=req.body.openmrs_version?req.body.openmrs_version:"Unknown";
         var distribution=req.body.distribution;
 
         console.log(id+"    "+latitude+longitude+name+url+type+image+patients+encounters+date_changed+"           "+date_created);
@@ -165,7 +165,7 @@ module.exports = function(connection) {
         var date_changed=new Date().toISOString().slice(0, 19).replace('T', ' ');
         var created_by=req.body.uid;
         var show_counts=req.body.show_counts;
-        var openmrs_version=req.body.openmrs_version?req.body.openmrs_version:"unknown";
+        var openmrs_version=req.body.openmrs_version?req.body.openmrs_version:"Unknown";
         var distribution=req.body.distribution;
         var query = 'UPDATE atlas SET latitude=?,longitude=?,name=?,url=?,type=?,image=?,patients=?,encounters=?,observations=?,contact=?,email=?,notes=?,data=?,atlas_version=?,date_created=?,date_changed=?,created_by=?,show_counts=?,openmrs_version=?,distribution=? WHERE id =?';
         // If the user is not admin, we have to check whether the marker belongs to the user
