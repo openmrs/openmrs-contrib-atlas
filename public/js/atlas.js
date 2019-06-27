@@ -613,7 +613,7 @@ function createInfoWindow(site, marker) {
             html: true, title: fadeHtml,
             delay: {show: 500, hide: 1200}
         });
-        if (fadeOverTime && getFadeGroup(site) > 0) {
+        if (getFadeGroup(site) > 0) {
             $(".site-fade").css("display", "block");
         }
         else {
