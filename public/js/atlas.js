@@ -523,19 +523,15 @@ function dateChangedString(site) {
 }
 
 function versionForSite(site) {
-    if (site.openmrs_version && site.openmrs_version !== "" && site.openmrs_version !== "unknown") {
-        var version = site.openmrs_version;
-        return version.match(/\d+(\.\d+)+/g).toString();
-    }
-    return null;
+    var version = site.openmrs_version;
+    version = version? version.match(/\d+(\.\d+)+/g) : null;
+    return version? version.toString() : null;
 }
 
 function versionMajMinForSite(site) {
-    if (site.openmrs_version && site.openmrs_version !== "" && site.openmrs_version !== "unknown") {
-        var version = site.openmrs_version;
-        return version.match(/\d+(\.\d+)/g).toString();
-    }
-    return null;
+    var version = site.openmrs_version;
+    version = version? version.match(/\d+(\.\d+)/g) : null;
+    return version? version.toString() : null;
 }
 
 function getFadeGroup(site) {
