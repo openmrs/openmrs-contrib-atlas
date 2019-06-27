@@ -298,6 +298,7 @@ function saveMarker(e) {
           if (auth_site.length > 0)
             $("#editSite").attr("hidden", false);
           repaintMarkers();
+          initLegend();
           bootbox.alert("Marker saved");
           if (site.distribution == null && (site.nonStandardDistributionName != null && site.nonStandardDistributionName != "")) {
             fetchDistributions()
