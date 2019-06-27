@@ -144,7 +144,7 @@ module.exports = function(connection) {
 
         //If authenticated user is not the owner of the marker or an admin, return 401 (Unauthorized)
         if(req.session.user.uid != req.body.uid && !req.session.user.admin) return res.send(401);
-
+        
         req.body = JSON.parse(Object.keys(req.body)[0]);
         var id=req.params['id'];
         var latitude=req.body.latitude;

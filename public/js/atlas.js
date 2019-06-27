@@ -403,7 +403,7 @@ function colorForSite(site) {
 function loadVersion(json) {
     for (i = 0; i < json.length; i++) {
         var site = json[i];
-        if (site.version) version.push(versionMajMinForSite(site));
+        if (site.openmrs_version) version.push(versionMajMinForSite(site));
         else unknownVersion++;
     }
     initVersion();
@@ -424,7 +424,7 @@ function loadSites(json) {
         var infowindow = createInfoWindow(site, marker);
         if ((site.uid !== "" && site.uid === currentUser) || isAdmin || (auth_site.indexOf(site.uuid) !== -1) || site.uuid !== null)
             editwindow = createEditInfoWindow(site, marker);
-        if (site.version)
+        if (site.openmrs_version)
             version.push(versionMajMinForSite(site));
         if (moduleHasSite !== 1 && auth_site.indexOf(site.uuid) !== -1 && moduleUUID !== null && auth_site.length === 1)
             uniqueMarker = marker;
@@ -521,16 +521,16 @@ function dateChangedString(site) {
 }
 
 function versionForSite(site) {
-    if (site.version) {
-        var version = site.version;
+    if (site.openmrs_version && site.openmrs_version !== "" && site.openmrs_version !== "unknown") {
+        var version = site.openmrs_version;
         return version.match(/\d+(\.\d+)+/g).toString();
     }
     return null;
 }
 
 function versionMajMinForSite(site) {
-    if (site.version) {
-        var version = site.version;
+    if (site.openmrs_version && site.openmrs_version !== "" && site.openmrs_version !== "unknown") {
+        var version = site.openmrs_version;
         return version.match(/\d+(\.\d+)/g).toString();
     }
     return null;
