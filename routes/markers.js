@@ -146,44 +146,71 @@ module.exports = function(connection) {
         if(req.session.user.uid != req.body.uid && !req.session.user.admin) return res.send(401);
         
         req.body = JSON.parse(Object.keys(req.body)[0]);
-        var id=req.params['id'];
-        var latitude=req.body.latitude;
-        var longitude=req.body.longitude;
-        var name=req.body.name;
-        var url=req.body.url;
-        var type=req.body.type;
-        var image=req.body.image;
-        var patients=req.body.patients;
-        var encounters=req.body.encounters;
-        var observations=req.body.observations;
-        var contact=req.body.contact;
-        var email=req.body.email;
-        var notes=req.body.notes;
-        var data=req.body.data;
-        var atlas_verison=req.body.atlas_version;
-        var date_created= new Date().toISOString().slice(0, 19).replace('T', ' ');
-        var date_changed=new Date().toISOString().slice(0, 19).replace('T', ' ');
-        var created_by=req.body.uid;
-        var show_counts=req.body.show_counts;
-        var openmrs_version=req.body.openmrs_version?req.body.openmrs_version:"Unknown";
-        var distribution=req.body.distribution;
-        var query = 'UPDATE atlas SET latitude=?,longitude=?,name=?,url=?,type=?,image=?,patients=?,encounters=?,observations=?,contact=?,email=?,notes=?,data=?,atlas_version=?,date_created=?,date_changed=?,created_by=?,show_counts=?,openmrs_version=?,distribution=? WHERE id =?';
-        // If the user is not admin, we have to check whether the marker belongs to the user
-        if(!req.session.user.admin) {
-            query += ' AND created_by=\''+req.session.user.uid+'\'';
+
+        if(req.body !== null && !Object.keys(req.body).length) {
+            var id = req.params['id']
+            var date_changed=new Date().toISOString().slice(0, 19).replace('T', ' ');
+            var query = 'UPDATE atlas SET date_changed=? WHERE id =?';
+            if(!req.session.user.admin) {
+                query += ' AND created_by=\''+req.session.user.uid+'\'';
+            }
+
+            connection.query(query, [date_changed,id], function (error, rows,field) {
+                if(!!error){
+                    console.log(error);
+                }
+            });            
+
+            connection.query("SELECT * from atlas WHERE id=?", [id], function (error, rows,field) {
+                if(!!error){
+                    console.log(error);
+                }
+                else {
+                    res.setHeader('Content-Type', 'application/json');
+                    res.json(rows);
+                }
+            });            
+
+        } else {
+            var id=req.params['id'];
+            var latitude=req.body.latitude;
+            var longitude=req.body.longitude;
+            var name=req.body.name;
+            var url=req.body.url;
+            var type=req.body.type;
+            var image=req.body.image;
+            var patients=req.body.patients;
+            var encounters=req.body.encounters;
+            var observations=req.body.observations;
+            var contact=req.body.contact;
+            var email=req.body.email;
+            var notes=req.body.notes;
+            var data=req.body.data;
+            var atlas_verison=req.body.atlas_version;
+            var date_created= new Date().toISOString().slice(0, 19).replace('T', ' ');
+            var date_changed=new Date().toISOString().slice(0, 19).replace('T', ' ');
+            var created_by=req.body.uid;
+            var show_counts=req.body.show_counts;
+            var openmrs_version=req.body.openmrs_version?req.body.openmrs_version:"unknown";
+            var distribution=req.body.distribution;
+            var query = 'UPDATE atlas SET latitude=?,longitude=?,name=?,url=?,type=?,image=?,patients=?,encounters=?,observations=?,contact=?,email=?,notes=?,data=?,atlas_version=?,date_created=?,date_changed=?,created_by=?,show_counts=?,openmrs_version=?,distribution=? WHERE id =?';
+            // If the user is not admin, we have to check whether the marker belongs to the user
+            if(!req.session.user.admin) {
+                query += ' AND created_by=\''+req.session.user.uid+'\'';
+            }
+
+            console.log(id+"    "+latitude+longitude+name+url+type+image+patients+encounters+date_changed+"           "+date_created);
+
+            connection.query(query, [latitude,longitude,name,url,type,image,patients,encounters,observations,contact,email,notes,data,atlas_verison,date_created,date_changed,created_by,show_counts,openmrs_version,distribution,id], function (error, rows,field) {
+                if(!!error){
+                    console.log(error);
+                }
+                else {
+                    res.setHeader('Content-Type', 'application/json');
+                    res.json(id);
+                }
+            });
         }
-
-        console.log(id+"    "+latitude+longitude+name+url+type+image+patients+encounters+date_changed+"           "+date_created);
-
-        connection.query(query, [latitude,longitude,name,url,type,image,patients,encounters,observations,contact,email,notes,data,atlas_verison,date_created,date_changed,created_by,show_counts,openmrs_version,distribution,id], function (error, rows,field) {
-            if(!!error){
-                console.log(error);
-            }
-            else {
-                res.setHeader('Content-Type', 'application/json');
-                res.json(id);
-            }
-        });
     });
 
     /* Update marker with given id (called by atlas module) */
