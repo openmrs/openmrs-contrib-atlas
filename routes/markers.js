@@ -103,7 +103,6 @@ module.exports = function(connection) {
         //If authenticated user is not the owner of the marker or an admin, return 401 (Unauthorized)
         if(req.session.user.uid != req.body.uid && !req.session.user.admin) return res.send(401);
 
-        req.body = JSON.parse(Object.keys(req.body)[0]);
         var id=uuid.v4();
         var latitude=req.body.latitude;
         var longitude=req.body.longitude;
@@ -134,7 +133,7 @@ module.exports = function(connection) {
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
-                res.json(id);
+                res.json({ id: id });
             }
         });
     });
@@ -144,8 +143,6 @@ module.exports = function(connection) {
 
         //If authenticated user is not the owner of the marker or an admin, return 401 (Unauthorized)
         if(req.session.user.uid != req.body.uid && !req.session.user.admin) return res.send(401);
-        
-        req.body = JSON.parse(Object.keys(req.body)[0]);
 
         if(req.body !== null && !Object.keys(req.body).length) {
             var id = req.params['id']
@@ -164,8 +161,7 @@ module.exports = function(connection) {
             connection.query("SELECT * from atlas WHERE id=?", [id], function (error, rows,field) {
                 if(!!error){
                     console.log(error);
-                }
-                else {
+                } else {
                     res.setHeader('Content-Type', 'application/json');
                     res.json(rows);
                 }
@@ -207,7 +203,7 @@ module.exports = function(connection) {
                 }
                 else {
                     res.setHeader('Content-Type', 'application/json');
-                    res.json(id);
+                    res.json({ id: id });
                 }
             });
         }
@@ -252,7 +248,7 @@ module.exports = function(connection) {
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
-                res.json(id);
+                res.json({ id: id });
             }
         });
     });

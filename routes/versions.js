@@ -36,7 +36,6 @@ module.exports = function(connection) {
     
     /* Create new version */
     router.post('/version', utils.isAdmin, function (req, res, next) {
-        req.body = JSON.parse(Object.keys(req.body)[0]);
         var version = req.body.version;
 
         connection.query('insert into versions(version) values (?)', [version], function (error, rows,field) {
@@ -45,14 +44,13 @@ module.exports = function(connection) {
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
-                res.json(rows.id);
+                res.json({ });
             }
         });
     });
 
     /* Update version with given id */
     router.patch('/version/:id', utils.isAdmin, function (req, res, next) {
-        req.body = JSON.parse(Object.keys(req.body)[0]);
         var id = req.params['id'];
         var version = req.body.version;
 
@@ -62,7 +60,7 @@ module.exports = function(connection) {
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
-                res.json(id);
+                res.json({ id: id });
             }
         });
     });
@@ -78,7 +76,7 @@ module.exports = function(connection) {
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
-                res.json(id);
+                res.json({ id: id });
             }
         });
     });    

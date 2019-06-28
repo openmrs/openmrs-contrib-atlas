@@ -37,7 +37,6 @@ module.exports = function(connection) {
 
     /* Create new distribution */
     router.post('/distribution', utils.isAdmin, function (req, res, next) {
-        req.body = JSON.parse(Object.keys(req.body)[0]);
         var name = req.body.name;
         var is_standard = req.body.is_standard;
 
@@ -47,14 +46,13 @@ module.exports = function(connection) {
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
-                res.json(rows.id);
+                res.json({ });
             }
         });
     });
 
     /* Update distribution */
     router.patch('/distribution/:id', utils.isAdmin, function (req, res, next) {
-        req.body = JSON.parse(Object.keys(req.body)[0]);
         var id = req.params['id'];
         var name = req.body.name;
         var is_standard = req.body.is_standard;
@@ -65,7 +63,7 @@ module.exports = function(connection) {
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
-                res.json(id);
+                res.json({ id: id });
             }
         });
     });
@@ -81,7 +79,7 @@ module.exports = function(connection) {
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
-                res.json(id);
+                res.json({ id: id });
             }
         });
     });        

@@ -35,7 +35,9 @@ $("#submit").click(function (e) {
       url: "/version",
       type: "POST",
       data: json,
-      dataType: "text",
+      dataType: "json",
+      processData: false,
+      contentType: "application/json",
     })
     .done(function (response) {
         console.log(response);

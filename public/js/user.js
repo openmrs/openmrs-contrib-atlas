@@ -160,7 +160,7 @@ function deleteMarker(site) {
     $.ajax({
       url: "/marker/"+deleted,
       type: "DELETE",
-      dataType: "text",
+      dataType: "json",
     })
         .done(function(response) {
           sites[site].marker.setMap(null);
@@ -277,10 +277,12 @@ function saveMarker(e) {
       url: "/marker" + (isUpdateRequest ? "/"+id : ""),
       type: isUpdateRequest?"PATCH":"POST",
       data: json,
-      dataType: "text",
+      dataType: "json",
+      processData: false,
+      contentType: "application/json",
     })
         .done(function(response) {
-          response = response.substring(1,response.length-1);
+          response = response.id;
           if(!isUpdateRequest) {
             sites[response] = sites[id];
             sites[response].siteData.id = response;
@@ -330,6 +332,8 @@ function updateMarker(id) {
       type: "PATCH",
       data: json,
       dataType: "json",
+      processData: false,
+      contentType: "application/json",
     })
         .done(function(response) {
           sites[id].siteData.date_changed = response[0].date_changed; 

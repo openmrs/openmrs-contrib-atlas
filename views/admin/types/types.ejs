@@ -18,7 +18,7 @@ function fetchTypes() {
                 row += "<td>"+type.name+"</td>";
                 row += "<td><a href='"+type.icon+"'>"+type.icon.substring(0,Math.min(40,type.icon.length))+"...</a></td>";
                 row += "<td><a href='/admin/types/"+type.id+"'><i class='fa fa-pencil-square-o fa-2x' id='edit' aria-hidden='true' style='margin: 5px;'></i></a> \
-                    <i class='fa fa-trash-o fa-2x' id='delete' onclick='deleteType("+type.id+")' aria-hidden='true'></i></td>";
+                    <i class='fa fa-trash-o fa-2x' id='delete' onclick='deleteType("+type.id+",\""+type.name+"\")' aria-hidden='true'></i></td>";
                 row += "</tr>";
                 rowElem.innerHTML = row;
                 table.appendChild(rowElem);
@@ -28,14 +28,14 @@ function fetchTypes() {
 
 fetchTypes();
 
-function deleteType(id) {
+function deleteType(id, name) {
     $.ajax({
       url: "/type/"+id,
       type: "DELETE",
-      dataType: "text",
+      dataType: "json",
     })
         .done(function(response) {
-            console.log("Marker Type deleted successfully!");
+            console.log("Marker Type - " + name + ", ID - " + response.id + " deleted successfully!");
             fetchTypes();
         })
         .fail(function(jqXHR, textStatus, errorThrown) {

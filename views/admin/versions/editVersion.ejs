@@ -50,7 +50,9 @@ $("#submit").click(function (e) {
       url: "/version/"+id,
       type: "PATCH",
       data: json,
-      dataType: "text",
+      dataType: "json",
+      processData: false,
+      contentType: "application/json",
     })
     .done(function (response) {
         submitbtn.disabled = false;
