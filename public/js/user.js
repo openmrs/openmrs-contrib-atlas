@@ -23,6 +23,7 @@ function initLoginButton() {
       var marker = createSite();
   });
 }
+
 $(function () {
   $("#map_canvas").on("submit", "form", (function(e) {
     saveMarker(e);
@@ -33,6 +34,10 @@ $(function () {
     bootbox.confirm("Are you sure ? Your site will be deleted", function(result) {
       if (result) deleteMarker(id);
     });
+  });
+  $("#map_canvas").on("click", "#update", function(e){
+    var id = $(this).attr("value");
+    updateMarker(id);
   });
 });
 
@@ -318,6 +323,26 @@ function saveMarker(e) {
   return false;
 }
 
+function updateMarker(id) {
+    var json = JSON.stringify({ });
+    $.ajax({
+      url: "/marker/"+id,
+      type: "PATCH",
+      data: json,
+      dataType: "json",
+    })
+        .done(function(response) {
+          sites[id].siteData.date_changed = response[0].date_changed; 
+          sites[id].infowindow.setContent(contentInfowindow(sites[id].siteData));
+          sites[id].fadeGroup = 0;
+          repaintMarkers();
+          bootbox.alert("Marker updated");
+        })
+        .fail(function(jqXHR, textStatus, errorThrown) {
+          bootbox.alert( "Error updating your marker - Please try again ! - " + jqXHR.statusText );
+        });
+}
+
 function contentInfowindow(site) {
   var html = "<div class='site-bubble'>";
   html += "<div class='site-name'>" + site.name + "</div>";
@@ -357,6 +382,7 @@ function contentInfowindow(site) {
     html += "<div id='site-update'>Last Updated: " + date_updated + "</div>";
   }
   if(site.uid == currentUser || isAdmin) {
+    html += "<a value='"+site.id+"' id='update'>Update</a>";
     html += "<div id='edit' value='" + site.id + "' title ='Edit site' class='control' style='position: absolute;overflow:none; right:12px;bottom:12px; color:#3F3F3F'><i class='fa fa-lg fa-pencil' style='color:rgba(171, 166, 166, 1)'></i></div>";
     html += "<div id='delete' value='" + site.id + "' title ='Delete site' class='control' style='position: absolute;overflow:none; right:12px;bottom:27px; color:#3F3F3F'><i class='fa fa-lg fa-trash-o' style='color:rgba(171, 166, 166, 1)'></i></div>";
   }
