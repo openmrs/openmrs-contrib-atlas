@@ -288,6 +288,7 @@ function saveMarker(e) {
             sites[response].siteData.id = response;
             delete sites[id];
           }
+          updateMarker(response);
           sites[response].infowindow.setContent(contentInfowindow(sites[response].siteData));
           sites[response].editwindow.setContent(contentEditwindow(sites[response].siteData));
 
@@ -306,7 +307,6 @@ function saveMarker(e) {
             $("#editSite").attr("hidden", false);
           repaintMarkers();
           initLegend();
-          bootbox.alert("Marker saved");
           if (site.distribution == null && (site.nonStandardDistributionName != null && site.nonStandardDistributionName != "")) {
             fetchDistributions()
                 .done(function () {
