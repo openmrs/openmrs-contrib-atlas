@@ -4,7 +4,7 @@
 
 <img style="float: centre;" src="https://shekharreddykmit.files.wordpress.com/2016/08/atlas1.png" alt = "OpenMRS"/>
 
-# OpenMRS Atlas 3.0
+# OpenMRS Atlas 3
 - [Description](#description)
 - [Setting Up](#setting-up)
 - [Code Structure](#code-structure)
@@ -148,10 +148,3 @@ ctrl+c
 
 4. Squash the commits and Create a pull request.
 
-### External Links and Useful Resources
-
-- [Nodejs](https://nodejs.org/en/)
-- [nodemon](https://www.npmjs.com/package/nodemon)
-- [My Blog](https://shekharreddykmit.wordpress.com/)
-- [Talk Thread](https://talk.openmrs.org/t/atlas-3-0-project/6540)
-- [Awesome Nodejs](https://github.com/sindresorhus/awesome-nodejs)
