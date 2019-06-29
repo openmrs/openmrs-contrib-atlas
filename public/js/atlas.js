@@ -122,7 +122,9 @@ function initialize() {
                 zoom: viewParam.zoom,
                 center: viewParam.position,
                 minZoom: 2,
-                mapTypeId: google.maps.MapTypeId.ROADMAP
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                zoomControl: false,
+                streetViewControl: false
             },
         }
     });
