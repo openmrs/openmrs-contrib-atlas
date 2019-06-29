@@ -19,7 +19,7 @@ function fetchDistributions() {
                 row += "<td>"+distribution.created_at+"</td>";
                 row += "<td>"+distribution.is_standard+"</td>";
                 row += "<td><a href='/admin/distributions/"+distribution.id+"'><i class='fa fa-pencil-square-o fa-2x' id='edit' aria-hidden='true' style='margin: 5px;'></i></a> \
-                    <i class='fa fa-trash-o fa-2x' id='delete' onclick='deleteDistribution("+distribution.id+")' aria-hidden='true'></i></td>";
+                    <i class='fa fa-trash-o fa-2x' id='delete' onclick='deleteDistribution("+distribution.id+",\""+distribution.name+"\")' aria-hidden='true'></i></td>";
                 row += "</tr>";
                 rowElem.innerHTML = row;
                 table.appendChild(rowElem);
@@ -29,14 +29,14 @@ function fetchDistributions() {
 
 fetchDistributions();
 
-function deleteDistribution(id) {
+function deleteDistribution(id, name) {
     $.ajax({
       url: "/distribution/"+id,
       type: "DELETE",
-      dataType: "text",
+      dataType: "json",
     })
         .done(function(response) {
-            console.log(response);
+            console.log("Distribution - " + name + ", ID - " + response.id + " deleted successfully!");
             fetchDistributions();
         })
         .fail(function(jqXHR, textStatus, errorThrown) {

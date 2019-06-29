@@ -35,7 +35,6 @@ module.exports = function(connection) {
 
     /* Create new type */
     router.post('/type', utils.isAdmin, function (req, res, next) {
-        req.body = JSON.parse(Object.keys(req.body)[0]);
         var name = req.body.name;
         var icon = req.body.icon;
 
@@ -46,14 +45,13 @@ module.exports = function(connection) {
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
-                res.json(rows.id);
+                res.json({ });
             }
         });
     });
     
     /* Update type with given id */
     router.patch('/type/:id', utils.isAdmin, function (req, res, next) {
-        req.body = JSON.parse(Object.keys(req.body)[0]);
         var id = req.params['id'];
         var name = req.body.name;
         var icon = req.body.icon;
@@ -65,7 +63,7 @@ module.exports = function(connection) {
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
-                res.json(id);
+                res.json({ id: id });
             }
         });
     });
@@ -81,7 +79,7 @@ module.exports = function(connection) {
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
-                res.json(id);
+                res.json({ id: id });
             }
         });
     });    

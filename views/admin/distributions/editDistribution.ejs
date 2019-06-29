@@ -59,7 +59,9 @@ $("#submit").click(function (e) {
       url: "/distribution/"+id,
       type: "PATCH",
       data: json,
-      dataType: "text",
+      dataType: "json",
+      processData: false,
+      contentType: "application/json",
     })
     .done(function (response) {
         console.log(response);

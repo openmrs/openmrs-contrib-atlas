@@ -42,7 +42,9 @@ $("#submit").click(function (e) {
       url: "/type",
       type: "POST",
       data: json,
-      dataType: "text",
+      dataType: "json",
+      processData: false,
+      contentType: "application/json",
     })
     .done(function (response) {
         console.log(response);

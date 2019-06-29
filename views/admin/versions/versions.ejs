@@ -17,7 +17,7 @@ function fetchVersions() {
                 row += "<td>"+version.id+"</td>";
                 row += "<td>"+version.version+"</td>";
                 row += "<td><a href='/admin/versions/"+version.id+"'><i class='fa fa-pencil-square-o fa-2x' id='edit' aria-hidden='true' style='margin: 5px;'></i></a> \
-                    <i class='fa fa-trash-o fa-2x' id='delete' onclick='deleteVersion("+version.id+")' aria-hidden='true'></i></td>";
+                    <i class='fa fa-trash-o fa-2x' id='delete' onclick='deleteVersion("+version.id+",\""+version.version+"\")' aria-hidden='true'></i></td>";
                 row += "</tr>";
                 rowElem.innerHTML = row;
                 table.appendChild(rowElem);
@@ -27,13 +27,15 @@ function fetchVersions() {
 
 fetchVersions();
 
-function deleteVersion(id) {
+function deleteVersion(id, name) {
+    console.log("hi");
     $.ajax({
       url: "/version/"+id,
       type: "DELETE",
-      dataType: "text",
+      dataType: "json",
     })
         .done(function(response) {
+            console.log("Version - " + name + ", ID - " + response.id + " deleted successfully!");
             fetchVersions();
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
