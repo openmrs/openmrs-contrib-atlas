@@ -135,7 +135,7 @@ function newSite(myPosition) {
     id: sites.length,
     uuid: null,
     contact: userName,
-    uid: currentUser,
+    created_by: currentUser,
     name: userName + " Site",
     email: userEmail,
     show_counts: 1,
@@ -200,7 +200,7 @@ function createEditInfoWindow(site, marker) {
   google.maps.event.addListener(infowindow, "closeclick", function() {
     sites[site.id].editBubbleOpen = false;
   });
-  if ((site.uid == currentUser) || isAdmin || (site.uuid) !== null) {
+  if ((site.created_by == currentUser) || isAdmin || (site.uuid) !== null) {
     $("#map_canvas").on("click", "#undo", function(e){
       e.preventDefault();
       var id = $(this).attr("value");
@@ -256,14 +256,12 @@ function saveMarker(e) {
     site.name = name;
     site.email =  mail;
     site.url = url;
-    site.date_changed = new Date().toDateString();
     site.contact = contact;
     site.notes = notes;
     site.image = image;
     site.type = type;
     site.longitude = pos.lng();
     site.latitude = pos.lat();
-    site.uid = currentUser;
     sites[id].siteData = site;
     sites[id].fadeGroup = getFadeGroup(site);
     sites[id].editwindow.close();
@@ -385,7 +383,7 @@ function contentInfowindow(site) {
     var date_updated = dateChangedString(site);
     html += "<div id='site-update'>Last Updated: " + date_updated + "</div>";
   }
-  if(site.uid == currentUser || isAdmin) {
+  if(site.created_by == currentUser || isAdmin) {
     html += "<a value='"+site.id+"' id='update'>Update</a>";
     html += "<div id='edit' value='" + site.id + "' title ='Edit site' class='control' style='position: absolute;overflow:none; right:12px;bottom:12px; color:#3F3F3F'><i class='fa fa-lg fa-pencil' style='color:rgba(171, 166, 166, 1)'></i></div>";
     html += "<div id='delete' value='" + site.id + "' title ='Delete site' class='control' style='position: absolute;overflow:none; right:12px;bottom:27px; color:#3F3F3F'><i class='fa fa-lg fa-trash-o' style='color:rgba(171, 166, 166, 1)'></i></div>";
