@@ -9,7 +9,6 @@
 - [Setting Up](#setting-up)
 - [Code Structure](#code-structure)
 - [Contribute](#contribute)
-- [External Links](#external-links)
 
 # Description
 
@@ -34,7 +33,6 @@ OpenMRS-contrib-atlas-node is the server code written in nodejs for [OpenMRS ATL
    ```git
    $ git clone https://github.com/openmrs/openmrs-contrib-atlas.git
    $ cd openmrs-contrib-atlas-node
-   $ git checkout 3.x
    ```
 
 - Install the dependencies
@@ -65,6 +63,8 @@ OpenMRS-contrib-atlas-node is the server code written in nodejs for [OpenMRS ATL
 
           ```mysql
           mysql> SOURCE : db/bootstrap.sql
+          mysql> SOURCE : db/bootstrap.v3.sql
+
           ```
 
       * UBUNTU OS
@@ -73,6 +73,8 @@ OpenMRS-contrib-atlas-node is the server code written in nodejs for [OpenMRS ATL
 
             ```
               $ mysql -u uname -p dbname < db/bootstrap.sql;
+              $ mysql -u uname -p dbname < db/bootstrap.v3.sql;
+
             ```
   - create environment variables in your bash
       ```sh
