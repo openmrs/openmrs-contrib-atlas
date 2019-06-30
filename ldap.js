@@ -29,7 +29,7 @@ const client = ldap.createClient({
   },
 });
 
-const ATLAS_ADMIN_LDAP_GROUP = "atlas-admin";
+const ATLAS_ADMIN_LDAP_GROUP = "atlas-administrators";
 
 /* Private functions */
 
