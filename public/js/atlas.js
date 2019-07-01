@@ -221,7 +221,7 @@ function fetchMarkerSites() {
     $.ajax({url: "/markers"})
         .always(function (data, textStatus) {
             if (textStatus != "success") {
-                bootbox.alert("Error fetching data for sites ! - " + data.statusText);
+                bootbox.alert({ message: "Error fetching data for sites ! - " + data.statusText, backdrop: true });
                 return;
             }
             loadSites(data);

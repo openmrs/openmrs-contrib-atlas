@@ -28,10 +28,10 @@ $(function () {
       repaintMarkers();
       if(window !== window.top)
         parent.postMessage("update", "*");
-      bootbox.alert('The module is now linked to ' + site.name);
+      bootbox.alert({ message: 'The module is now linked to ' + site.name, backdrop: true });
     })
     .fail(function(jqXHR, textStatus, errorThrown) {
-      bootbox.alert( "Error saving your marker - Please try again ! - " + jqXHR.statusText );
+      bootbox.alert({ message: "Error saving your marker - Please try again ! - " + jqXHR.statusText , backdrop: true });
     });
   });
 
@@ -69,10 +69,10 @@ function detachMarker(id) {
     repaintMarkers();
     if(window !== window.top)
       parent.postMessage("update", "*");
-    bootbox.alert("Authorization delete");
+    bootbox.alert({ message: "Authorization delete", backdrop: true });
   })
   .fail(function(jqXHR, textStatus, errorThrown) {
-    bootbox.alert( "Error deleting authorization - Please try again ! - " + jqXHR.statusText );
+    bootbox.alert({ message: "Error deleting authorization - Please try again ! - " + jqXHR.statusText, backdrop: true });
   });
 }
 

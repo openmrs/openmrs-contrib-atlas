@@ -166,7 +166,7 @@ function deleteMarker(site) {
           sites[site].marker.setMap(null);
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
-          bootbox.alert( "Error deleting your marker - Please try again ! - " + jqXHR.statusText );
+          bootbox.alert({ message: "Error deleting your marker - Please try again ! - " + jqXHR.statusText , backdrop: true });
           return;
         });
   } else {
@@ -250,7 +250,7 @@ function saveMarker(e) {
   var url  = $("#url").val().trim();
   var type = $("select#type").val().trim();
   if(name === "" || id === "") {
-    bootbox.alert("Site Name is missing !");
+    bootbox.alert({ message: "Site Name is missing !", backdrop: true });
   } else {
     var pos = sites[id].marker.getPosition();
     site.name = name;
@@ -317,7 +317,7 @@ function saveMarker(e) {
 
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
-          bootbox.alert( "Error saving your marker - Please try again ! - " + jqXHR.statusText );
+          bootbox.alert({ message: "Error saving your marker - Please try again ! - " + jqXHR.statusText , backdrop: true });
         });
   }
   return false;
@@ -338,10 +338,10 @@ function updateMarker(id) {
           sites[id].infowindow.setContent(contentInfowindow(sites[id].siteData));
           sites[id].fadeGroup = 0;
           repaintMarkers();
-          bootbox.alert("Marker updated");
+          bootbox.alert({ message: "Marker updated", backdrop: true });
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
-          bootbox.alert( "Error updating your marker - Please try again ! - " + jqXHR.statusText );
+          bootbox.alert({ message: "Error updating your marker - Please try again ! - " + jqXHR.statusText, backdrop: true });
         });
 }
 
