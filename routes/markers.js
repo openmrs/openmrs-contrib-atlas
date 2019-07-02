@@ -2,6 +2,8 @@ var express = require('express');
 var router = express.Router();
 var uuid = require('uuid');
 var utils = require('../utils.js');
+var stream = require('stream');
+var { Parser } = require('json2csv');
 
 module.exports = function(connection) {
 
@@ -73,6 +75,41 @@ module.exports = function(connection) {
 
     });
 
+    /* GET all the markers */
+    router.get('/markers/download', utils.isAdmin, function(req, res, next) {
+
+        var query = "SELECT atlas.id as id,latitude,longitude,atlas.name as site_name,url,type,image,patients,encounters,observations,contact,email,notes,data,atlas_version,date_created,date_changed,created_by,show_counts,openmrs_version,distributions.name as distribution FROM atlas LEFT JOIN distributions on atlas.distribution=distributions.id";
+
+        connection.query(query, function (error, rows, field) {
+            if(!!error){
+                console.log(error);
+            }
+            else{
+                var fields = ['id','latitude','longitude','site_name','url','type','image','show_counts','patients','encounters','observations','contact','email','notes','data','atlas_version','openmrs_version','distribution','date_created','date_changed','created_by'];
+                var opts = { fields };
+                                
+                try {
+                    const parser = new Parser(opts);
+                    const csv = parser.parse(rows);
+
+                    var fileName = 'atlas.csv';
+
+                    var readStream = new stream.PassThrough();
+                    readStream.end(csv);
+                  
+                    res.set('Content-disposition', 'attachment; filename=' + fileName);
+                    res.set('Content-Type', 'text/plain');
+                  
+                    readStream.pipe(res);
+
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+        });
+
+    });
+
     /* Get a specific marker with id parameter */
     router.get('/marker/:id', function (req, res, next) {
 
@@ -117,7 +154,7 @@ module.exports = function(connection) {
         var email=req.body.email;
         var notes=req.body.notes;
         var data=req.body.data;
-        var atlas_verison=req.body.atlas_version;
+        var atlas_version=req.body.atlas_version;
         var date_created= new Date().toISOString().slice(0, 19).replace('T', ' ');
         var date_changed=new Date().toISOString().slice(0, 19).replace('T', ' ');
         var created_by=req.session.user.uid;
@@ -127,7 +164,7 @@ module.exports = function(connection) {
 
         console.log(id+"    "+latitude+longitude+name+url+type+image+patients+encounters+date_changed+"           "+date_created);
 
-        connection.query('insert into atlas values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [id,latitude,longitude,name,url,type,image,patients,encounters,observations,contact,email,notes,data,atlas_verison,date_created,date_changed,created_by,show_counts,openmrs_version,distribution], function (error, rows,field) {
+        connection.query('insert into atlas values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [id,latitude,longitude,name,url,type,image,patients,encounters,observations,contact,email,notes,data,atlas_version,date_created,date_changed,created_by,show_counts,openmrs_version,distribution], function (error, rows,field) {
             if(!!error){
                 console.log(error);
             }
@@ -191,7 +228,7 @@ module.exports = function(connection) {
                     var email=req.body.email;
                     var notes=req.body.notes;
                     var data=req.body.data;
-                    var atlas_verison=req.body.atlas_version;
+                    var atlas_version=req.body.atlas_version;
                     var date_changed=new Date().toISOString().slice(0, 19).replace('T', ' ');
                     var show_counts=req.body.show_counts;
                     var openmrs_version=req.body.openmrs_version?req.body.openmrs_version:"unknown";
@@ -204,7 +241,7 @@ module.exports = function(connection) {
 
                     console.log(id+"    "+latitude+longitude+name+url+type+image+patients+encounters+date_changed);
 
-                    connection.query(query, [latitude,longitude,name,url,type,image,patients,encounters,observations,contact,email,notes,data,atlas_verison,date_changed,show_counts,openmrs_version,distribution,id], function (error, rows,field) {
+                    connection.query(query, [latitude,longitude,name,url,type,image,patients,encounters,observations,contact,email,notes,data,atlas_version,date_changed,show_counts,openmrs_version,distribution,id], function (error, rows,field) {
                         if(!!error){
                             console.log(error);
                         }
@@ -227,11 +264,11 @@ module.exports = function(connection) {
         var encounters=req.body.encounters;
         var observations=req.body.observations;
         var data=req.body.data;
-        var atlas_verison=req.body.atlas_version;
+        var atlas_version=req.body.atlas_version;
         var date_changed=new Date().toISOString().slice(0, 19).replace('T', ' ');
         var openmrs_version=data.version;
 
-        connection.query('UPDATE atlas SET patients=?,encounters=?,observations=?,data=?,atlas_version=?,date_changed=?,openmrs_version=? WHERE id =?', [patients,encounters,observations,data,atlas_verison,date_changed,openmrs_version,id], function (error, rows,field) {
+        connection.query('UPDATE atlas SET patients=?,encounters=?,observations=?,data=?,atlas_version=?,date_changed=?,openmrs_version=? WHERE id =?', [patients,encounters,observations,data,atlas_version,date_changed,openmrs_version,id], function (error, rows,field) {
             if(!!error){
                 console.log(error);
             }
