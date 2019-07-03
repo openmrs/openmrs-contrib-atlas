@@ -45,7 +45,9 @@ module.exports = function(connection) {
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
-                res.json({ });
+                var json = req.body;
+                json.id = rows.insertId;
+                res.json(json);
             }
         });
     });
@@ -62,8 +64,14 @@ module.exports = function(connection) {
                 console.log(error);
             }
             else {
-                res.setHeader('Content-Type', 'application/json');
-                res.json({ id: id });
+                connection.query('SELECT * FROM types WHERE id =?', [id], function (error, rows,field) {
+                    if(error) {
+                        console.log(error);
+                    } else {
+                        res.setHeader('Content-Type', 'application/json');
+                        res.json(rows[0]);        
+                    }
+                });
             }
         });
     });
@@ -73,13 +81,20 @@ module.exports = function(connection) {
 
         var id=req.params['id'];
 
-        connection.query('DELETE FROM types WHERE id =?', [id], function (error, rows,field) {
-            if(!!error){
+        connection.query('SELECT * FROM types WHERE id =?', [id], function (error, rows,field) {
+            if(error) {
                 console.log(error);
-            }
-            else {
-                res.setHeader('Content-Type', 'application/json');
-                res.json({ id: id });
+            } else {
+                var data = rows[0];
+                connection.query('DELETE FROM types WHERE id =?', [id], function (error, rows,field) {
+                    if(!!error){
+                        console.log(error);
+                    }
+                    else {
+                        res.setHeader('Content-Type', 'application/json');
+                        res.json(data);
+                    }
+                });
             }
         });
     });    

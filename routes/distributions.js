@@ -45,8 +45,14 @@ module.exports = function(connection) {
                 console.log(error);
             }
             else {
-                res.setHeader('Content-Type', 'application/json');
-                res.json({ });
+                connection.query('SELECT * FROM distributions WHERE id=?', [rows.insertId], function (error, rows,field) {
+                    if(error){
+                        console.log(error);
+                    } else {
+                        res.setHeader('Content-Type', 'application/json');
+                        res.json(rows[0]);
+                    }
+                });
             }
         });
     });
@@ -60,10 +66,15 @@ module.exports = function(connection) {
         connection.query('update distributions set name=?, is_standard=? where id=?', [name,is_standard,id], function (error, rows,field) {
             if(!!error){
                 console.log(error);
-            }
-            else {
-                res.setHeader('Content-Type', 'application/json');
-                res.json({ id: id });
+            } else {
+                connection.query('SELECT * FROM distributions WHERE id=?', [id], function (error, rows,field) {
+                    if(error){
+                        console.log(error);
+                    } else {
+                        res.setHeader('Content-Type', 'application/json');
+                        res.json(rows[0]);
+                    }
+                });
             }
         });
     });
@@ -73,13 +84,20 @@ module.exports = function(connection) {
 
         var id=req.params['id'];
 
-        connection.query('DELETE FROM distributions WHERE id =?', [id], function (error, rows,field) {
-            if(!!error){
+        connection.query('SELECT * FROM distributions WHERE id=?', [id], function (error, rows,field) {
+            if(error){
                 console.log(error);
-            }
-            else {
-                res.setHeader('Content-Type', 'application/json');
-                res.json({ id: id });
+            } else {
+                var data = rows[0];
+                connection.query('DELETE FROM distributions WHERE id =?', [id], function (error, rows,field) {
+                    if(!!error){
+                        console.log(error);
+                    }
+                    else {
+                        res.setHeader('Content-Type', 'application/json');
+                        res.json(data);
+                    }
+                });
             }
         });
     });        
