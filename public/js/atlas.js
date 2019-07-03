@@ -40,6 +40,10 @@ function initLegendChoice() {
         repaintMarkers();
         initLegend();
     });
+    $("#mymarkers-checkbox").click(function () {
+        showAllMarkers = !showAllMarkers;
+        repaintMarkers();
+    });
 }
 
 function clickLegend(id) {
@@ -461,7 +465,7 @@ function repaintMarkers() {
         var opacity = 1;
         if (fadeOverTime)
             opacity = (1 - (site.fadeGroup * 0.25));
-        if (shouldBeVisible(site.fadeGroup)) {
+        if (shouldBeVisible(site.fadeGroup) && (showAllMarkers || site.siteData.created_by == currentUser)) {
             site.marker.setIcon(colorForSite(site.siteData));
             site.marker.setVisible(true);
             site.marker.setOpacity(opacity);

@@ -50,6 +50,7 @@
     var shadows = [];
     var fadeOverTime = true;
     var legendGroups = 0;
+    var showAllMarkers = true;
     var viewParam = {
       site : null,
       position : new google.maps.LatLng(15,15),
@@ -201,6 +202,12 @@
     <div class = "dropDownItemDiv" id="legend-clusters" title="Enable markers clustering.">
       <label><input type="checkbox" id="clusters-checkbox"><b>Clustering</b></label>
     </div>
+
+    <% if (user) { %>
+      <div class = "dropDownItemDiv" id="mymarkers" title="Display only user's markers.">
+        <label><input type="checkbox" id="mymarkers-checkbox"><b>My Markers</b></label>
+      </div>
+    <% } %>
 
   </div>
 
