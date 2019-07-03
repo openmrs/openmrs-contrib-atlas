@@ -29,11 +29,14 @@ function initLegendChoice() {
         if (clustersEnabled) {
             clusters.setMap(map);
             $("#clusters-checkbox").prop('checked', true);
+            legendGroups = 2;
         } else {
-            clusters.setMap(null);
+            clusters.clearMarkers();
+            initClusters();
+            fetchMarkerSites();
             $("#clusters-checkbox").prop('checked', false);
+            legendGroups = 0;
         }
-        legendGroups = 2;
         repaintMarkers();
         initLegend();
     });
@@ -115,6 +118,16 @@ function initVersion() {
     }
 }
 
+function initClusters() {
+    var markerClustererOptions = {
+        imagePath: "https://googlemaps.github.io/js-marker-clusterer/images/m",
+        minimumClusterSize: 3,
+        gridSize: 30
+    };
+    clusters = new MarkerClusterer(map, null, markerClustererOptions);
+    clusters.setMap(null);
+}
+
 function initialize() {
     $("#map_canvas").gmap3({
         map: {
@@ -129,13 +142,7 @@ function initialize() {
         }
     });
     map = $("#map_canvas").gmap3('get');
-    var markerClustererOptions = {
-        imagePath: "https://googlemaps.github.io/js-marker-clusterer/images/m1.png",
-        minimumClusterSize: 3,
-        gridSize: 30
-    };
-    clusters = new MarkerClusterer(map, null, markerClustererOptions);
-    clusters.setMap(null);
+    initClusters();
     images[0] = new google.maps.MarkerImage("atlas_sprite.png",
         // This marker is 20 pixels wide by 32 pixels tall.
         new google.maps.Size(20, 34),
