@@ -118,7 +118,6 @@ module.exports = function(connection) {
         else query = no_counts_query;
 
         var id=req.params['id'];
-        console.log(id);
         connection.query(query+' where id=?',[id], function (error, rows, field) {
 
             if(!!error){
@@ -162,7 +161,7 @@ module.exports = function(connection) {
         var openmrs_version=req.body.openmrs_version?req.body.openmrs_version:"Unknown";
         var distribution=req.body.distribution;
 
-        console.log(id+"    "+latitude+longitude+name+url+type+image+patients+encounters+date_changed+"           "+date_created);
+        console.log(data);
 
         connection.query('insert into atlas values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [id,latitude,longitude,name,url,type,image,patients,encounters,observations,contact,email,notes,data,atlas_version,date_created,date_changed,created_by,show_counts,openmrs_version,distribution], function (error, rows,field) {
             if(!!error){
@@ -170,7 +169,13 @@ module.exports = function(connection) {
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
-                res.json({ id: id });
+                var json = req.body;
+                json['id'] = id;
+                json['date_created'] = date_created;
+                json['date_changed'] = date_changed;
+                json['created_by'] = created_by;
+                json['openmrs_version'] = openmrs_version;
+                res.json(json);
             }
         });
     });
@@ -180,33 +185,29 @@ module.exports = function(connection) {
 
         var id = req.params['id']
 
-        connection.query("SELECT created_by FROM atlas WHERE id=?", [id], function (error, rows, field) {
+        connection.query("SELECT * FROM atlas WHERE id=?", [id], function (error, rows, field) {
             if(error) {
                 console.log(error);
-                return res.status(500).send({ message: "Error retrieving created_by from database"});
+                return res.status(500).send({ message: "Error retrieving data from database"});
             }
             else if(rows[0].created_by != req.session.user.uid && !req.session.user.admin) {
                 return res.send(401);
             } else {
+                var data = rows[0];
+
                 if(req.body !== null && !Object.keys(req.body).length) {
-                    var date_changed=new Date().toISOString().slice(0, 19).replace('T', ' ');
+                    data.date_changed=new Date().toISOString().slice(0, 19).replace('T', ' ');
                     var query = 'UPDATE atlas SET date_changed=? WHERE id =?';
                     if(!req.session.user.admin) {
                         query += ' AND created_by=\''+req.session.user.uid+'\'';
                     }
 
-                    connection.query(query, [date_changed,id], function (error, rows,field) {
+                    connection.query(query, [data.date_changed,id], function (error, rows,field) {
                         if(!!error){
                             console.log(error);
                         } else {
-                            connection.query("SELECT * from atlas WHERE id=?", [id], function (error, rows,field) {
-                                if(!!error){
-                                    console.log(error);
-                                } else {
-                                    res.setHeader('Content-Type', 'application/json');
-                                    res.json(rows);
-                                }
-                            });  
+                            res.setHeader('Content-Type', 'application/json');
+                            res.json(data);
                         }
                     });            
           
@@ -215,39 +216,39 @@ module.exports = function(connection) {
                     //If authenticated user is not the owner of the marker or an admin, return 401 (Unauthorized)
                     if(req.session.user.uid != req.body.created_by && !req.session.user.admin) return res.send(401);
 
-                    var latitude=req.body.latitude;
-                    var longitude=req.body.longitude;
-                    var name=req.body.name;
-                    var url=req.body.url;
-                    var type=req.body.type;
-                    var image=req.body.image;
-                    var patients=req.body.patients;
-                    var encounters=req.body.encounters;
-                    var observations=req.body.observations;
-                    var contact=req.body.contact;
-                    var email=req.body.email;
-                    var notes=req.body.notes;
-                    var data=req.body.data;
-                    var atlas_version=req.body.atlas_version;
-                    var date_changed=new Date().toISOString().slice(0, 19).replace('T', ' ');
-                    var show_counts=req.body.show_counts;
-                    var openmrs_version=req.body.openmrs_version?req.body.openmrs_version:"unknown";
-                    var distribution=req.body.distribution;
+                    data.latitude=req.body.latitude;
+                    data.longitude=req.body.longitude;
+                    data.name=req.body.name;
+                    data.url=req.body.url;
+                    data.type=req.body.type;
+                    data.image=req.body.image;
+                    data.patients=req.body.patients;
+                    data.encounters=req.body.encounters;
+                    data.observations=req.body.observations;
+                    data.contact=req.body.contact;
+                    data.email=req.body.email;
+                    data.notes=req.body.notes;
+                    data.data=req.body.data;
+                    data.atlas_verison=req.body.atlas_version;
+                    data.date_changed=new Date().toISOString().slice(0, 19).replace('T', ' ');
+                    data.show_counts=req.body.show_counts;
+                    data.openmrs_version=req.body.openmrs_version?req.body.openmrs_version:"unknown";
+                    data.distribution=req.body.distribution;
                     var query = 'UPDATE atlas SET latitude=?,longitude=?,name=?,url=?,type=?,image=?,patients=?,encounters=?,observations=?,contact=?,email=?,notes=?,data=?,atlas_version=?,date_changed=?,show_counts=?,openmrs_version=?,distribution=? WHERE id =?';
                     // If the user is not admin, we have to check whether the marker belongs to the user
                     if(!req.session.user.admin) {
                         query += ' AND created_by=\''+req.session.user.uid+'\'';
                     }
 
-                    console.log(id+"    "+latitude+longitude+name+url+type+image+patients+encounters+date_changed);
+                    console.log(data);
 
-                    connection.query(query, [latitude,longitude,name,url,type,image,patients,encounters,observations,contact,email,notes,data,atlas_version,date_changed,show_counts,openmrs_version,distribution,id], function (error, rows,field) {
+                    connection.query(query, [data.latitude,data.longitude,data.name,data.url,data.type,data.image,data.patients,data.encounters,data.observations,data.contact,data.email,data.notes,data.data,data.atlas_verison,data.date_changed,data.show_counts,data.openmrs_version,data.distribution,data.id], function (error, rows,field) {
                         if(!!error){
                             console.log(error);
                         }
                         else {
-                            res.setHeader('Content-Type', 'application/json');
-                            res.json({ id: id });
+                            res.setHeader('Content-Type', 'application/json');                    
+                            res.json(data);        
                         }
                     });
                 }
@@ -284,14 +285,16 @@ module.exports = function(connection) {
 
         var id=req.params['id'];
 
-        connection.query("SELECT created_by FROM atlas WHERE id=?", [id], function (error, rows, field) {
+        connection.query("SELECT * FROM atlas WHERE id=?", [id], function (error, rows, field) {
 
             if(error) {
                 console.log(error);
-                return res.status(500).send({ message: "Error retrieving created_by from database"});
+                return res.status(500).send({ message: "Error retrieving data from database"});
             } else if (rows[0].created_by != req.session.user.uid && !req.session.user.admin) {
                 res.send(401);
             } else {
+                var data = rows[0];
+
                 // If the user is not admin, we have to check whether the marker belongs to the user
                 var query = 'DELETE FROM atlas WHERE id =?';
                 if(!req.session.user.admin) {
@@ -304,7 +307,7 @@ module.exports = function(connection) {
                     }
                     else {
                         res.setHeader('Content-Type', 'application/json');
-                        res.json({ id: id });
+                        res.json(data);
                     }
                 });
             }

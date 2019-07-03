@@ -280,17 +280,20 @@ function saveMarker(e) {
       contentType: "application/json",
     })
         .done(function(response) {
-          response = response.id;
+          var nid = response.id;
           if(!isUpdateRequest) {
-            sites[response] = sites[id];
-            sites[response].siteData.id = response;
+            site.id = nid;
+            site.date_created = response.date_created;
+            sites[nid] = sites[id];
+            sites[nid].siteData = response;
             delete sites[id];
           }
-          updateMarker(response);
-          sites[response].infowindow.setContent(contentInfowindow(sites[response].siteData));
-          sites[response].editwindow.setContent(contentEditwindow(sites[response].siteData));
+          site.openmrs_version = response.openmrs_version;
+          site.date_changed = response.date_changed;
 
-          site.uuid = response;
+          sites[nid].infowindow.setContent(contentInfowindow(sites[nid].siteData));
+          sites[nid].editwindow.setContent(contentEditwindow(sites[nid].siteData));
+
           if (moduleUUID !== null && moduleHasSite === 0) {
             site.module = 1;
             moduleHasSite = 1;
@@ -299,12 +302,15 @@ function saveMarker(e) {
             parent.postMessage("save", "*");
           }
 
-          if (auth_site.indexOf(response) === -1)
-            auth_site.push(response);
+          if (auth_site.indexOf(nid) === -1)
+            auth_site.push(nid);
           if (auth_site.length > 0)
             $("#editSite").attr("hidden", false);
+
           repaintMarkers();
           initLegend();
+          bootbox.alert("Marker saved");
+          
           if (site.distribution == null && (site.nonStandardDistributionName != null && site.nonStandardDistributionName != "")) {
             fetchDistributions()
                 .done(function () {
@@ -334,7 +340,7 @@ function updateMarker(id) {
       contentType: "application/json",
     })
         .done(function(response) {
-          sites[id].siteData.date_changed = response[0].date_changed; 
+          sites[id].siteData = response; 
           sites[id].infowindow.setContent(contentInfowindow(sites[id].siteData));
           sites[id].fadeGroup = 0;
           repaintMarkers();
