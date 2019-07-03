@@ -12,6 +12,6 @@ function fetchVersions(){
             })();
         })
         .fail(function (jqXHR) {
-            bootbox.alert(errorMessages.failMessage + jqXHR.statusText);
+            bootbox.alert({ message: errorMessages.failMessage + jqXHR.statusText, backdrop: true });
         })
 }
