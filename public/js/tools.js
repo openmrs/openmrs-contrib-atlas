@@ -57,32 +57,21 @@ $(function () {
 });
 
 function initDownloadButton() {
-  $("#download").mouseover(function(){
-    $("#screen").css("display", "block");
+  $('#download').click(function () {
+    html2canvas(document.getElementById('map_canvas'), {
+      scale: 2,
+      useCORS: true,
+      allowTaint:true,
+    }).then(function(canvas) {
+      var link = document.createElement("a");
+      link.download = "openmrs-atlas.png";
+      link.href = canvas.toDataURL("image/png");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      delete link;
+    });
   });
-  $("#download").mouseleave(function(){
-    $("#screen").css("display", "none");
-  });
-  $("#1024x768, #1280x1024, #3840x2160").click(function(){
-    $("#screen").css("display", "none");
-  });
-  var legend;
-  $('#1024x768').click(function () {
-    legend = (clustersEnabled == true) ? 3 : legendGroups;
-    var url = "download?legend=" + legend + "&size=1024x768" + "&fade=" + fadeOverTime;
-    window.location = url ;
-  });
-  $('#1280x1024').click(function () {
-    legend = (clustersEnabled == true) ? 3 : legendGroups;
-    var url = "download?legend=" + legend + "&size=1920x1080" + "&fade=" + fadeOverTime;
-    window.location = url ;
-  });
-  $('#3840x2160').click(function () {
-    legend = (clustersEnabled == true) ? 3 : legendGroups;
-    var url = "download?legend=" + legend + "&size=3840x2160" + "&fade=" + fadeOverTime;
-    window.location = url ;
-  });
-
 }
 
 function customizeView() {
