@@ -24,6 +24,7 @@
   <script type="text/javascript" src="js/module.js"></script>
   <script type="text/javascript" src="lib/js/yqlgeo.js"></script>
   <script type="text/javascript" src="https://googlemaps.github.io/js-marker-clusterer/src/markerclusterer.js"></script>
+  <script type="text/javascript" src="lib/js/html2canvas.min.js"></script>
   <script type="text/javascript">
 
     var auth_site = [];
@@ -149,17 +150,8 @@
 
 <div id="legend" class="control"></div>
 
-<div class="atlas-container control screen" id ="download">
-  <div class="dropDownControl control"
-       title="Click to download a screenshot" id ="down-screen">
-    <span><i class="fa fa-download"></i></span>Download
-  </div>
-  <div class = "dropDownOptionsDiv screen" id="screen">
-    <div class = "dropDownItemDiv screen" id="1024x768"><i class="fa fa-file-image-o"></i>1024x768</div>
-    <div class = "dropDownItemDiv screen" id="1280x1024"><i class="fa fa-file-image-o"></i>1920x1080</div>
-    <div class = "dropDownItemDiv screen" id="3840x2160"><i class="fa fa-file-image-o"></i>3840x2160</div>
-    <div class="separatorDiv"></div>
-  </div>
+<div class="atlas-container loginControl dropDownControl control" title="How to place my information on the Atlas" id ="download">
+  <i class="fa fa-download"></i> Download
 </div>
 
 <%if (user != null) { %>
