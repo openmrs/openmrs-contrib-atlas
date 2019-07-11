@@ -153,9 +153,9 @@ module.exports = function(connection) {
         var email=req.body.email;
         var notes=req.body.notes;
         var data=req.body.data;
-        var atlas_version=req.body.atlas_version;
-        var date_created= new Date().toISOString().slice(0, 19).replace('T', ' ');
-        var date_changed=new Date().toISOString().slice(0, 19).replace('T', ' ');
+        var atlas_version=null;
+        var date_created= new Date();
+        var date_changed=new Date();
         var created_by=req.session.user.uid;
         var show_counts=req.body.show_counts;
         var openmrs_version=req.body.openmrs_version?req.body.openmrs_version:"Unknown";
@@ -163,7 +163,7 @@ module.exports = function(connection) {
 
         console.log(data);
 
-        connection.query('insert into atlas values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [id,latitude,longitude,name,url,type,image,patients,encounters,observations,contact,email,notes,data,atlas_version,date_created,date_changed,created_by,show_counts,openmrs_version,distribution], function (error, rows,field) {
+        connection.query('insert into atlas values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [id,latitude,longitude,name,url,type,image,patients,encounters,observations,contact,email,notes,data,atlas_version,date_created.toISOString().slice(0, 19).replace('T', ' '),date_changed.toISOString().slice(0, 19).replace('T', ' '),created_by,show_counts,openmrs_version,distribution], function (error, rows,field) {
             if(!!error){
                 console.log(error);
             }
@@ -196,13 +196,15 @@ module.exports = function(connection) {
                 var data = rows[0];
 
                 if(req.body !== null && !Object.keys(req.body).length) {
-                    data.date_changed=new Date().toISOString().slice(0, 19).replace('T', ' ');
+                    data.date_changed=new Date();
                     var query = 'UPDATE atlas SET date_changed=? WHERE id =?';
                     if(!req.session.user.admin) {
                         query += ' AND created_by=\''+req.session.user.uid+'\'';
                     }
 
-                    connection.query(query, [data.date_changed,id], function (error, rows,field) {
+                    console.log(data);
+
+                    connection.query(query, [data.date_changed.toISOString().slice(0, 19).replace('T', ' '),id], function (error, rows,field) {
                         if(!!error){
                             console.log(error);
                         } else {
@@ -229,8 +231,7 @@ module.exports = function(connection) {
                     data.email=req.body.email;
                     data.notes=req.body.notes;
                     data.data=req.body.data;
-                    data.atlas_verison=req.body.atlas_version;
-                    data.date_changed=new Date().toISOString().slice(0, 19).replace('T', ' ');
+                    data.date_changed=new Date();
                     data.show_counts=req.body.show_counts;
                     data.openmrs_version=req.body.openmrs_version?req.body.openmrs_version:"unknown";
                     data.distribution=req.body.distribution;
@@ -242,7 +243,7 @@ module.exports = function(connection) {
 
                     console.log(data);
 
-                    connection.query(query, [data.latitude,data.longitude,data.name,data.url,data.type,data.image,data.patients,data.encounters,data.observations,data.contact,data.email,data.notes,data.data,data.atlas_verison,data.date_changed,data.show_counts,data.openmrs_version,data.distribution,data.id], function (error, rows,field) {
+                    connection.query(query, [data.latitude,data.longitude,data.name,data.url,data.type,data.image,data.patients,data.encounters,data.observations,data.contact,data.email,data.notes,data.data,data.atlas_verison,data.date_changed.toISOString().slice(0, 19).replace('T', ' '),data.show_counts,data.openmrs_version,data.distribution,data.id], function (error, rows,field) {
                         if(!!error){
                             console.log(error);
                         }
@@ -269,13 +270,22 @@ module.exports = function(connection) {
         var date_changed=new Date().toISOString().slice(0, 19).replace('T', ' ');
         var openmrs_version=data.version;
 
-        connection.query('UPDATE atlas SET patients=?,encounters=?,observations=?,data=?,atlas_version=?,date_changed=?,openmrs_version=? WHERE id =?', [patients,encounters,observations,data,atlas_version,date_changed,openmrs_version,id], function (error, rows,field) {
+        connection.query('SELECT * FROM atlas_versions WHERE version=', [atlas_version], function (error, rows,field) {
             if(!!error){
                 console.log(error);
-            }
-            else {
-                res.setHeader('Content-Type', 'application/json');
-                res.json(id);
+            } else {
+                
+                if(!rows.length) atlas_version = null;
+
+                connection.query('UPDATE atlas SET patients=?,encounters=?,observations=?,data=?,atlas_version=?,date_changed=?,openmrs_version=? WHERE id =?', [patients,encounters,observations,data,atlas_version,date_changed,openmrs_version,id], function (error, rows,field) {
+                    if(!!error){
+                        console.log(error);
+                    }
+                    else {
+                        res.setHeader('Content-Type', 'application/json');
+                        res.json(id);
+                    }
+                });
             }
         });
     });
