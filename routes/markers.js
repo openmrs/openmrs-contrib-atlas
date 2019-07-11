@@ -194,6 +194,9 @@ module.exports = function(connection) {
                 console.log(error);
                 return res.status(500).send({ message: "Error retrieving data from database"});
             }
+            else if(!rows || rows.length === 0) {
+                return res.status(404).send({ message: "Marker not found"});
+            }
             else if(rows[0].created_by != req.session.user.uid && !req.session.user.admin) {
                 return res.send(401);
             } else {
@@ -306,6 +309,8 @@ module.exports = function(connection) {
             if(error) {
                 console.log(error);
                 return res.status(500).send({ message: "Error retrieving data from database"});
+            } else if (!rows || rows.length === 0) {
+                return res.status(404).send({ message: "Marker not found"});
             } else if (rows[0].created_by != req.session.user.uid && !req.session.user.admin) {
                 res.send(401);
             } else {
