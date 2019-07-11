@@ -236,6 +236,12 @@ function fetchMarkerSites() {
                 return;
             }
             loadSites(data);
+
+            var marker_id = document.getElementById('marker-id').value;
+            if(marker_id != "" && sites[marker_id]) {
+                sites[marker_id].infowindow.open(map, sites[marker_id].marker);
+            }    
+        
         })
 }
 

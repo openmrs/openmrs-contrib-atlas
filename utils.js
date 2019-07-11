@@ -16,6 +16,16 @@ module.exports = {
         } else {
             res.send(401);
         }
-    }
+    },
     
+    /* Add entry to RSS table */
+    addRSS: function(connection, title, description, url, created_by) {
+
+        connection.query('INSERT INTO rss(title, description, url, author) VALUES(?,?,?,?)', [title, description, url, created_by], function (error, rows,field) {
+            if(!!error){
+                console.log(error);
+            }
+        });
+        
+    }
 };
