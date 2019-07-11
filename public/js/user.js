@@ -155,6 +155,10 @@ function newSite(myPosition) {
 }
 
 function deleteMarker(site) {
+  if(!isValidMarkerId(site)) {
+    sites[site].marker.setMap(null);
+    return;
+  }
   var deleted = site;
   if  (deleted !== "" && deleted !== null) {
     $.ajax({
@@ -390,7 +394,9 @@ function contentInfowindow(site) {
     html += "<div id='site-update'>Last Updated: " + date_updated + "</div>";
   }
   if(site.created_by == currentUser || isAdmin) {
-    html += "<a value='"+site.id+"' id='update'>Update</a>";
+    if(isValidMarkerId(site.id)) {
+      html += "<a value='"+site.id+"' id='update'>Update</a>";
+    }
     html += "<div id='edit' value='" + site.id + "' title ='Edit site' class='control' style='position: absolute;overflow:none; right:12px;bottom:12px; color:#3F3F3F'><i class='fa fa-lg fa-pencil' style='color:rgba(171, 166, 166, 1)'></i></div>";
     html += "<div id='delete' value='" + site.id + "' title ='Delete site' class='control' style='position: absolute;overflow:none; right:12px;bottom:27px; color:#3F3F3F'><i class='fa fa-lg fa-trash-o' style='color:rgba(171, 166, 166, 1)'></i></div>";
   }
