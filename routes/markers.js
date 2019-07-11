@@ -7,12 +7,21 @@ var { Parser } = require('json2csv');
 
 module.exports = function(connection) {
 
-    function filterMarkerIds(req, markers) {
-        for(var i = 0; i < markers.length; i++) {
-            //If user not is signed in or authenticated user is not the creator of a marker
-            //then hide the marker's id
-            if(req.session.user == null || markers[i].created_by != req.session.user.uid) markers[i].id = i;
+    var recently_seen = [];
+    const ATLAS_LINK = process.env.ATLAS_RSS_LINK || 'https://atlas.openmrs.org';
+
+    setInterval(function() {
+        while(recently_seen.length && new Date() - recently_seen[0][1] > 5*60*1000) {
+            recently_seen.shift();
         }
+    }, 60 * 1000);
+
+    function checkAndAddRSS(title, description, url, created_by) {
+        if(typeof recently_seen.find(function(row) { return row[0] === title; }) === "undefined") {
+            recently_seen.push([title, new Date()]);
+            utils.addRSS(connection,title,description,url,created_by);
+        }
+
     }
 
     var show_counts_query = "SELECT * FROM atlas";
@@ -65,10 +74,7 @@ module.exports = function(connection) {
                 console.log(error);
             }
             else{
-                //var data  = JSON.stringify(rows);
                 res.setHeader('Content-Type', 'application/json');
-                //If user is logged in and is admin, don't filter marker ids. Else, do it.
-                if(!(req.session.user && req.session.user.admin)) filterMarkerIds(req, rows);
                 res.json(rows);
             }
         });
@@ -125,10 +131,7 @@ module.exports = function(connection) {
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
-                //If user is logged in and is admin, don't filter marker ids. Else, do it.
-                if(!(req.session.user && req.session.user.admin)) filterMarkerIds(req, rows);
                 res.json(rows);
-                //connection.end();
             }
         })
     });
@@ -176,6 +179,7 @@ module.exports = function(connection) {
                 json['created_by'] = created_by;
                 json['openmrs_version'] = openmrs_version;
                 res.json(json);
+                checkAndAddRSS(`${name} joins the OpenMRS Atlas`, `${req.session.user.uid} added ${name} as a new site on the OpenMRS Atlas`, ATLAS_LINK + "/?marker=" + id, req.session.user.uid);
             }
         });
     });
@@ -210,6 +214,7 @@ module.exports = function(connection) {
                         } else {
                             res.setHeader('Content-Type', 'application/json');
                             res.json(data);
+                            checkAndAddRSS(`${data.name} refreshed`, `The OpenMRS Atlas received a ping from ${data.name}`, ATLAS_LINK + "/?marker=" + id, req.session.user.uid);
                         }
                     });            
           
@@ -250,6 +255,7 @@ module.exports = function(connection) {
                         else {
                             res.setHeader('Content-Type', 'application/json');                    
                             res.json(data);        
+                            checkAndAddRSS(`${data.name} entry updated`, `${req.session.user.uid} made changes to ${data.name} on the OpenMRS Atlas`, ATLAS_LINK + "/?marker=" + id, req.session.user.uid);
                         }
                     });
                 }
@@ -318,6 +324,7 @@ module.exports = function(connection) {
                     else {
                         res.setHeader('Content-Type', 'application/json');
                         res.json(data);
+                        checkAndAddRSS(`OpenMRS Atlas bids farewell to ${data.name}`, `${req.session.user.uid} removed ${data.name} from the OpenMRS Atlas.`, ATLAS_LINK, req.session.user.uid);
                     }
                 });
             }

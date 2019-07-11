@@ -13,4 +13,5 @@ module.exports = function(app, db) {
     importRoute('versions');
     importRoute('authentication');
     importRoute('admin');
+    importRoute('rss');
 };
