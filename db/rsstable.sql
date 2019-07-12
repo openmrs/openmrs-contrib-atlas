@@ -28,6 +28,7 @@ CREATE TABLE `rss` (
   `description` VARCHAR(4096) NOT NULL,
   `author` VARCHAR(1024) NOT NULL,
   `url` varchar(1024) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `image_url` varchar(1024) COLLATE utf8_unicode_ci DEFAULT NULL,
   `date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   INDEX (`date`)

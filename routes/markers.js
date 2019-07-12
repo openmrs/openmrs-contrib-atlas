@@ -16,10 +16,10 @@ module.exports = function(connection) {
         }
     }, 60 * 1000);
 
-    function checkAndAddRSS(title, description, url, created_by) {
+    function checkAndAddRSS(title, description, url, image_url, created_by) {
         if(typeof recently_seen.find(function(row) { return row[0] === title; }) === "undefined") {
             recently_seen.push([title, new Date()]);
-            utils.addRSS(connection,title,description,url,created_by);
+            utils.addRSS(connection,title,description,url,image_url,created_by);
         }
 
     }
@@ -179,7 +179,7 @@ module.exports = function(connection) {
                 json['created_by'] = created_by;
                 json['openmrs_version'] = openmrs_version;
                 res.json(json);
-                checkAndAddRSS(`${name} joins the OpenMRS Atlas`, `${req.session.user.uid} added ${name} as a new site on the OpenMRS Atlas`, ATLAS_LINK + "/?marker=" + id, req.session.user.uid);
+                checkAndAddRSS(`${name} joins the OpenMRS Atlas`, `${req.session.user.uid} added ${name} as a new site on the OpenMRS Atlas`, ATLAS_LINK + "/?marker=" + id, image, req.session.user.uid);
             }
         });
     });
@@ -217,7 +217,7 @@ module.exports = function(connection) {
                         } else {
                             res.setHeader('Content-Type', 'application/json');
                             res.json(data);
-                            checkAndAddRSS(`${data.name} refreshed`, `The OpenMRS Atlas received a ping from ${data.name}`, ATLAS_LINK + "/?marker=" + id, req.session.user.uid);
+                            checkAndAddRSS(`${data.name} refreshed`, `The OpenMRS Atlas received a ping from ${data.name}`, ATLAS_LINK + "/?marker=" + id, data.image, req.session.user.uid);
                         }
                     });            
           
@@ -258,7 +258,7 @@ module.exports = function(connection) {
                         else {
                             res.setHeader('Content-Type', 'application/json');                    
                             res.json(data);        
-                            checkAndAddRSS(`${data.name} entry updated`, `${req.session.user.uid} made changes to ${data.name} on the OpenMRS Atlas`, ATLAS_LINK + "/?marker=" + id, req.session.user.uid);
+                            checkAndAddRSS(`${data.name} entry updated`, `${req.session.user.uid} made changes to ${data.name} on the OpenMRS Atlas`, ATLAS_LINK + "/?marker=" + id, data.image, req.session.user.uid);
                         }
                     });
                 }
@@ -329,7 +329,7 @@ module.exports = function(connection) {
                     else {
                         res.setHeader('Content-Type', 'application/json');
                         res.json(data);
-                        checkAndAddRSS(`OpenMRS Atlas bids farewell to ${data.name}`, `${req.session.user.uid} removed ${data.name} from the OpenMRS Atlas.`, ATLAS_LINK, req.session.user.uid);
+                        checkAndAddRSS(`OpenMRS Atlas bids farewell to ${data.name}`, `${req.session.user.uid} removed ${data.name} from the OpenMRS Atlas.`, ATLAS_LINK, null, req.session.user.uid);
                     }
                 });
             }

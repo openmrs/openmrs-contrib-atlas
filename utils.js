@@ -19,9 +19,9 @@ module.exports = {
     },
     
     /* Add entry to RSS table */
-    addRSS: function(connection, title, description, url, created_by) {
+    addRSS: function(connection, title, description, url, image_url, created_by) {
 
-        connection.query('INSERT INTO rss(title, description, url, author) VALUES(?,?,?,?)', [title, description, url, created_by], function (error, rows,field) {
+        connection.query('INSERT INTO rss(title, description, url, image_url, author) VALUES(?,?,?,?,?)', [title, description, url, image_url, created_by], function (error, rows,field) {
             if(!!error){
                 console.log(error);
             }
