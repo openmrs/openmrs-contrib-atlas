@@ -1,3 +1,5 @@
+var bcrypt = require('bcrypt');
+
 module.exports = {
 
     /* Middleware to check whether the user is logged in */
@@ -16,6 +18,16 @@ module.exports = {
         } else {
             res.send(401);
         }
+    },
+
+    /* Hash provided token */
+    hashToken: async function (token) {
+
+        const saltRounds = 10;
+        const salt = await bcrypt.genSalt(saltRounds);
+        const hash = await bcrypt.hash(token, salt);
+      
+        return hash;
     },
     
     /* Add entry to RSS table */

@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var uuid = require('uuid');
 var utils = require('../utils.js');
+var ldapUtils = require('../ldap.js');
 var stream = require('stream');
 var { Parser } = require('json2csv');
 var request = require('request');
@@ -195,6 +196,7 @@ module.exports = function(connection) {
         var url=req.body.url;
         var type=req.body.type;
         var image=req.body.image;
+        if (typeof image !== 'undefined') image=null;
         if(image && image.length > MAX_IMAGE_UPLOAD_SIZE*4/3) {
             return res.status(413).send({ message: 'Image size must be below '+ Math.round(MAX_IMAGE_UPLOAD_SIZE/1024) + ' kilobytes' });
         }
@@ -213,26 +215,30 @@ module.exports = function(connection) {
         var openmrs_version=req.body.openmrs_version?req.body.openmrs_version:"Unknown";
         var distribution=req.body.distribution;
 
-        console.log(data);
-
         connection.query('insert into atlas values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [id,latitude,longitude,name,url,type,image,patients,encounters,observations,contact,email,notes,data,atlas_version,date_created.toISOString().slice(0, 19).replace('T', ' '),date_changed.toISOString().slice(0, 19).replace('T', ' '),created_by,show_counts,openmrs_version,distribution], function (error, rows,field) {
             if(!!error){
                 console.log(error);
-            }
-            else {
-                res.setHeader('Content-Type', 'application/json');
-                var json = req.body;
-                if(image) {
-                    json['image_url'] = getImageURL(req, id);
-                }
-                delete json.image;
-                json['id'] = id;
-                json['date_created'] = date_created;
-                json['date_changed'] = date_changed;
-                json['created_by'] = created_by;
-                json['openmrs_version'] = openmrs_version;
-                res.json(json);
-                checkAndAddRSS(`${name} joins the OpenMRS Atlas`, `${req.session.user.uid} added ${name} as a new site on the OpenMRS Atlas`, getMarkerLink(req, id), json['image_url'], req.session.user.uid);
+            } else {
+                connection.query("INSERT INTO auth(atlas_id,principal,token,privileges,expires) VALUES(?,?,?,?,?)", [id,req.session.user.uid,null,"ALL",null], function (error, rows, field) {
+
+                    if(error) {
+                        console.log(error);
+                    } else {
+                        res.setHeader('Content-Type', 'application/json');
+                        var json = req.body;
+                        if(image) {
+                            json['image_url'] = getImageURL(req, id);
+                        }
+                        delete json.image;                        
+                        json['id'] = id;
+                        json['date_created'] = date_created;
+                        json['date_changed'] = date_changed;
+                        json['created_by'] = created_by;
+                        json['openmrs_version'] = openmrs_version;
+                        res.json(json);
+                        checkAndAddRSS(`${name} joins the OpenMRS Atlas`, `${req.session.user.uid} added ${name} as a new site on the OpenMRS Atlas`, getMarkerLink(req, id), json['image_url'], req.session.user.uid);
+                    }
+                });
             }
         });
     });
@@ -242,94 +248,90 @@ module.exports = function(connection) {
 
         var id = req.params['id']
 
-        connection.query(show_counts_query + " WHERE id=?", [req.protocol, req.headers.host, id], function (error, rows, field) {
+
+        connection.query("SELECT privileges FROM auth WHERE principal=? AND atlas_id=?", [req.session.user.uid,id], function (error, rows, field) {
+
             if(error) {
                 console.log(error);
                 return res.status(500).send({ message: "Error retrieving data from database"});
-            }
-            else if(!rows || rows.length === 0) {
-                return res.status(404).send({ message: "Marker not found"});
-            }
-            else if(rows[0].created_by != req.session.user.uid && !req.session.user.admin) {
-                return res.send(401);
-            } else {
-                var data = rows[0];
+            } else if((rows.length && (rows[0].privileges === "ALL" || rows[0].privileges === "UPDATE")) || req.session.user.admin) {
 
-                if(req.body !== null && !Object.keys(req.body).length) {
-                    data.date_changed=new Date();
-                    var query = 'UPDATE atlas SET date_changed=? WHERE id =?';
-                    if(!req.session.user.admin) {
-                        query += ' AND created_by=\''+req.session.user.uid+'\'';
-                    }
+                connection.query(show_counts_query + " WHERE id=?", [req.protocol, req.headers.host, id], function (error, rows, field) {
+                    if(error) {
+                        console.log(error);
+                        return res.status(500).send({ message: "Error retrieving data from database"});
+                    } else if(!rows || rows.length === 0) {
+                        return res.status(404).send({ message: "Marker not found"});
+                    } else {
+                        var data = rows[0];
 
-                    console.log(data);
+                        if(req.body !== null && !Object.keys(req.body).length) {
+                            
+                            data.date_changed=new Date().toISOString().slice(0, 19).replace('T', ' ');
+                            var query = 'UPDATE atlas SET date_changed=? WHERE id =?';
 
-                    connection.query(query, [data.date_changed.toISOString().slice(0, 19).replace('T', ' '),id], function (error, rows,field) {
-                        if(!!error){
-                            console.log(error);
+                            connection.query(query, [data.date_changed,id], function (error, rows,field) {
+                                if(!!error){
+                                    console.log(error);
+                                } else {
+                                    res.setHeader('Content-Type', 'application/json');
+                                    res.json(data);
+                                    checkAndAddRSS(`${data.name} refreshed`, `The OpenMRS Atlas received a ping from ${data.name}`, getMarkerLink(req, id), data.image_url, req.session.user.uid);
+                                }
+                            });            
+
                         } else {
-                            res.setHeader('Content-Type', 'application/json');
-                            res.json(data);
-                            checkAndAddRSS(`${data.name} refreshed`, `The OpenMRS Atlas received a ping from ${data.name}`, getMarkerLink(req, id), data.image_url, req.session.user.uid);
-                        }
-                    });            
-          
 
-                } else {
-                    //If authenticated user is not the owner of the marker or an admin, return 401 (Unauthorized)
-                    if(req.session.user.uid != req.body.created_by && !req.session.user.admin) return res.send(401);
+                            data.latitude=req.body.latitude;
+                            data.longitude=req.body.longitude;
+                            data.name=req.body.name;
+                            data.url=req.body.url;
+                            data.type=req.body.type;
+                            if(req.body.image) {
+                                if(req.body.image.length > MAX_IMAGE_UPLOAD_SIZE*4/3) {
+                                    return res.status(413).send({ message: 'Image size must be below '+ Math.round(MAX_IMAGE_UPLOAD_SIZE/1024) + ' kilobytes' });
+                                }
+                                data.image=req.body.image;
+                            }
+                            data.patients=req.body.patients;
+                            data.encounters=req.body.encounters;
+                            data.observations=req.body.observations;
+                            data.contact=req.body.contact;
+                            data.email=req.body.email;
+                            data.notes=req.body.notes;
+                            data.data=req.body.data;
+                            data.atlas_verison=req.body.atlas_version;
+                            data.date_changed=new Date();
+                            data.show_counts=req.body.show_counts;
+                            data.openmrs_version=req.body.openmrs_version?req.body.openmrs_version:"unknown";
+                            data.distribution=req.body.distribution;
+                            var query = 'UPDATE atlas SET latitude=?,longitude=?,name=?,url=?,type=?,image=?,patients=?,encounters=?,observations=?,contact=?,email=?,notes=?,data=?,atlas_version=?,date_changed=?,show_counts=?,openmrs_version=?,distribution=? WHERE id =?';
 
-                    data.latitude=req.body.latitude;
-                    data.longitude=req.body.longitude;
-                    data.name=req.body.name;
-                    data.url=req.body.url;
-                    data.type=req.body.type;
-                    if(req.body.image) {
-                        if(req.body.image.length > MAX_IMAGE_UPLOAD_SIZE*4/3) {
-                            return res.status(413).send({ message: 'Image size must be below '+ Math.round(MAX_IMAGE_UPLOAD_SIZE/1024) + ' kilobytes' });
+
+                            var params = [data.latitude,data.longitude,data.name,data.url,data.type,data.patients,data.encounters,data.observations,data.contact,data.email,data.notes,data.data,data.atlas_verison,data.date_changed.toISOString().slice(0, 19).replace('T', ' '),data.show_counts,data.openmrs_version,data.distribution];
+                            if(req.body.image) params.push(data.image);
+                            params.push(data.id);
+        
+                            connection.query(query, [data.latitude,data.longitude,data.name,data.url,data.type,data.image,data.patients,data.encounters,data.observations,data.contact,data.email,data.notes,data.data,data.atlas_verison,data.date_changed.toISOString().slice(0, 19).replace('T', ' '),data.show_counts,data.openmrs_version,data.distribution,data.id], function (error, rows,field) {
+                                if(!!error){
+                                    console.log(error);
+                                }
+                                else {
+                                    res.setHeader('Content-Type', 'application/json');                    
+                                    if(data.image && !data.image_url) {
+                                        data.image_url = getImageURL(req, id);
+                                    }                
+                                    res.json(data);        
+                                    checkAndAddRSS(`${data.name} entry updated`, `${req.session.user.uid} made changes to ${data.name} on the OpenMRS Atlas`, getMarkerLink(req, id), data.image_url, req.session.user.uid);
+                                }
+                            });
                         }
-                        data.image=req.body.image;
                     }
-                    data.patients=req.body.patients;
-                    data.encounters=req.body.encounters;
-                    data.observations=req.body.observations;
-                    data.contact=req.body.contact;
-                    data.email=req.body.email;
-                    data.notes=req.body.notes;
-                    data.data=req.body.data;
-                    data.date_changed=new Date();
-                    data.show_counts=req.body.show_counts;
-                    data.openmrs_version=req.body.openmrs_version?req.body.openmrs_version:"Unknown";
-                    data.distribution=req.body.distribution;
-                    var query = 'UPDATE atlas SET latitude=?,longitude=?,name=?,url=?,type=?,patients=?,encounters=?,observations=?,contact=?,email=?,notes=?,data=?,atlas_version=?,date_changed=?,show_counts=?,openmrs_version=?,distribution=?' + (req.body.image? ',image=?': '') + ' WHERE id =?';
-                    // If the user is not admin, we have to check whether the marker belongs to the user
-                    if(!req.session.user.admin) {
-                        query += ' AND created_by=\''+req.session.user.uid+'\'';
-                    }
-
-                    console.log(data);
-
-                    var params = [data.latitude,data.longitude,data.name,data.url,data.type,data.patients,data.encounters,data.observations,data.contact,data.email,data.notes,data.data,data.atlas_verison,data.date_changed.toISOString().slice(0, 19).replace('T', ' '),data.show_counts,data.openmrs_version,data.distribution];
-                    if(req.body.image) params.push(data.image);
-                    params.push(data.id);
-
-                    connection.query(query, params, function (error, rows,field) {
-                        if(!!error){
-                            console.log(error);
-                        }
-                        else {
-                            res.setHeader('Content-Type', 'application/json');
-                            if(data.image && !data.image_url) {
-                                data.image_url = getImageURL(req, id);
-                            }                
-                            res.json(data);        
-                            checkAndAddRSS(`${data.name} entry updated`, `${req.session.user.uid} made changes to ${data.name} on the OpenMRS Atlas`, getMarkerLink(req, id), data.image_url, req.session.user.uid);
-                        }
-                    });
-                }
+                });
+            } else {
+                res.send(401);
             }
         });
-        
     });
 
     /* Update marker with given id (called by atlas module) */
@@ -344,7 +346,7 @@ module.exports = function(connection) {
         var date_changed=new Date().toISOString().slice(0, 19).replace('T', ' ');
         var openmrs_version=data.version;
 
-        connection.query('SELECT * FROM atlas_versions WHERE version=', [atlas_version], function (error, rows,field) {
+        connection.query('SELECT * FROM atlas_versions WHERE version=?', [atlas_version], function (error, rows,field) {
             if(!!error){
                 console.log(error);
             } else {
@@ -369,35 +371,39 @@ module.exports = function(connection) {
 
         var id=req.params['id'];
 
-        connection.query(show_counts_query + " WHERE id=?", [req.protocol, req.headers.host, id], function (error, rows, field) {
+        connection.query("SELECT privileges FROM auth WHERE principal=? AND atlas_id=?", [req.session.user.uid,id], function (error, rows, field) {
 
             if(error) {
                 console.log(error);
                 return res.status(500).send({ message: "Error retrieving data from database"});
-            } else if (!rows || rows.length === 0) {
-                return res.status(404).send({ message: "Marker not found"});
-            } else if (rows[0].created_by != req.session.user.uid && !req.session.user.admin) {
-                res.send(401);
-            } else {
-                var data = rows[0];
+            } else if((rows.length && rows[0].privileges === "ALL") || req.session.user.admin) {
 
-                // If the user is not admin, we have to check whether the marker belongs to the user
-                var query = 'DELETE FROM atlas WHERE id =?';
-                if(!req.session.user.admin) {
-                    query += ' AND created_by=\''+req.session.user.uid+'\'';
-                }
+                connection.query(show_counts_query + " WHERE id=?", [req.protocol, req.headers.host, id], function (error, rows, field) {
 
-                connection.query(query, [id], function (error, rows,field) {
-                    if(!!error){
+                    if(error) {
                         console.log(error);
-                    }
-                    else {
-                        res.setHeader('Content-Type', 'application/json');
-                        data.image_url = null;
-                        res.json(data);
-                        checkAndAddRSS(`OpenMRS Atlas bids farewell to ${data.name}`, `${req.session.user.uid} removed ${data.name} from the OpenMRS Atlas.`, getMarkerLink(req, id), null, req.session.user.uid);
-                    }
+                        return res.status(500).send({ message: "Error retrieving data from database"});
+                    } else if (!rows || rows.length === 0) {
+                        return res.status(404).send({ message: "Marker not found"});
+                    } else {
+                            // If the user is not admin, we have to check whether the marker belongs to the user
+                        var data = rows[0];
+                        var query = 'DELETE FROM atlas WHERE id =?';
+
+                        connection.query(query, [id], function (error, rows,field) {
+                            if(!!error){
+                                console.log(error);
+                            }
+                            else {
+                                res.setHeader('Content-Type', 'application/json');
+                                res.json(data);
+                                checkAndAddRSS(`OpenMRS Atlas bids farewell to ${data.name}`, `${req.session.user.uid} removed ${data.name} from the OpenMRS Atlas.`, getMarkerLink(req, id), null, req.session.user.uid);
+                            }
+                        });
+                    } 
                 });
+            } else {
+                res.send(401);
             }
         });
     });
@@ -418,6 +424,6 @@ module.exports = function(connection) {
             }
         });
     });
-    
+        
     return router;
 };
