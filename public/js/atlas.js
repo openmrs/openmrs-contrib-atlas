@@ -235,19 +235,21 @@ function fetchMarkerSites() {
                 bootbox.alert({ message: "Error fetching data for sites ! - " + data.statusText, backdrop: true });
                 return;
             }
-            loadSites(data);
-
-            var marker_id = document.getElementById('marker-id').value;
-            if(marker_id != "" && sites[marker_id]) {
-                sites[marker_id].infowindow.open(map, sites[marker_id].marker);
-                google.maps.event.addListenerOnce(map, 'tilesloaded', function(){
-                    google.maps.event.addListenerOnce(map, 'tilesloaded', function(){
-                        map.setZoom(8);
-                        map.setCenter(sites[marker_id].marker.getPosition());    
-                    });
-                });                
-            }    
         
+            $.ajax({url: "/auth"})
+            .always(function (authrules, textStatus) {
+                loadSites(data, authrules);
+                var marker_id = document.getElementById('marker-id').value;
+                if(marker_id != "" && sites[marker_id]) {
+                    sites[marker_id].infowindow.open(map, sites[marker_id].marker);
+                    google.maps.event.addListenerOnce(map, 'tilesloaded', function(){
+                        google.maps.event.addListenerOnce(map, 'tilesloaded', function(){
+                            map.setZoom(8);
+                            map.setCenter(sites[marker_id].marker.getPosition());    
+                        });
+                    });                
+                }        
+            });
         })
 }
 
@@ -413,19 +415,17 @@ function colorForSite(site) {
         var key = distribution && icons.hasOwnProperty(distribution.name) ? distribution.name : "Other";
         image.url = icons[key].icon;
     }
-    if ((site.created_by === currentUser || auth_site.indexOf(site.uuid) !== -1) && legendGroups === 2
+    if ((isMyMarker(site) || auth_site.indexOf(site.uuid) !== -1) && legendGroups === 2
         && moduleHasSite !== 1 && !clustersEnabled)
         image.url = "https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png";
     if ((site.module === 1 && legendGroups === 2 && moduleUUID !== null && moduleHasSite === 1 && !clustersEnabled)) {
         image.url = "https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png";
-    } else if ((site.created_by === currentUser || auth_site.indexOf(site.uuid) !== -1)
+    } else if ((isMyMarker(site) || auth_site.indexOf(site.uuid) !== -1)
         && legendGroups === 2 && (moduleUUID === null || moduleHasSite === 0) && !clustersEnabled) {
         image.url = "https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png";
     }
     return image;
 }
-
-
 
 function loadVersion(json) {
     for (i = 0; i < json.length; i++) {
@@ -436,11 +436,25 @@ function loadVersion(json) {
     initVersion();
 }
 
-function loadSites(json) {
+function canUpdate(site) {
+    return ((site.created_by === currentUser) || (site.coowners.indexOf(currentUser) !== -1) || isAdmin || (auth_site.indexOf(site.uuid) !== -1));
+}
+
+function isMyMarker(site) {
+    return ((site.created_by === currentUser) || (site.coowners.indexOf(currentUser) !== -1) || (auth_site.indexOf(site.uuid) !== -1));
+}
+
+function loadSites(json, authrules) {
     var bounds = new google.maps.LatLngBounds();
     loadVersion(json);
     for (i = 0; i < json.length; i++) {
         var site = json[i];
+        site.auth = [];
+        site.auth = authrules.filter(function(rule) {
+            return rule.atlas_id === site.id && rule.privileges === 'UPDATE';
+        });
+        site.coowners = [];
+        site.coowners = site.auth.map(function(rule) { return rule.principal; });
         if (!site.hasOwnProperty("uuid"))
             site.uuid = null;
         var fadeGroup = getFadeGroup(site);
@@ -448,7 +462,7 @@ function loadSites(json) {
         if (fadeGroup < 4) clusters.addMarker(marker);
         var editwindow = null;
         var infowindow = createInfoWindow(site, marker);
-        if ((site.created_by !== "" && site.created_by === currentUser) || isAdmin || (auth_site.indexOf(site.uuid) !== -1) || site.uuid !== null)
+        if ((site.created_by !== "" && canUpdate(site)) || site.uuid !== null)
             editwindow = createEditInfoWindow(site, marker);
         if (site.openmrs_version)
             version.push(versionMajMinForSite(site));
@@ -466,6 +480,7 @@ function loadSites(json) {
         initLegend();
         repaintMarkers();
     }
+
     setTimeout('openBubble(uniqueMarker)', 800);
     map.fitBounds(bounds);
     customizeView();
@@ -477,7 +492,7 @@ function repaintMarkers() {
         var opacity = 1;
         if (fadeOverTime)
             opacity = (1 - (site.fadeGroup * 0.25));
-        if (shouldBeVisible(site.fadeGroup) && (showAllMarkers || site.siteData.created_by == currentUser)) {
+        if (shouldBeVisible(site.fadeGroup) && (showAllMarkers || isMyMarker(site))) {
             site.marker.setIcon(colorForSite(site.siteData));
             site.marker.setVisible(true);
             site.marker.setOpacity(opacity);
@@ -666,7 +681,7 @@ function createInfoWindow(site, marker) {
                 html += "class='btn btn-info btn-xs'>This is not me.</button></div>";
                 $(".site-bubble").append(html);
             }
-            if ((site.created_by == currentUser) || isAdmin || site.uuid !== null) {
+            if (canUpdate(site) || site.uuid !== null) {
                 if ($(".gm-style-iw").parent().has("#edit").length == 0) {
                     $("#lock").remove();
                     $(".gm-style-iw").parent().append("<div id='edit' value='" + site.id + "' title ='Edit site' class='control' style='position: absolute;overflow:none; right:12px;bottom:12px; color:#3F3F3F'><i class='fa fa-lg fa-pencil' style='color:rgba(171, 166, 166, 1)'></i></div>");
@@ -685,7 +700,7 @@ function createInfoWindow(site, marker) {
                 });
             }
         }
-        if ((site.created_by === currentUser) || isAdmin || site.uuid !== null) {
+        if (canUpdate(site) || site.uuid !== null) {
             $("#map_canvas").on("click", "#edit", function (e) {
                 //e.preventDefault();
                 var id = $(this).attr("value");

@@ -449,3 +449,13 @@ span.site-version {
     display: none;
     color: red;
 }
+
+#adv-button {
+    font-size: 14px;
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+#adv-options {
+    display: none;
+}

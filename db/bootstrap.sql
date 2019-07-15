@@ -117,7 +117,7 @@ CREATE TABLE `auth` (
   `expires` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `auth_atlas_id_foreign` (`atlas_id`),
-  CONSTRAINT `auth_atlas_id_foreign` FOREIGN KEY (`atlas_id`) REFERENCES `atlas` (`id`)
+  CONSTRAINT `auth_atlas_id_foreign` FOREIGN KEY (`atlas_id`) REFERENCES `atlas` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=509 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

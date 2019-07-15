@@ -39,6 +39,16 @@ $(function () {
     var id = $(this).attr("value");
     updateMarker(id);
   });
+  $("#map_canvas").on("click", "#addcoowner", function(e){
+    addCoOwner(e);
+  });
+  $("#map_canvas").on("click", "#removecoowner", function(e){
+    removeCoOwner(e);
+  });
+  $("#map_canvas").on("click", "#adv-button", function(e){
+    showAdvancedOptions = !showAdvancedOptions;
+    displayAdvancedOptions(e);
+  });
 });
 
 function getGeolocation() {
@@ -147,7 +157,9 @@ function newSite(myPosition) {
     longitude: myPosition.lng(),
     type:  "TBD",
     date_changed: new Date().toDateString(),
-    date_created: new Date().toDateString()
+    date_created: new Date().toDateString(),
+    auth: [],
+    coowners: []
   };
   if (moduleHasSite !== 1 && moduleUUID !== null)
     site.module = 1;
@@ -204,7 +216,7 @@ function createEditInfoWindow(site, marker) {
   google.maps.event.addListener(infowindow, "closeclick", function() {
     sites[site.id].editBubbleOpen = false;
   });
-  if ((site.created_by == currentUser) || isAdmin || (site.uuid) !== null) {
+  if (canUpdate(site) || (site.uuid) !== null) {
     $("#map_canvas").on("click", "#undo", function(e){
       e.preventDefault();
       var id = $(this).attr("value");
@@ -387,6 +399,85 @@ function updateMarker(id) {
         });
 }
 
+function addCoOwner(e) {
+  e.preventDefault();
+  var atlas_id = $("#site").val();
+  var principal = $("#coowner").val();
+  var json = JSON.stringify({
+    atlas_id: atlas_id,
+    principal: principal,
+    token: null,
+    privileges: "UPDATE",
+    expires: null
+  });
+  $.ajax({
+    url: "/auth",
+    type: "POST",
+    data: json,
+    dataType: "json",
+    processData: false,
+    contentType: "application/json",
+  })
+      .done(function(response) {
+        sites[atlas_id].siteData.auth.push(response); 
+        sites[atlas_id].siteData.coowners.push(response.principal); 
+        sites[atlas_id].infowindow.setContent(contentInfowindow(sites[atlas_id].siteData));
+        sites[atlas_id].editwindow.setContent(contentEditwindow(sites[atlas_id].siteData));
+        displayAdvancedOptions(e);
+      })
+      .fail(function(jqXHR, textStatus, errorThrown) {
+        bootbox.alert({ message: "Unable to add " + principal + " as a co-owner : " + (jqXHR.responseJSON.message?jqXHR.responseJSON.message:jqXHR.statusText), backdrop: true });
+      });
+}
+
+function removeCoOwner(e) {
+  e.preventDefault();
+  var id = $("#removecoowner").val();
+  var atlas_id = $("#site").val();
+  
+  $.ajax({
+    url: "/auth/" + id,
+    type: "DELETE",
+    dataType: "json",
+  })
+      .done(function(response) {
+        var authElem = sites[atlas_id].siteData.auth.find(function(rule) { return rule.id === id; });
+        var idx = sites[atlas_id].siteData.auth.indexOf(authElem);
+        sites[atlas_id].siteData.auth.splice(idx, 1);
+        sites[atlas_id].siteData.coowners.splice(idx, 1);
+        sites[atlas_id].infowindow.setContent(contentInfowindow(sites[atlas_id].siteData));
+        sites[atlas_id].editwindow.setContent(contentEditwindow(sites[atlas_id].siteData));
+        displayAdvancedOptions(e);
+      })
+      .fail(function(jqXHR, textStatus, errorThrown) {
+        bootbox.alert({ message: "Error removing Co-owner - Please try again ! - " + (jqXHR.responseJSON.message?jqXHR.responseJSON.message:jqXHR.statusText), backdrop: true });
+      });
+}
+
+function displayAdvancedOptions(e) {
+  var advOptions = document.getElementById('adv-options');
+  var advIcon = document.getElementById('adv-icon');
+  if(showAdvancedOptions) {
+    advOptions.style.display = "block";
+    advIcon.classList.remove('glyphicon-chevron-down');
+    advIcon.classList.add('glyphicon-chevron-up');
+  } else {
+    advOptions.style.display = "none";
+    advIcon.classList.remove('glyphicon-chevron-up');
+    advIcon.classList.add('glyphicon-chevron-down');
+  }
+}
+
+function checkCoOwnerInput(e) {
+  var coOwnerInput = document.getElementById('coowner');
+  var coOwnerButton = document.getElementById('addcoowner');
+  if(coOwnerInput.value === '') {
+    coOwnerButton.disabled = true;
+  } else {
+    coOwnerButton.disabled = false;
+  }
+}
+
 function contentInfowindow(site) {
   var html = "<div class='site-bubble'>";
   html += "<div class='site-name'>" + site.name + "</div>";
@@ -412,6 +503,12 @@ function contentInfowindow(site) {
     html += "<a href='mailto:"+ site.email + "' class='site-email'><img src='images/mail.png' width='15px' height='15px'/></a>";
   html += "</div>";
 
+  if (site.coowners && site.coowners.length) {
+    html += "<div class='site-coowners'><span class='site-label'>Co-owners:</span> ";
+    html += site.coowners.join(', ');
+    html += "</div>";
+  }
+
   if(site.distribution){
     html += createHtmlForDistributionInfo(site.distribution);
   }
@@ -426,11 +523,13 @@ function contentInfowindow(site) {
     var date_updated = dateChangedString(site);
     html += "<div id='site-update'>Last Updated: " + date_updated + "</div>";
   }
-  if(site.created_by == currentUser || isAdmin) {
+  if(canUpdate(site)) {
     if(isValidMarkerId(site.id)) {
       html += "<a value='"+site.id+"' id='update'>Update</a>";
     }
     html += "<div id='edit' value='" + site.id + "' title ='Edit site' class='control' style='position: absolute;overflow:none; right:12px;bottom:12px; color:#3F3F3F'><i class='fa fa-lg fa-pencil' style='color:rgba(171, 166, 166, 1)'></i></div>";
+  }
+  if(site.created_by === currentUser || isAdmin) {
     html += "<div id='delete' value='" + site.id + "' title ='Delete site' class='control' style='position: absolute;overflow:none; right:12px;bottom:27px; color:#3F3F3F'><i class='fa fa-lg fa-trash-o' style='color:rgba(171, 166, 166, 1)'></i></div>";
   }
   html += "</div>";
@@ -486,5 +585,21 @@ function contentEditwindow(site) {
   html += "</select></div>";
   html += "<input type='hidden' id='site' value='"+site.id+"'/>";
   html += "<div class=''><button type='submit' class='btn btn-primary'>Save</button></div></div></form></div></div>";
+
+  if((site.created_by === currentUser || isAdmin) && isValidMarkerId(site.id)) {
+    html += "<div id='adv-button'><span class='glyphicon glyphicon glyphicon-cog'></span> Advanced Options &nbsp; <span class='glyphicon glyphicon-chevron-down' id='adv-icon'></span></div>"
+    html += "<div id='adv-options'>"
+    
+    html += "<div class='form-inline'>"
+    html += "<input class='form-control' title='Co-owner' name='coowner' id ='coowner' placeholder='Co-owner' style='width:120px; margin:5px;' onkeyup='checkCoOwnerInput()'>"
+    html += "<button id='addcoowner' class='btn btn-primary' disabled>Add</button>";
+    html += "</div>";
+
+    site.auth.forEach(function(rule) {
+      html += rule.principal + "<button class='btn btn-default' id='removecoowner' value='"+rule.id+"' style='margin: 5px;'><span class='glyphicon glyphicon-remove'></span></button>";
+    });
+    html += "</div>";
+  }
+
   return html;
 }
