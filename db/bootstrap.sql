@@ -80,7 +80,7 @@ CREATE TABLE `atlas` (
   `name` varchar(1024) COLLATE utf8_unicode_ci NOT NULL,
   `url` varchar(1024) COLLATE utf8_unicode_ci DEFAULT NULL,
   `type` varchar(1024) COLLATE utf8_unicode_ci NOT NULL,
-  `image` varchar(1024) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `image` varchar(1024) COLLATE utf8_unicode_ci NULL,
   `patients` int(11) DEFAULT NULL,
   `encounters` int(11) DEFAULT NULL,
   `observations` int(11) DEFAULT NULL,

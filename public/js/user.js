@@ -222,8 +222,36 @@ function isValidMarkerId(markerId) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(markerId);  
 }
 
+function readImage(file) {
+  var id = $("#site").val();
+  var input = file.target;
+  var reader = new FileReader();
+  var fileDetails = input.files[0];
+  reader.readAsDataURL(fileDetails);
+
+  reader.onload = function(){
+    sites[id].siteData.image = reader.result;
+    var imageErrorElem = document.getElementById('image-error');
+    if(fileDetails.type !== "image/jpg" && fileDetails.type !== "image/jpeg" && fileDetails.type !== "image/png") {
+      imageError = true;
+      imageErrorElem.innerHTML = "Please select a png/jpg/jpeg";
+      imageErrorElem.style.display = "block";
+    } else if(sites[id].siteData.image.length > maxImageUploadSize*4/3) {
+      imageError = true;
+      imageErrorElem.innerHTML = "Please select an image less than " + Math.round(maxImageUploadSize/1024) + " kb in size";
+      imageErrorElem.style.display = "block";
+    } else {
+      imageError = false;
+      imageErrorElem.style.display = "none";
+    }
+  };
+};
+
 function saveMarker(e) {
   e.preventDefault();
+  if(imageError) {
+    return;
+  }
   var id = $("#site").val();
   var site = sites[id].siteData;
   if (moduleUUID === null || site.module !== 1) {
@@ -246,7 +274,7 @@ function saveMarker(e) {
     site.show_counts = stats;
   }
   
-  var image = $("#image").val();
+  var image = sites[id].siteData.image;
   var name = $("#name").val().trim();
   var mail = $("#email").val().trim();
   var notes = $("#notes").val().trim();
@@ -292,8 +320,11 @@ function saveMarker(e) {
             sites[nid].siteData = response;
             delete sites[id];
           }
-          site.openmrs_version = response.openmrs_version;
-          site.date_changed = response.date_changed;
+          sites[nid].siteData.openmrs_version = response.openmrs_version;
+          sites[nid].siteData.date_changed = response.date_changed;
+          sites[nid].siteData.image_url = response.image_url;
+          delete sites[nid].siteData.image;
+          console.log(sites[nid].siteData);
 
           sites[nid].infowindow.setContent(contentInfowindow(sites[nid].siteData));
           sites[nid].editwindow.setContent(contentEditwindow(sites[nid].siteData));
@@ -327,7 +358,7 @@ function saveMarker(e) {
 
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
-          bootbox.alert({ message: "Error saving your marker - Please try again ! - " + jqXHR.statusText , backdrop: true });
+          bootbox.alert({ message: "Error saving your marker - Please try again ! - " + jqXHR.responseText.message? jqXHR.responseText.message: jqXHR.statusText , backdrop: true });
         });
   }
   return false;
@@ -344,7 +375,8 @@ function updateMarker(id) {
       contentType: "application/json",
     })
         .done(function(response) {
-          sites[id].siteData = response; 
+          sites[id].siteData = response;
+          sites[id].siteData.image = sites[id].siteData.image;
           sites[id].infowindow.setContent(contentInfowindow(sites[id].siteData));
           sites[id].fadeGroup = 0;
           repaintMarkers();
@@ -358,9 +390,10 @@ function updateMarker(id) {
 function contentInfowindow(site) {
   var html = "<div class='site-bubble'>";
   html += "<div class='site-name'>" + site.name + "</div>";
+  if(site.image_url && site.image_url !== "") {
+    html += "<img class='site-image' src='" + site.image_url + "?t=" + new Date().getTime() + "' width='80px' height='80px' alt='thumbnail' />";
+  }
   html += "<div class='site-panel'>";
-  //if (site.image) #TODO
-    //html += "<img class='site-image' src='" + site.image + "' width='80px' height='80px' alt='thumbnail' />";
   if (site.url)
     html += "<div class='site-url'><a target='_blank' rel='nofollow' href='" + safeUrl(site.url) + "' title='" + site.url + "'>"
         + displayUrl(safeUrl(site.url)) + "</a></div>";
@@ -406,10 +439,13 @@ function contentInfowindow(site) {
 
 function contentEditwindow(site) {
   var html = "<div class='site-bubble bubble-form'>";
-  html += "<form method='post' id='"+ site.id +"'>";
+  html += "<form method='post' id='"+ site.id +"' enctype='multipart/form-data'>";
   html += "<div class='form-group'><input type='text' required='true' placeholder='Site Name' title='Site Name' class='form-control input-sm' value='"+ site.name + "' id='name' name='name'></div>";
   html += "<div class='form-group'><input type='url' class='form-control input-sm' placeholder='Site URL' title='Site URL' value='"+ site.url + "' name='url' id='url'></div>";
-  html += "<div class='form-group'><input type='url' class='form-control input-sm' placeholder='Image' title='Image' value='"+ site.image + "' name='image' id='image'></div>";
+  html += "<div class='form-group'><p>Image: <br/>"
+  html += "<div id='image-hint'>square (prefer 80x80) jpeg or png up to " + Math.round(maxImageUploadSize/1024) + " kb</div>"
+  html += "</p><input type='file' title='Image' name='image' id='image' onchange='readImage(event)'></div>";
+  html += "<div id='image-error'>image error</div>";
   html += "<div class='form-group'><input type='text' class='form-control input-sm'  placeholder='Contact' title='Contact' value='"+ site.contact + "' name='contact' id ='contact'></div>";
   html += "<div class='form-group'><input type='email' class='form-control input-sm' placeholder='Email' title='Email' value='"+ site.email + "' name='email' id='email'></div>";
   html += "<div class='form-group'><textarea class='form-control' value='' name='notes' rows='2' id='notes' placeholder='Notes'>"+ site.notes + "</textarea></div>";
