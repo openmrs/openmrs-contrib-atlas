@@ -6,8 +6,6 @@ module.exports = function(connection) {
 
     const ATLAS_TITLE = process.env.ATLAS_RSS_TITLE || 'OpenMRS Atlas';
     const ATLAS_DESC = process.env.ATLAS_RSS_DESC || 'Updates to OpenMRS Atlas';
-    const ATLAS_LINK = process.env.ATLAS_RSS_LINK || 'https://atlas.openmrs.org';
-    const RSS_LINK = ATLAS_LINK + '/rss';
     const FEED_LENGTH = process.env.ATLAS_RSS_LENGTH || 20;
     const ATLAS_RSS_IMAGE_URL = process.env.ATLAS_RSS_IMAGE_URL;
     const IMAGE_RED_DOT = 'https://atlas.openmrs.org/images/red-dot.png';
@@ -15,6 +13,9 @@ module.exports = function(connection) {
     /* GET RSS Feed */
     router.get('/rss', function(req, res, next) {
 
+        const ATLAS_LINK = process.env.ATLAS_RSS_LINK || (req.protocol + '://' + req.headers.host);
+        const RSS_LINK = ATLAS_LINK + '/rss';
+    
         connection.query("SELECT title,description,url,image_url,author FROM rss ORDER BY date DESC LIMIT "+FEED_LENGTH, function (error, rows, field) {
             if(!!error){
                 console.log(error);

@@ -438,3 +438,14 @@ span.site-version {
 .soft-hidden{
     display: none;
 }
+
+#image-hint {
+    font-size: 12px;
+    font-style: italic;
+}
+
+#image-error {
+    font-size: 12px;
+    display: none;
+    color: red;
+}
