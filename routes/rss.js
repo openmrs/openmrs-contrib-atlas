@@ -13,7 +13,7 @@ module.exports = function(connection) {
     /* GET RSS Feed */
     router.get('/rss', function(req, res, next) {
 
-        const ATLAS_LINK = process.env.ATLAS_RSS_LINK || 'https://' + req.headers.host);
+        const ATLAS_LINK = process.env.ATLAS_RSS_LINK || 'https://' + req.headers.host;
         const RSS_LINK = ATLAS_LINK + '/rss';
     
         connection.query("SELECT title,description,url,image_url,author FROM rss ORDER BY date DESC LIMIT "+FEED_LENGTH, function (error, rows, field) {
