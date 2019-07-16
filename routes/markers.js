@@ -164,7 +164,7 @@ module.exports = function(connection) {
                 if(rows[0].image && rows[0].image.length) {
                     var dataString = rows[0].image.toString('utf-8');
                     var matches = dataString.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-                    if (matches.length !== 3) {
+                    if (!matches || matches.length !== 3) {
                         return new Error('Invalid input string');
                     }
         
