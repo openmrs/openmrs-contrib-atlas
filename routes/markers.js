@@ -301,14 +301,14 @@ module.exports = function(connection) {
                             data.email=req.body.email;
                             data.notes=req.body.notes;
                             data.data=req.body.data;
-                            data.atlas_verison=req.body.atlas_version;
+                            data.atlas_version=req.body.atlas_version;
                             data.date_changed=new Date();
                             data.show_counts=req.body.show_counts;
                             data.openmrs_version=req.body.openmrs_version?req.body.openmrs_version:"unknown";
                             data.distribution=req.body.distribution;
                             var query = 'UPDATE atlas SET latitude=?,longitude=?,name=?,url=?,type=?,patients=?,encounters=?,observations=?,contact=?,email=?,notes=?,data=?,atlas_version=?,date_changed=?,show_counts=?,openmrs_version=?,distribution=?';
 
-                            var params = [data.latitude,data.longitude,data.name,data.url,data.type,data.patients,data.encounters,data.observations,data.contact,data.email,data.notes,data.data,data.atlas_verison,data.date_changed.toISOString().slice(0, 19).replace('T', ' '),data.show_counts,data.openmrs_version,data.distribution];
+                            var params = [data.latitude,data.longitude,data.name,data.url,data.type,data.patients,data.encounters,data.observations,data.contact,data.email,data.notes,data.data,data.atlas_version,data.date_changed.toISOString().slice(0, 19).replace('T', ' '),data.show_counts,data.openmrs_version,data.distribution];
                             if(data.image) {
                                 query += ',image=?';
                                 params.push(data.image);
