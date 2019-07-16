@@ -197,7 +197,7 @@ module.exports = function(connection) {
         var url=req.body.url;
         var type=req.body.type;
         var image=req.body.image;
-        if (typeof image !== 'undefined') image=null;
+        if (typeof image === 'undefined') image=null;
         if(image && image.length > MAX_IMAGE_UPLOAD_SIZE*4/3) {
             return res.status(413).send({ message: 'Image size must be below '+ Math.round(MAX_IMAGE_UPLOAD_SIZE/1024) + ' kilobytes' });
         }
