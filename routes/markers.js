@@ -168,7 +168,7 @@ module.exports = function(connection) {
                         return new Error('Invalid input string');
                     }
         
-                    var img = new Buffer(matches[2], 'base64');
+                    var img = Buffer.from(matches[2], 'base64');
                     res.writeHead(200, {
                         'Content-Type': matches[1],
                         'Content-Length': img.length
