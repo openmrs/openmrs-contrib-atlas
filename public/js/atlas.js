@@ -447,12 +447,21 @@ function isMyMarker(site) {
 function loadSites(json, authrules) {
     var bounds = new google.maps.LatLngBounds();
     loadVersion(json);
+
+    //Create dictionary mapping marker ids to respective auth rules
+    idToRules = {};
+    authrules.forEach(function(rule) {
+        if(rule.privileges === 'UPDATE') {
+            if(!idToRules[rule.atlas_id]) {
+                idToRules[rule.atlas_id] = [];
+            }
+            idToRules[rule.atlas_id].push(rule);    
+        }
+    });
+
     for (i = 0; i < json.length; i++) {
         var site = json[i];
-        site.auth = [];
-        site.auth = authrules.filter(function(rule) {
-            return rule.atlas_id === site.id && rule.privileges === 'UPDATE';
-        });
+        site.auth = idToRules[site.id]? idToRules[site.id]: [];
         site.coowners = [];
         site.coowners = site.auth.map(function(rule) { return rule.principal; });
         if (!site.hasOwnProperty("uuid"))
@@ -477,9 +486,9 @@ function loadSites(json, authrules) {
             "editBubbleOpen": false,
             "fadeGroup": fadeGroup
         };
-        initLegend();
-        repaintMarkers();
     }
+    initLegend();
+    repaintMarkers();
 
     setTimeout('openBubble(uniqueMarker)', 800);
     map.fitBounds(bounds);
