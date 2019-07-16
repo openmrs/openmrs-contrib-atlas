@@ -23,6 +23,7 @@ module.exports = function(connection) {
 
     var recently_seen = [];
     const MAX_IMAGE_UPLOAD_SIZE = 150*1024;
+    const REQUEST_PROTOCOL = "https";
 
     setInterval(function() {
         while(recently_seen.length && new Date() - recently_seen[0][1] > 5*60*1000) {
@@ -40,12 +41,12 @@ module.exports = function(connection) {
 
     //returns link to marker
     function getMarkerLink(req, id) {
-        return req.protocol + '://' + req.headers.host + '/?marker=' + id;
+        return REQUEST_PROTOCOL + '://' + req.headers.host + '/?marker=' + id;
     }
     
     //returns image URL given marker id
     function getImageURL(req, id) {
-        return req.protocol + '://' + req.headers.host + '/marker/' + id + '/image';
+        return REQUEST_PROTOCOL + '://' + req.headers.host + '/marker/' + id + '/image';
     }
 
     /* GET all the markers */
@@ -77,7 +78,7 @@ module.exports = function(connection) {
 
         //if parameter exists in the url
         //push it into params, and add column name to sql query
-        var params = [req.protocol, req.headers.host];
+        var params = [REQUEST_PROTOCOL, req.headers.host];
         criteria.forEach(function(crit) {
             if(req.query[crit.param]) {
                 query += (params.length === 2? ' WHERE ':' AND ')+crit.col+"=?";
@@ -104,7 +105,7 @@ module.exports = function(connection) {
         IF(image is not null, concat(?,'://',?,'/marker/',atlas.id,'/image'), null) AS image_url, \
         patients,encounters,observations,contact,email,notes,data,atlas_version,date_created,date_changed,created_by,show_counts,openmrs_version,distributions.name as distribution FROM atlas LEFT JOIN distributions on atlas.distribution=distributions.id";
 
-        connection.query(query, [req.protocol, req.headers.host], function (error, rows, field) {
+        connection.query(query, [REQUEST_PROTOCOL, req.headers.host], function (error, rows, field) {
             if(!!error){
                 console.log(error);
             }
@@ -142,7 +143,7 @@ module.exports = function(connection) {
         else query = no_counts_query;
 
         var id=req.params['id'];
-        connection.query(query+' where id=?',[req.protocol, req.headers.host, id], function (error, rows, field) {
+        connection.query(query+' where id=?',[REQUEST_PROTOCOL, req.headers.host, id], function (error, rows, field) {
 
             if(!!error){
                 console.log(error);
@@ -256,7 +257,7 @@ module.exports = function(connection) {
                 return res.status(500).send({ message: "Error retrieving data from database"});
             } else if((rows.length && (rows[0].privileges === "ALL" || rows[0].privileges === "UPDATE")) || req.session.user.admin) {
 
-                connection.query(show_counts_query + " WHERE id=?", [req.protocol, req.headers.host, id], function (error, rows, field) {
+                connection.query(show_counts_query + " WHERE id=?", [REQUEST_PROTOCOL, req.headers.host, id], function (error, rows, field) {
                     if(error) {
                         console.log(error);
                         return res.status(500).send({ message: "Error retrieving data from database"});
@@ -378,7 +379,7 @@ module.exports = function(connection) {
                 return res.status(500).send({ message: "Error retrieving data from database"});
             } else if((rows.length && rows[0].privileges === "ALL") || req.session.user.admin) {
 
-                connection.query(show_counts_query + " WHERE id=?", [req.protocol, req.headers.host, id], function (error, rows, field) {
+                connection.query(show_counts_query + " WHERE id=?", [REQUEST_PROTOCOL, req.headers.host, id], function (error, rows, field) {
 
                     if(error) {
                         console.log(error);
