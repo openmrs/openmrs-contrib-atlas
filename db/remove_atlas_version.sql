@@ -15,37 +15,41 @@
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
---
--- Table structure for table `atlas_versions`
---
+-- Drop atlas_version column for table 'atlas'
+SET @dbname = DATABASE();
+SET @tablename = "atlas";
+SET @columnname = "atlas_version";
+SET @preparedStatement = (SELECT IF(
+  (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE
+      (table_name = @tablename)
+      AND (table_schema = @dbname)
+      AND (column_name = @columnname)
+  ) = 0,
+  "SELECT 1",
+  CONCAT("ALTER TABLE ", @tablename, " DROP COLUMN ", @columnname, ";")
+));
+PREPARE alterColumnType FROM @preparedStatement;
+EXECUTE alterColumnType;
+DEALLOCATE PREPARE alterColumnType;
 
-DROP TABLE IF EXISTS `atlas_versions`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `atlas_versions` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `version` varchar(50) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `atlas_versions`
---
-
---
--- Dumping data for table `atlas_versions`
---
-
-LOCK TABLES `atlas_versions` WRITE;
-/*!40000 ALTER TABLE `atlas_versions` DISABLE KEYS */;
-INSERT INTO `atlas_versions` VALUES (1,'2'),
-(2,'2.1'),
-(3,'2.1-SNAPSHOT'),
-(4,'2.2'),
-(5,'2.2-SNAPSHOT');
-/*!40000 ALTER TABLE `atlas_versions` ENABLE KEYS */;
-UNLOCK TABLES;
+-- Drop atlas_version column for table 'archive'
+SET @tablename = "archive";
+SET @preparedStatement = (SELECT IF(
+  (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE
+      (table_name = @tablename)
+      AND (table_schema = @dbname)
+      AND (column_name = @columnname)
+  ) = 0,
+  "SELECT 1",
+  CONCAT("ALTER TABLE ", @tablename, " DROP COLUMN ", @columnname, ";")
+));
+PREPARE alterColumnType FROM @preparedStatement;
+EXECUTE alterColumnType;
+DEALLOCATE PREPARE alterColumnType;
 
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
