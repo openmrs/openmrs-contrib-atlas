@@ -201,9 +201,9 @@ module.exports = function(connection) {
         if(image && image.length > MAX_IMAGE_UPLOAD_SIZE*4/3) {
             return res.status(413).send({ message: 'Image size must be below '+ Math.round(MAX_IMAGE_UPLOAD_SIZE/1024) + ' kilobytes' });
         }
-        var patients=req.body.patients;
-        var encounters=req.body.encounters;
-        var observations=req.body.observations;
+        var patients=(req.body.patients? req.body.patients: 0);
+        var encounters=(req.body.encounters? req.body.encounters: 0);
+        var observations=(req.body.observations? req.body.observations: 0);
         var contact=req.body.contact;
         var email=req.body.email;
         var notes=req.body.notes;
@@ -293,9 +293,9 @@ module.exports = function(connection) {
                                 }
                                 data.image=req.body.image;
                             }
-                            data.patients=req.body.patients;
-                            data.encounters=req.body.encounters;
-                            data.observations=req.body.observations;
+                            data.patients=(req.body.patients? req.body.patients: 0);
+                            data.encounters=(req.body.encounters? req.body.encounters: 0);
+                            data.observations=(req.body.observations? req.body.observations: 0);
                             data.contact=req.body.contact;
                             data.email=req.body.email;
                             data.notes=req.body.notes;
