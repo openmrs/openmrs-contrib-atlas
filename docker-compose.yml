@@ -39,6 +39,12 @@ services:
       MAIL_USER: ${MAIL_USER:-infrastructure@openmrs.org}
       MAIL_PASS: ${MAIL_PASS:-magic}
       GOOGLE_MAPS_JS_API_KEY: ${GOOGLE_MAPS_JS_API_KEY:-XXXXXXXXXXX_XXXXXX-XXXXXXXXXXX-XXXXXXXX}
+      ATLAS_LINK_PROTOCOL: ${ATLAS_LINK_PROTOCOL:-http}
+      ATLAS_RSS_TITLE: ${ATLAS_RSS_TITLE:-OpenMRS Atlas}
+      ATLAS_RSS_DESC: ${ATLAS_RSS_DESC:-Updates to OpenMRS Atlas}
+      ATLAS_RSS_LENGTH: ${ATLAS_RSS_LENGTH:-20}
+      ATLAS_RSS_IMAGE_URL: ${ATLAS_RSS_IMAGE_URL:-http://localhost:3000/images/red-dot.png}
+      ATLAS_RSS_LINK: ${ATLAS_RSS_LINK:-http://localhost}
     ports:
       - 3000:3000
     restart: always

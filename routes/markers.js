@@ -23,7 +23,7 @@ module.exports = function(connection) {
 
     var recently_seen = [];
     const MAX_IMAGE_UPLOAD_SIZE = 150*1024;
-    const REQUEST_PROTOCOL = "https";
+    const REQUEST_PROTOCOL = process.env.ATLAS_LINK_PROTOCOL || 'https';
 
     setInterval(function() {
         while(recently_seen.length && new Date() - recently_seen[0][1] > 5*60*1000) {
