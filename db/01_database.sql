@@ -44,7 +44,7 @@ CREATE TABLE `archive` (
   `name` varchar(1024) COLLATE utf8_unicode_ci NOT NULL,
   `url` varchar(1024) COLLATE utf8_unicode_ci DEFAULT NULL,
   `type` varchar(1024) COLLATE utf8_unicode_ci NOT NULL,
-  `image` varchar(1024) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `image` mediumblob DEFAULT NULL,
   `patients` int(11) DEFAULT NULL,
   `encounters` int(11) DEFAULT NULL,
   `observations` int(11) DEFAULT NULL,
@@ -79,7 +79,7 @@ CREATE TABLE `atlas` (
   `name` varchar(1024) COLLATE utf8_unicode_ci NOT NULL,
   `url` varchar(1024) COLLATE utf8_unicode_ci DEFAULT NULL,
   `type` varchar(1024) COLLATE utf8_unicode_ci NOT NULL,
-  `image` varchar(1024) COLLATE utf8_unicode_ci NULL,
+  `image` mediumblob DEFAULT NULL,
   `patients` int(11) DEFAULT NULL,
   `encounters` int(11) DEFAULT NULL,
   `observations` int(11) DEFAULT NULL,
@@ -88,7 +88,7 @@ CREATE TABLE `atlas` (
   `notes` text COLLATE utf8_unicode_ci,
   `data` text COLLATE utf8_unicode_ci,
   `date_created` timestamp NOT NULL DEFAULT '0000-00-00 00:00:00',
-  `date_changed` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `date_changed` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `created_by` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
   `show_counts` tinyint(1) NOT NULL DEFAULT '1',
   `openmrs_version` varchar(50) COLLATE utf8_unicode_ci NOT NULL,
@@ -136,17 +136,54 @@ CREATE TABLE `distributions` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `migrations`
+-- Table structure for table `types`
 --
 
-DROP TABLE IF EXISTS `migrations`;
+DROP TABLE IF EXISTS `types`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `migrations` (
-  `migration` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
-  `batch` int(11) NOT NULL
+CREATE TABLE `types` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(1024) NOT NULL,
+  `icon` varchar(1024) NOT NULL,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `versions`
+--
+
+DROP TABLE IF EXISTS `versions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `versions` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `version` varchar(50) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `rss`
+--
+
+DROP TABLE IF EXISTS `rss`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `rss` (
+  `id` INT(10) unsigned NOT NULL AUTO_INCREMENT,
+  `title` VARCHAR(1024) NOT NULL,
+  `description` VARCHAR(4096) NOT NULL,
+  `author` VARCHAR(1024) NOT NULL,
+  `url` varchar(1024) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `image_url` varchar(1024) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `date` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  INDEX (`date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
