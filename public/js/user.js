@@ -120,6 +120,7 @@ function createSite() {
     icon: image,
     draggable: false,
     animation: google.maps.Animation.DROP,
+    optimized: false
   });
   marker.setDraggable(true);
   var site = newSite(myPosition);
