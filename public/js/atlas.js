@@ -548,7 +548,8 @@ function createMarker(site, fadeGroup, bounds) {
         title: site.name,
         icon: colorForSite(site),
         shadow: shadows[imageIndex],
-        animation: google.maps.Animation.DROP
+        animation: google.maps.Animation.DROP,
+        optimized: false
     });
     bounds.extend(latLng);
     return marker;
