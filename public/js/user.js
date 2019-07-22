@@ -110,7 +110,7 @@ function createSite() {
   closeBubbles();
   myPosition = map.getCenter();
   var image = {
-    url: "https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png",
+    url: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png",
     scaledSize: new google.maps.Size(32, 32)
   };
   var marker = new google.maps.Marker({
@@ -148,9 +148,6 @@ function newSite(myPosition) {
     contact: userName,
     created_by: currentUser,
     name: userName + " Site",
-    patients: 0,
-    encounters: 0,
-    observations: 0,
     email: userEmail,
     show_counts: 1,
     notes: "",
@@ -209,7 +206,7 @@ function deleteMarker(site) {
   }
   if (auth_site.length === 0)
     $("#editSite").attr("hidden", true);
-  }
+}
 
 function createEditInfoWindow(site, marker) {
   var html = contentEditwindow(site);
@@ -340,7 +337,7 @@ function saveMarker(e) {
           sites[nid].siteData.date_changed = response.date_changed;
           sites[nid].siteData.image_url = response.image_url;
           delete sites[nid].siteData.image;
-          sites[nid].fadeGroup = 0;
+          console.log(sites[nid].siteData);
 
           sites[nid].infowindow.setContent(contentInfowindow(sites[nid].siteData));
           sites[nid].editwindow.setContent(contentEditwindow(sites[nid].siteData));
@@ -457,6 +454,35 @@ function removeCoOwner(e) {
         bootbox.alert({ message: "Error removing Co-owner - Please try again ! - " + (jqXHR.responseJSON.message?jqXHR.responseJSON.message:jqXHR.statusText), backdrop: true });
       });
 }
+
+function subscribeUser() {
+  $.ajax({
+    url: "/unsubscribed",
+    type: "DELETE",
+    dataType: "json",
+  })
+      .done(function(response) {
+        bootbox.alert({ message: "Subscribed for marker updates!", backdrop: true });
+      })
+      .fail(function(jqXHR, textStatus, errorThrown) {
+        bootbox.alert({ message: "Error subscribing for marker updates - Please try again ! - " + jqXHR.statusText, backdrop: true });
+      });
+}
+
+function unsubscribeUser() {
+  $.ajax({
+    url: "/unsubscribed",
+    type: "POST",
+    dataType: "json",
+  })
+      .done(function(response) {
+        bootbox.alert({ message: "Unsubscribed for marker updates!", backdrop: true });
+      })
+      .fail(function(jqXHR, textStatus, errorThrown) {
+        bootbox.alert({ message: "Error Unsubscribing for marker updates - Please try again ! - " + jqXHR.statusText, backdrop: true });
+      });
+}
+
 
 function displayAdvancedOptions(e) {
   var advOptions = document.getElementById('adv-options');

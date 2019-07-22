@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
+var utils = require('../utils');
 var ldapUtils = require('../ldap');
+var url = require('url');
 
 module.exports = function () {
     //GET login
@@ -17,6 +19,7 @@ module.exports = function () {
 
     //Validate login credentials and redirect accordingly
     router.post('/login', function(req, res) {
+
         ldapUtils.authenticate(req.body.username, req.body.password, function(err) {
             //If authentication fails, redirect to login
             if(err) {
@@ -37,7 +40,10 @@ module.exports = function () {
                         //Login user, store user details in the session, and redirect to Atlas home page
                         req.session.authenticated = true;
                         req.session.user = user;
-                        res.redirect('/');
+                        
+                        var redirectUrl = url.parse(req.headers.referer,true).query.redirect;
+                        if(!redirectUrl || utils.isUrlAbsolute(redirectUrl)) res.redirect('/');
+                        else res.redirect(redirectUrl);
                     }
                 });                
             }

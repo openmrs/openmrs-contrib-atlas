@@ -6,13 +6,25 @@ module.exports = function(){
     router.get('/', function(req, res, next) {
 
         var marker_id = req.query['marker'];    
+        var update_marker = req.query['update'];    
+        var delete_marker = req.query['delete'];    
+        var unsubscribed = req.query['unsubscribed'];
+        var unsubscribeDialog = req.query['unsubscribeDialog'];
+
+        if((update_marker || delete_marker || unsubscribed || unsubscribeDialog) && !req.session.authenticated) {
+            return res.redirect('/login?redirect=' + encodeURIComponent(req.url));
+        } 
 
         var options = {
             title: 'OpenMRS Atlas',
             isAuth: req.session,
             user: req.session.user,
             google_maps_api_key:  process.env.GOOGLE_MAPS_JS_API_KEY || 'NO_API',
-            marker_id: marker_id
+            marker_id: marker_id,
+            update_marker: update_marker,
+            delete_marker: delete_marker,
+            unsubscribed: unsubscribed,
+            unsubscribeDialog: unsubscribeDialog
         };
         res.render('index', options);
 
