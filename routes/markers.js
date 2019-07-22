@@ -47,14 +47,6 @@ module.exports = function(connection) {
         return REQUEST_PROTOCOL + '://' + req.headers.host + '/marker/' + id + '/image';
     }
 
-    async function addToNotificationTable(connection, marker_id) {
-        var ret = null;
-        await connection.query("INSERT INTO notifications(id) VALUES(?)", [marker_id], function (error, rows, field) {
-            if(error) ret = error;
-        });
-        return ret;
-    }
-
     utils.scheduleMails(connection);
 
     /* GET all the markers */
@@ -209,9 +201,9 @@ module.exports = function(connection) {
         if(image && image.length > MAX_IMAGE_UPLOAD_SIZE*4/3) {
             return res.status(413).send({ message: 'Image size must be below '+ Math.round(MAX_IMAGE_UPLOAD_SIZE/1024) + ' kilobytes' });
         }
-        var patients=req.body.patients;
-        var encounters=req.body.encounters;
-        var observations=req.body.observations;
+        var patients=(req.body.patients? req.body.patients: 0);
+        var encounters=(req.body.encounters? req.body.encounters: 0);
+        var observations=(req.body.observations? req.body.observations: 0);
         var contact=req.body.contact;
         var email=req.body.email;
         var notes=req.body.notes;
@@ -232,25 +224,19 @@ module.exports = function(connection) {
                     if(error) {
                         console.log(error);
                     } else {
-                        error = addToNotificationTable(connection, rows[0].insertId);
-
-                        if(error) {
-                            console.log(error);
-                        } else {
-                            res.setHeader('Content-Type', 'application/json');
-                            var json = req.body;
-                            if(image) {
-                                json['image_url'] = getImageURL(req, id);
-                            }
-                            delete json.image;                        
-                            json['id'] = id;
-                            json['date_created'] = date_created;
-                            json['date_changed'] = date_changed;
-                            json['created_by'] = created_by;
-                            json['openmrs_version'] = openmrs_version;
-                            res.json(json);
-                            checkAndAddRSS(`${name} joins the OpenMRS Atlas`, `${req.session.user.uid} added ${name} as a new site on the OpenMRS Atlas`, getMarkerLink(req, id), json['image_url'], req.session.user.uid);    
+                        res.setHeader('Content-Type', 'application/json');
+                        var json = req.body;
+                        if(image) {
+                            json['image_url'] = getImageURL(req, id);
                         }
+                        delete json.image;                        
+                        json['id'] = id;
+                        json['date_created'] = date_created;
+                        json['date_changed'] = date_changed;
+                        json['created_by'] = created_by;
+                        json['openmrs_version'] = openmrs_version;
+                        res.json(json);
+                        checkAndAddRSS(`${name} joins the OpenMRS Atlas`, `${req.session.user.uid} added ${name} as a new site on the OpenMRS Atlas`, getMarkerLink(req, id), json['image_url'], req.session.user.uid);    
                     }
                 });
             }
@@ -307,9 +293,9 @@ module.exports = function(connection) {
                                 }
                                 data.image=req.body.image;
                             }
-                            data.patients=req.body.patients;
-                            data.encounters=req.body.encounters;
-                            data.observations=req.body.observations;
+                            data.patients=(req.body.patients? req.body.patients: 0);
+                            data.encounters=(req.body.encounters? req.body.encounters: 0);
+                            data.observations=(req.body.observations? req.body.observations: 0);
                             data.contact=req.body.contact;
                             data.email=req.body.email;
                             data.notes=req.body.notes;

@@ -110,7 +110,7 @@ function createSite() {
   closeBubbles();
   myPosition = map.getCenter();
   var image = {
-    url: "http://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png",
+    url: "https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png",
     scaledSize: new google.maps.Size(32, 32)
   };
   var marker = new google.maps.Marker({
@@ -148,6 +148,9 @@ function newSite(myPosition) {
     contact: userName,
     created_by: currentUser,
     name: userName + " Site",
+    patients: 0,
+    encounters: 0,
+    observations: 0,
     email: userEmail,
     show_counts: 1,
     notes: "",
@@ -337,8 +340,8 @@ function saveMarker(e) {
           sites[nid].siteData.date_changed = response.date_changed;
           sites[nid].siteData.image_url = response.image_url;
           delete sites[nid].siteData.image;
-          console.log(sites[nid].siteData);
-
+          sites[nid].fadeGroup = 0;
+          
           sites[nid].infowindow.setContent(contentInfowindow(sites[nid].siteData));
           sites[nid].editwindow.setContent(contentEditwindow(sites[nid].siteData));
 
