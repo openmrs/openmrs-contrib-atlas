@@ -15,4 +15,5 @@ module.exports = function(app, db) {
     importRoute('auth');
     importRoute('admin');
     importRoute('rss');
+    importRoute('unsubscribed');
 };

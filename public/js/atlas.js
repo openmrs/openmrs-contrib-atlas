@@ -240,7 +240,12 @@ function fetchMarkerSites() {
             .always(function (authrules, textStatus) {
                 loadSites(data, authrules);
                 var marker_id = document.getElementById('marker-id').value;
-                if(marker_id != "" && sites[marker_id]) {
+                var update_marker = document.getElementById('update-marker').value;
+                var delete_marker = document.getElementById('delete-marker').value;
+                var unsubscribeDialog = document.getElementById('unsubscribeDialog').value;
+                var unsubscribed = document.getElementById('unsubscribed').value;
+
+                if(isValidMarkerId(marker_id) && sites[marker_id]) {
                     sites[marker_id].infowindow.open(map, sites[marker_id].marker);
                     google.maps.event.addListenerOnce(map, 'tilesloaded', function(){
                         google.maps.event.addListenerOnce(map, 'tilesloaded', function(){
@@ -248,7 +253,26 @@ function fetchMarkerSites() {
                             map.setCenter(sites[marker_id].marker.getPosition());    
                         });
                     });                
-                }        
+                } 
+
+                if(isValidMarkerId(update_marker) && sites[update_marker]) {
+                    updateMarker(update_marker);
+                } 
+
+                if(isValidMarkerId(delete_marker) && sites[delete_marker]) {
+                    deleteMarker(delete_marker);
+                } 
+
+                if(unsubscribeDialog === "true") {
+                    bootbox.confirm("Unsubscribe from all email notifications from Atlas?", function(result) {
+                        if (result) unsubscribeUser();
+                      });
+                }
+
+                if(unsubscribed === "true") {
+                    bootbox.alert({ message: "You have been unsubscribed from any email notifications from Atlas.", backdrop: true });
+                }
+
             });
         })
 }
