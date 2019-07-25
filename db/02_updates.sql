@@ -178,6 +178,13 @@ CREATE TABLE `unsubscribed` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+--
+-- Convert any username stored as 'openmrs-id:<username>' to '<username>'
+--
+
+UPDATE `atlas` SET `created_by`=SUBSTRING(`created_by`, length('openmrs_id:')+1, length(`created_by`)-length('openmrs_id:')) WHERE `created_by` LIKE 'openmrs_id:%';
+UPDATE `auth` SET `principal`=SUBSTRING(`principal`, length('openmrs_id:')+1, length(`principal`)-length('openmrs_id:')) WHERE `principal` LIKE 'openmrs_id:%';
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
