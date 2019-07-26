@@ -3,7 +3,7 @@
 <script>
 
 function fetchVersions() {
-    $.ajax({url: "/versions"})
+    $.ajax({url: "/api/versions"})
         .always(function (data, textStatus) {
             if (textStatus != "success") {
                 return;
@@ -30,7 +30,7 @@ fetchVersions();
 function deleteVersion(id, name) {
     console.log("hi");
     $.ajax({
-      url: "/version/"+id,
+      url: "/api/version/"+id,
       type: "DELETE",
       dataType: "json",
     })

@@ -33,7 +33,7 @@
 
 function fetchType() {
     var typeid = document.getElementById("typeid").value;
-    $.ajax({url: "/type/"+typeid})
+    $.ajax({url: "/api/type/"+typeid})
         .always(function (data, textStatus) {
             if (textStatus != "success") {
                 return;
@@ -55,7 +55,7 @@ $("#submit").click(function (e) {
     var icon = $("#icon").val().trim();
     var json = JSON.stringify({ name: name, icon: icon });
     $.ajax({
-      url: "/type/"+id,
+      url: "/api/type/"+id,
       type: "PATCH",
       data: json,
       dataType: "json",

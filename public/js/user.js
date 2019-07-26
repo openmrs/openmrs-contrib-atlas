@@ -178,7 +178,7 @@ function deleteMarker(site) {
   var deleted = site;
   if  (deleted !== "" && deleted !== null) {
     $.ajax({
-      url: "/marker/"+deleted,
+      url: "/api/marker/"+deleted,
       type: "DELETE",
       dataType: "json",
     })
@@ -320,7 +320,7 @@ function saveMarker(e) {
     $.ajax({
       //If marker id is a uuid, its an PATCH update request to '/marker/[id]'
       //else it is an POST create request to '/marker'
-      url: "/marker" + (isUpdateRequest ? "/"+id : ""),
+      url: "/api/marker" + (isUpdateRequest ? "/"+id : ""),
       type: isUpdateRequest?"PATCH":"POST",
       data: json,
       dataType: "json",
@@ -383,7 +383,7 @@ function saveMarker(e) {
 function updateMarker(id) {
     var json = JSON.stringify({ });
     $.ajax({
-      url: "/marker/"+id,
+      url: "/api/marker/"+id,
       type: "PATCH",
       data: json,
       dataType: "json",
@@ -391,7 +391,7 @@ function updateMarker(id) {
       contentType: "application/json",
     })
         .done(function(response) {
-          sites[id].siteData = response;
+          sites[id].siteData.date_changed = response.date_changed;
           sites[id].siteData.image = sites[id].siteData.image;
           sites[id].infowindow.setContent(contentInfowindow(sites[id].siteData));
           sites[id].fadeGroup = 0;
@@ -415,7 +415,7 @@ function addCoOwner(e) {
     expires: null
   });
   $.ajax({
-    url: "/auth",
+    url: "/api/auth",
     type: "POST",
     data: json,
     dataType: "json",
@@ -440,7 +440,7 @@ function removeCoOwner(e) {
   var atlas_id = $("#site").val();
   
   $.ajax({
-    url: "/auth/" + id,
+    url: "/api/auth/" + id,
     type: "DELETE",
     dataType: "json",
   })
@@ -460,7 +460,7 @@ function removeCoOwner(e) {
 
 function subscribeUser() {
   $.ajax({
-    url: "/unsubscribed",
+    url: "/api/unsubscribed",
     type: "DELETE",
     dataType: "json",
   })
@@ -474,7 +474,7 @@ function subscribeUser() {
 
 function unsubscribeUser() {
   $.ajax({
-    url: "/unsubscribed",
+    url: "/api/unsubscribed",
     type: "POST",
     dataType: "json",
   })

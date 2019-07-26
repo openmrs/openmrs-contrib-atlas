@@ -27,7 +27,7 @@
 
 function fetchVersion() {
     var versionid = document.getElementById("versionid").value;
-    $.ajax({url: "/version/"+versionid})
+    $.ajax({url: "/api/version/"+versionid})
         .always(function (data, textStatus) {
             if (textStatus != "success") {
                 return;
@@ -47,7 +47,7 @@ $("#submit").click(function (e) {
     var version = $("#version").val().trim();
     var json = JSON.stringify({ version: version });
     $.ajax({
-      url: "/version/"+id,
+      url: "/api/version/"+id,
       type: "PATCH",
       data: json,
       dataType: "json",

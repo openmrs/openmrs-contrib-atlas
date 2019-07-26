@@ -1,18 +1,18 @@
 var express = require('express');
 var router = express.Router();
 var uuid = require('uuid');
-var utils = require('../utils.js');
+var utils = require('../../utils.js');
 var stream = require('stream');
 var { Parser } = require('json2csv');
 
 module.exports = function(connection) {
 
     var show_counts_query = "SELECT id,latitude,longitude,name,url,type, \
-    IF(image is not null, concat(?,'://',?,'/marker/',id,'/image'), null) AS image_url, \
+    IF(image is not null, concat(?,'://',?,'/api/marker/',id,'/image'), null) AS image_url, \
     show_counts,patients,encounters,observations,contact,email,notes,data,openmrs_version,distribution,date_created,date_changed,created_by FROM atlas";
 
     var no_counts_query = "SELECT id,latitude,longitude,name,url,type, \
-    IF(image is not null, concat(?,'://',?,'/marker/',id,'/image'), null) AS image_url, \
+    IF(image is not null, concat(?,'://',?,'/api/marker/',id,'/image'), null) AS image_url, \
     show_counts, \
     IF(show_counts, patients, null) AS patients, \
     IF(show_counts, encounters, null) AS encounters, \
@@ -44,7 +44,7 @@ module.exports = function(connection) {
     
     //returns image URL given marker id
     function getImageURL(req, id) {
-        return REQUEST_PROTOCOL + '://' + req.headers.host + '/marker/' + id + '/image';
+        return REQUEST_PROTOCOL + '://' + req.headers.host + '/api/marker/' + id + '/image';
     }
 
     utils.scheduleMails(connection);

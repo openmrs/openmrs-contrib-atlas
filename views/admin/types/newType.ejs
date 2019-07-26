@@ -39,7 +39,7 @@ $("#submit").click(function (e) {
     var icon = $("#icon").val().trim();
     var json = JSON.stringify({ name: name, icon: icon });
     $.ajax({
-      url: "/type",
+      url: "/api/type",
       type: "POST",
       data: json,
       dataType: "json",

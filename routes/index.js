@@ -6,14 +6,13 @@ module.exports = function(app, db) {
         app.use(routeModule(db));
     }
 
+    // Web endpoints
     importRoute('default');
-    importRoute('distributions');
-    importRoute('markers');
-    importRoute('types');
-    importRoute('versions');
     importRoute('authentication');
-    importRoute('auth');
     importRoute('admin');
     importRoute('rss');
-    importRoute('unsubscribed');
+
+    // REST endpoints
+    var routes = require('./api/index');
+    routes(app, db);
 };

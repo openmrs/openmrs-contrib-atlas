@@ -1,7 +1,7 @@
 var express = require('express');
 var router = express.Router();
-var utils = require('../utils.js');
-var ldapUtils = require('../ldap.js');
+var utils = require('../../utils.js');
+var ldapUtils = require('../../ldap.js');
 
 module.exports = function(connection) {
 

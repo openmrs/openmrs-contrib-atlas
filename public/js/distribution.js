@@ -10,7 +10,7 @@ var constants = {
 };
 
 var URI = {
-    distributions : "distributions"
+    distributions : "/api/distributions"
 };
 
 var errorMessages ={

@@ -32,7 +32,7 @@ $("#submit").click(function (e) {
     var version = $("#version").val().trim();
     var json = JSON.stringify({ version: version });
     $.ajax({
-      url: "/version",
+      url: "/api/version",
       type: "POST",
       data: json,
       dataType: "json",
