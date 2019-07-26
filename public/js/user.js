@@ -14,6 +14,12 @@ function initLoginButton() {
     if ($(this).attr("id") === "editSite") {
       getMarkerPosition(nextSite, function (result) {
         //increments nextSite, and loops back to 0 when nextSite is equal to auth_site.length 
+        fadeOverTime = false;
+        closeBubbles();
+        repaintMarkers();
+        document.getElementById("fadeCheckbox").checked = false;
+        sites[auth_site[nextSite]].infowindow.open(map, sites[auth_site[nextSite]].marker);
+        sites[auth_site[nextSite]].bubbleOpen = true;
         nextSite = (nextSite+1)%auth_site.length;
         map.setCenter(result);
         map.setZoom(8);

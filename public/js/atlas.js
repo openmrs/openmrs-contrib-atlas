@@ -247,6 +247,7 @@ function fetchMarkerSites() {
 
                 if(isValidMarkerId(marker_id) && sites[marker_id]) {
                     sites[marker_id].infowindow.open(map, sites[marker_id].marker);
+                    sites[marker_id].bubbleOpen = true;
                     google.maps.event.addListenerOnce(map, 'tilesloaded', function(){
                         google.maps.event.addListenerOnce(map, 'tilesloaded', function(){
                             map.setZoom(8);
