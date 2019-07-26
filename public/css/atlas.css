@@ -382,8 +382,9 @@ span.site-version {
     color: rgba(141, 141, 141, 1);
     position: absolute;
     padding-bottom: 2px;
-    left:12px;
+    left:-40px;
     bottom:1px;
+    z-index: 1;
 }
 .toggle {
         cursor:pointer;
