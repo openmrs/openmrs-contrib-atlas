@@ -3,7 +3,7 @@ var getCachedVersions = null;
 function fetchVersions(){
 
     return $.ajax({
-            url: "/versions",
+            url: "/api/versions",
             type: "GET"
         })
         .done(function (versions) {

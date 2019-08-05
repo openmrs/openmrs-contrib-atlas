@@ -14,7 +14,7 @@ $(function () {
     }
     var json = JSON.stringify(auth);
     $.ajax({
-      url: "module/auth?uuid=" + moduleUUID,
+      url: "/api/module/auth?uuid=" + moduleUUID,
       type: "POST",
       data: json,
       dataType: "text",
@@ -56,7 +56,7 @@ function openBubble(uniqueMarker) {
 function detachMarker(id) {
   var site = sites[id].siteData;
   $.ajax({
-    url: "module/auth?uuid=" + moduleUUID,
+    url: "/api/module/auth?uuid=" + moduleUUID,
     type: "DELETE",
     dataType: "text",
   })

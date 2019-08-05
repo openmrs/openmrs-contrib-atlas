@@ -3,7 +3,7 @@
 <script>
 
 function fetchTypes() {
-    $.ajax({url: "/types"})
+    $.ajax({url: "/api/types"})
         .always(function (data, textStatus) {
             if (textStatus != "success") {
                 return;
@@ -30,7 +30,7 @@ fetchTypes();
 
 function deleteType(id, name) {
     $.ajax({
-      url: "/type/"+id,
+      url: "/api/type/"+id,
       type: "DELETE",
       dataType: "json",
     })

@@ -40,7 +40,7 @@ $("#submit").click(function (e) {
     var json = JSON.stringify({ name: name, is_standard: is_standard });
     console.log(json);
     $.ajax({
-      url: "/distribution",
+      url: "/api/distribution",
       type: "POST",
       data: json,
       dataType: "json",

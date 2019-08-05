@@ -3,7 +3,7 @@ var getCachedTypes = null;
 function fetchTypes(){
 
     return $.ajax({
-            url: "/types",
+            url: "/api/types",
             type: "GET"
         })
         .done(function (types) {

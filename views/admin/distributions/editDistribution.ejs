@@ -33,7 +33,7 @@
 
 function fetchDistribution() {
     var distributionid = document.getElementById("distributionid").value;
-    $.ajax({url: "/distribution/"+distributionid})
+    $.ajax({url: "/api/distribution/"+distributionid})
         .always(function (data, textStatus) {
             if (textStatus != "success") {
                 return;
@@ -56,7 +56,7 @@ $("#submit").click(function (e) {
     var json = JSON.stringify({ name: name, is_standard: is_standard });
     console.log(json);
     $.ajax({
-      url: "/distribution/"+id,
+      url: "/api/distribution/"+id,
       type: "PATCH",
       data: json,
       dataType: "json",

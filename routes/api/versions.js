@@ -1,6 +1,6 @@
 var express = require('express');
 var router = express.Router();
-var utils = require('../utils.js');
+var utils = require('../../utils.js');
 
 module.exports = function(connection) {
 

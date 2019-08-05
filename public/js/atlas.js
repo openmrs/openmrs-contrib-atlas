@@ -229,14 +229,14 @@ function initialize() {
 }
 
 function fetchMarkerSites() {
-    $.ajax({url: "/markers"})
+    $.ajax({url: "/api/markers"})
         .always(function (data, textStatus) {
             if (textStatus != "success") {
                 bootbox.alert({ message: "Error fetching data for sites ! - " + data.statusText, backdrop: true });
                 return;
             }
         
-            $.ajax({url: "/auth"})
+            $.ajax({url: "/api/auth"})
             .always(function (authrules, textStatus) {
                 loadSites(data, authrules);
                 var marker_id = document.getElementById('marker-id').value;
