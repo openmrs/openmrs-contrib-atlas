@@ -25,6 +25,7 @@
   <script type="text/javascript" src="lib/js/yqlgeo.js"></script>
   <script type="text/javascript" src="https://googlemaps.github.io/js-marker-clusterer/src/markerclusterer.js"></script>
   <script type="text/javascript" src="lib/js/html2canvas.min.js"></script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=<%= google_analytics_tracking_id %>"></script>
   <script type="text/javascript">
 
     var auth_site = [];
@@ -60,6 +61,12 @@
       position : new google.maps.LatLng(15,15),
       zoom : 3
     };
+
+    // setting up gtag for google analytics
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '${GOOGLE_ANALYTICS_TRACKING_ID}');
 
     function getParameterByName(name, url) {
       if (!url) url = window.location.href;
