@@ -366,7 +366,6 @@ function saveMarker(e) {
 
           repaintMarkers();
           initLegend();
-          bootbox.alert("Marker saved");
           
           if (site.distribution == null && (site.nonStandardDistributionName != null && site.nonStandardDistributionName != "")) {
             fetchDistributions()
@@ -402,7 +401,6 @@ function updateMarker(id) {
           sites[id].infowindow.setContent(contentInfowindow(sites[id].siteData));
           sites[id].fadeGroup = 0;
           repaintMarkers();
-          bootbox.alert({ message: "Marker updated", backdrop: true });
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
           bootbox.alert({ message: "Error updating your marker - Please try again ! - " + jqXHR.statusText, backdrop: true });
