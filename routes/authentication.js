@@ -3,6 +3,8 @@ var router = express.Router();
 var utils = require('../utils');
 var ldapUtils = require('../ldap');
 var url = require('url');
+var logger = require('log4js').getLogger();
+logger.level = 'debug';
 
 module.exports = function () {
     //GET login
@@ -23,17 +25,16 @@ module.exports = function () {
         ldapUtils.authenticate(req.body.username, req.body.password, function(err) {
             //If authentication fails, redirect to login
             if(err) {
-                console.log(err);
+                logger.error(err);
                 req.session.signin_error = err.lde_message;
                 res.redirect('/login');
             }
             else {
                 //Fetch user details
                 ldapUtils.getUser(req.body.username, function(err, user) {
-                    console.log(user);
                     //If unable to fetch user details, redirect to login
                     if(err) {
-                        console.log(err);
+                        logger.error(err);
                         req.session.signin_error = err.lde_message;
                         res.redirect('/login');
                     } else {

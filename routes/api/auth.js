@@ -2,6 +2,8 @@ var express = require('express');
 var router = express.Router();
 var utils = require('../../utils.js');
 var ldapUtils = require('../../ldap.js');
+var logger = require('log4js').getLogger();
+logger.level = 'debug';
 
 module.exports = function(connection) {
 
@@ -11,13 +13,13 @@ module.exports = function(connection) {
         connection.query('select * from auth', function (error, rows, field) {
 
             if(!!error){
-                console.log(error);
+                logger.error(error);
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
                 res.json(rows);
             }
-        })
+        });
     });
     
     /* Create new auth rule */
@@ -32,13 +34,13 @@ module.exports = function(connection) {
 
         connection.query('SELECT created_by FROM atlas WHERE id=?', [atlas_id], function (error, rows, field) {
             if(!!error){
-                console.log(error);
+                logger.error(error);
             } else if(rows[0].created_by == req.session.user.uid || req.session.user.admin) {
 
                 ldapUtils.getUser(principal, function(error, user) {
 
                     if(error) {
-                        console.log(error);
+                        logger.error(error);
                     } else if (user) {
                         var token=req.body.token;
                         if(token) {
@@ -48,7 +50,7 @@ module.exports = function(connection) {
                         var expires=req.body.expires;
                         connection.query('INSERT INTO auth(atlas_id,principal,token,privileges,expires) VALUES(?,?,?,?,?)', [atlas_id,principal,token,privileges,expires], function (error, rows, field) {
                             if(!!error){
-                                console.log(error);
+                                logger.error(error);
                             } else {
                                 res.setHeader('Content-Type', 'application/json');
                                 var json = req.body;
@@ -78,7 +80,7 @@ module.exports = function(connection) {
         connection.query("SELECT * FROM auth WHERE id=?", [id], function (error, rows, field) {
 
             if(error) {
-                console.log(error);
+                logger.error(error);
                 return res.status(500).send({ message: "Error retrieving data from database"});
             } else {
                 var data = rows[0];
@@ -86,12 +88,12 @@ module.exports = function(connection) {
                 connection.query("SELECT created_by FROM atlas WHERE id=?", [data.atlas_id], function (error, rows, field) {
 
                     if(error) {
-                        console.log(error);
+                        logger.error(error);
                         return res.status(500).send({ message: "Error retrieving data from database"});
                     } else if (rows[0].created_by === req.session.user.uid || req.session.user.admin) {
                         connection.query("DELETE FROM auth WHERE id=?", [id], function (error, rows,field) {
                             if(!!error){
-                                console.log(error);
+                                logger.error(error);
                             } else {
                                 res.setHeader('Content-Type', 'application/json');
                                 res.json(data);

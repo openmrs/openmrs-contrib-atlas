@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
 var RSS = require('rss');
+var logger = require('log4js').getLogger();
+logger.level = 'debug';
 
 module.exports = function(connection) {
 
@@ -18,7 +20,7 @@ module.exports = function(connection) {
     
         connection.query("SELECT title,description,url,image_url,author FROM rss ORDER BY date DESC LIMIT "+FEED_LENGTH, function (error, rows, field) {
             if(!!error){
-                console.log(error);
+                logger.error(error);
             }
             else{
 

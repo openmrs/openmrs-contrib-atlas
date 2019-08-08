@@ -2,6 +2,8 @@ var express = require('express');
 var router = express.Router();
 var utils = require('../../utils.js');
 var ldapUtils = require('../../ldap.js');
+var logger = require('log4js').getLogger();
+logger.level = 'debug';
 
 module.exports = function(connection) {
 
@@ -9,9 +11,8 @@ module.exports = function(connection) {
         if(req.session.authenticated) {
 
             connection.query("SELECT * FROM unsubscribed WHERE username=?", [req.session.user.uid], function (error, rows, field) {
-                console.log(rows);
                 if(!!error) {
-                    console.log(error);
+                    logger.error(error);
                 } else if(rows && rows.length) {
                     res.redirect('/?unsubscribed=true');
                 } else {
@@ -28,9 +29,8 @@ module.exports = function(connection) {
     router.post('/unsubscribed', utils.isAuthenticated, function (req, res, next) {
 
         connection.query("INSERT INTO unsubscribed(username) VALUES(?)", [req.session.user.uid], function (error, rows, field) {
-            console.log(rows);
             if(!!error){
-                console.log(error);
+                logger.error(error);
             } else {
                 res.setHeader('Content-Type', 'application/json');
                 res.json({ id: rows.insertId, username: req.session.user.uid });
@@ -44,7 +44,7 @@ module.exports = function(connection) {
         // Delete entry from 'unsubscribed'
         connection.query('DELETE FROM unsubscribed WHERE username=?', [req.session.user.uid], function (error, rows, field) {
             if(error) {
-                console.log(error);
+                logger.error(error);
             } else {
                 res.setHeader('Content-Type', 'application/json');
                 res.json({ username: req.session.user.uid });
@@ -60,11 +60,11 @@ module.exports = function(connection) {
         ldapUtils.getUser(username, function(error, user) {
 
             if(error) {
-                console.log(error);
+                logger.error(error);
             } else if (user) {
                 connection.query("INSERT INTO unsubscribed(username) VALUES(?)", [username], function (error, rows, field) {
                     if(!!error){
-                        console.log(error);
+                        logger.error(error);
                     } else {
                         res.setHeader('Content-Type', 'application/json');
                         res.json({ id: rows.insertId, username: username });
@@ -85,7 +85,7 @@ module.exports = function(connection) {
         // Delete entry from 'unsubscribed'
         connection.query('DELETE FROM unsubscribed WHERE username=?', [username], function (error, rows, field) {
             if(error) {
-                console.log(error);
+                logger.error(error);
             } else {
                 res.setHeader('Content-Type', 'application/json');
                 res.json({ username: username });
