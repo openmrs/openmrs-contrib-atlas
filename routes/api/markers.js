@@ -9,7 +9,7 @@ module.exports = function(connection) {
 
     var show_counts_query = "SELECT id,latitude,longitude,name,url,type, \
     IF(image is not null, concat(?,'://',?,'/api/marker/',id,'/image'), null) AS image_url, \
-    show_counts,patients,encounters,observations,contact,email,notes,data,openmrs_version,distribution,date_created,date_changed,created_by FROM atlas";
+    show_counts,patients,encounters,observations,contact,email,notes,openmrs_version,distribution,date_created,date_changed,created_by FROM atlas";
 
     var no_counts_query = "SELECT id,latitude,longitude,name,url,type, \
     IF(image is not null, concat(?,'://',?,'/api/marker/',id,'/image'), null) AS image_url, \
@@ -17,7 +17,7 @@ module.exports = function(connection) {
     IF(show_counts, patients, null) AS patients, \
     IF(show_counts, encounters, null) AS encounters, \
     IF(show_counts, observations, null) as observations, \
-    contact,email,notes,data,openmrs_version,distribution,date_created,date_changed,created_by FROM atlas";
+    contact,email,notes,openmrs_version,distribution,date_created,date_changed,created_by FROM atlas";
 
     var recently_seen = [];
     const MAX_IMAGE_UPLOAD_SIZE = 150*1024;
@@ -103,14 +103,14 @@ module.exports = function(connection) {
 
         var query = "SELECT atlas.id as id,latitude,longitude,atlas.name as site_name,url,type, \
         IF(image is not null, concat(?,'://',?,'/marker/',atlas.id,'/image'), null) AS image_url, \
-        patients,encounters,observations,contact,email,notes,data,date_created,date_changed,created_by,show_counts,openmrs_version,distributions.name as distribution FROM atlas LEFT JOIN distributions on atlas.distribution=distributions.id";
+        patients,encounters,observations,contact,email,notes,date_created,date_changed,created_by,show_counts,openmrs_version,distributions.name as distribution FROM atlas LEFT JOIN distributions on atlas.distribution=distributions.id";
 
         connection.query(query, [REQUEST_PROTOCOL, req.headers.host], function (error, rows, field) {
             if(!!error){
                 console.log(error);
             }
             else{
-                var fields = ['id','latitude','longitude','site_name','url','type','image_url','show_counts','patients','encounters','observations','contact','email','notes','data','openmrs_version','distribution','date_created','date_changed','created_by'];
+                var fields = ['id','latitude','longitude','site_name','url','type','image_url','show_counts','patients','encounters','observations','contact','email','notes','openmrs_version','distribution','date_created','date_changed','created_by'];
                 var opts = { fields };
                                 
                 try {

@@ -30,7 +30,7 @@ module.exports = function(connection) {
             return res.send(400);
         }
 
-        connection.query('SELECT * FROM atlas WHERE id=?', [atlas_id], function (error, rows, field) {
+        connection.query('SELECT created_by FROM atlas WHERE id=?', [atlas_id], function (error, rows, field) {
             if(!!error){
                 console.log(error);
             } else if(rows[0].created_by == req.session.user.uid || req.session.user.admin) {
