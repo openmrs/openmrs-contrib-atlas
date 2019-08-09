@@ -20,6 +20,7 @@ module.exports = function(){
             isAuth: req.session,
             user: req.session.user,
             google_maps_api_key:  process.env.GOOGLE_MAPS_JS_API_KEY || 'NO_API',
+            google_analytics_tracking_id: process.env.GOOGLE_ANALYTICS_TRACKING_ID || 'NONE',
             marker_id: marker_id,
             update_marker: update_marker,
             delete_marker: delete_marker,
