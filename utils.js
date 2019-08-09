@@ -3,6 +3,8 @@ var schedule = require('node-schedule');
 var nodemailer = require("nodemailer");
 var ldapUtils = require('./ldap.js');
 var conf = require('./conf.example.js');
+var logger = require('log4js').getLogger();
+logger.level = 'debug';
 
 const baseURL = 'https://atlas.openmrs.org';
 
@@ -45,7 +47,7 @@ module.exports = {
 
         connection.query('INSERT INTO rss(title, description, url, image_url, author) VALUES(?,?,?,?,?)', [title, description, url, image_url, created_by], function (error, rows,field) {
             if(!!error){
-                console.log(error);
+                logger.error(error);
             }
         });
     },
@@ -82,7 +84,7 @@ module.exports = {
             connection.query(sitesQuery, function (error, rows, field) {
 
                 if(error) {
-                    console.log(error);
+                    logger.error(error);
                 } else {
 
                     rows.forEach(function(site) {
@@ -101,14 +103,14 @@ module.exports = {
                             html += "Don't want these notifications? <a href='" + baseURL + "/unsubscribe'>Unsubscribe from these notifications</a><br/><br/>";
 
                             if(error) {
-                                console.log(error);
+                                logger.error(error);
                             } else {
                                 rows.forEach(function(rule) {
 
                                     ldapUtils.getUser(rule.principal, function(err, user) {
 
                                         if(err) {
-                                            console.log(err);
+                                            logger.error(err);
                                         } else {
 
                                             mailOptions = {
@@ -121,13 +123,13 @@ module.exports = {
                                 
                                             transporter.sendMail(mailOptions, function(error, info) {
                                                 if (error) {
-                                                    console.log(error);
+                                                    logger.error(error);
                                                 } else {
-                                                    console.log('Email sent: ' + info.response);
+                                                    logger.debug('Email sent: ' + info.response);
                                                     connection.query("INSERT INTO notifications(marker_id,username,notified_on) VALUES(?,?,?)", [rule.atlas_id,rule.principal,new Date()], function (error, rows, field) {
         
                                                         if(error) {
-                                                            console.log(error);
+                                                            logger.error(error);
                                                         } 
                                                     });                                                    
                                                 }

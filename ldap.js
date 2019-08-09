@@ -1,7 +1,8 @@
 'use strict';
 
 const ldap = require('ldapjs');
-const log = require('log4js').getLogger();
+const logger = require('log4js').getLogger();
+logger.level = 'debug';
 
 const conf = require('./conf.example.js');
 const serverAttr = conf.ldap.server;
@@ -51,11 +52,11 @@ const searchGroups = (username, cb) => {
       groups.push(entry.object[groupAttr.rdn]);
     });
     res.on('error', err => {
-      log.error(err);
+      logger.error(err);
       return cb(err);
     });
     res.on('end', result => {
-      log.debug(`ldap search ended with status: ${result.status}`);
+      logger.debug(`ldap search ended with status: ${result.status}`);
       return cb(null, groups);
     });
   });
@@ -70,13 +71,12 @@ const searchGroups = (username, cb) => {
  * @param  {Function} cb        cb(err)
  */
 exports.authenticate = (username, pass, cb) => {
-  log.debug(`${username}: will authenticate`);
+  logger.debug(`${username}: will authenticate`);
   // client used for authenticating users specially
   const userClient = ldap.createClient({
     url: url,
   });
   const userdn = `${userAttr.rdn}=${username},${userAttr.baseDn}`;
-  console.log(userdn);
   userClient.bind(userdn, pass, err => {
     userClient.unbind();
     return cb(err);
@@ -108,11 +108,11 @@ exports.getUser = (username, cb) => {
       if (err.code === 32) { // not found, no such dn
         return cb(null, null);
       }
-      log.error(`error: ${err.message}`);
+      logger.error(`error: ${err.message}`);
       return cb(err);
     });
     res.on('end', result => {
-      log.debug(`ldap search ended with status: ${result.status}`);
+      logger.debug(`ldap search ended with status: ${result.status}`);
       if (!ret.length) {
         return cb(null, null);
       } else {

@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
 var utils = require('../../utils.js');
+var logger = require('log4js').getLogger();
+logger.level = 'debug';
 
 module.exports = function(connection) {
     /* GET all the types */
@@ -8,7 +10,7 @@ module.exports = function(connection) {
 
         connection.query("SELECT * FROM types", function (error, rows, field) {
             if(!!error){
-                console.log(error);
+                logger.error(error);
             }
             else{
                 res.setHeader('Content-Type', 'application/json');
@@ -24,7 +26,7 @@ module.exports = function(connection) {
 
         connection.query("SELECT * FROM types WHERE id=?", [id], function (error, rows, field) {
             if(!!error){
-                console.log(error);
+                logger.error(error);
             }
             else{
                 res.setHeader('Content-Type', 'application/json');
@@ -41,7 +43,7 @@ module.exports = function(connection) {
 
         connection.query('INSERT INTO types(name,icon) VALUES(?,?)', [name,icon], function (error, rows,field) {
             if(!!error){
-                console.log(error);
+                logger.error(error);
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
@@ -61,12 +63,12 @@ module.exports = function(connection) {
 
         connection.query('UPDATE types SET name=?, icon=? WHERE id =?', [name,icon,id], function (error, rows,field) {
             if(!!error){
-                console.log(error);
+                logger.error(error);
             }
             else {
                 connection.query('SELECT * FROM types WHERE id =?', [id], function (error, rows,field) {
                     if(error) {
-                        console.log(error);
+                        logger.error(error);
                     } else {
                         res.setHeader('Content-Type', 'application/json');
                         res.json(rows[0]);        
@@ -83,12 +85,12 @@ module.exports = function(connection) {
 
         connection.query('SELECT * FROM types WHERE id =?', [id], function (error, rows,field) {
             if(error) {
-                console.log(error);
+                logger.error(error);
             } else {
                 var data = rows[0];
                 connection.query('DELETE FROM types WHERE id =?', [id], function (error, rows,field) {
                     if(!!error){
-                        console.log(error);
+                        logger.error(error);
                     }
                     else {
                         res.setHeader('Content-Type', 'application/json');

@@ -1,4 +1,6 @@
 var mysql = require('mysql');
+var logger = require('log4js').getLogger();
+logger.level = 'debug';
 
 // set the mysql properties
 var connection = mysql.createConnection({
@@ -13,9 +15,9 @@ var connection = mysql.createConnection({
 //get the connection
 connection.connect(function (error) {
     if(!!error){
-        console.log(error);
+        logger.error(error);
     }else{
-        console.log('connected');
+        logger.debug('Connected to MySQL database');
     }
 });
 

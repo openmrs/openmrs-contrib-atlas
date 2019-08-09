@@ -22,7 +22,7 @@ app.use(favicon(path.join('public', 'favicon.ico')));
 app.use(bodyParser.json({limit: '250kb'}));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(morgan('dev'));     //this package logs the requests and errors in the console (needed for dev not intended for production purpose)
+app.use(morgan('combined'));     //this package logs the requests and errors in the console (needed for dev not intended for production purpose)
 
 //auth middleware
 app.use(cookieParser());

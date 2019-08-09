@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
 var utils = require('../../utils.js');
+var logger = require('log4js').getLogger();
+logger.level = 'debug';
 
 module.exports = function(connection) {
     /* GET all the distributions */
@@ -8,10 +10,9 @@ module.exports = function(connection) {
 
         connection.query("SELECT * FROM distributions", function (error, rows, field) {
             if(!!error){
-                console.log(error);
+                logger.error(error);
             }
             else{
-                //var data  = JSON.stringify(rows);
                 res.setHeader('Content-Type', 'application/json');
                 res.json(rows);
             }
@@ -25,7 +26,7 @@ module.exports = function(connection) {
 
         connection.query("SELECT * FROM distributions WHERE id=?", [id], function (error, rows, field) {
             if(!!error){
-                console.log(error);
+                logger.error(error);
             }
             else{
                 //var data  = JSON.stringify(rows);
@@ -42,12 +43,12 @@ module.exports = function(connection) {
 
         connection.query('INSERT INTO distributions(name,is_standard) VALUES(?,?)', [name,is_standard], function (error, rows,field) {
             if(!!error){
-                console.log(error);
+                logger.error(error);
             }
             else {
                 connection.query('SELECT * FROM distributions WHERE id=?', [rows.insertId], function (error, rows,field) {
                     if(error){
-                        console.log(error);
+                        logger.error(error);
                     } else {
                         res.setHeader('Content-Type', 'application/json');
                         res.json(rows[0]);
@@ -65,11 +66,11 @@ module.exports = function(connection) {
 
         connection.query('update distributions set name=?, is_standard=? where id=?', [name,is_standard,id], function (error, rows,field) {
             if(!!error){
-                console.log(error);
+                logger.error(error);
             } else {
                 connection.query('SELECT * FROM distributions WHERE id=?', [id], function (error, rows,field) {
                     if(error){
-                        console.log(error);
+                        logger.error(error);
                     } else {
                         res.setHeader('Content-Type', 'application/json');
                         res.json(rows[0]);
@@ -86,12 +87,12 @@ module.exports = function(connection) {
 
         connection.query('SELECT * FROM distributions WHERE id=?', [id], function (error, rows,field) {
             if(error){
-                console.log(error);
+                logger.error(error);
             } else {
                 var data = rows[0];
                 connection.query('DELETE FROM distributions WHERE id =?', [id], function (error, rows,field) {
                     if(!!error){
-                        console.log(error);
+                        logger.error(error);
                     }
                     else {
                         res.setHeader('Content-Type', 'application/json');
