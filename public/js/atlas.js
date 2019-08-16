@@ -239,6 +239,9 @@ function fetchMarkerSites() {
             $.ajax({url: "/api/auth"})
             .always(function (authrules, textStatus) {
                 loadSites(data, authrules);
+
+                if(moduleMode === "true") getModuleMarker(moduleUUID, moduleToken);
+
                 var marker_id = document.getElementById('marker-id').value;
                 var update_marker = document.getElementById('update-marker').value;
                 var delete_marker = document.getElementById('delete-marker').value;
@@ -440,12 +443,12 @@ function colorForSite(site) {
         var key = distribution && icons.hasOwnProperty(distribution.name) ? distribution.name : "Other";
         image.url = icons[key].icon;
     }
-    if ((isMyMarker(site) || auth_site.indexOf(site.uuid) !== -1) && legendGroups === 2
+    if ((isMyMarker(site) || auth_site.indexOf(site.id) !== -1) && legendGroups === 2
         && moduleHasSite !== 1 && !clustersEnabled)
         image.url = "https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png";
     if ((site.module === 1 && legendGroups === 2 && moduleUUID !== null && moduleHasSite === 1 && !clustersEnabled)) {
         image.url = "https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png";
-    } else if ((isMyMarker(site) || auth_site.indexOf(site.uuid) !== -1)
+    } else if ((isMyMarker(site) || auth_site.indexOf(site.id) !== -1)
         && legendGroups === 2 && (moduleUUID === null || moduleHasSite === 0) && !clustersEnabled) {
         image.url = "https://maps.google.com/intl/en_us/mapfiles/ms/micons/blue-dot.png";
     }
@@ -500,7 +503,7 @@ function loadSites(json, authrules) {
             editwindow = createEditInfoWindow(site, marker);
         if (site.openmrs_version)
             version.push(versionMajMinForSite(site));
-        if (moduleHasSite !== 1 && auth_site.indexOf(site.uuid) !== -1 && moduleUUID !== null && auth_site.length === 1)
+        if (moduleHasSite !== 1 && auth_site.indexOf(site.id) !== -1 && moduleUUID !== null && auth_site.length === 1)
             uniqueMarker = marker;
         sites[site.id] = {
             "siteData": site,
@@ -703,20 +706,7 @@ function createInfoWindow(site, marker) {
             infowindow.open(map, marker);
             sites[site.id].bubbleOpen = true;
             $("#undo").remove();
-            if (moduleHasSite !== 1 && site.uuid !== null && moduleUUID !== null
-                && currentUser !== "visitor" && auth_site.indexOf(site.uuid) !== -1
-                && $(".site-bubble").has("#me-button").length == 0) {
-                html = "<div class='me-button'><button type='button' id='me-button' value='" + site.id + "' title='Pick the site for this server.'";
-                html += "class='btn btn-success btn-xs'>This is me !</button></div>";
-                $(".site-bubble").append(html);
-            } else if (site.module === 1 && moduleHasSite === 1 && currentUser !== "visitor"
-                && auth_site.indexOf(site.uuid) !== -1
-                && $(".site-bubble").has("#detach-button").length == 0) {
-                html = "<div class='me-button'><button type='button' id='detach-button' value='" + site.id + "' title='Detach the site from this server.'";
-                html += "class='btn btn-info btn-xs'>This is not me.</button></div>";
-                $(".site-bubble").append(html);
-            }
-            if (canUpdate(site) || site.uuid !== null) {
+            if (canUpdate(site) || site.id !== null) {
                 if ($(".gm-style-iw").parent().has("#edit").length == 0) {
                     $("#lock").remove();
                     $(".gm-style-iw").parent().append("<div id='edit' value='" + site.id + "' title ='Edit site' class='control' style='position: absolute;overflow:none; right:12px;bottom:12px; color:#3F3F3F'><i class='fa fa-lg fa-pencil' style='color:rgba(171, 166, 166, 1)'></i></div>");

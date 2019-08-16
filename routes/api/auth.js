@@ -7,10 +7,12 @@ logger.level = 'debug';
 
 module.exports = function(connection) {
 
+    var get_auth_query = "SELECT id, atlas_id, principal, privileges, expires from auth";
+
     /* Get all auth rules */
     router.get('/auth', function (req, res, next) {
 
-        connection.query('select * from auth', function (error, rows, field) {
+        connection.query(get_auth_query, function (error, rows, field) {
 
             if(!!error){
                 logger.error(error);
@@ -77,7 +79,7 @@ module.exports = function(connection) {
             return res.send(400);
         }
 
-        connection.query("SELECT * FROM auth WHERE id=?", [id], function (error, rows, field) {
+        connection.query(get_auth_query + " WHERE id=?", [id], function (error, rows, field) {
 
             if(error) {
                 logger.error(error);

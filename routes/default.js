@@ -10,6 +10,14 @@ module.exports = function(){
         var delete_marker = req.query['delete'];    
         var unsubscribed = req.query['unsubscribed'];
         var unsubscribeDialog = req.query['unsubscribeDialog'];
+        var module = req.query['module'];
+
+        if(module === "true") {
+            req.session.module_mode=true;
+            if(!req.session.authenticated) {
+                return res.redirect('/login');
+            }
+        } 
 
         if((update_marker || delete_marker || unsubscribed || unsubscribeDialog) && !req.session.authenticated) {
             return res.redirect('/login?redirect=' + encodeURIComponent(req.url));
@@ -25,7 +33,8 @@ module.exports = function(){
             update_marker: update_marker,
             delete_marker: delete_marker,
             unsubscribed: unsubscribed,
-            unsubscribeDialog: unsubscribeDialog
+            unsubscribeDialog: unsubscribeDialog,
+            moduleMode: req.session.module_mode
         };
         res.render('index', options);
 

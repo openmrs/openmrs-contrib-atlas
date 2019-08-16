@@ -569,6 +569,17 @@ function contentInfowindow(site) {
   if(site.created_by === currentUser || isAdmin) {
     html += "<div id='delete' value='" + site.id + "' title ='Delete site' class='control' style='position: absolute;overflow:none; right:12px;bottom:27px; color:#3F3F3F'><i class='fa fa-lg fa-trash-o' style='color:rgba(171, 166, 166, 1)'></i></div>";
   }
+
+  if (site.module === 1 && moduleHasSite === 1 && currentUser !== "visitor"
+      && auth_site.indexOf(site.id) !== -1) {
+      html += "<div class='me-button'><button type='button' id='detach-button' value='" + site.id + "' title='Detach the site from this server.'";
+      html += "class='btn btn-info btn-xs'>This is not me.</button></div>";
+  } else if (site.id !== null && moduleUUID !== null
+    && currentUser !== "visitor" && auth_site.indexOf(site.id) !== -1) {
+    html += "<div class='me-button'><button type='button' id='me-button' value='" + site.id + "' title='Pick the site for this server.'";
+    html += "class='btn btn-success btn-xs'>This is me !</button></div>";
+  }
+
   html += "</div>";
   return html;
 }

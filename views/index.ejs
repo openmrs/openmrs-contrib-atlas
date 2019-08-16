@@ -30,9 +30,11 @@
 
     var auth_site = [];
     var moduleUUID = null;
+    var moduleToken = null;
     var counts = {};
     var countsEnabled = 1;
     var moduleHasSite = null;
+    var moduleMode = null;
 
     var currentUser;
     var userEmail;
@@ -129,6 +131,26 @@
       userEmail = $('#user-email').val().trim();
       isAdmin = $('#user-admin').val();
       isAdmin = (isAdmin == 'true'); // converting string to boolean
+      moduleMode = $('#moduleMode').val();
+
+      if(moduleMode === "true") {
+        setTimeout(function() {
+          window.parent.postMessage("atlas loaded","*");
+
+          window.addEventListener("message", function(event) {
+            if(!event.data || typeof event.data !== "string") return;
+            var data = event.data.split(":");
+            if(data.length === 2) {
+              if(data[0] === "module_id") moduleUUID=data[1];
+              if(data[0] === "token") moduleToken=data[1];
+              if(data[0] === "has_site") moduleHasSite=(data[1]==="true"?1:0);
+              if(moduleUUID != null && moduleToken != null && moduleHasSite != null) {
+                initialize();
+              }
+            }
+          }, false);
+        }, 500);
+      }
 
       //If user is logged in
       if(currentUser != "visitor") {
@@ -149,7 +171,7 @@
       }
     });
 
-    setTimeout('initialize()', 500);
+    if(moduleMode !== "true") setTimeout('initialize()', 500);
   </script>
 
 </head>
@@ -235,6 +257,7 @@
 <input type="hidden" id="delete-marker" value= <%= delete_marker?delete_marker:"" %> />
 <input type="hidden" id="unsubscribed" value= <%= unsubscribed?unsubscribed:"" %> />
 <input type="hidden" id="unsubscribeDialog" value= <%= unsubscribeDialog?unsubscribeDialog:"" %> />
+<input type="hidden" id="moduleMode" value= <%= moduleMode?moduleMode:"" %> />
 
 </body>
 

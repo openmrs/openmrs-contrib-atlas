@@ -13,4 +13,5 @@ module.exports = function(app, db) {
     importRoute('versions');
     importRoute('auth');
     importRoute('unsubscribed');
+    importRoute('module');
 };
