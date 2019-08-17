@@ -13,5 +13,6 @@ module.exports = function(app, db) {
     importRoute('versions');
     importRoute('auth');
     importRoute('unsubscribed');
+    importRoute('report');
     importRoute('module');
 };

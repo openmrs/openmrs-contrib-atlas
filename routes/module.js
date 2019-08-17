@@ -1,6 +1,8 @@
 var express = require('express');
 var router = express.Router();
 var utils = require('../utils');
+var logger = require('log4js').getLogger();
+logger.level = 'debug';
 
 module.exports = function(connection) {
 
@@ -29,11 +31,11 @@ module.exports = function(connection) {
 
         connection.query('SELECT * FROM auth WHERE principal=?', [module_id], function (error, rows, field) {
             if(!!error){
-                console.log(error);
+                logger.error(error);
             } else if(rows && rows.length > 0) {
                 connection.query(show_counts_query + ' WHERE id=?', [REQUEST_PROTOCOL, req.headers.host, rows[0].atlas_id], function (error, rows, field) {
                     if(!!error){
-                        console.log(error);
+                        logger.error(error);
                     } else if(rows && rows.length > 0) {
                         res.setHeader('Content-Type', 'application/json');
                         delete rows[0].token;
