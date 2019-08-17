@@ -11,6 +11,7 @@ module.exports = function(app, db) {
     importRoute('authentication');
     importRoute('admin');
     importRoute('rss');
+    importRoute('data');
     importRoute('module');
 
     // REST endpoints
