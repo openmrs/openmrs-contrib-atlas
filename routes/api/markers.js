@@ -339,28 +339,6 @@ module.exports = function(connection) {
         });
     });
 
-    /* Update marker with given id (called by atlas module) */
-    router.post('/module/ping.php', utils.isAuthenticated, function (req, res, next) {
-        console.log(req.body);
-        var id=req.body.id;
-        var patients=req.body.patients;
-        var encounters=req.body.encounters;
-        var observations=req.body.observations;
-        var data=req.body.data;
-        var date_changed=new Date().toISOString().slice(0, 19).replace('T', ' ');
-        var openmrs_version=data.version;
-
-        connection.query('UPDATE atlas SET patients=?,encounters=?,observations=?,data=?,date_changed=?,openmrs_version=? WHERE id =?', [patients,encounters,observations,data,date_changed,openmrs_version,id], function (error, rows,field) {
-            if(!!error){
-                console.log(error);
-            }
-            else {
-                res.setHeader('Content-Type', 'application/json');
-                res.json(id);
-            }
-        });
-    });
-
     /* Delete marker with given id */
     router.delete('/marker/:id', utils.isAuthenticated, function(req, res, next) {
 
@@ -403,22 +381,5 @@ module.exports = function(connection) {
         });
     });
 
-    /* Delete marker with given id (called by atlas module) */
-    router.delete('/module', utils.isAuthenticated, function(req, res, next) {
-
-        var id=req.query['id'];
-        var secret=req.query['secret'];
-
-        connection.query('DELETE FROM atlas WHERE id =?', [id], function (error, rows,field) {
-            if(!!error){
-                logger.error(error);
-            }
-            else {
-                res.setHeader('Content-Type', 'application/json');
-                res.json(id);
-            }
-        });
-    });
-        
     return router;
 };

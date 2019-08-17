@@ -36,9 +36,9 @@ module.exports = {
     hashToken: async function (token) {
 
         const saltRounds = 10;
-        const salt = await bcrypt.genSalt(saltRounds);
+        const salt = await bcrypt.genSalt(saltRounds); 
         const hash = await bcrypt.hash(token, salt);
-      
+
         return hash;
     },
     
@@ -52,6 +52,11 @@ module.exports = {
         });
     },
 
+    /* Checks whether string is a uuid */
+    isUUID: function(id) {
+        return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id);  
+    },
+      
     /* Checks whether url is absolute */
     /* Taken from https://stackoverflow.com/questions/10687099/how-to-test-if-a-url-string-is-absolute-or-relative */
     isUrlAbsolute: function(url) {
