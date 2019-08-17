@@ -285,6 +285,24 @@ span.site-version {
 .dropDownControl:hover{
         background: -webkit-linear-gradient(top,rgb(255,255,255),rgb(230,230,230));
 }
+#search-bar {
+        width: 100%;
+}
+#search-results {
+        position: absolute;
+        margin-top: -4px;
+        min-width: 100%;
+}
+.search-image {
+        height: 28px;
+        width: 28px;
+}
+.search-result {
+        padding: 5px;
+        background-color: white;
+        user-select: none;
+        cursor: pointer
+}
 .glyphicon {
     color: #333333;
     margin-right: 5px;

@@ -112,6 +112,24 @@ function getMarkerPosition(nextSite, callback)  {
   return null;
 }
 
+function resetFadeGroups() {
+  Object.keys(sites).forEach(function(id) {
+    var site = sites[id];
+    site.fadeGroup = getFadeGroup(site.siteData);
+  });
+  repaintMarkers();
+}
+
+function focusMarker(id) {
+  if(sites[id].fadeGroup > 3) {
+    $("#fadeCheckbox").click();  
+  }
+  sites[id].infowindow.open(map, sites[id].marker);
+  sites[id].bubbleOpen = true;
+  map.setZoom(8);
+  map.setCenter(sites[id].marker.getPosition());    
+}
+
 function createSite() {
   closeBubbles();
   myPosition = map.getCenter();

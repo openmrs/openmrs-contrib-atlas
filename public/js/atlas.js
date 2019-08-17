@@ -214,6 +214,8 @@ function initialize() {
     map.controls[google.maps.ControlPosition.TOP_RIGHT].push(share);
     var help = document.getElementById("help");
     map.controls[google.maps.ControlPosition.TOP_RIGHT].push(help);
+    var search = document.getElementById("search");
+    map.controls[google.maps.ControlPosition.TOP_RIGHT].push(search);
 
     if (moduleUUID !== null) {
         var alert = document.getElementById("alert");
@@ -249,12 +251,9 @@ function fetchMarkerSites() {
                 var unsubscribed = document.getElementById('unsubscribed').value;
 
                 if(isValidMarkerId(marker_id) && sites[marker_id]) {
-                    sites[marker_id].infowindow.open(map, sites[marker_id].marker);
-                    sites[marker_id].bubbleOpen = true;
                     google.maps.event.addListenerOnce(map, 'tilesloaded', function(){
                         google.maps.event.addListenerOnce(map, 'tilesloaded', function(){
-                            map.setZoom(8);
-                            map.setCenter(sites[marker_id].marker.getPosition());    
+                            focusMarker(marker_id);
                         });
                     });                
                 } 
