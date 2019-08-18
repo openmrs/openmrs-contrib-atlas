@@ -117,6 +117,18 @@ function selectSearchResult(id) {
 
 function initDownloadButton() {
   $('#download').click(function () {
+
+    var controls = document.getElementsByClassName('atlas-container');
+    Object.keys(controls).forEach(function(idx) {
+      controls[idx].style.visibility = "hidden";
+    })
+    var fullscreen_control = document.getElementsByClassName('gm-fullscreen-control')[0];
+    if(fullscreen_control) fullscreen_control.style.visibility = "hidden";
+    var noprint_controls = document.getElementsByClassName('gmnoprint');
+    Object.keys(noprint_controls).forEach(function(idx) {
+      noprint_controls[idx].style.visibility = "hidden";
+    })
+
     html2canvas(document.getElementById('map_canvas'), {
       scale: 2,
       useCORS: true,
@@ -129,6 +141,14 @@ function initDownloadButton() {
       link.click();
       document.body.removeChild(link);
       delete link;
+
+      Object.keys(controls).forEach(function(idx) {
+        controls[idx].style.visibility = "visible";
+      })
+      if(fullscreen_control) fullscreen_control.style.visibility = "visible";
+      Object.keys(noprint_controls).forEach(function(idx) {
+        noprint_controls[idx].style.visibility = "visible";
+      })
     });
   });
 }
