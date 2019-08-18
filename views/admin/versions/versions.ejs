@@ -39,7 +39,7 @@ function deleteVersion(id, name) {
             fetchVersions();
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
-            console.log("Error deleting version - Please try again ! - " + jqXHR.statusText);
+            console.log("Error deleting version - Please try again ! - " + (jqXHR.responseJSON.message? jqXHR.responseJSON.message: jqXHR.statusText));
             return;
         });
 }

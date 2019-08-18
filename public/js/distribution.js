@@ -32,7 +32,7 @@ function fetchDistributions(){
             })();
         })
         .fail(function (jqXHR) {
-            bootbox.alert({ message: errorMessages.failMessage + jqXHR.statusText,  backdrop: true });
+            bootbox.alert({ message: errorMessages.failMessage + (jqXHR.responseJSON.message? jqXHR.responseJSON.message: jqXHR.statusText),  backdrop: true });
         })
 }
 

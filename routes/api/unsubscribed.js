@@ -13,6 +13,7 @@ module.exports = function(connection) {
             connection.query("SELECT * FROM unsubscribed WHERE username=?", [req.session.user.uid], function (error, rows, field) {
                 if(!!error) {
                     logger.error(error);
+                    return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
                 } else if(rows && rows.length) {
                     res.redirect('/?unsubscribed=true');
                 } else {
@@ -31,6 +32,7 @@ module.exports = function(connection) {
         connection.query("INSERT INTO unsubscribed(username) VALUES(?)", [req.session.user.uid], function (error, rows, field) {
             if(!!error){
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             } else {
                 res.setHeader('Content-Type', 'application/json');
                 res.json({ id: rows.insertId, username: req.session.user.uid });
@@ -45,6 +47,7 @@ module.exports = function(connection) {
         connection.query('DELETE FROM unsubscribed WHERE username=?', [req.session.user.uid], function (error, rows, field) {
             if(error) {
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             } else {
                 res.setHeader('Content-Type', 'application/json');
                 res.json({ username: req.session.user.uid });
@@ -61,10 +64,12 @@ module.exports = function(connection) {
 
             if(error) {
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             } else if (user) {
                 connection.query("INSERT INTO unsubscribed(username) VALUES(?)", [username], function (error, rows, field) {
                     if(!!error){
                         logger.error(error);
+                        return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
                     } else {
                         res.setHeader('Content-Type', 'application/json');
                         res.json({ id: rows.insertId, username: username });
@@ -86,6 +91,7 @@ module.exports = function(connection) {
         connection.query('DELETE FROM unsubscribed WHERE username=?', [username], function (error, rows, field) {
             if(error) {
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             } else {
                 res.setHeader('Content-Type', 'application/json');
                 res.json({ username: username });

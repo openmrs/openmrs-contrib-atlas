@@ -40,7 +40,7 @@ function deleteDistribution(id, name) {
             fetchDistributions();
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
-          console.log( "Error deleting distribution - Please try again ! - " + jqXHR.statusText );
+          console.log( "Error deleting distribution - Please try again ! - " + (jqXHR.responseJSON.message? jqXHR.responseJSON.message: jqXHR.statusText) );
           return;
         });
 }

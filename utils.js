@@ -1,6 +1,7 @@
 var bcrypt = require('bcrypt');
 var schedule = require('node-schedule');
 var nodemailer = require("nodemailer");
+var util = require('util');
 var ldapUtils = require('./ldap.js');
 var conf = require('./conf.example.js');
 var logger = require('log4js').getLogger();
@@ -77,6 +78,13 @@ module.exports = {
             return false;
         }
         return true;
+    },
+
+    genericDatabaseErrorMessage: function() {
+        return util.format(
+            "An unexpected database error occurred. Please ask an administrator to check atlas logs at %s for more information",
+            new Date().toISOString().slice(0, 19).replace('T', ' ')
+        );
     },
 
     /* Send mails to owners of fading markers */

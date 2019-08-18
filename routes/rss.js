@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+var utils = require('../utils.js');
 var RSS = require('rss');
 var logger = require('log4js').getLogger();
 logger.level = 'debug';
@@ -21,6 +22,7 @@ module.exports = function(connection) {
         connection.query("SELECT title,description,url,image_url,author FROM rss ORDER BY date DESC LIMIT "+FEED_LENGTH, function (error, rows, field) {
             if(!!error){
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             }
             else{
 

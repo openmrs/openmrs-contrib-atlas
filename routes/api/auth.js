@@ -16,6 +16,7 @@ module.exports = function(connection) {
 
             if(!!error){
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
@@ -37,12 +38,14 @@ module.exports = function(connection) {
         connection.query('SELECT created_by FROM atlas WHERE id=?', [atlas_id], function (error, rows, field) {
             if(!!error){
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             } else if(rows[0].created_by == req.session.user.uid || req.session.user.admin) {
 
                 ldapUtils.getUser(principal, function(error, user) {
 
                     if(error) {
                         logger.error(error);
+                        return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
                     } else if (user) {
                         var token=req.body.token;
                         if(token) {
@@ -53,6 +56,7 @@ module.exports = function(connection) {
                         connection.query('INSERT INTO auth(atlas_id,principal,token,privileges,expires) VALUES(?,?,?,?,?)', [atlas_id,principal,token,privileges,expires], function (error, rows, field) {
                             if(!!error){
                                 logger.error(error);
+                                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
                             } else {
                                 res.setHeader('Content-Type', 'application/json');
                                 var json = req.body;
@@ -83,7 +87,7 @@ module.exports = function(connection) {
 
             if(error) {
                 logger.error(error);
-                return res.status(500).send({ message: "Error retrieving data from database"});
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             } else {
                 var data = rows[0];
 
@@ -91,11 +95,12 @@ module.exports = function(connection) {
 
                     if(error) {
                         logger.error(error);
-                        return res.status(500).send({ message: "Error retrieving data from database"});
+                        return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
                     } else if (rows[0].created_by === req.session.user.uid || req.session.user.admin) {
                         connection.query("DELETE FROM auth WHERE id=?", [id], function (error, rows,field) {
                             if(!!error){
                                 logger.error(error);
+                                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
                             } else {
                                 res.setHeader('Content-Type', 'application/json');
                                 res.json(data);

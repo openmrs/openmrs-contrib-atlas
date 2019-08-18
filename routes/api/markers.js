@@ -91,6 +91,7 @@ module.exports = function(connection) {
         connection.query(query, params, function (error, rows, field) {
             if(!!error){
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             }
             else{
                 res.setHeader('Content-Type', 'application/json');
@@ -110,6 +111,7 @@ module.exports = function(connection) {
         connection.query(query, [REQUEST_PROTOCOL, req.headers.host], function (error, rows, field) {
             if(!!error){
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             }
             else{
                 var fields = ['id','latitude','longitude','site_name','url','type','image_url','show_counts','patients','encounters','observations','contact','email','notes','openmrs_version','distribution','date_created','date_changed','created_by'];
@@ -131,6 +133,7 @@ module.exports = function(connection) {
 
                 } catch (err) {
                     console.error(err);
+                    return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
                 }
             }
         });
@@ -149,6 +152,7 @@ module.exports = function(connection) {
 
             if(!!error){
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
@@ -162,7 +166,10 @@ module.exports = function(connection) {
 
         connection.query('SELECT image FROM atlas WHERE id=?',[req.params['id']], function (error, rows, field) {
 
-            if(rows && rows.length) {
+            if(error) {
+                logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
+            } else if(rows && rows.length) {
                 if(rows[0].image && rows[0].image.length) {
                     var dataString = rows[0].image.toString('utf-8');
                     var matches = dataString.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
@@ -220,11 +227,13 @@ module.exports = function(connection) {
         connection.query('insert into atlas values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', [id,latitude,longitude,name,url,type,image,patients,encounters,observations,contact,email,notes,data,date_created.toISOString().slice(0, 19).replace('T', ' '),date_changed.toISOString().slice(0, 19).replace('T', ' '),created_by,show_counts,openmrs_version,distribution], function (error, rows,field) {
             if(!!error){
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             } else {
                 connection.query("INSERT INTO auth(atlas_id,principal,token,privileges,expires) VALUES(?,?,?,?,?)", [id,req.session.user.uid,null,"ALL",null], function (error, rows, field) {
 
                     if(error) {
                         logger.error(error);
+                        return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
                     } else {
                         res.setHeader('Content-Type', 'application/json');
                         var json = req.body;
@@ -248,20 +257,19 @@ module.exports = function(connection) {
     /* Update marker with given id */
     router.patch('/marker/:id', utils.isAuthenticated, function (req, res, next) {
 
-        var id = req.params['id']
-
+        var id = req.params['id'];
 
         connection.query("SELECT privileges FROM auth WHERE principal=? AND atlas_id=?", [req.session.user.uid,id], function (error, rows, field) {
 
             if(error) {
                 logger.error(error);
-                return res.status(500).send({ message: "Error retrieving data from database"});
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             } else if((rows.length && (rows[0].privileges === "ALL" || rows[0].privileges === "UPDATE")) || req.session.user.admin) {
 
                 connection.query(show_counts_query + " WHERE id=?", [REQUEST_PROTOCOL, req.headers.host, id], function (error, rows, field) {
                     if(error) {
                         logger.error(error);
-                        return res.status(500).send({ message: "Error retrieving data from database"});
+                        return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
                     } else if(!rows || rows.length === 0) {
                         return res.status(404).send({ message: "Marker not found"});
                     } else {
@@ -275,6 +283,7 @@ module.exports = function(connection) {
                             connection.query(query, [data.date_changed,id], function (error, rows,field) {
                                 if(!!error){
                                     logger.error(error);
+                                    return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
                                 } else {
                                     res.setHeader('Content-Type', 'application/json');
                                     res.json(data);
@@ -320,6 +329,7 @@ module.exports = function(connection) {
                             connection.query(query, params, function (error, rows,field) {
                                 if(!!error){
                                     logger.error(error);
+                                    return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
                                 }
                                 else {
                                     res.setHeader('Content-Type', 'application/json');                    
@@ -348,14 +358,14 @@ module.exports = function(connection) {
 
             if(error) {
                 logger.error(error);
-                return res.status(500).send({ message: "Error retrieving data from database"});
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             } else if((rows.length && rows[0].privileges === "ALL") || req.session.user.admin) {
 
                 connection.query(show_counts_query + " WHERE id=?", [REQUEST_PROTOCOL, req.headers.host, id], function (error, rows, field) {
 
                     if(error) {
                         logger.error(error);
-                        return res.status(500).send({ message: "Error retrieving data from database"});
+                        return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
                     } else if (!rows || rows.length === 0) {
                         return res.status(404).send({ message: "Marker not found"});
                     } else {
@@ -366,6 +376,7 @@ module.exports = function(connection) {
                         connection.query(query, [id], function (error, rows,field) {
                             if(!!error){
                                 logger.error(error);
+                                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
                             }
                             else {
                                 res.setHeader('Content-Type', 'application/json');
