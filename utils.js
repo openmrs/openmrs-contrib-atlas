@@ -69,6 +69,16 @@ module.exports = {
         return false; // Anything else must be relative
     },
 
+    /* Checks whether string is json */
+    isJson: function(str) {
+        try {
+            JSON.parse(str);
+        } catch (e) {
+            return false;
+        }
+        return true;
+    },
+
     /* Send mails to owners of fading markers */
     scheduleMails: function(connection) {
 
