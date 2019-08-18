@@ -94,7 +94,7 @@ function detachMarker(id) {
     bootbox.alert({ message: "Module detached", backdrop: true });
   })
   .fail(function(jqXHR, textStatus, errorThrown) {
-    bootbox.alert({ message: "Error deleting authorization - Please try again ! - " + jqXHR.statusText, backdrop: true });
+    bootbox.alert({ message: "Error deleting authorization - Please try again ! - " + (jqXHR.responseJSON.message? jqXHR.responseJSON.message: jqXHR.statusText), backdrop: true });
   });
 }
 

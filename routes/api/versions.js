@@ -12,6 +12,7 @@ module.exports = function(connection) {
         connection.query("SELECT * FROM versions", function (error, rows, field) {
             if(!!error){
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             }
             else{
                 res.setHeader('Content-Type', 'application/json');
@@ -28,6 +29,7 @@ module.exports = function(connection) {
         connection.query("SELECT * FROM versions WHERE id=?", [id], function (error, rows, field) {
             if(!!error){
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             }
             else{
                 res.setHeader('Content-Type', 'application/json');
@@ -43,6 +45,7 @@ module.exports = function(connection) {
         connection.query('insert into versions(version) values (?)', [version], function (error, rows,field) {
             if(!!error){
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
@@ -61,10 +64,12 @@ module.exports = function(connection) {
         connection.query('UPDATE versions SET version=? WHERE id =?', [version,id], function (error, rows,field) {
             if(error) {
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             } else {
                 connection.query('SELECT * FROM versions WHERE id =?', [id], function (error, rows,field) {
                     if(!!error){
                         logger.error(error);
+                        return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
                     }
                     else {
                         res.setHeader('Content-Type', 'application/json');
@@ -83,11 +88,13 @@ module.exports = function(connection) {
         connection.query('SELECT * FROM versions WHERE id =?', [id], function (error, rows,field) {
             if(error) {
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             } else {
                 var data = rows[0];
                 connection.query('DELETE FROM versions WHERE id =?', [id], function (error, rows,field) {
                     if(!!error){
                         logger.error(error);
+                        return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
                     }
                     else {
                         res.setHeader('Content-Type', 'application/json');

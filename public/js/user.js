@@ -210,7 +210,7 @@ function deleteMarker(site) {
           sites[site].marker.setMap(null);
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
-          bootbox.alert({ message: "Error deleting your marker - Please try again ! - " + jqXHR.statusText , backdrop: true });
+          bootbox.alert({ message: "Error deleting your marker - Please try again ! - " + (jqXHR.responseJSON.message? jqXHR.responseJSON.message: jqXHR.statusText) , backdrop: true });
           return;
         });
   } else {
@@ -397,7 +397,7 @@ function saveMarker(e) {
 
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
-          bootbox.alert({ message: "Error saving your marker - Please try again ! - " + jqXHR.responseText.message? jqXHR.responseText.message: jqXHR.statusText , backdrop: true });
+          bootbox.alert({ message: "Error saving your marker - Please try again ! - " + (jqXHR.responseJSON.message? jqXHR.responseJSON.message: jqXHR.statusText) , backdrop: true });
         });
   }
   return false;
@@ -421,7 +421,7 @@ function updateMarker(id) {
           repaintMarkers();
         })
         .fail(function(jqXHR, textStatus, errorThrown) {
-          bootbox.alert({ message: "Error updating your marker - Please try again ! - " + jqXHR.statusText, backdrop: true });
+          bootbox.alert({ message: "Error updating your marker - Please try again ! - " + (jqXHR.responseJSON.message? jqXHR.responseJSON.message: jqXHR.statusText), backdrop: true });
         });
 }
 
@@ -490,7 +490,7 @@ function subscribeUser() {
         bootbox.alert({ message: "Subscribed for marker updates!", backdrop: true });
       })
       .fail(function(jqXHR, textStatus, errorThrown) {
-        bootbox.alert({ message: "Error subscribing for marker updates - Please try again ! - " + jqXHR.statusText, backdrop: true });
+        bootbox.alert({ message: "Error subscribing for marker updates - Please try again ! - " + (jqXHR.responseJSON.message? jqXHR.responseJSON.message: jqXHR.statusText), backdrop: true });
       });
 }
 
@@ -504,7 +504,7 @@ function unsubscribeUser() {
         bootbox.alert({ message: "Unsubscribed for marker updates!", backdrop: true });
       })
       .fail(function(jqXHR, textStatus, errorThrown) {
-        bootbox.alert({ message: "Error Unsubscribing for marker updates - Please try again ! - " + jqXHR.statusText, backdrop: true });
+        bootbox.alert({ message: "Error Unsubscribing for marker updates - Please try again ! - " + (jqXHR.responseJSON.message? jqXHR.responseJSON.message: jqXHR.statusText), backdrop: true });
       });
 }
 

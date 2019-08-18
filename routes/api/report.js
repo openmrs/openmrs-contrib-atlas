@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+var util = require('util');
 var utils = require('../../utils.js');
 var logger = require('log4js').getLogger();
 logger.level = 'debug';
@@ -12,6 +13,7 @@ module.exports = function(connection) {
 
             if(error) {
                 logger.error(error);
+                return res.status(500).send({ message: util.format(constants.DATABASE_ERROR_RESPONSE, new Date().toISOString().slice(0, 19).replace('T', ' ')) });
             } else {
                 var resp = [];
                 var idxs = {};
@@ -51,6 +53,7 @@ module.exports = function(connection) {
 
             if(error) {
                 logger.error(error);
+                return res.status(500).send({ message: util.format(constants.DATABASE_ERROR_RESPONSE, new Date().toISOString().slice(0, 19).replace('T', ' ')) });
             } else {
 
                 if(rows && rows.length > 0) {

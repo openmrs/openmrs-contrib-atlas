@@ -45,7 +45,7 @@ $("#submit").click(function (e) {
     })
     .fail(function (jqXHR) {
         submitbtn.disabled = false;
-        console.log("Error creating version - Please try again ! - " + jqXHR.statusText);
+        console.log("Error creating version - Please try again ! - " + (jqXHR.responseJSON.message? jqXHR.responseJSON.message: jqXHR.statusText));
     });
 });
 

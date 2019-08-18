@@ -11,6 +11,7 @@ module.exports = function(connection) {
         connection.query("SELECT * FROM distributions", function (error, rows, field) {
             if(!!error){
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             }
             else{
                 res.setHeader('Content-Type', 'application/json');
@@ -27,6 +28,7 @@ module.exports = function(connection) {
         connection.query("SELECT * FROM distributions WHERE id=?", [id], function (error, rows, field) {
             if(!!error){
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             }
             else{
                 //var data  = JSON.stringify(rows);
@@ -44,11 +46,13 @@ module.exports = function(connection) {
         connection.query('INSERT INTO distributions(name,is_standard) VALUES(?,?)', [name,is_standard], function (error, rows,field) {
             if(!!error){
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             }
             else {
                 connection.query('SELECT * FROM distributions WHERE id=?', [rows.insertId], function (error, rows,field) {
                     if(error){
                         logger.error(error);
+                        return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
                     } else {
                         res.setHeader('Content-Type', 'application/json');
                         res.json(rows[0]);
@@ -67,10 +71,12 @@ module.exports = function(connection) {
         connection.query('update distributions set name=?, is_standard=? where id=?', [name,is_standard,id], function (error, rows,field) {
             if(!!error){
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             } else {
                 connection.query('SELECT * FROM distributions WHERE id=?', [id], function (error, rows,field) {
                     if(error){
                         logger.error(error);
+                        return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
                     } else {
                         res.setHeader('Content-Type', 'application/json');
                         res.json(rows[0]);
@@ -88,11 +94,13 @@ module.exports = function(connection) {
         connection.query('SELECT * FROM distributions WHERE id=?', [id], function (error, rows,field) {
             if(error){
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             } else {
                 var data = rows[0];
                 connection.query('DELETE FROM distributions WHERE id =?', [id], function (error, rows,field) {
                     if(!!error){
                         logger.error(error);
+                        return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
                     }
                     else {
                         res.setHeader('Content-Type', 'application/json');

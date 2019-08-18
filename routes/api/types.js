@@ -11,6 +11,7 @@ module.exports = function(connection) {
         connection.query("SELECT * FROM types", function (error, rows, field) {
             if(!!error){
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             }
             else{
                 res.setHeader('Content-Type', 'application/json');
@@ -27,6 +28,7 @@ module.exports = function(connection) {
         connection.query("SELECT * FROM types WHERE id=?", [id], function (error, rows, field) {
             if(!!error){
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             }
             else{
                 res.setHeader('Content-Type', 'application/json');
@@ -44,6 +46,7 @@ module.exports = function(connection) {
         connection.query('INSERT INTO types(name,icon) VALUES(?,?)', [name,icon], function (error, rows,field) {
             if(!!error){
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             }
             else {
                 res.setHeader('Content-Type', 'application/json');
@@ -64,11 +67,13 @@ module.exports = function(connection) {
         connection.query('UPDATE types SET name=?, icon=? WHERE id =?', [name,icon,id], function (error, rows,field) {
             if(!!error){
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             }
             else {
                 connection.query('SELECT * FROM types WHERE id =?', [id], function (error, rows,field) {
                     if(error) {
                         logger.error(error);
+                        return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
                     } else {
                         res.setHeader('Content-Type', 'application/json');
                         res.json(rows[0]);        
@@ -86,11 +91,13 @@ module.exports = function(connection) {
         connection.query('SELECT * FROM types WHERE id =?', [id], function (error, rows,field) {
             if(error) {
                 logger.error(error);
+                return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
             } else {
                 var data = rows[0];
                 connection.query('DELETE FROM types WHERE id =?', [id], function (error, rows,field) {
                     if(!!error){
                         logger.error(error);
+                        return res.status(500).send({ message: utils.genericDatabaseErrorMessage() });
                     }
                     else {
                         res.setHeader('Content-Type', 'application/json');
