@@ -57,6 +57,7 @@
     var imageData = null;
     var imageError = false;
     var maxImageUploadSize = 150*1024;
+    var maxSearchResults = 20;
     var showAdvancedOptions = false;
     var viewParam = {
       site : null,
@@ -188,6 +189,10 @@
   <i class="fa fa-download"></i> Download
 </div>
 
+<div class="atlas-container loginControl dropDownControl control" title="Search for markers" id="search">
+  <span class="glyphicon glyphicon-search"></span> Search
+</div>
+
 <%if (user != null) { %>
 <div class="atlas-container control logged" id ="login">
   <div class="dropDownControl" id="user"><span class="glyphicon glyphicon-user"></span> <%= user.uid %></div>
@@ -244,6 +249,25 @@
 
   </div>
 
+</div>
+
+<!-- set up the modal to start hidden and fade in and out -->
+<div id="search-modal" class="modal fade">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-body">
+        <div id="search-div">
+          <input type="text" id="search-bar" placeholder="Search for markers"/>
+        </div>
+      </div>
+
+      <div id="search-results">
+
+      </div>
+
+    </div>
+  </div>
 </div>
 
 <div id='atlas-hidden-latitude' style='hidden:true;'></div>

@@ -54,7 +54,66 @@ $(function () {
     e.stopPropagation();
     $("#share").popover("toggle")
   });
+  $("#search-bar").val("");
+  $("#search").click(function (e) {
+    resetFadeGroups();
+    showSearchModalBox();
+  });
+  $("#search-bar").bind('input', function() { 
+    resetFadeGroups();
+    var search_term = $(this).val().toLowerCase();
+    var search_results = document.getElementById("search-results");
+    var search_results_html = "";
+    if(!search_term) return;
+    var count=0;
+    Object.keys(sites).forEach(function(id) {
+      if(count>=maxSearchResults) return;
+      var site = sites[id];
+      if(site.siteData.name.toLowerCase().includes(search_term)) {
+        search_results_html += "<div class='search-result' onclick='selectSearchResult(\"" + site.siteData.id + "\")'>";
+        var marker_image = "";
+        getCachedTypes().forEach(function(type) {
+          if(marker_image !== "") return;
+          if(type.name === site.siteData.type) marker_image = type.icon;
+        });
+        search_results_html += "<img class='search-image' src='" + marker_image + "' />";
+        search_results_html += "<b>" + site.siteData.name + "</b>";
+        search_results_html += "</div>";
+        count += 1;
+      }
+    });
+    search_results.innerHTML = search_results_html;
+  });
+  //Toggle search bar if ctrl is pressed
+  $(document).keydown(function(event) {
+    if(event.keyCode === 191) {
+      event.preventDefault();
+      resetFadeGroups();
+      showSearchModalBox();
+    }
+  });
+
 });
+
+function showSearchModalBox() {
+  $("#search-modal").modal({
+    "backdrop"  : true,
+    "keyboard"  : true,
+    "show"      : true
+  });
+  setTimeout(function() {
+    if($("#search-bar").val() === "") {
+      $("#search-bar").focus();
+    } else {
+      $("#search-bar").select();
+    }
+  }, 200);
+}
+
+function selectSearchResult(id) {
+  focusMarker(id);
+  $("#search-modal").modal("hide");
+}
 
 function initDownloadButton() {
   $('#download').click(function () {
