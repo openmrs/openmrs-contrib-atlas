@@ -558,7 +558,7 @@ function contentInfowindow(site) {
     html += "<a href='mailto:"+ site.email + "' class='site-email'><img src='images/mail.png' width='15px' height='15px'/></a>";
   html += "</div>";
 
-  if (site.coowners && site.coowners.length) {
+  if (site.coowners && site.coowners.length && currentUser !== "visitor" && (site.created_by === currentUser || site.coowners.includes(currentUser))) {
     html += "<div class='site-coowners'><span class='site-label'>Co-owners:</span> ";
     html += site.coowners.join(', ');
     html += "</div>";
