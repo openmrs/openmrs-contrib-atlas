@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html;" charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>OpenMRS Atlas - Data</title>
+        <link rel="shortcut icon" href="/favicon.ico">
+        <link rel="stylesheet" href="/lib/css/font-awesome.min.css">
+        <link rel="stylesheet" href="/lib/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/css/data.css">
+
+        <script src="/lib/js/jquery-1.11.1.min.js"></script>
+        <script src="/lib/js/bootstrap.min.js"></script>
+        <script id="globalnav-script" src="https://id.openmrs.org/globalnav/js/app-optimized.js" type="text/javascript"></script>
+        <script src="/lib/js/plotly.min.js"></script>
+    </head>
+    <body>
+        <noscript><h3>JavaScript is required to properly use this page.</h3></noscript>
+
+        <div class="navbar navbar-default" role="banner">
+            <div class="navbar-inner-sm">
+                <div class="container">
+                    <ul class="nav navbar-nav pull-left">
+                        <li><h3><a href="/">OpenMRS Atlas</a></h3></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+            
+        <div class="container">
+
+                <div class="row">
+                    <div class="col-md-4" id="site-stats">
+
+                    </div>
+                    <div class="col-md-8" id="type-stats">
+                        <h2>Marker Types</h2>
+                        <div id="type-plot"></div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6" id="version-stats">
+                        <h2>OpenMRS Versions</h2>
+                        <div id="version-plot"></div>
+                    </div>
+                    <div class="col-md-6" id="distribution-stats">
+                        <h2>OpenMRS Distributions</h2>
+                        <div id="distribution-plot"></div>
+                    </div>
+                </div>
+
+        </div>
+
+    </body>
+    <script>
+        $.ajax({url: "/api/markers"})
+        .always(function (markers, textStatus) {
+            if (textStatus != "success") {
+                bootbox.alert({ message: "Error fetching site data! - " + data.statusText, backdrop: true });
+                return;
+            }
+
+            var site_stats_div = document.getElementById('site-stats');
+
+            var html = "<div>"
+            html += "<h1 id='sites-number'>" + markers.length + "</h1>";
+            html += "<p>sites</p>";
+            html += "<h2>+" + markers.filter(function(marker) { return new Date() - new Date(marker.date_changed) < 365*86400*1000 ; }).length + " </h2>";
+            html += "<p>this year<p>";
+            html += "</div>";
+
+            site_stats_div.innerHTML += html;
+
+            $.ajax({url: "/api/types"})
+            .always(function (types, textStatus) {
+                if (textStatus != "success") {
+                    bootbox.alert({ message: "Error fetching site data! - " + data.statusText, backdrop: true });
+                    return;
+                }
+
+                var type_counts = {};
+                types.forEach(function(type) {
+                    type_counts[type.name] = 0;
+                });
+
+                markers.forEach(function(marker) {
+                    if(typeof type_counts[marker.type] !== "undefined") type_counts[marker.type] += 1;
+                });
+
+                var plot = [{
+                    type: 'bar',
+                    x: Object.values(type_counts),
+                    y: Object.keys(type_counts),
+                    orientation: 'h'
+                }];
+
+                Plotly.newPlot('type-plot', plot);
+            });
+
+            $.ajax({url: "/api/versions"})
+            .always(function (versions, textStatus) {
+                if (textStatus != "success") {
+                    bootbox.alert({ message: "Error fetching site data! - " + data.statusText, backdrop: true });
+                    return;
+                }
+
+                var version_counts = {};
+                versions.forEach(function(version) {
+                    version_counts[version.version] = 0;
+                });
+
+                markers.forEach(function(marker) {
+                    if(typeof version_counts[marker.openmrs_version] !== "undefined") version_counts[marker.openmrs_version] += 1;
+                });
+
+                var plot = [{
+                    type: 'bar',
+                    x: Object.values(version_counts),
+                    y: Object.keys(version_counts),
+                    orientation: 'h'
+                }];
+
+                Plotly.newPlot('version-plot', plot);
+            });
+
+            $.ajax({url: "/api/distributions"})
+            .always(function (distributions, textStatus) {
+                if (textStatus != "success") {
+                    bootbox.alert({ message: "Error fetching site data! - " + data.statusText, backdrop: true });
+                    return;
+                }
+
+                var distribution_counts = {};
+                var id_to_distribution = {};
+                distributions.forEach(function(distribution) {
+                    distribution_counts[distribution.name] = 0;
+                    id_to_distribution[distribution.id] = distribution.name;
+                });
+
+                markers.forEach(function(marker) {
+                    var distribution_name = id_to_distribution[marker.distribution];
+                    if(typeof distribution_counts[distribution_name] !== "undefined") distribution_counts[distribution_name] += 1;
+                });
+
+                var plot = [{
+                    type: 'bar',
+                    x: Object.values(distribution_counts),
+                    y: Object.keys(distribution_counts),
+                    orientation: 'h'
+                }];
+
+                Plotly.newPlot('distribution-plot', plot);
+            });
+
+        });
+    </script>
+</html>
