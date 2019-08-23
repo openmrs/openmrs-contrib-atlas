@@ -31,7 +31,8 @@
     "serve-favicon": "^2.5.0",
     "sshpk": "^1.16.1",
     "stringstream": "^1.0.0",
-    "uuid": "^2.0.2"
+    "uuid": "^2.0.2",
+    "which-country": "^1.0.0"
   },
   "devDependencies": {}
 }
