@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var util = require('util');
 var utils = require('../../utils.js');
+var wc = require('which-country');
 var logger = require('log4js').getLogger();
 logger.level = 'debug';
 
@@ -22,7 +23,7 @@ module.exports = function(connection) {
                     var data = row.data;
                     if(data && utils.isJson(data)) {
                         data = JSON.parse(data);
-                        if(data.modules) {
+                        if(data && data.modules) {
                             data.modules.forEach(function(module) {
                                 if(module.active !== "true") return;
                                 if(typeof idxs[module.id] === "undefined") {
@@ -46,7 +47,7 @@ module.exports = function(connection) {
             }
         });
     });
-    
+
     router.get('/report/module/:module_id', function (req, res, next) {
 
         connection.query('select data from atlas', function (error, rows, field) {
@@ -66,7 +67,7 @@ module.exports = function(connection) {
                         var data = row.data;
                         if(data && utils.isJson(data)) {
                             data = JSON.parse(data);
-                            if(data.modules) {
+                            if(data && data.modules) {
                                 data.modules.forEach(function(module) {
                                     if(module.active !== "true") return;
                                     if(module_id === module.id && module.version) {
@@ -82,6 +83,30 @@ module.exports = function(connection) {
                         }
                     });
                 }
+
+                res.setHeader('Content-Type', 'application/json');
+                res.json(resp);
+            }
+        });
+    });
+
+    router.get('/report/countries', function (req, res, next) {
+
+        connection.query('select latitude,longitude from atlas', function (error, rows, field) {
+
+            if(error) {
+                logger.error(error);
+                return res.status(500).send({ message: util.format(constants.DATABASE_ERROR_RESPONSE, new Date().toISOString().slice(0, 19).replace('T', ' ')) });
+            } else {
+                var resp = {};
+                countries = rows.map(function(row) { return wc([row.longitude,row.latitude]) });
+                countries.forEach(function(country) {
+                    if(resp[country]) {
+                        resp[country] += 1;
+                    } else {
+                        resp[country] = 1;
+                    }
+                });
 
                 res.setHeader('Content-Type', 'application/json');
                 res.json(resp);
