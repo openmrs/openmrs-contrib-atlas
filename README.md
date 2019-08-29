@@ -57,23 +57,25 @@ OpenMRS-contrib-atlas-node is the server code written in nodejs for [OpenMRS ATL
       ```mysql
       mysql> USE atlasdb;
       ```
-  - Run the sql script file (Note: there are multiple ways to run sql script file )
+  - Run the sql script files (Note: there are multiple ways to run sql script files )
 
       * WINDOWS OS
 
           ```mysql
-          mysql> SOURCE : db/bootstrap.sql
-          mysql> SOURCE : db/bootstrap.v3.sql
+          mysql> SOURCE : db/01_database.sql
+          mysql> SOURCE : db/02_updates.sql
+          mysql> SOURCE : db/03_demo_data.sql
 
           ```
 
       * UBUNTU OS
 
-          * Navigate to the directory where in sql file exists, in terminal
+          * Navigate to the directory where the sql files exist, in terminal
 
             ```
-              $ mysql -u uname -p dbname < db/bootstrap.sql;
-              $ mysql -u uname -p dbname < db/bootstrap.v3.sql;
+              $ mysql -u uname -p dbname < db/01_database.sql;
+              $ mysql -u uname -p dbname < db/02_updates.sql;
+              $ mysql -u uname -p dbname < db/03_demo_data.sql;
 
             ```
   - create environment variables in your bash
