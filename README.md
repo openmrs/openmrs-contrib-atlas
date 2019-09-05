@@ -19,7 +19,7 @@ OpenMRS-contrib-atlas-node is the server code written in nodejs for [OpenMRS ATL
 ## Prerequisite
 
 - Install nodejs
-- Install nodemon globally(if you need it)
+- Install nodemon globally (if you need it)
 
     ```git
     npm install -g nodemon
