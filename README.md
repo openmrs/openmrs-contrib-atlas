@@ -12,7 +12,7 @@
 
 # Description
 
-OpenMRS-contrib-atlas-node is the server code written in nodejs for [OpenMRS ATLAS](http://atlas.openmrs.org). This project includes migrating the server side code from PHP Laravel framework to Nodejs, Making the Backend RESTful and authenticating the app against OpenMRS ID
+OpenMRS-contrib-atlas-node is the server code written in nodejs for [OpenMRS ATLAS](http://atlas.openmrs.org). This project includes migrating the server side code from PHP Laravel framework to Nodejs, making the Backend RESTful and authenticating the app against OpenMRS ID
 
 # Setting Up
 
