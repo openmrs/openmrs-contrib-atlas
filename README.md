@@ -81,8 +81,8 @@ OpenMRS-contrib-atlas-node is the server code written in nodejs for [OpenMRS ATL
   - create environment variables in your bash
       ```sh
         export DB_HOST='localhost'
-        export DB_USERNAME='root'
-        export DB_PASSWORD='root'
+        export DB_USERNAME='<mysql username>'
+        export DB_PASSWORD='<mysql password>'
         export DB_NAME='atlasdb'
         export GOOGLE_MAPS_JS_API_KEY='<your google api key>'
         ```
