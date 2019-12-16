@@ -164,7 +164,8 @@
                     orientation: 'h'
                 }];
 
-                Plotly.newPlot('distribution-plot', plot);
+                Plotly.newPlot('distribution-plot', plot,
+                    {yaxis:{automargin:true}});
             });
 
             $.ajax({url: "/api/report/module"})
