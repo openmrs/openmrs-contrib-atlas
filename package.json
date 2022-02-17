@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
+    "dev": "NODE_ENV=development nodemon --delay 10 ./bin/www",
     "start": "node ./bin/www"
   },
   "dependencies": {
@@ -33,5 +34,7 @@
     "uuid": "^2.0.2",
     "which-country": "^1.0.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "nodemon": "^2.0.3"
+  }
 }
