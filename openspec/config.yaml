@@ -1,0 +1,35 @@
+schema: spec-driven
+
+# Project context: constraints for OpenSpec artifacts that cannot be inferred from the code.
+# Background and rationale: "OpenMRS Atlas 3.0 — Requirements & Design Spec"
+# https://claude.ai/artifact/GKHHVKkbSRPtCpya5DZVfZ (requirement IDs such as M1, C4, O3 come from there).
+context: |
+  Atlas 3.0 replaces Atlas 2.0 (the Express + MySQL app on master) at atlas.openmrs.org.
+  Work happens on the atlas-3.0 branch and deploys to atlas-stg.openmrs.org until cutover.
+  The 2.0 code remains on master and in git history; 3.0 shares no runtime code with it.
+
+  Architecture decisions (settled; do not re-open in proposals without saying so):
+  - Static front end (TypeScript, Vite, React) on Firebase Hosting; MapLibre GL JS with
+    OpenFreeMap tiles. No Google Maps, no self-hosted tiles.
+  - A Google Sheet is the source of truth. Visitors never read the sheet; they read a JSON
+    snapshot in a public Cloud Storage bucket, regenerated on every write and nightly.
+  - One TypeScript service on Google Cloud Run does all writes and publishing. Everything
+    lives in one OpenMRS Google Cloud project.
+  - Sign-in is OpenMRS Keycloak (OIDC). Admins are the Keycloak group atlas-admin.
+    Editors are added by OpenMRS ID (username) only.
+  - Email goes through Mandrill (Mailchimp Transactional). Staging only delivers to an allowlist.
+  - Contact emails and owner/editor lists are never published. Contact is an opt-in relay form.
+
+  Product constraints:
+  - English-only UI; no translation framework.
+  - Google Analytics stays (shared with other OpenMRS sites).
+  - URLs kept from 2.0: /?marker=<id> and /rss. The 2.0 REST API and Atlas module pings are retired.
+  - Maintained by volunteers: prefer fewer dependencies, managed services, and boring code.
+  - No ticket tracker: OpenSpec changes and pull requests are the record.
+
+rules:
+  proposal:
+    - Reference requirement IDs from the Atlas 3.0 design spec where they apply.
+    - Always state what is out of scope.
+  tasks:
+    - Mark tasks that need a human with access to Google Cloud, Keycloak, DNS or Mandrill as "(manual)".
