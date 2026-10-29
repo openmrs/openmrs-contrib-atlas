@@ -7,7 +7,7 @@
 - [ ] 1.3 Add a CI workflow that runs install, typecheck, lint, test and build on pull requests to `atlas-3.0`; verify it passes on a draft PR
 - [x] 1.4 Add `docker-compose.yml` for local development (MySQL seeded from `migration/fixtures/`, `fake-gcs-server`); verify that `docker compose up` starts both, the demo markers are queryable, and a test object can be written to and read from the fake bucket
 - [ ] 1.5 Create a personal test sheet with the tabs, headers and seed lookups from specs/marker-data, and document `TEST_SHEET_ID` and the credentials setup; verify a script lists the tab names using the developer's own Google credentials
-- [ ] 1.6 Replace README.md with a 3.0 overview (architecture, workspace layout, local development, link to the design spec and `openspec/`); verify the local-development steps work from a fresh clone
+- [x] 1.6 Replace README.md with a 3.0 overview (architecture, workspace layout, local development, link to the design spec and `openspec/`); verify the local-development steps work from a fresh clone
 
 ## 2. Shared model and validation
 
