@@ -1,154 +1,92 @@
-# openmrs-contrib-atlas-node
+# OpenMRS Atlas 3.0
 
-[![OpenMRS IRC](https://img.shields.io/badge/openmrs-irc-EEA616.svg?logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MTIiIGhlaWdodD0iNjEyIiB2aWV3Qm94PSIwIDAgNjEyIDYxMiI%2BPHBhdGggZD0iTTE1MyAyMjkuNWMtMjEuMTMzIDAtMzguMjUgMTcuMTE3LTM4LjI1IDM4LjI1UzEzMS44NjcgMzA2IDE1MyAzMDZjMjEuMTE0IDAgMzguMjUtMTcuMTE3IDM4LjI1LTM4LjI1UzE3NC4xMzMgMjI5LjUgMTUzIDIyOS41em0xNTMgMGMtMjEuMTMzIDAtMzguMjUgMTcuMTE3LTM4LjI1IDM4LjI1UzI4NC44NjcgMzA2IDMwNiAzMDZjMjEuMTE0IDAgMzguMjUtMTcuMTE3IDM4LjI1LTM4LjI1UzMyNy4xMzMgMjI5LjUgMzA2IDIyOS41em0xNTMgMGMtMjEuMTMzIDAtMzguMjUgMTcuMTE3LTM4LjI1IDM4LjI1UzQzNy44NjcgMzA2IDQ1OSAzMDZzMzguMjUtMTcuMTE3IDM4LjI1LTM4LjI1UzQ4MC4xMzMgMjI5LjUgNDU5IDIyOS41ek0zMDYgMEMxMzcuMDEyIDAgMCAxMTkuODc1IDAgMjY3Ljc1YzAgODQuNTE0IDQ0Ljg0OCAxNTkuNzUgMTE0Ljc1IDIwOC44MjZWNjEybDEzNC4wNDctODEuMzRjMTguNTUyIDMuMDYyIDM3LjYzOCA0Ljg0IDU3LjIwMyA0Ljg0IDE2OS4wMDggMCAzMDYtMTE5Ljg3NSAzMDYtMjY3Ljc1UzQ3NS4wMDggMCAzMDYgMHptMCA0OTcuMjVjLTIyLjMzOCAwLTQzLjkxLTIuNi02NC42NDMtNy4wMmwtOTAuMDQgNTQuMTI0IDEuMjA0LTg4LjdDODMuNSA0MTQuMTMzIDM4LjI1IDM0NS41MTMgMzguMjUgMjY3Ljc1YzAtMTI2Ljc0IDExOS44NzUtMjI5LjUgMjY3Ljc1LTIyOS41czI2Ny43NSAxMDIuNzYgMjY3Ljc1IDIyOS41UzQ1My44NzUgNDk3LjI1IDMwNiA0OTcuMjV6IiBmaWxsPSIjZmZmIi8%2BPC9zdmc%2B)](http://irc.openmrs.org) [![OpenMRS Telegram](https://img.shields.io/badge/openmrs-telegram-009384.svg?logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNDAgMjQwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImEiIHgxPSIuNjY3IiB5MT0iLjE2NyIgeDI9Ii40MTciIHkyPSIuNzUiPjxzdG9wIHN0b3AtY29sb3I9IiMzN2FlZTIiIG9mZnNldD0iMCIvPjxzdG9wIHN0b3AtY29sb3I9IiMxZTk2YzgiIG9mZnNldD0iMSIvPjwvbGluZWFyR3JhZGllbnQ%2BPGxpbmVhckdyYWRpZW50IGlkPSJiIiB4MT0iLjY2IiB5MT0iLjQzNyIgeDI9Ii44NTEiIHkyPSIuODAyIj48c3RvcCBzdG9wLWNvbG9yPSIjZWZmN2ZjIiBvZmZzZXQ9IjAiLz48c3RvcCBzdG9wLWNvbG9yPSIjZmZmIiBvZmZzZXQ9IjEiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSIxMjAiIGN5PSIxMjAiIHI9IjEyMCIgZmlsbD0idXJsKCNhKSIvPjxwYXRoIGZpbGw9IiNjOGRhZWEiIGQ9Ik05OCAxNzVjLTMuODg4IDAtMy4yMjctMS40NjgtNC41NjgtNS4xN0w4MiAxMzIuMjA3IDE3MCA4MCIvPjxwYXRoIGZpbGw9IiNhOWM5ZGQiIGQ9Ik05OCAxNzVjMyAwIDQuMzI1LTEuMzcyIDYtM2wxNi0xNS41NTgtMTkuOTU4LTEyLjAzNSIvPjxwYXRoIGZpbGw9InVybCgjYikiIGQ9Ik0xMDAuMDQgMTQ0LjQxbDQ4LjM2IDM1LjczYzUuNTIgMy4wNDQgOS41IDEuNDY3IDEwLjg3Ni01LjEyNGwxOS42ODUtOTIuNzYzYzIuMDE2LTguMDgtMy4wOC0xMS43NDYtOC4zNTgtOS4zNWwtMTE1LjU5IDQ0LjU3MmMtNy44OSAzLjE2NS03Ljg0NCA3LjU2Ny0xLjQ0IDkuNTI4bDI5LjY2NCA5LjI2IDY4LjY3My00My4zMjZjMy4yNC0xLjk2NiA2LjIxNy0uOTEgMy43NzUgMS4yNTgiLz48L3N2Zz4%3D)](https://telegram.me/openmrs) 
+A world map of OpenMRS implementations, at [atlas.openmrs.org](https://atlas.openmrs.org).
 
-<img style="float: centre;" src="https://shekharreddykmit.files.wordpress.com/2016/08/atlas1.png" alt = "OpenMRS"/>
+> **Status:** Atlas 3.0 is being built on the `atlas-3.0` branch and will be previewed at
+> atlas-stg.openmrs.org. Atlas 2.0 (Express + MySQL) remains on `master` and keeps serving
+> atlas.openmrs.org until cutover.
 
-# OpenMRS Atlas 3
-- [Description](#description)
-- [Setting Up](#setting-up)
-- [Code Structure](#code-structure)
-- [Contribute](#contribute)
+## How it works
 
-# Description
+- **Data lives in a Google Sheet.** One row per marker; private fields (owners, contact details)
+  sit on a separate tab and are never published.
+- **Visitors never read the sheet.** A small Cloud Run service validates the sheet and publishes
+  snapshot files (`atlas.json`, GeoJSON, CSV) to a public Cloud Storage bucket, both whenever the
+  sheet is edited and nightly.
+- **The map is a static site** (React, Vite, MapLibre GL JS with OpenFreeMap tiles) that loads
+  the snapshot.
+- **Sign-in** (Phase 2) uses OpenMRS Keycloak.
 
-OpenMRS-contrib-atlas-node is the server code written in nodejs for [OpenMRS ATLAS](http://atlas.openmrs.org). This project includes migrating the server side code from PHP Laravel framework to Nodejs, making the Backend RESTful and authenticating the app against OpenMRS ID
+The requirements and design live in [`openspec/`](openspec/). Each piece of work is an OpenSpec
+change: proposed, applied, then archived into `openspec/specs/`. Background and rationale are in the
+[Atlas 3.0 design spec](https://claude.ai/artifact/GKHHVKkbSRPtCpya5DZVfZ).
 
-# Setting Up
+## Repository layout
 
-## Prerequisite
+| Path           | What it is                                                                |
+| -------------- | ------------------------------------------------------------------------- |
+| `shared/`      | Sheet schema, validation, snapshot builders. Pure TypeScript, no I/O.     |
+| `web/`         | The map site.                                                             |
+| `service/`     | Cloud Run service: validate and publish. Also `npm run setup:sheet`.      |
+| `apps-script/` | Apps Script bound to the sheet: edit bookkeeping and publish triggers.    |
+| `migration/`   | One-off copy of Atlas 2.0 data into the sheet; `fixtures/` holds 2.0 SQL. |
+| `openspec/`    | Specs and change proposals.                                               |
 
-- Install nodejs
-- Install nodemon globally (if you need it)
+## Local development
 
-    ```git
-    npm install -g nodemon
-    ```
-- Get a Google Maps JS API key from the [Google API console](https://developers.google.com/maps/documentation/javascript/get-api-key). Make sure to enable JS google maps and static google maps API in your project/account.
+Prerequisites: Node 24+, Docker, and (for anything touching Google) the
+[Google Cloud CLI](https://cloud.google.com/sdk/docs/install).
 
-## SetUp repo
+```sh
+npm install
+npm test            # unit tests (no network, no Google account needed)
+npm run typecheck
+npm run lint
+```
 
-- Clone the repo
+`docker compose up -d` starts the local stack:
 
-   ```git
-   $ git clone https://github.com/openmrs/openmrs-contrib-atlas.git
-   $ cd openmrs-contrib-atlas-node
+- **mysql** on port 3306: an Atlas 2.0 database with the 2.0 schema and demo data
+  (database `atlasdb`, user `atlas`, password `atlas`), the source for the migration.
+- **gcs** on port 4443: [fake-gcs-server](https://github.com/fsouza/fake-gcs-server) with a bucket
+  named `atlas-local`, standing in for Cloud Storage.
+
+## Test sheet
+
+Code that talks to Google Sheets is tested against a real sheet in your own Google account. There
+is no Sheets emulator, and the unit tests don't need one.
+
+1. **Create a Google Cloud project** for personal development (free), and enable the Google Sheets
+   API in it.
+2. **Sign in with Application Default Credentials**, including the Sheets scope, and set the quota
+   project:
+
+   ```sh
+   gcloud auth application-default login \
+     --scopes=https://www.googleapis.com/auth/spreadsheets,https://www.googleapis.com/auth/cloud-platform
+   gcloud auth application-default set-quota-project <your-project-id>
    ```
 
-- Install the dependencies
+3. **Create an empty Google Sheet**, and copy its id from the URL
+   (`https://docs.google.com/spreadsheets/d/<id>/edit`).
+4. **Set it up:**
 
-   ```git
-   npm install
+   ```sh
+   npm run setup:sheet -- <id> --sample
    ```
 
-## Running
+   This adds every tab with its headers and seed lookups, plus five clearly labelled sample markers.
+   It is safe to re-run, and never changes existing data rows. It finishes by printing the tab
+   names.
 
-### Running Locally
+5. **Save the id** in `.env` (copy `.env.example`) as `TEST_SHEET_ID`. Then
+   `npm run test:sheet` runs the sheet integration tests.
 
-  - Install MySQL
-  - Create a database
+Sheet integration tests (`*.sheet.test.ts`) are not run in CI. Run them before merging changes to
+code that reads or writes the sheet.
 
-      ```mysql
-      mysql> CREATE DATABASE atlasdb;
-      ```
+## Contributing
 
-  - Switch to the 'atlasdb' database
-
-      ```mysql
-      mysql> USE atlasdb;
-      ```
-  - Run the sql script files (Note: there are multiple ways to run sql script files )
-
-      * WINDOWS OS
-
-          ```mysql
-          mysql> SOURCE : db/01_database.sql
-          mysql> SOURCE : db/02_updates.sql
-          mysql> SOURCE : db/03_demo_data.sql
-
-          ```
-
-      * UBUNTU OS
-
-          * Navigate to the directory where the sql files exist, in terminal
-
-            ```
-              $ mysql -u uname -p dbname < db/01_database.sql;
-              $ mysql -u uname -p dbname < db/02_updates.sql;
-              $ mysql -u uname -p dbname < db/03_demo_data.sql;
-
-            ```
-  - create environment variables in your bash
-      ```sh
-        export DB_HOST='localhost'
-        export DB_USERNAME='<mysql username>'
-        export DB_PASSWORD='<mysql password>'
-        export DB_NAME='atlasdb'
-        export GOOGLE_MAPS_JS_API_KEY='<your google api key>'
-        ```
-  - Navigate to the project root directory and run the nodemon
-
-      ```git
-      $ nodemon
-      ```
-
-  - Fire up your browser to check http://localhost:3000
-
-### Running using docker
-
-  - Install docker and docker-compose
-
-  - Clone and start ldap-stg following instructions in [repository](https://github.com/openmrs/openmrs-contrib-ansible-docker-compose/tree/master/files/ldap-stg)
-
-  - Build and start atlas inside a docker container
-```
-export GOOGLE_MAPS_JS_API_KEY='<your google api key>'
-$ docker-compose build
-$ docker-compose up -d
-```
-  - Fire up your browser to check http://localhost:3000
-
-To stop:
-```
-ctrl+c
-# docker-compose down -v
-```
-
-### Code Structure
-
-<table>
- <tr>
-  <td>public/</td>
-  <td>This directory contains js,css,images and lib files</td>
- </tr>
- <tr>
-  <td>routes/</td>
-  <td>Contains all the routes</td>
- </tr>
- <tr>
-  <td>views/</td>
-  <td>Contains all the front end code </td>
- </tr>
- <tr>
-  <td>bin/www.js</td>
-  <td>Contains the script for creating and running the http server</td>
- </tr>
- <tr>
-  <td>app.js</td>
-  <td> Creates an express app and holds all the middleware e.g auth middleware </td>
- </tr>
-  <td>package.json</td>
-  <td>Manifest file used to manage project dependencies.</td>
- </tr>
-</table>
-
-### Contribute
-
-1. Fork the repo.
-
-2. Clone the fork to your machine.
-
-3. Make changes in required files, reload the browser to verify the changes.
-
-4. Squash the commits and Create a pull request.
-
+Changes go through OpenSpec: propose a change (`/opsx:propose` in Claude Code, or by hand under
+`openspec/changes/`), get it reviewed, implement it, then archive it. Pull requests target
+`atlas-3.0` until cutover.

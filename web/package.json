@@ -1,0 +1,11 @@
+{
+  "name": "@openmrs-atlas/web",
+  "version": "3.0.0-dev",
+  "private": true,
+  "description": "Atlas map site (React, Vite, MapLibre GL JS)",
+  "type": "module",
+  "exports": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}

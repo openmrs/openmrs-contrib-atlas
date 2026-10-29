@@ -1,0 +1,17 @@
+{
+  "name": "@openmrs-atlas/shared",
+  "version": "3.0.0-dev",
+  "private": true,
+  "description": "Atlas data model, validation and snapshot builders (pure TypeScript, no I/O)",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./seed": "./src/seed.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rapideditor/country-coder": "^5.6.1"
+  }
+}

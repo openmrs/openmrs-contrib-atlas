@@ -1,0 +1,11 @@
+{
+  "name": "@openmrs-atlas/apps-script",
+  "version": "3.0.0-dev",
+  "private": true,
+  "description": "Apps Script bound to the Atlas sheet: edit bookkeeping and publish debounce",
+  "type": "module",
+  "exports": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  }
+}

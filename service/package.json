@@ -1,0 +1,20 @@
+{
+  "name": "@openmrs-atlas/service",
+  "version": "3.0.0-dev",
+  "private": true,
+  "description": "Atlas Cloud Run service: validates the sheet and publishes snapshots",
+  "type": "module",
+  "exports": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "setup:sheet": "tsx src/scripts/setup-sheet.ts"
+  },
+  "dependencies": {
+    "@googleapis/sheets": "^18.1.1",
+    "google-auth-library": "^11.3.2",
+    "@openmrs-atlas/shared": "*"
+  },
+  "devDependencies": {
+    "tsx": "^4.23.15"
+  }
+}

@@ -2,19 +2,19 @@
 
 ## 1. Repository scaffolding
 
-- [ ] 1.1 Remove the 2.0 app from `atlas-3.0` (Express app, routes, views, public, db, Docker files, 2.0 package files), keeping `db/01_database.sql` and `db/03_demo_data.sql` copied to `migration/fixtures/`; verify `git ls-files` shows no 2.0 runtime files
-- [ ] 1.2 Create the npm workspaces (`shared`, `web`, `service`, `apps-script`, `migration`) on Node 24 with TypeScript, ESLint, Prettier and Vitest configured at the root; verify `npm install`, `npm run typecheck`, `npm run lint` and `npm test` succeed on the empty packages
+- [x] 1.1 Remove the 2.0 app from `atlas-3.0` (Express app, routes, views, public, db, Docker files, 2.0 package files), keeping `db/01_database.sql` and `db/03_demo_data.sql` copied to `migration/fixtures/`; verify `git ls-files` shows no 2.0 runtime files
+- [x] 1.2 Create the npm workspaces (`shared`, `web`, `service`, `apps-script`, `migration`) on Node 24 with TypeScript, ESLint, Prettier and Vitest configured at the root; verify `npm install`, `npm run typecheck`, `npm run lint` and `npm test` succeed on the empty packages
 - [ ] 1.3 Add a CI workflow that runs install, typecheck, lint, test and build on pull requests to `atlas-3.0`; verify it passes on a draft PR
-- [ ] 1.4 Add `docker-compose.yml` for local development (MySQL seeded from `migration/fixtures/`, `fake-gcs-server`); verify that `docker compose up` starts both, the demo markers are queryable, and a test object can be written to and read from the fake bucket
+- [x] 1.4 Add `docker-compose.yml` for local development (MySQL seeded from `migration/fixtures/`, `fake-gcs-server`); verify that `docker compose up` starts both, the demo markers are queryable, and a test object can be written to and read from the fake bucket
 - [ ] 1.5 Create a personal test sheet with the tabs, headers and seed lookups from specs/marker-data, and document `TEST_SHEET_ID` and the credentials setup; verify a script lists the tab names using the developer's own Google credentials
 - [ ] 1.6 Replace README.md with a 3.0 overview (architecture, workspace layout, local development, link to the design spec and `openspec/`); verify the local-development steps work from a fresh clone
 
 ## 2. Shared model and validation
 
-- [ ] 2.1 Define the sheet tab schemas and TypeScript types for markers, private rows and lookups in `shared/`; verify with unit tests that parse sample rows from each tab
-- [ ] 2.2 Implement row validation with every rule in specs/marker-data (required fields, value rules, duplicate ids, per-row multi-reason output); verify one unit test per scenario
-- [ ] 2.3 Implement the snapshot builders: `atlas.json`, GeoJSON and CSV from validated rows, active-only, public fields only, derived country; verify with tests that the three outputs contain the same ids and no private field names
-- [ ] 2.4 Implement the publish safety check (fewer than 80% of the current count refuses unless forced); verify with unit tests for refuse, pass and force
+- [x] 2.1 Define the sheet tab schemas and TypeScript types for markers, private rows and lookups in `shared/`; verify with unit tests that parse sample rows from each tab
+- [x] 2.2 Implement row validation with every rule in specs/marker-data (required fields, value rules, duplicate ids, per-row multi-reason output); verify one unit test per scenario
+- [x] 2.3 Implement the snapshot builders: `atlas.json`, GeoJSON and CSV from validated rows, active-only, public fields only, derived country; verify with tests that the three outputs contain the same ids and no private field names
+- [x] 2.4 Implement the publish safety check (fewer than 80% of the current count refuses unless forced); verify with unit tests for refuse, pass and force
 
 ## 3. Google Cloud and sheet setup (staging)
 

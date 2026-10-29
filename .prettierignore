@@ -1,0 +1,4 @@
+openspec/
+.claude/
+migration/fixtures/
+package-lock.json

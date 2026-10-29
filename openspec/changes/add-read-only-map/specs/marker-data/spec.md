@@ -47,6 +47,17 @@ Optional marker fields SHALL be validated when present: `type` matches a `types`
 - **WHEN** a marker's `site_count` is 0
 - **THEN** the row is invalid with the reason "site_count must be 1 or more"
 
+### Requirement: Date fields
+`created_at`, `updated_at` and `confirmed_at`, when present, SHALL be dates: ISO 8601 text, or a date value entered through the spreadsheet. Valid dates SHALL be published as ISO 8601 UTC timestamps.
+
+#### Scenario: Date typed into the sheet
+- **WHEN** an admin types 2025-06-01 into `confirmed_at` and the sheet stores it as a date value
+- **THEN** the marker is valid and its `confirmed_at` is published as `2025-06-01T00:00:00.000Z`
+
+#### Scenario: Unreadable date
+- **WHEN** a marker's `confirmed_at` is "last spring"
+- **THEN** the row is invalid with the reason "confirmed_at must be a date"
+
 ### Requirement: Marker identifiers
 Every marker SHALL have a unique, stable `id`. Rows added without an `id` SHALL be given a new UUID automatically, and an `id` SHALL never change once assigned.
 
