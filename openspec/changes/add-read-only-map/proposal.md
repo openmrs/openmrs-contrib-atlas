@@ -43,5 +43,5 @@ None. This is the first change; no specs exist yet.
 - Code: replaces the repository contents on `atlas-3.0` with npm workspaces for `web` (map site), `service` (Cloud Run), `shared` (types and validation), `apps-script` (sheet trigger), and `migration`.
 - Systems: one Google Cloud project with Firebase Hosting (staging site), Cloud Run, Cloud Scheduler, Cloud Storage, Secret Manager; one staging Google Sheet; Cloudflare DNS record for atlas-stg.openmrs.org; a GA4 property ID.
 - Data: reads the production Atlas 2.0 MySQL database (read-only) to seed staging.
-- Dependencies: React, MapLibre GL JS, Vite, Hono, googleapis, @google-cloud/storage, zod, @rapideditor/country-coder, Vitest, Playwright.
+- Dependencies: React, MapLibre GL JS, Vite, Hono, @googleapis/sheets, google-auth-library, @google-cloud/storage, @rapideditor/country-coder, Vitest, Playwright.
 - Atlas 2.0 on `master` and atlas.openmrs.org are unaffected.

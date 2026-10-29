@@ -23,7 +23,7 @@ Data volume is small: 451 markers today, a few edits a week. Visitors are global
 ### Repository layout: npm workspaces in one repo
 
 ```
-shared/       types, zod schemas, validation, snapshot builders (pure TS, no I/O)
+shared/       types, validation (plain TypeScript, no schema library), snapshot builders (pure TS, no I/O)
 web/          React + Vite map site
 service/      Cloud Run service (Hono): /publish now; edit endpoints in Phase 2
 apps-script/  sheet-bound Apps Script (onEdit bookkeeping, debounce, admin menu)
