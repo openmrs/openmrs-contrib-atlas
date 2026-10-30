@@ -1,6 +1,7 @@
 .env
 .env.*
 !.env.example
+!.env.e2e
 .idea/
 .vscode/
 .DS_Store
@@ -8,3 +9,6 @@ node_modules/
 dist/
 build/
 coverage/
+web/dev-data/live.json
+test-results/
+playwright-report/

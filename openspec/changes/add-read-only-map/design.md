@@ -47,7 +47,7 @@ Node 24 LTS throughout. The 2.0 files are deleted from the branch in the first c
 ### Snapshot publishing
 
 - **Service** (Hono on Cloud Run, min instances 0) reads every tab in one Sheets `batchGet` call, validates with `shared/`, writes the `problems` tab, applies the 80% safety check against the current `atlas.json`, then writes `atlas.json`, `markers.geojson` and `markers.csv` to the public bucket with `Cache-Control: public, max-age=300`. It also writes a timestamped copy under `history/` (a 90-day lifecycle rule deletes old copies) so a bad publish can be rolled back by copying a file.
-- **Country** is derived at publish time with `@rapideditor/country-coder` (offline, ISO alpha-3).
+- **Country** is derived at publish time with `@rapideditor/country-coder` (offline, ISO alpha-2, the form `Intl.DisplayNames` accepts).
 - **Callers and auth.** Cloud Scheduler calls nightly with a Google OIDC token for a dedicated service account, and the service verifies the token's audience and email. Apps Script calls with a shared secret held in Secret Manager and copied to Script Properties. `force=true` is accepted only from the Apps Script admin menu path. *Alternative:* IAM-only invocation, but Apps Script can't easily mint tokens for a service account.
 - **Sheet access** uses the Cloud Run service account, which is shared on the sheet as an editor. No key files.
 

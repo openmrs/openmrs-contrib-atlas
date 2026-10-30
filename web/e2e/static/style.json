@@ -1,0 +1,29 @@
+{
+  "version": 8,
+  "name": "Atlas end-to-end test style (offline)",
+  "glyphs": "/e2e/fonts/{fontstack}/{range}.pbf",
+  "sources": {
+    "attribution": {
+      "type": "geojson",
+      "data": {
+        "type": "FeatureCollection",
+        "features": []
+      },
+      "attribution": "<a href=\"https://openfreemap.org\" target=\"_blank\">OpenFreeMap</a> <a href=\"https://www.openmaptiles.org/\" target=\"_blank\">&copy; OpenMapTiles</a> Data from <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">OpenStreetMap</a>"
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#e8eef2"
+      }
+    },
+    {
+      "id": "attribution",
+      "type": "circle",
+      "source": "attribution"
+    }
+  ]
+}

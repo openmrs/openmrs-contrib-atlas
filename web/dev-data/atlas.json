@@ -1,0 +1,196 @@
+{
+  "generated_at": "2026-11-01T00:00:00.000Z",
+  "types": [
+    {
+      "name": "Clinical",
+      "colour": "#7B3FBF",
+      "sort": 1
+    },
+    {
+      "name": "Research",
+      "colour": "#2E9E44",
+      "sort": 2
+    },
+    {
+      "name": "Development",
+      "colour": "#2F6FDB",
+      "sort": 3
+    },
+    {
+      "name": "Evaluation",
+      "colour": "#E0B000",
+      "sort": 4
+    },
+    {
+      "name": "Other",
+      "colour": "#D9443B",
+      "sort": 5
+    }
+  ],
+  "distributions": [
+    {
+      "name": "OpenMRS 1.x",
+      "is_standard": true
+    },
+    {
+      "name": "Reference Application 2.x",
+      "is_standard": true
+    },
+    {
+      "name": "Bahmni",
+      "url": "https://www.bahmni.org",
+      "is_standard": true
+    },
+    {
+      "name": "KenyaEMR",
+      "is_standard": true
+    },
+    {
+      "name": "Platform 1.x + Legacy UI",
+      "is_standard": true
+    },
+    {
+      "name": "Platform 1.x + Custom UI",
+      "is_standard": true
+    },
+    {
+      "name": "AMPATH",
+      "is_standard": false
+    },
+    {
+      "name": "OpenMRS 1.x MDRTB",
+      "is_standard": false
+    },
+    {
+      "name": "Reference Application 3.x (O3)",
+      "is_standard": true
+    }
+  ],
+  "versions": [
+    {
+      "version": "1.6"
+    },
+    {
+      "version": "1.7"
+    },
+    {
+      "version": "1.8"
+    },
+    {
+      "version": "1.9"
+    },
+    {
+      "version": "1.10"
+    },
+    {
+      "version": "1.11"
+    },
+    {
+      "version": "1.12"
+    },
+    {
+      "version": "2.0"
+    },
+    {
+      "version": "2.1"
+    },
+    {
+      "version": "2.2"
+    },
+    {
+      "version": "2.3"
+    },
+    {
+      "version": "2.4"
+    },
+    {
+      "version": "2.5"
+    },
+    {
+      "version": "2.6"
+    },
+    {
+      "version": "2.7"
+    },
+    {
+      "version": "2.8"
+    },
+    {
+      "version": "3.0"
+    },
+    {
+      "version": "3.1"
+    },
+    {
+      "version": "3.2"
+    },
+    {
+      "version": "3.3"
+    },
+    {
+      "version": "3.4"
+    },
+    {
+      "version": "3.5"
+    },
+    {
+      "version": "3.6"
+    },
+    {
+      "version": "3.7"
+    },
+    {
+      "version": "3.8"
+    }
+  ],
+  "markers": [
+    {
+      "id": "9f1c2a6e-0d1b-4c3e-9a51-2f7e8b1d0a01",
+      "name": "Test site: single clinic",
+      "organisation": "Atlas test data",
+      "latitude": -1.2921,
+      "longitude": 36.8219,
+      "country": "KE",
+      "type": "Clinical",
+      "distribution": "Reference Application 2.x",
+      "openmrs_version": "2.4",
+      "url": "https://example.org",
+      "notes": "Sample row for development.",
+      "created_at": "2024-03-01T00:00:00.000Z",
+      "updated_at": "2024-03-01T00:00:00.000Z",
+      "confirmed_at": "2025-06-01T00:00:00.000Z"
+    },
+    {
+      "id": "9f1c2a6e-0d1b-4c3e-9a51-2f7e8b1d0a02",
+      "name": "Test site: 50-site rollout",
+      "organisation": "Atlas test data",
+      "latitude": 0.3476,
+      "longitude": 32.5825,
+      "country": "UG",
+      "type": "Clinical",
+      "distribution": "OpenMRS 1.x",
+      "openmrs_version": "1.10",
+      "site_count": 50,
+      "notes": "Exercises site counts.",
+      "created_at": "2016-05-10T00:00:00.000Z",
+      "updated_at": "2020-01-15T00:00:00.000Z",
+      "confirmed_at": "2020-01-15T00:00:00.000Z"
+    },
+    {
+      "id": "9f1c2a6e-0d1b-4c3e-9a51-2f7e8b1d0a03",
+      "name": "Test site: stale research",
+      "organisation": "Atlas test data",
+      "latitude": 27.7172,
+      "longitude": 85.324,
+      "country": "NP",
+      "type": "Research",
+      "distribution": "Bahmni",
+      "openmrs_version": "Other",
+      "site_count": 3,
+      "notes": "Confirmed in 2017, so it should be faded.",
+      "created_at": "2017-02-02T00:00:00.000Z",
+      "updated_at": "2017-02-02T00:00:00.000Z",
+      "confirmed_at": "2017-02-02T00:00:00.000Z"
+    }
+  ]
+}

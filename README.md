@@ -44,6 +44,19 @@ npm run typecheck
 npm run lint
 ```
 
+### The map site
+
+```sh
+npm run dev -w web                                    # sample data, http://localhost:5173
+npm run fixtures -w web -- --live                     # once: fetch ~450 real markers from Atlas 2.0
+VITE_DATA_FILE=live.json npm run dev -w web           # the map with real data
+npm run e2e -w web                                    # Playwright tests (offline map style)
+```
+
+Run `npx -w web playwright install chromium` once before the first `e2e` run.
+
+### Local services
+
 `docker compose up -d` starts the local stack:
 
 - **mysql** on port 3306: an Atlas 2.0 database with the 2.0 schema and demo data

@@ -1,4 +1,4 @@
-import { iso1A3Code } from "@rapideditor/country-coder";
+import { iso1A2Code } from "@rapideditor/country-coder";
 import type { Distribution, Lookups, Marker, MarkerType, Version } from "./schema.ts";
 
 /**
@@ -28,7 +28,7 @@ export const PUBLIC_FIELDS = [
 ] as const;
 
 export type PublicMarker = Omit<Marker, "status"> & {
-  /** ISO 3166-1 alpha-3, derived from the coordinates; omitted at sea. */
+  /** ISO 3166-1 alpha-2, derived from the coordinates; omitted at sea. */
   country?: string;
 };
 
@@ -52,7 +52,7 @@ export function buildSnapshot(markers: Marker[], lookups: Lookups, now: Date): A
 }
 
 function toPublicMarker(marker: Marker): PublicMarker {
-  const country = iso1A3Code([marker.longitude, marker.latitude]) ?? undefined;
+  const country = iso1A2Code([marker.longitude, marker.latitude]) ?? undefined;
   const out: Record<string, unknown> = {};
   for (const field of PUBLIC_FIELDS) {
     const value = field === "country" ? country : marker[field];

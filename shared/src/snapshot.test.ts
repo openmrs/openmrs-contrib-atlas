@@ -42,7 +42,7 @@ describe("buildSnapshot", () => {
 
   it("Scenario: Country derived from coordinates", () => {
     const snapshot = snapshotOf(markerRow({ latitude: -1.29, longitude: 36.82 }));
-    expect(snapshot.markers[0]?.country).toBe("KEN");
+    expect(snapshot.markers[0]?.country).toBe("KE");
   });
 
   it("omits country for a point at sea", () => {

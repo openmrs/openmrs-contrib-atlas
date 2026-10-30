@@ -12,10 +12,7 @@
   },
   "dependencies": {
     "@googleapis/sheets": "^18.1.1",
-    "google-auth-library": "^11.3.2",
-    "@openmrs-atlas/shared": "*"
-  },
-  "devDependencies": {
-    "tsx": "^4.23.15"
+    "@openmrs-atlas/shared": "*",
+    "google-auth-library": "^11.3.2"
   }
 }

@@ -7,7 +7,7 @@ Turns the Atlas sheet into the public snapshot files the map and downloads read,
 ## ADDED Requirements
 
 ### Requirement: Snapshot contents
-A publish SHALL produce `atlas.json` containing the generation time, the `types`, `distributions` and `versions` lists, and every valid marker whose `status` is `active`, with only public marker fields plus a derived `country` (ISO 3166-1 alpha-3).
+A publish SHALL produce `atlas.json` containing the generation time, the `types`, `distributions` and `versions` lists, and every valid marker whose `status` is `active`, with only public marker fields plus a derived `country` (ISO 3166-1 alpha-2).
 
 #### Scenario: Hidden and closed markers excluded
 - **WHEN** a marker's `status` is `hidden` or `closed`
@@ -20,7 +20,7 @@ A publish SHALL produce `atlas.json` containing the generation time, the `types`
 
 #### Scenario: Country derived from coordinates
 - **WHEN** a marker is at latitude -1.29, longitude 36.82
-- **THEN** its published `country` is `KEN`
+- **THEN** its published `country` is `KE`
 
 ### Requirement: Download formats
 Each publish SHALL also produce `markers.geojson` (a FeatureCollection of the same markers) and `markers.csv` (one row per marker, public fields only), generated from the same data as `atlas.json`.
