@@ -1,0 +1,168 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "e2e00000-0000-4000-8000-000000000001",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          32.5825,
+          0.3476
+        ]
+      },
+      "properties": {
+        "id": "e2e00000-0000-4000-8000-000000000001",
+        "name": "Kampala Rollout",
+        "organisation": "Uganda Health Partners",
+        "country": "UG",
+        "type": "Clinical",
+        "distribution": "OpenMRS 1.x",
+        "openmrs_version": "1.10",
+        "site_count": 50,
+        "confirmed_at": "2026-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "e2e00000-0000-4000-8000-000000000002",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          32.59,
+          0.35
+        ]
+      },
+      "properties": {
+        "id": "e2e00000-0000-4000-8000-000000000002",
+        "name": "Makerere Research Clinic",
+        "country": "UG",
+        "type": "Research",
+        "distribution": "KenyaEMR",
+        "openmrs_version": "2.4",
+        "confirmed_at": "2025-09-01T00:00:00.000Z"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "e2e00000-0000-4000-8000-000000000003",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          32.57,
+          0.34
+        ]
+      },
+      "properties": {
+        "id": "e2e00000-0000-4000-8000-000000000003",
+        "name": "Entebbe Road Health Centres",
+        "country": "UG",
+        "type": "Clinical",
+        "site_count": 3,
+        "confirmed_at": "2018-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "e2e00000-0000-4000-8000-000000000004",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.8219,
+          -1.2921
+        ]
+      },
+      "properties": {
+        "id": "e2e00000-0000-4000-8000-000000000004",
+        "name": "Nairobi Teaching Hospital",
+        "organisation": "Kenya Research Network",
+        "country": "KE",
+        "type": "Research",
+        "distribution": "Bahmni",
+        "openmrs_version": "2.4",
+        "url": "https://example.org/nairobi",
+        "notes": "Details at https://example.org/about. <script>window.hacked = true</script>",
+        "confirmed_at": "2025-06-01T00:00:00.000Z"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "e2e00000-0000-4000-8000-000000000005",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.324,
+          27.7172
+        ]
+      },
+      "properties": {
+        "id": "e2e00000-0000-4000-8000-000000000005",
+        "name": "Kathmandu Development Lab",
+        "country": "NP",
+        "type": "Development",
+        "distribution": "Bahmni",
+        "openmrs_version": "Other",
+        "confirmed_at": "2017-11-01T00:00:00.000Z"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "e2e00000-0000-4000-8000-000000000006",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -77.0428,
+          -12.0464
+        ]
+      },
+      "properties": {
+        "id": "e2e00000-0000-4000-8000-000000000006",
+        "name": "Clínica Nuevas Raíces",
+        "organisation": "Partners In Health",
+        "country": "PE",
+        "type": "Evaluation",
+        "distribution": "Reference Application 2.x",
+        "openmrs_version": "2.2",
+        "confirmed_at": "2023-05-01T00:00:00.000Z"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "e2e00000-0000-4000-8000-000000000007",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -72.3074,
+          18.5944
+        ]
+      },
+      "properties": {
+        "id": "e2e00000-0000-4000-8000-000000000007",
+        "name": "Port-au-Prince O3 Pilot",
+        "country": "HT",
+        "type": "Clinical",
+        "distribution": "Reference Application 3.x (O3)",
+        "openmrs_version": "3.8",
+        "confirmed_at": "2026-06-01T00:00:00.000Z"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "e2e00000-0000-4000-8000-000000000008",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.06,
+          42.36
+        ]
+      },
+      "properties": {
+        "id": "e2e00000-0000-4000-8000-000000000008",
+        "name": "Boston Training Server",
+        "country": "US",
+        "type": "Other",
+        "confirmed_at": "2026-09-01T00:00:00.000Z"
+      }
+    }
+  ]
+}

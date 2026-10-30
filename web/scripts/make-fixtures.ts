@@ -12,6 +12,8 @@ import {
   buildSnapshot,
   COLUMNS,
   parseLookups,
+  toCsv,
+  toGeoJson,
   validateMarkers,
   type Cell,
 } from "@openmrs-atlas/shared";
@@ -34,6 +36,19 @@ async function write(path: string, data: unknown) {
   await mkdir(resolve(file, ".."), { recursive: true });
   await writeFile(file, JSON.stringify(data, null, 2) + "\n");
   console.log(`wrote ${path}`);
+}
+
+/** Writes atlas.json, markers.geojson and markers.csv, as a publish would. */
+async function writeSnapshot(
+  dir: string,
+  snapshot: ReturnType<typeof buildSnapshot>,
+  name = "atlas",
+) {
+  await write(`${dir}/${name}.json`, snapshot);
+  if (name !== "atlas") return;
+  await write(`${dir}/markers.geojson`, toGeoJson(snapshot));
+  await writeFile(resolve(import.meta.dirname, "..", dir, "markers.csv"), toCsv(snapshot));
+  console.log(`wrote ${dir}/markers.csv`);
 }
 
 /** End-to-end markers. Tests run with the clock fixed at 2026-11-01. */
@@ -152,14 +167,14 @@ function fromAtlas2(m: Record<string, unknown>): Record<string, Cell> {
 
 async function main() {
   const fixed = new Date("2026-11-01T00:00:00Z");
-  await write("dev-data/atlas.json", snapshotFrom(SAMPLE_MARKERS, fixed).snapshot);
-  await write("e2e/static/atlas.json", snapshotFrom(E2E_MARKERS, fixed).snapshot);
+  await writeSnapshot("dev-data", snapshotFrom(SAMPLE_MARKERS, fixed).snapshot);
+  await writeSnapshot("e2e/static", snapshotFrom(E2E_MARKERS, fixed).snapshot);
 
   if (process.argv.includes("--live")) {
     const res = await fetch("https://atlas.openmrs.org/api/markers");
     const rows = ((await res.json()) as Record<string, unknown>[]).map(fromAtlas2);
     const { snapshot, problems } = snapshotFrom(rows, new Date());
-    await write("dev-data/live.json", snapshot);
+    await writeSnapshot("dev-data", snapshot, "live");
     console.log(
       `live: ${snapshot.markers.length} markers, ${problems.length} invalid rows skipped`,
     );

@@ -1,5 +1,6 @@
 import type { Map as MapLibreMap } from "maplibre-gl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { DownloadPanel } from "./components/DownloadPanel.tsx";
 import { FilterPanel } from "./components/FilterPanel.tsx";
 import { Legend } from "./components/Legend.tsx";
 import { MarkerDetails } from "./components/MarkerDetails.tsx";
@@ -35,9 +36,10 @@ export function App() {
   const [filters, setFilters] = useState<Filters>(initial.filters);
   const [selectedId, setSelectedId] = useState<string | undefined>(initial.marker);
   const [view, setView] = useState<MapView | undefined>(initial.view);
-  const [showFilters, setShowFilters] = useState(false);
+  const [panel, setPanel] = useState<"filters" | "download">();
   const [notice, setNotice] = useState<string>();
   const mapRef = useRef<MapLibreMap | null>(null);
+  const [map, setMap] = useState<MapLibreMap | null>(null);
 
   useEffect(() => {
     let current = true;
@@ -86,6 +88,7 @@ export function App() {
 
   const select = useCallback((marker: PublicMarker) => {
     setSelectedId(marker.id);
+    setPanel(undefined);
     track("marker_open", { marker_id: marker.id });
     if (mapRef.current)
       void revealMarker(mapRef.current, marker.longitude, marker.latitude, marker.id);
@@ -95,6 +98,7 @@ export function App() {
   const onMapReady = useCallback(
     (map: MapLibreMap) => {
       mapRef.current = map;
+      setMap(map);
       if (!initial.marker || !snapshot) return;
       const marker = snapshot.markers.find((m) => m.id === initial.marker);
       if (marker) {
@@ -128,10 +132,19 @@ export function App() {
         <button
           type="button"
           className={hasFilters(filters) ? "primary" : "secondary"}
-          aria-expanded={showFilters}
-          onClick={() => setShowFilters((s) => !s)}
+          aria-expanded={panel === "filters"}
+          onClick={() => setPanel((p) => (p === "filters" ? undefined : "filters"))}
         >
           Filters{hasFilters(filters) ? " (on)" : ""}
+        </button>
+        <button
+          type="button"
+          className="secondary"
+          aria-expanded={panel === "download"}
+          disabled={!snapshot}
+          onClick={() => setPanel((p) => (p === "download" ? undefined : "download"))}
+        >
+          Download
         </button>
       </header>
 
@@ -179,16 +192,21 @@ export function App() {
             </button>
           </div>
         )}
-        {showFilters && snapshot && (
+        {panel === "filters" && snapshot && (
           <FilterPanel
             markers={allMarkers}
             order={order}
             filters={filters}
             onChange={changeFilters}
-            onClose={() => setShowFilters(false)}
+            onClose={() => setPanel(undefined)}
           />
         )}
-        {selected && <MarkerDetails marker={selected} onClose={() => setSelectedId(undefined)} />}
+        {panel === "download" && snapshot && (
+          <DownloadPanel map={map} legend={legend} onClose={() => setPanel(undefined)} />
+        )}
+        {selected && !panel && (
+          <MarkerDetails marker={selected} onClose={() => setSelectedId(undefined)} />
+        )}
       </main>
     </div>
   );

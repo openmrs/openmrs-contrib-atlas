@@ -1,0 +1,9 @@
+id,name,organisation,latitude,longitude,country,type,distribution,openmrs_version,site_count,url,logo_url,notes,created_at,updated_at,confirmed_at
+e2e00000-0000-4000-8000-000000000001,Kampala Rollout,Uganda Health Partners,0.3476,32.5825,UG,Clinical,OpenMRS 1.x,1.10,50,,,,,,2026-01-01T00:00:00.000Z
+e2e00000-0000-4000-8000-000000000002,Makerere Research Clinic,,0.35,32.59,UG,Research,KenyaEMR,2.4,,,,,,,2025-09-01T00:00:00.000Z
+e2e00000-0000-4000-8000-000000000003,Entebbe Road Health Centres,,0.34,32.57,UG,Clinical,,,3,,,,,,2018-01-01T00:00:00.000Z
+e2e00000-0000-4000-8000-000000000004,Nairobi Teaching Hospital,Kenya Research Network,-1.2921,36.8219,KE,Research,Bahmni,2.4,,https://example.org/nairobi,,Details at https://example.org/about. <script>window.hacked = true</script>,,,2025-06-01T00:00:00.000Z
+e2e00000-0000-4000-8000-000000000005,Kathmandu Development Lab,,27.7172,85.324,NP,Development,Bahmni,Other,,,,,,,2017-11-01T00:00:00.000Z
+e2e00000-0000-4000-8000-000000000006,Clínica Nuevas Raíces,Partners In Health,-12.0464,-77.0428,PE,Evaluation,Reference Application 2.x,2.2,,,,,,,2023-05-01T00:00:00.000Z
+e2e00000-0000-4000-8000-000000000007,Port-au-Prince O3 Pilot,,18.5944,-72.3074,HT,Clinical,Reference Application 3.x (O3),3.8,,,,,,,2026-06-01T00:00:00.000Z
+e2e00000-0000-4000-8000-000000000008,Boston Training Server,,42.36,-71.06,US,Other,,,,,,,,,2026-09-01T00:00:00.000Z

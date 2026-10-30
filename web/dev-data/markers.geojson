@@ -1,0 +1,80 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "9f1c2a6e-0d1b-4c3e-9a51-2f7e8b1d0a01",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          36.8219,
+          -1.2921
+        ]
+      },
+      "properties": {
+        "id": "9f1c2a6e-0d1b-4c3e-9a51-2f7e8b1d0a01",
+        "name": "Test site: single clinic",
+        "organisation": "Atlas test data",
+        "country": "KE",
+        "type": "Clinical",
+        "distribution": "Reference Application 2.x",
+        "openmrs_version": "2.4",
+        "url": "https://example.org",
+        "notes": "Sample row for development.",
+        "created_at": "2024-03-01T00:00:00.000Z",
+        "updated_at": "2024-03-01T00:00:00.000Z",
+        "confirmed_at": "2025-06-01T00:00:00.000Z"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "9f1c2a6e-0d1b-4c3e-9a51-2f7e8b1d0a02",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          32.5825,
+          0.3476
+        ]
+      },
+      "properties": {
+        "id": "9f1c2a6e-0d1b-4c3e-9a51-2f7e8b1d0a02",
+        "name": "Test site: 50-site rollout",
+        "organisation": "Atlas test data",
+        "country": "UG",
+        "type": "Clinical",
+        "distribution": "OpenMRS 1.x",
+        "openmrs_version": "1.10",
+        "site_count": 50,
+        "notes": "Exercises site counts.",
+        "created_at": "2016-05-10T00:00:00.000Z",
+        "updated_at": "2020-01-15T00:00:00.000Z",
+        "confirmed_at": "2020-01-15T00:00:00.000Z"
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "9f1c2a6e-0d1b-4c3e-9a51-2f7e8b1d0a03",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          85.324,
+          27.7172
+        ]
+      },
+      "properties": {
+        "id": "9f1c2a6e-0d1b-4c3e-9a51-2f7e8b1d0a03",
+        "name": "Test site: stale research",
+        "organisation": "Atlas test data",
+        "country": "NP",
+        "type": "Research",
+        "distribution": "Bahmni",
+        "openmrs_version": "Other",
+        "site_count": 3,
+        "notes": "Confirmed in 2017, so it should be faded.",
+        "created_at": "2017-02-02T00:00:00.000Z",
+        "updated_at": "2017-02-02T00:00:00.000Z",
+        "confirmed_at": "2017-02-02T00:00:00.000Z"
+      }
+    }
+  ]
+}

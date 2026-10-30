@@ -19,7 +19,7 @@
 ## 3. Google Cloud and sheet setup (staging)
 
 - [ ] 3.1 (manual) Create or choose the OpenMRS GCP project; enable Cloud Run, Cloud Build, Artifact Registry, Cloud Scheduler, Secret Manager, Sheets API and Firebase; verify with `gcloud services list --enabled`
-- [ ] 3.2 (manual) Create the staging bucket with public read, CORS for the atlas-stg origin and a 90-day lifecycle rule on `history/`; verify an uploaded test file is readable anonymously and from the atlas-stg origin
+- [ ] 3.2 (manual) Create the staging bucket (`openmrs-atlas-stg`, the name `firebase.json` redirects to) with public read, CORS for the atlas-stg origin and a 90-day lifecycle rule on `history/`; verify an uploaded test file is readable anonymously and from the atlas-stg origin
 - [ ] 3.3 (manual) Create the staging Google Sheet with the tabs and headers from specs/marker-data, seed `types`, `distributions` and `versions`, and share it with the Cloud Run service account as editor; verify the service account can read it with a one-off script
 - [ ] 3.4 (manual) Create the publish secret in Secret Manager and the Cloud Scheduler service account; verify both exist with `gcloud`
 - [ ] 3.5 (manual) Configure Workload Identity Federation for the GitHub repo with deploy rights to Cloud Run and Firebase Hosting; verify a test workflow can run `gcloud auth list` without a key file
@@ -63,8 +63,8 @@
 ## 8. Export
 
 - [ ] 8.1 Add the Firebase redirects for `/data/atlas.json`, `/data/markers.csv` and `/data/markers.geojson`, plus download links with dated file names; verify the links download correctly named files with no private fields
-- [ ] 8.2 Implement PNG export at 1x, 2x and 4x with off-screen rendering, title, legend and date toggles, mandatory attribution and dated file name; verify that a Playwright test checks the image dimensions for a 1280 × 720 view at 4x, and inspect a sample image by eye
-- [ ] 8.3 Handle canvas allocation failure with a "try a smaller size" message; verify by forcing the failure path in a component test
+- [x] 8.2 Implement PNG export at 1x, 2x and 4x with off-screen rendering, title, legend and date toggles, mandatory attribution and dated file name; verify that a Playwright test checks the image dimensions for a 1280 × 720 view at 4x, and inspect a sample image by eye
+- [x] 8.3 Handle canvas allocation failure with a "try a smaller size" message; verify by forcing the failure path in a component test
 
 ## 9. Staging deployment and integration
 
