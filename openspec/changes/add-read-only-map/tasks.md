@@ -35,9 +35,9 @@
 
 ## 5. Sheet automation (Apps Script)
 
-- [ ] 5.1 Implement the installable `onEdit` handler: assign missing ids, set `updated_at`, append to `changes`; verify by editing the test sheet and checking each effect
-- [ ] 5.2 Implement the publish debounce (one pending time-based trigger, 60 s) and the "Atlas" menu (Publish now, Force publish); verify that 20 rapid edits cause at most 2 publishes, per the service logs
-- [ ] 5.3 Set up `clasp` push for `apps-script/` and document installation and the Script Properties in `apps-script/README.md`; verify by reinstalling from the README onto a copy of the sheet
+- [x] 5.1 Implement the installable `onEdit` handler: assign missing ids, set `updated_at`, append to `changes`; verify by editing the test sheet and checking each effect
+- [x] 5.2 Implement the publish debounce (one pending time-based trigger, 60 s) and the "Atlas" menu (Publish now, Force publish); verify that 20 rapid edits cause at most 2 publishes, per the service logs
+- [x] 5.3 Set up `clasp` push for `apps-script/` and document installation and the Script Properties in `apps-script/README.md`; verify by reinstalling from the README onto a copy of the sheet
 
 ## 6. Legacy migration
 
