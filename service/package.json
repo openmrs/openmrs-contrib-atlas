@@ -11,8 +11,11 @@
     "setup:sheet": "tsx src/scripts/setup-sheet.ts"
   },
   "dependencies": {
+    "@google-cloud/storage": "^8.4.0",
     "@googleapis/sheets": "^18.1.1",
+    "@hono/node-server": "^2.1.5",
     "@openmrs-atlas/shared": "*",
-    "google-auth-library": "^11.3.2"
+    "google-auth-library": "^11.3.2",
+    "hono": "^4.13.14"
   }
 }

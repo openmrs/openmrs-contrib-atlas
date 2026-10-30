@@ -28,7 +28,7 @@
 
 - [ ] 4.1 Implement the Sheets reader (one `batchGet` for all tabs) and the `problems` tab writer; verify with `npm run test:sheet` against the test sheet (opt-in via `TEST_SHEET_ID`, not run in CI)
 - [ ] 4.2 Implement `POST /publish`: validate, safety check, write the three files and a `history/` copy with `Cache-Control: public, max-age=300`; verify with tests using a fake storage client, and by a manual publish to the staging bucket
-- [ ] 4.3 Implement auth for `/publish` (scheduler OIDC token or shared secret; `force` only with the secret); verify that tests reject missing, wrong and expired credentials
+- [x] 4.3 Implement auth for `/publish` (scheduler OIDC token or shared secret; `force` only with the secret); verify that tests reject missing, wrong and expired credentials
 - [ ] 4.4 Add `service/Dockerfile` and the staging deploy job (Cloud Build to Cloud Run on push to `atlas-3.0`); verify the deployed service answers a health check
 - [ ] 4.5 (manual) Create the nightly Cloud Scheduler job calling `/publish`; verify one scheduled run shows success in the logs and refreshes `atlas.json`
 - [ ] 4.6 Document the service endpoints, configuration and rollback (copying a `history/` file) in `service/README.md`; verify the rollback steps on staging

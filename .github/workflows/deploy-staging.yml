@@ -1,0 +1,69 @@
+# Deploys atlas-3.0 to staging (atlas-stg.openmrs.org) after CI passes.
+# Authenticates to Google Cloud with Workload Identity Federation (no stored keys).
+# Repository variables to set (Settings > Secrets and variables > Actions > Variables):
+#   GCP_PROJECT          Google Cloud project id
+#   GCP_REGION           Cloud Run / Artifact Registry region, e.g. us-central1
+#   GCP_WIF_PROVIDER     projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>
+#   GCP_DEPLOY_SA        deploy service account email
+#   STAGING_DATA_URL     public base URL of the staging bucket, e.g. https://storage.googleapis.com/openmrs-atlas-stg
+name: Deploy staging
+
+on:
+  workflow_run:
+    workflows: [CI]
+    branches: [atlas-3.0]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    env:
+      IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT }}/atlas/atlas-service:${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+      - uses: google-github-actions/setup-gcloud@v3
+
+      - name: Build and push the service image
+        run: |
+          gcloud auth configure-docker ${{ vars.GCP_REGION }}-docker.pkg.dev --quiet
+          docker build -f service/Dockerfile -t "$IMAGE" .
+          docker push "$IMAGE"
+
+      - name: Deploy the service to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v3
+        with:
+          service: atlas-service-stg
+          region: ${{ vars.GCP_REGION }}
+          image: ${{ env.IMAGE }}
+          # SHEET_ID, BUCKET, SCHEDULER_SA_EMAIL and SERVICE_URL are set once on the service;
+          # PUBLISH_SECRET comes from Secret Manager. See service/README.md.
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Build the map site
+        run: npm run build -w web
+        env:
+          VITE_DATA_BASE_URL: ${{ vars.STAGING_DATA_URL }}
+          # No VITE_GA_ID on staging, so analytics stays off.
+      - name: Deploy the map site to Firebase Hosting
+        run: npx firebase-tools@15.34.2 deploy --only hosting:staging --project "${{ vars.GCP_PROJECT }}" --non-interactive
