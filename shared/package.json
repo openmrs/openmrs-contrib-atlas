@@ -3,6 +3,7 @@
   "version": "3.0.0-dev",
   "private": true,
   "description": "Atlas data model, validation and snapshot builders (pure TypeScript, no I/O)",
+  "license": "MPL-2.0",
   "type": "module",
   "exports": {
     ".": "./src/index.ts",

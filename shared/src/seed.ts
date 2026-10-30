@@ -2,7 +2,8 @@ import type { Cell } from "./schema.ts";
 
 /**
  * Starting lookup rows for a new Atlas sheet (header rows excluded).
- * Types and distributions match Atlas 2.0; colours follow its marker icons.
+ * Types and distributions start from Atlas 2.0 (colours follow its marker icons), plus O3.
+ * Versions cover OpenMRS platform 1.6-2.8 and O3 releases 3.0-3.8.
  */
 export const SEED_LOOKUPS: { types: Cell[][]; distributions: Cell[][]; versions: Cell[][] } = {
   types: [
@@ -21,6 +22,7 @@ export const SEED_LOOKUPS: { types: Cell[][]; distributions: Cell[][]; versions:
     ["Platform 1.x + Custom UI", "", true],
     ["AMPATH", "", false],
     ["OpenMRS 1.x MDRTB", "", false],
+    ["Reference Application 3.x (O3)", "", true],
   ],
   versions: [
     "1.6",
@@ -39,6 +41,15 @@ export const SEED_LOOKUPS: { types: Cell[][]; distributions: Cell[][]; versions:
     "2.6",
     "2.7",
     "2.8",
+    "3.0",
+    "3.1",
+    "3.2",
+    "3.3",
+    "3.4",
+    "3.5",
+    "3.6",
+    "3.7",
+    "3.8",
   ].map((v) => [v, ""]),
 };
 

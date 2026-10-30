@@ -3,6 +3,7 @@
   "version": "3.0.0-dev",
   "private": true,
   "description": "One-off migration of Atlas 2.0 MySQL data into the Atlas sheet",
+  "license": "MPL-2.0",
   "type": "module",
   "exports": "./src/index.ts",
   "scripts": {

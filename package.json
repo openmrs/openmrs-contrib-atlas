@@ -3,6 +3,7 @@
   "version": "3.0.0-dev",
   "private": true,
   "description": "OpenMRS Atlas 3.0: a world map of OpenMRS implementations",
+  "license": "MPL-2.0",
   "type": "module",
   "engines": {
     "node": ">=24"

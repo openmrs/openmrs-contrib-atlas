@@ -3,6 +3,7 @@
   "version": "3.0.0-dev",
   "private": true,
   "description": "Atlas Cloud Run service: validates the sheet and publishes snapshots",
+  "license": "MPL-2.0",
   "type": "module",
   "exports": "./src/index.ts",
   "scripts": {

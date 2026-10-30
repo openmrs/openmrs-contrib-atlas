@@ -3,6 +3,7 @@
   "version": "3.0.0-dev",
   "private": true,
   "description": "Apps Script bound to the Atlas sheet: edit bookkeeping and publish debounce",
+  "license": "MPL-2.0",
   "type": "module",
   "exports": "./src/index.ts",
   "scripts": {

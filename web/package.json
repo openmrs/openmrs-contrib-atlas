@@ -3,6 +3,7 @@
   "version": "3.0.0-dev",
   "private": true,
   "description": "Atlas map site (React, Vite, MapLibre GL JS)",
+  "license": "MPL-2.0",
   "type": "module",
   "exports": "./src/index.ts",
   "scripts": {
