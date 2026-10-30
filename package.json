@@ -24,7 +24,7 @@
     "test:watch": "vitest",
     "build": "npm run build --workspaces --if-present",
     "setup:sheet": "npm run setup:sheet -w service --",
-    "test:sheet": "vitest run --config vitest.sheet.config.ts",
+    "test:sheet": "node --env-file-if-exists=.env node_modules/vitest/vitest.mjs run --config vitest.sheet.config.ts",
     "migrate": "npm run migrate -w migration --"
   },
   "devDependencies": {

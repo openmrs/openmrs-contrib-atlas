@@ -6,7 +6,7 @@
 - [x] 1.2 Create the npm workspaces (`shared`, `web`, `service`, `apps-script`, `migration`) on Node 24 with TypeScript, ESLint, Prettier and Vitest configured at the root; verify `npm install`, `npm run typecheck`, `npm run lint` and `npm test` succeed on the empty packages
 - [ ] 1.3 Add a CI workflow that runs install, typecheck, lint, test and build on pull requests to `atlas-3.0`; verify it passes on a draft PR
 - [x] 1.4 Add `docker-compose.yml` for local development (MySQL seeded from `migration/fixtures/`, `fake-gcs-server`); verify that `docker compose up` starts both, the demo markers are queryable, and a test object can be written to and read from the fake bucket
-- [ ] 1.5 Create a personal test sheet with the tabs, headers and seed lookups from specs/marker-data, and document `TEST_SHEET_ID` and the credentials setup; verify a script lists the tab names using the developer's own Google credentials
+- [x] 1.5 Create a personal test sheet with the tabs, headers and seed lookups from specs/marker-data, and document `TEST_SHEET_ID` and the credentials setup; verify a script lists the tab names using the developer's own Google credentials
 - [x] 1.6 Replace README.md with a 3.0 overview (architecture, workspace layout, local development, link to the design spec and `openspec/`); verify the local-development steps work from a fresh clone
 
 ## 2. Shared model and validation
@@ -26,7 +26,7 @@
 
 ## 4. Publish service
 
-- [ ] 4.1 Implement the Sheets reader (one `batchGet` for all tabs) and the `problems` tab writer; verify with `npm run test:sheet` against the test sheet (opt-in via `TEST_SHEET_ID`, not run in CI)
+- [x] 4.1 Implement the Sheets reader (one `batchGet` for all tabs) and the `problems` tab writer; verify with `npm run test:sheet` against the test sheet (opt-in via `TEST_SHEET_ID`, not run in CI)
 - [ ] 4.2 Implement `POST /publish`: validate, safety check, write the three files and a `history/` copy with `Cache-Control: public, max-age=300`; verify with tests using a fake storage client, and by a manual publish to the staging bucket
 - [x] 4.3 Implement auth for `/publish` (scheduler OIDC token or shared secret; `force` only with the secret); verify that tests reject missing, wrong and expired credentials
 - [ ] 4.4 Add `service/Dockerfile` and the staging deploy job (Cloud Build to Cloud Run on push to `atlas-3.0`); verify the deployed service answers a health check
@@ -42,7 +42,7 @@
 ## 6. Legacy migration
 
 - [x] 6.1 Implement the field mapping, version normalisation and owner/editor derivation as pure functions in `shared/`; verify one unit test per scenario in specs/legacy-migration, using `migration/fixtures/03_demo_data.sql` rows
-- [ ] 6.2 Implement the CLI: MySQL read (read-only), logo resize to WebP within 300 × 300 and upload, full replacement of the data tabs, report and `--dry-run`; verify against the demo data loaded into a local MySQL container
+- [x] 6.2 Implement the CLI: MySQL read (read-only), logo resize to WebP within 300 × 300 and upload, full replacement of the data tabs, report and `--dry-run`; verify against the demo data loaded into a local MySQL container
 - [x] 6.3 Document running the migration (tunnel or restored dump, credentials, dry run, cutover re-run) in `migration/README.md`; verify a dry run follows the README exactly
 - [ ] 6.4 (manual) Run the migration against production data into the staging sheet, dry run first; verify the report shows 451 markers (or the current 2.0 count) and that a publish succeeds with the same count
 

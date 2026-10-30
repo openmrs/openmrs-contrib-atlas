@@ -69,19 +69,28 @@ Run `npx -w web playwright install chromium` once before the first `e2e` run.
 Code that talks to Google Sheets is tested against a real sheet in your own Google account. There
 is no Sheets emulator, and the unit tests don't need one.
 
-1. **Create a Google Cloud project** for personal development (free), and enable the Google Sheets
-   API in it.
-2. **Sign in with Application Default Credentials**, including the Sheets scope, and set the quota
-   project:
+1. **Create a development service account** in a personal Google Cloud project (free), and allow
+   your account to act as it. Google no longer lets the gcloud CLI request the Sheets scope
+   directly, so local code reaches Sheets as this service account, just as the Cloud Run service
+   does.
 
    ```sh
-   gcloud auth application-default login \
-     --scopes=https://www.googleapis.com/auth/spreadsheets,https://www.googleapis.com/auth/cloud-platform
-   gcloud auth application-default set-quota-project <your-project-id>
+   P=<your-project-id>
+   SA=atlas-dev@$P.iam.gserviceaccount.com
+   gcloud services enable sheets.googleapis.com iamcredentials.googleapis.com --project $P
+   gcloud iam service-accounts create atlas-dev --display-name="Atlas local development" --project $P
+   gcloud iam service-accounts add-iam-policy-binding $SA \
+     --member=user:<your-google-account> --role=roles/iam.serviceAccountTokenCreator --project $P
    ```
 
-3. **Create an empty Google Sheet**, and copy its id from the URL
-   (`https://docs.google.com/spreadsheets/d/<id>/edit`).
+2. **Sign in with Application Default Credentials** that impersonate it:
+
+   ```sh
+   gcloud auth application-default login --impersonate-service-account=$SA
+   ```
+
+3. **Create an empty Google Sheet**, share it with the service account (`$SA`) as an Editor, and
+   copy its id from the URL (`https://docs.google.com/spreadsheets/d/<id>/edit`).
 4. **Set it up:**
 
    ```sh
