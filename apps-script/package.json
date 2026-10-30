@@ -5,8 +5,11 @@
   "description": "Apps Script bound to the Atlas sheet: edit bookkeeping and publish debounce",
   "license": "MPL-2.0",
   "type": "module",
-  "exports": "./src/index.ts",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "push": "clasp push"
+  },
+  "devDependencies": {
+    "@openmrs-atlas/shared": "*"
   }
 }

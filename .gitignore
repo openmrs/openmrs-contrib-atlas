@@ -12,3 +12,6 @@ coverage/
 web/dev-data/live.json
 test-results/
 playwright-report/
+
+# clasp: per-developer script binding
+apps-script/.clasp.json

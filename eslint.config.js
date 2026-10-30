@@ -23,6 +23,22 @@ export default tseslint.config(
     },
   },
   {
+    // Apps Script: one global scope, globals provided by Google.
+    files: ["apps-script/src/**/*.js"],
+    languageOptions: {
+      sourceType: "script",
+      globals: {
+        SpreadsheetApp: "readonly",
+        ScriptApp: "readonly",
+        PropertiesService: "readonly",
+        LockService: "readonly",
+        UrlFetchApp: "readonly",
+        Utilities: "readonly",
+      },
+    },
+    rules: { "no-unused-vars": "off", "@typescript-eslint/no-unused-vars": "off", "no-var": "off" },
+  },
+  {
     files: ["web/src/**/*.{ts,tsx}"],
     languageOptions: { globals: { ...globals.browser } },
     plugins: { "react-hooks": reactHooks },
