@@ -41,9 +41,9 @@
 
 ## 6. Legacy migration
 
-- [ ] 6.1 Implement the field mapping, version normalisation and owner/editor derivation as pure functions in `shared/`; verify one unit test per scenario in specs/legacy-migration, using `migration/fixtures/03_demo_data.sql` rows
+- [x] 6.1 Implement the field mapping, version normalisation and owner/editor derivation as pure functions in `shared/`; verify one unit test per scenario in specs/legacy-migration, using `migration/fixtures/03_demo_data.sql` rows
 - [ ] 6.2 Implement the CLI: MySQL read (read-only), logo resize to WebP within 300 × 300 and upload, full replacement of the data tabs, report and `--dry-run`; verify against the demo data loaded into a local MySQL container
-- [ ] 6.3 Document running the migration (tunnel or restored dump, credentials, dry run, cutover re-run) in `migration/README.md`; verify a dry run follows the README exactly
+- [x] 6.3 Document running the migration (tunnel or restored dump, credentials, dry run, cutover re-run) in `migration/README.md`; verify a dry run follows the README exactly
 - [ ] 6.4 (manual) Run the migration against production data into the staging sheet, dry run first; verify the report shows 451 markers (or the current 2.0 count) and that a publish succeeds with the same count
 
 ## 7. Map site

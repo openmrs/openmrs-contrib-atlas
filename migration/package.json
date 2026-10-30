@@ -5,8 +5,16 @@
   "description": "One-off migration of Atlas 2.0 MySQL data into the Atlas sheet",
   "license": "MPL-2.0",
   "type": "module",
-  "exports": "./src/index.ts",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "migrate": "tsx src/cli.ts"
+  },
+  "dependencies": {
+    "@google-cloud/storage": "^8.4.0",
+    "@googleapis/sheets": "^18.1.1",
+    "google-auth-library": "^11.3.2",
+    "mysql2": "^3.24.6",
+    "sharp": "^0.35.5",
+    "@openmrs-atlas/shared": "*"
   }
 }
