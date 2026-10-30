@@ -38,9 +38,9 @@ The code is plain JavaScript in [`src/Code.js`](src/Code.js), because Apps Scrip
 
 ```sh
 cd apps-script
-npx @google/clasp@3.3.0 login
-npx @google/clasp@3.3.0 clone <script-id> --rootDir src   # the script id is in Project Settings
-npx @google/clasp@3.3.0 push
+npx @google/clasp@3.4.1 login
+npx @google/clasp@3.4.1 clone <script-id> --rootDir src   # the script id is in Project Settings
+npx @google/clasp@3.4.1 push
 ```
 
 `.clasp.json` binds your checkout to one sheet's script and is git-ignored. Set the Script
