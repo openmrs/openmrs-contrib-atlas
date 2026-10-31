@@ -56,7 +56,7 @@ The service accounts are `atlas-service` (reads and writes the sheet, writes the
 7. **Deploy.** Push to `atlas-3.0`, or re-run the latest CI run. Then check:
 
    ```sh
-   curl https://<service url>/healthz
+   curl https://<service url>/health
    gcloud scheduler jobs run atlas-nightly-publish --location=us-central1
    curl -sI https://storage.googleapis.com/openmrs-atlas-stg/atlas.json
    ```

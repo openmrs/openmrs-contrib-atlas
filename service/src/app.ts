@@ -13,7 +13,8 @@ export interface AppDeps {
 export function createApp(deps: AppDeps) {
   const app = new Hono();
 
-  app.get("/healthz", (c) => c.json({ ok: true }));
+  // Not /healthz: Cloud Run reserves some paths ending in "z" and answers them itself.
+  app.get("/health", (c) => c.json({ ok: true }));
 
   // ?force=true skips the safety check; only the sheet's admin menu (shared secret) may force.
   app.post("/publish", async (c) => {

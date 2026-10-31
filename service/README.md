@@ -7,7 +7,7 @@ public snapshot files to Cloud Storage. Phase 2 adds the edit endpoints here.
 
 | Method and path            | Who may call                                      | What it does                                                                                                                       |
 | -------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `GET /healthz`             | anyone                                            | `{"ok":true}`                                                                                                                      |
+| `GET /health`              | anyone                                            | `{"ok":true}`                                                                                                                      |
 | `POST /publish`            | the sheet's Apps Script, or Cloud Scheduler       | Validates the sheet, rewrites `problems`, and publishes unless the safety check refuses. `200` when published, `409` when refused. |
 | `POST /publish?force=true` | the sheet's Apps Script ("Atlas › Force publish") | The same, but skips the safety check.                                                                                              |
 
