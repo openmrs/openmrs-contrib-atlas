@@ -18,19 +18,19 @@
 
 ## 3. Google Cloud and sheet setup (staging)
 
-- [ ] 3.1 (manual) Create or choose the OpenMRS GCP project; enable Cloud Run, Cloud Build, Artifact Registry, Cloud Scheduler, Secret Manager, Sheets API and Firebase; verify with `gcloud services list --enabled`
-- [ ] 3.2 (manual) Create the staging bucket (`openmrs-atlas-stg`, the name `firebase.json` redirects to) with public read, CORS for the atlas-stg origin and a 90-day lifecycle rule on `history/`; verify an uploaded test file is readable anonymously and from the atlas-stg origin
-- [ ] 3.3 (manual) Create the staging Google Sheet with the tabs and headers from specs/marker-data, seed `types`, `distributions` and `versions`, and share it with the Cloud Run service account as editor; verify the service account can read it with a one-off script
-- [ ] 3.4 (manual) Create the publish secret in Secret Manager and the Cloud Scheduler service account; verify both exist with `gcloud`
-- [ ] 3.5 (manual) Configure Workload Identity Federation for the GitHub repo with deploy rights to Cloud Run and Firebase Hosting; verify a test workflow can run `gcloud auth list` without a key file
+- [x] 3.1 (manual) Create or choose the OpenMRS GCP project; enable Cloud Run, Cloud Build, Artifact Registry, Cloud Scheduler, Secret Manager, Sheets API and Firebase; verify with `gcloud services list --enabled`
+- [x] 3.2 (manual) Create the staging bucket (`openmrs-atlas-stg`, the name `firebase.json` redirects to) with public read, CORS for the atlas-stg origin and a 90-day lifecycle rule on `history/`; verify an uploaded test file is readable anonymously and from the atlas-stg origin
+- [x] 3.3 (manual) Create the staging Google Sheet with the tabs and headers from specs/marker-data, seed `types`, `distributions` and `versions`, and share it with the Cloud Run service account as editor; verify the service account can read it with a one-off script
+- [x] 3.4 (manual) Create the publish secret in Secret Manager and the Cloud Scheduler service account; verify both exist with `gcloud`
+- [x] 3.5 (manual) Configure Workload Identity Federation for the GitHub repo with deploy rights to Cloud Run and Firebase Hosting; verify a test workflow can run `gcloud auth list` without a key file
 
 ## 4. Publish service
 
 - [x] 4.1 Implement the Sheets reader (one `batchGet` for all tabs) and the `problems` tab writer; verify with `npm run test:sheet` against the test sheet (opt-in via `TEST_SHEET_ID`, not run in CI)
-- [ ] 4.2 Implement `POST /publish`: validate, safety check, write the three files and a `history/` copy with `Cache-Control: public, max-age=300`; verify with tests using a fake storage client, and by a manual publish to the staging bucket
+- [x] 4.2 Implement `POST /publish`: validate, safety check, write the three files and a `history/` copy with `Cache-Control: public, max-age=300`; verify with tests using a fake storage client, and by a manual publish to the staging bucket
 - [x] 4.3 Implement auth for `/publish` (scheduler OIDC token or shared secret; `force` only with the secret); verify that tests reject missing, wrong and expired credentials
-- [ ] 4.4 Add `service/Dockerfile` and the staging deploy job (Cloud Build to Cloud Run on push to `atlas-3.0`); verify the deployed service answers a health check
-- [ ] 4.5 (manual) Create the nightly Cloud Scheduler job calling `/publish`; verify one scheduled run shows success in the logs and refreshes `atlas.json`
+- [x] 4.4 Add `service/Dockerfile` and the staging deploy job (Cloud Build to Cloud Run on push to `atlas-3.0`); verify the deployed service answers a health check
+- [x] 4.5 (manual) Create the nightly Cloud Scheduler job calling `/publish`; verify one scheduled run shows success in the logs and refreshes `atlas.json`
 - [ ] 4.6 Document the service endpoints, configuration and rollback (copying a `history/` file) in `service/README.md`; verify the rollback steps on staging
 
 ## 5. Sheet automation (Apps Script)
@@ -68,7 +68,7 @@
 
 ## 9. Staging deployment and integration
 
-- [ ] 9.1 Configure the Firebase Hosting site for atlas-stg and the web deploy job on push to `atlas-3.0`; verify the deploy succeeds from CI
+- [x] 9.1 Configure the Firebase Hosting site for atlas-stg and the web deploy job on push to `atlas-3.0`; verify the deploy succeeds from CI
 - [ ] 9.2 (manual) Point `atlas-stg.openmrs.org` at Firebase Hosting in Cloudflare DNS; verify HTTPS loads the site
 - [ ] 9.3 End-to-end check on staging: edit a marker in the sheet and confirm it appears on atlas-stg within 10 minutes; confirm `/?marker=<id>` works for 5 ids taken from atlas.openmrs.org; confirm the counts match the migration report
 - [ ] 9.4 Run Lighthouse against atlas-stg with Fast 3G throttling; verify the map with markers is visible within 3 seconds, or record the gap and the fixes chosen
