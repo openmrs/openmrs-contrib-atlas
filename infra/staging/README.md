@@ -62,8 +62,8 @@ The service accounts are `atlas-service` (reads and writes the sheet, writes the
    ```
 
 8. **Add the custom domain.** In Firebase Hosting choose _Add custom domain_, enter
-   `atlas-stg.openmrs.org` and use Quick setup. In Cloudflare, add the records it (for staging, a `CNAME` and a `TXT`)
-   shows, with the proxy off (DNS only). The certificate can take up to a day.
+   `atlas-stg.openmrs.org` and use Quick setup. In Cloudflare, add the records it shows (for staging, a `CNAME` and a
+   `TXT`), with the proxy off (DNS only). The certificate can take up to a day.
 
 ## If the setup script fails
 
