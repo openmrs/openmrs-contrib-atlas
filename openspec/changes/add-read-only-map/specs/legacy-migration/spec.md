@@ -69,8 +69,16 @@ Each 2.0 marker image SHALL be converted to PNG, JPEG or WebP no larger than 300
 - **WHEN** a 2.0 image is 800 × 400 pixels
 - **THEN** the stored logo is 300 × 150 pixels and `logo_url` points to it
 
+#### Scenario: Image stored as a data URL
+- **WHEN** a 2.0 `image` value is a base64 data URL, as 2.0 stores uploads
+- **THEN** the decoded image is converted and stored as above
+
+#### Scenario: Unreadable image
+- **WHEN** a 2.0 image cannot be decoded
+- **THEN** the marker migrates with a blank `logo_url`, the run continues, and the report lists the marker id and reason
+
 ### Requirement: Migration report
-Each run SHALL print a report with counts of markers, owners, orphans, logos, unmapped versions and rows failing validation, and SHALL support a dry run that writes nothing.
+Each run SHALL print a report with counts of markers, owners, orphans, logos, unreadable logos, unmapped versions and rows failing validation, and SHALL support a dry run that writes nothing.
 
 #### Scenario: Dry run
 - **WHEN** the migration runs in dry-run mode

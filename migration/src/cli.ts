@@ -24,7 +24,7 @@ import {
 } from "@openmrs-atlas/shared";
 import { SEED_LOOKUPS } from "@openmrs-atlas/shared/seed";
 import mysql from "mysql2/promise";
-import { toLogo } from "./logos.ts";
+import { convertLogos } from "./logos.ts";
 
 const { values: args } = parseArgs({
   options: {
@@ -89,6 +89,11 @@ const toValues = (columns: readonly string[], rows: Record<string, Cell>[]) =>
 
 async function main() {
   const data = await readAtlas2();
+  // Before anything is written, so a dry run finds unreadable logos and they get no logo_url.
+  const { logos, unreadable } = await convertLogos(data.atlas);
+  for (const m of data.atlas) {
+    if (!logos.has(m.id)) m.image = null;
+  }
   const lookups = lookupRows(data);
   const versions = lookups.versions.map((v) => String(v[0]));
   const migrated = migrateAtlas2(data, versions, logoUrl);
@@ -107,6 +112,8 @@ async function main() {
   console.log(`  owners:             ${report.owners}`);
   console.log(`  orphans (no owner): ${report.orphans.length}`);
   console.log(`  logos:              ${report.logos}`);
+  console.log(`  unreadable logos:   ${unreadable.length}`);
+  for (const u of unreadable) console.log(`    ${u.id}: ${u.reason}`);
   const unmapped = Object.entries(report.unmappedVersions);
   console.log(
     `  unmapped versions:  ${unmapped.reduce((n, [, c]) => n + c, 0)}` +
@@ -120,9 +127,8 @@ async function main() {
 
   const storage = new Storage(endpoint ? { apiEndpoint: endpoint, projectId: "local" } : {});
   const bucket = storage.bucket(args.bucket!);
-  for (const m of data.atlas) {
-    if (!m.image || m.image.length === 0) continue;
-    await bucket.file(`logos/${m.id}.webp`).save(await toLogo(m.image), {
+  for (const [id, logo] of logos) {
+    await bucket.file(`logos/${id}.webp`).save(logo, {
       // A logo is a few KB: one request, not a resumable upload session.
       resumable: false,
       metadata: { contentType: "image/webp", cacheControl: "public, max-age=86400" },

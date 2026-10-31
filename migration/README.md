@@ -36,6 +36,7 @@ Atlas 2.0 → 3.0 migration (dry run: nothing written)
   owners:             2
   orphans (no owner): 0
   logos:              0
+  unreadable logos:   0
   unmapped versions:  0
   failing validation: 0
 ```
@@ -43,6 +44,7 @@ Atlas 2.0 → 3.0 migration (dry run: nothing written)
 | Report line          | What it means                                                                                                                                     |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `orphans`            | Markers with no owner; admins can assign one later.                                                                                               |
+| `unreadable logos`   | 2.0 images that could not be converted, listed with the reason. The marker migrates with a blank `logo_url`, and admins can add a logo later.     |
 | `unmapped versions`  | 2.0 version text that matched no entry in `versions` and became `Other`. The raw values are listed so admins can decide whether to add a version. |
 | `failing validation` | Rows that will be listed in `problems` and left off the public map until fixed. Each is listed with its reasons.                                  |
 

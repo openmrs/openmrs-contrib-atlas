@@ -69,7 +69,7 @@
 ## 9. Staging deployment and integration
 
 - [x] 9.1 Configure the Firebase Hosting site for atlas-stg and the web deploy job on push to `atlas-3.0`; verify the deploy succeeds from CI
-- [ ] 9.2 (manual) Point `atlas-stg.openmrs.org` at Firebase Hosting in Cloudflare DNS; verify HTTPS loads the site
+- [x] 9.2 (manual) Point `atlas-stg.openmrs.org` at Firebase Hosting in Cloudflare DNS; verify HTTPS loads the site
 - [ ] 9.3 End-to-end check on staging: edit a marker in the sheet and confirm it appears on atlas-stg within 10 minutes; confirm `/?marker=<id>` works for 5 ids taken from atlas.openmrs.org; confirm the counts match the migration report
 - [ ] 9.4 Run Lighthouse against atlas-stg with Fast 3G throttling; verify the map with markers is visible within 3 seconds, or record the gap and the fixes chosen
 
