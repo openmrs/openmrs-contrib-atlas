@@ -93,8 +93,15 @@ if ! exists gcloud run services describe "$SERVICE" --region="$REGION"; then
     --set-secrets="PUBLISH_SECRET=${SECRET}:latest" \
     --set-env-vars="SHEET_ID=${SHEET_ID},BUCKET=${BUCKET},SCHEDULER_SA_EMAIL=${SCHEDULER_SA}"
 fi
-SERVICE_URL="$(gcloud run services describe "$SERVICE" --region="$REGION" \
-  --format='value(status.url)')"
+# A new service can take a moment to report its URL.
+SERVICE_URL=""
+for _ in 1 2 3 4 5 6; do
+  SERVICE_URL="$(gcloud run services describe "$SERVICE" --region="$REGION" \
+    --format='value(status.url)')"
+  [[ -n "$SERVICE_URL" ]] && break
+  sleep 10
+done
+[[ -n "$SERVICE_URL" ]] || { echo "Cloud Run did not report a URL for ${SERVICE}." >&2; exit 1; }
 gcloud run services update "$SERVICE" --region="$REGION" \
   --update-env-vars="SHEET_ID=${SHEET_ID},SERVICE_URL=${SERVICE_URL}" >/dev/null
 
