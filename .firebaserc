@@ -1,0 +1,12 @@
+{
+  "projects": {
+    "staging": "atlas-stg-513316"
+  },
+  "targets": {
+    "atlas-stg-513316": {
+      "hosting": {
+        "staging": ["atlas-stg-513316"]
+      }
+    }
+  }
+}
