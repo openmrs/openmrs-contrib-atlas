@@ -28,6 +28,8 @@ Anything else gets `401`.
 | `markers.csv`               | `public, max-age=300`     |
 | `history/atlas-<time>.json` | `no-store` (kept 90 days) |
 
+All of them are stored gzipped. Clients that don't accept gzip are served the plain file.
+
 A publish is refused if it would publish fewer than 80% of the markers in the current
 `atlas.json`. The reason is then written to the first row of `problems`, and the public files are
 left alone.
