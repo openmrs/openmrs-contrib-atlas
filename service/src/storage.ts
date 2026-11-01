@@ -24,6 +24,8 @@ export function gcsSnapshotStore(bucketName: string, apiEndpoint?: string): Snap
       for (const file of files) {
         await bucket.file(file.name).save(file.body, {
           resumable: false,
+          // Google Cloud Storage serves it plain to clients that don't accept gzip.
+          gzip: true,
           metadata: {
             contentType: file.contentType,
             cacheControl: file.name.startsWith("history/") ? "no-store" : PUBLIC_CACHE,

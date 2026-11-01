@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import react from "@vitejs/plugin-react";
 import type { Plugin } from "vite";
 import { defineConfig } from "vitest/config";
-import { DEFAULT_MAP_STYLE_URL } from "./src/mapStyle.ts";
+import { DEFAULT_COUNT_FONT_URL, DEFAULT_MAP_STYLE_URL } from "./src/mapStyle.ts";
 
 /** Serves web/dev-data/ at /dev-data/ in the dev server only, so it never ships in a build. */
 function devData(): Plugin {
@@ -38,7 +38,9 @@ function preloads(): Plugin {
       const data = env.VITE_DATA_BASE_URL;
       const urls = [
         ...(data ? [`${data}/${env.VITE_DATA_FILE || "atlas.json"}`] : []),
-        env.VITE_MAP_STYLE_URL || DEFAULT_MAP_STYLE_URL,
+        ...(env.VITE_MAP_STYLE_URL
+          ? [env.VITE_MAP_STYLE_URL]
+          : [DEFAULT_MAP_STYLE_URL, DEFAULT_COUNT_FONT_URL]),
       ];
       return urls.map((href) => ({
         tag: "link",
