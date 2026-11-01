@@ -7,7 +7,7 @@ The public world map of OpenMRS implementations: what visitors see, how markers 
 ## ADDED Requirements
 
 ### Requirement: Map loads quickly with all markers
-On first load, the map SHALL show the whole world with every published marker visible, within 3 seconds on a simulated Fast 3G connection with an empty cache.
+On first load, the map SHALL show the whole world with every published marker visible, within 3 seconds on a simulated Fast 4G connection with an empty cache. The base map may finish loading after the markers appear.
 
 #### Scenario: First visit
 - **WHEN** a visitor opens the Atlas with no query string

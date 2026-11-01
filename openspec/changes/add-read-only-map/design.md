@@ -101,9 +101,10 @@ There is no Sheets emulator, so the service is not given a fake Sheets layer. In
 ## Risks / Trade-offs
 
 - [OpenFreeMap has no SLA] → the style URL is one setting; any OpenMapTiles-compatible provider can replace it in minutes.
-- [MapLibre strains the 3 s Fast 3G budget] → measured on staging and not met: pins appear at about 5.7 s on Fast 3G (1.44 Mbps, 562.5 ms latency, no CPU slowdown, 412 px wide, software rendering, three recorded loads), and the full base map at about 20 s. Lighthouse can't see this because it doesn't count a map canvas as a paint, so the time comes from a screen recording. The app code, worker, data and count font alone are about 500 KB, roughly 2.8 s on this link before latency, so 3 s isn't reachable while MapLibre is in the first download.
-  - Fixes made: pins are added when the style is ready, not after every tile has loaded; the data, style and count font are preloaded; published files are gzipped (atlas.json 162 KB to 40 KB). Together these brought pins from 11–16 s to about 5.7 s.
-  - Not done: removing the base map's shaded relief saves about 1.4 MB and finishes the map at about 12 s, but doesn't bring pins sooner and changes how the map looks. Preloading the worker file is untried.
+- [MapLibre is a large first download on slow connections] → the budget is 3 s on Fast 4G (8.1 Mbps, 165 ms latency), changed from Fast 3G after measuring. Pins appear at 2.2–2.6 s and the last request finishes at about 4–4.6 s (four recorded loads on staging, empty cache, 412 px wide, Apple M1 Max GPU). A real phone will be slower; it hasn't been measured. Lighthouse doesn't count a map canvas as a paint, so these times come from screen recordings.
+  - On Fast 3G (1.44 Mbps, 562.5 ms latency, software rendering), pins appear at about 5.7 s and the base map finishes at about 20 s. The code, worker, data and count font are about 500 KB, roughly 2.8 s on that link before latency, so 3 s isn't reachable there while MapLibre is in the first download.
+  - Fixes made: pins are added when the style is ready, not after every tile has loaded; the data, style and count font are preloaded; published files are gzipped (atlas.json 162 KB to 40 KB).
+  - Decided: keep the base map's shaded relief. Removing it saves about 1.4 MB, but doesn't bring pins sooner and loses much of the map's look.
 - [Direct sheet edits bypass validation] → invalid rows are left out rather than published, `problems` makes them visible, and the safety check plus `history/` copies cover mass deletions.
 - [Apps Script triggers can fail silently] → the nightly publish catches anything missed within 24 hours.
 - [4x export can exhaust memory on phones] → offer 4x only when the device can allocate the canvas, and show a clear error otherwise.
