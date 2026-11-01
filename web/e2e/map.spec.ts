@@ -59,6 +59,34 @@ test.describe("Site counts and clusters", () => {
     expect(labelled).not.toContain(1);
   });
 
+  test("Scenario: Cluster fading", async ({ page }) => {
+    // The Kampala markers, first apart and then clustered.
+    const opacities = (layer: string, property: string) =>
+      page.evaluate(
+        ([layer, property]) => {
+          const features = window.atlasMap!.queryRenderedFeatures({ layers: [layer!] });
+          const byId = new Map(
+            features.map((f) => [f.properties.id ?? f.properties.cluster_id, f.properties]),
+          );
+          return [...byId.values()].map((p) => p[property!] as number);
+        },
+        [layer, property],
+      );
+    await page.goto("/?map=7/0.345/32.58");
+    await mapIdle(page);
+    const separate = await opacities("markers", "opacity");
+    expect(separate).toHaveLength(3);
+    expect(new Set(separate).size).toBeGreaterThan(1);
+
+    await page.goto("/?map=2/0.345/32.58");
+    await mapIdle(page);
+    const [sum] = await opacities("clusters", "opacity_sum");
+    expect(sum).toBeCloseTo(
+      separate.reduce((a, b) => a + b, 0),
+      5,
+    );
+  });
+
   test("Scenario: Overlapping markers stay separate", async ({ page }) => {
     await page.goto("/?map=7/0.345/32.58");
     await mapIdle(page);

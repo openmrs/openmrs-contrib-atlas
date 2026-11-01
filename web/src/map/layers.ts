@@ -55,7 +55,10 @@ export function sourceSpec(
     clusterRadius: CLUSTER_RADIUS,
     clusterMaxZoom: 14,
     // Clusters are labelled with total sites, not marker count (specs/map-view).
-    clusterProperties: { sites: ["+", ["get", "sites"]] },
+    clusterProperties: {
+      sites: ["+", ["get", "sites"]],
+      opacity_sum: ["+", ["get", "opacity"]],
+    },
   };
 }
 
@@ -63,6 +66,13 @@ const isMulti: ExpressionSpecification = [">", ["get", "sites"], 1];
 
 const MULTI_SIZE = 1.35;
 const markerSize: ExpressionSpecification = ["case", isMulti, MULTI_SIZE, 1];
+/** A cluster fades to the average of its markers. */
+const clusterOpacity: ExpressionSpecification = [
+  "/",
+  ["get", "opacity_sum"],
+  ["get", "point_count"],
+];
+
 /** A value per cluster size: pins grow with the number of sites. */
 const clusterStep = (value: (size: number) => unknown) =>
   [
@@ -105,6 +115,7 @@ export const layerSpecs: SymbolLayerSpecification[] = [
       "icon-image": `${plainPrefix}${CLUSTER_COLOUR}`,
       "icon-size": clusterStep((size) => size),
     },
+    paint: { "icon-opacity": clusterOpacity },
   },
   {
     id: LAYERS.markers,
@@ -133,7 +144,7 @@ export const layerSpecs: SymbolLayerSpecification[] = [
       "text-size": 12,
       "text-offset": clusterStep((size) => ["literal", countOffset(size, 12)]),
     },
-    paint: { "text-color": "#FFFFFF" },
+    paint: { "text-color": "#FFFFFF", "text-opacity": clusterOpacity },
   },
   {
     id: LAYERS.markerCount,

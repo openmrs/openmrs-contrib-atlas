@@ -64,6 +64,10 @@ A marker SHALL be fully opaque until 2 years after its `confirmed_at`, then fade
 - **WHEN** a marker was confirmed 9 years ago
 - **THEN** it is drawn at 60% opacity and is still visible and selectable
 
+#### Scenario: Cluster fading
+- **WHEN** nine markers at 60% opacity and one at 80% form a cluster
+- **THEN** the cluster is drawn at 62% opacity, the average of its markers
+
 ### Requirement: Marker details
 Selecting a marker SHALL show its name, logo, organisation, type, distribution, OpenMRS version, site count, website link, notes and the month and year it was last confirmed. Fields that are blank SHALL be omitted. Notes SHALL be shown as plain text, with web addresses made into links.
 
