@@ -63,7 +63,8 @@ export function AtlasMap({
     mapRef.current = map;
     if (config.e2e) window.atlasMap = map;
 
-    map.on("load", () => {
+    // Not "load", which waits for every base map tile: pins can be drawn long before those arrive.
+    map.once("style.load", () => {
       map.addSource(SOURCE, sourceSpec(latest.current.features));
       for (const layer of layerSpecs) map.addLayer(layer);
       loaded.current = true;
