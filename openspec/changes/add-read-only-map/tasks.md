@@ -75,9 +75,9 @@
 
 ## 10. Review changes from staging
 
-- [ ] 10.1 Switch the base map to OpenFreeMap "liberty"; verify on staging
-- [ ] 10.2 Draw markers and clusters as teardrop pins, including in PNG export; verify by a Playwright test and by eye
-- [ ] 10.3 Cluster only markers that can't be told apart (0.25 px radius), and act only on the top pin when pins overlap; verify by a Playwright test against the "Overlapping markers stay separate" scenario
+- [x] 10.1 Switch the base map to OpenFreeMap "liberty"; verify on staging
+- [x] 10.2 Draw markers and clusters as teardrop pins, including in PNG export; verify by a Playwright test and by eye
+- [x] 10.3 Cluster only markers that can't be told apart (0.25 px radius), and act only on the top pin when pins overlap; verify by a Playwright test against the "Overlapping markers stay separate" scenario
 
 ## Workflow follow-up
 
