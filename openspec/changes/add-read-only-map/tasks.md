@@ -51,7 +51,7 @@
 - [x] 7.1 Scaffold `web/` with React, Vite and MapLibre on the OpenFreeMap positron style, loading `atlas.json` from `VITE_DATA_BASE_URL`, with the load error and retry state; verify that `npm run dev` shows the map with fixture markers, and that a broken data URL shows the retry message
 - [x] 7.2 Draw markers as clustered GeoJSON layers with site-count labels, cluster totals summing site counts, and cluster click-to-zoom; verify with a Playwright test on a fixture with known counts (the 50 + blank + 3 = 54 case)
 - [x] 7.3 Implement colour-by (type, distribution, version) with a legend that includes "Unknown"; verify with component tests and a Playwright check of the legend entries
-- [x] 7.4 Implement freshness fading (full to 2 years, linear to 35% at 5 years, floor 35%); verify with unit tests at 8 months, 3.5 years and 9 years
+- [x] 7.4 Implement freshness fading (full to 2 years, linear to 60% at 5 years, floor 60%); verify with unit tests at 8 months, 3.5 years and 9 years
 - [x] 7.5 Implement marker details (blank fields omitted, plain-text notes with linkified URLs, logo); verify with component tests, including the `<script>` case
 - [x] 7.6 Implement search (name, organisation, country via `Intl.DisplayNames`, diacritic-insensitive) with keyboard-navigable results; verify with unit tests and a keyboard-only Playwright test
 - [x] 7.7 Implement filters (type, distribution, version, country, confirmed within N years, clear all) applied to markers, clusters, legend and stats; verify with Playwright tests for the spec scenarios

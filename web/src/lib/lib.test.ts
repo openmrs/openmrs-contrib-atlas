@@ -30,8 +30,8 @@ describe("opacityFor (Gradual fading by freshness)", () => {
   });
 
   it("fades part way at 3.5 years", () => {
-    // Halfway between 2 and 5 years: halfway between 1 and 0.35.
-    expect(opacityFor(monthsAgo(42), now)).toBeCloseTo(0.675, 2);
+    // Halfway between 2 and 5 years: halfway between 1 and 0.6.
+    expect(opacityFor(monthsAgo(42), now)).toBeCloseTo(0.8, 2);
   });
 
   it("Scenario: Long unconfirmed", () => {

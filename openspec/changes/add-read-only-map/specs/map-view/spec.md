@@ -54,7 +54,7 @@ Markers SHALL be drawn as teardrop pins with their tip on the site's position. M
 - **THEN** three separate pins are drawn, with no cluster
 
 ### Requirement: Gradual fading by freshness
-A marker SHALL be fully opaque until 2 years after its `confirmed_at`, then fade linearly to 35% opacity at 5 years, and never fade below 35% or disappear.
+A marker SHALL be fully opaque until 2 years after its `confirmed_at`, then fade linearly to 60% opacity at 5 years, and never fade below 60% or disappear.
 
 #### Scenario: Recently confirmed
 - **WHEN** a marker was confirmed 8 months ago
@@ -62,7 +62,7 @@ A marker SHALL be fully opaque until 2 years after its `confirmed_at`, then fade
 
 #### Scenario: Long unconfirmed
 - **WHEN** a marker was confirmed 9 years ago
-- **THEN** it is drawn at 35% opacity and is still visible and selectable
+- **THEN** it is drawn at 60% opacity and is still visible and selectable
 
 ### Requirement: Marker details
 Selecting a marker SHALL show its name, logo, organisation, type, distribution, OpenMRS version, site count, website link, notes and the month and year it was last confirmed. Fields that are blank SHALL be omitted. Notes SHALL be shown as plain text, with web addresses made into links.

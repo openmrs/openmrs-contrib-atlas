@@ -4,7 +4,7 @@ const MS_PER_YEAR = 365.25 * 24 * 60 * 60 * 1000;
 
 export const FADE_START_YEARS = 2;
 export const FADE_END_YEARS = 5;
-export const MIN_OPACITY = 0.35;
+export const MIN_OPACITY = 0.6;
 
 /** The date a marker was last confirmed, falling back to its last update or creation. */
 export function lastConfirmed(marker: PublicMarker): string | undefined {
@@ -17,7 +17,7 @@ export function yearsSince(iso: string | undefined, now: Date): number {
 }
 
 /**
- * Full opacity until 2 years after confirmation, then linear down to 35% at 5 years,
+ * Full opacity until 2 years after confirmation, then linear down to 60% at 5 years,
  * never lower. See specs/map-view, "Gradual fading by freshness".
  */
 export function opacityFor(marker: PublicMarker, now: Date): number {
