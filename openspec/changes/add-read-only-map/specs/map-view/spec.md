@@ -134,6 +134,10 @@ The map, search, filters, legend and marker details SHALL be usable on a 360 pix
 - **WHEN** a visitor opens the Atlas with no query string on a 360 pixel wide phone
 - **THEN** the map zooms out far enough to span every published marker from west to east
 
+#### Scenario: First view on a wide screen
+- **WHEN** a visitor opens the Atlas with no query string on a screen wider than one copy of the world at the usual zoom
+- **THEN** the map shows exactly one copy of the world across its width, with no longitudes repeated
+
 ### Requirement: Keyboard access
 Search, filters, the colour-by choice, the download controls and marker details SHALL be operable by keyboard, and search results SHALL give keyboard users a way to reach any marker.
 

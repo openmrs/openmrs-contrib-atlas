@@ -81,6 +81,7 @@
 - [x] 10.4 Fade clusters to the average opacity of their markers; verify by a Playwright test against the "Cluster fading" scenario
 - [x] 10.5 Keep site counts at full opacity on faded pins; verify by a Playwright test against the "Counts stay readable" scenario
 - [x] 10.6 Fit the first view to the screen so phones span every marker; verify by a Playwright test against the "First view on a phone" scenario and by eye
+- [x] 10.7 Make the first view exactly one copy of the world across the map's width; verify by Playwright tests against the "First view" scenarios and by eye
 
 ## Workflow follow-up
 

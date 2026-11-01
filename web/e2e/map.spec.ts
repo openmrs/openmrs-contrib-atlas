@@ -304,6 +304,17 @@ test("Scenario: First view on a phone", async ({ page }) => {
   expect(xs[1]).toBeLessThanOrEqual(360);
 });
 
+test("Scenario: First view on a wide screen", async ({ page }) => {
+  await page.setViewportSize({ width: 1728, height: 1000 });
+  await page.goto("/");
+  await mapIdle(page);
+  const xs = await page.evaluate(() =>
+    [-180, 180].map((lng) => window.atlasMap!.project([lng, 0]).x),
+  );
+  expect(xs[0]).toBeCloseTo(0, 0);
+  expect(xs[1]).toBeCloseTo(1728, 0);
+});
+
 test("Usage analytics: Scenario: Staging without analytics", async ({ page }) => {
   const analytics: string[] = [];
   page.on("request", (r) => {

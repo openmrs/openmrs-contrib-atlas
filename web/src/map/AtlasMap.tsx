@@ -45,8 +45,7 @@ export function AtlasMap({
   });
 
   useEffect(() => {
-    const view =
-      initialView ?? worldView(container.current!.clientWidth, container.current!.clientHeight);
+    const view = initialView ?? worldView(container.current!.clientWidth);
     const map = new maplibregl.Map({
       container: container.current!,
       style: config.mapStyleUrl,
