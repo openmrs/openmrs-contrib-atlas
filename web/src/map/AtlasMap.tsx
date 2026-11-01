@@ -7,6 +7,7 @@ import { config } from "../config.ts";
 import type { MapView } from "../lib/types.ts";
 import { LAYERS, SOURCE, layerSpecs, sourceSpec } from "./layers.ts";
 import { installPins } from "./pins.ts";
+import { worldView } from "./worldView.ts";
 
 interface Props {
   features: GeoJSON.FeatureCollection<GeoJSON.Point>;
@@ -19,8 +20,6 @@ interface Props {
 
 // MapLibre 6 loads its worker from a separate file; ship it as an asset and say where it is.
 maplibregl.setWorkerUrl(workerUrl);
-
-const WORLD: MapView = { zoom: 1.5, lat: 15, lng: 10 };
 
 declare global {
   interface Window {
@@ -46,7 +45,8 @@ export function AtlasMap({
   });
 
   useEffect(() => {
-    const view = initialView ?? WORLD;
+    const view =
+      initialView ?? worldView(container.current!.clientWidth, container.current!.clientHeight);
     const map = new maplibregl.Map({
       container: container.current!,
       style: config.mapStyleUrl,

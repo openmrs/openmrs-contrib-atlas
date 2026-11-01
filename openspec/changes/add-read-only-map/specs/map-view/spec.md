@@ -130,6 +130,10 @@ The map, search, filters, legend and marker details SHALL be usable on a 360 pix
 - **WHEN** a visitor opens the Atlas on a 360 pixel wide phone
 - **THEN** they can search, filter and open marker details using touch alone
 
+#### Scenario: First view on a phone
+- **WHEN** a visitor opens the Atlas with no query string on a 360 pixel wide phone
+- **THEN** the map zooms out far enough to span every published marker from west to east
+
 ### Requirement: Keyboard access
 Search, filters, the colour-by choice, the download controls and marker details SHALL be operable by keyboard, and search results SHALL give keyboard users a way to reach any marker.
 

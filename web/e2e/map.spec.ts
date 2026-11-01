@@ -292,6 +292,18 @@ test.describe("Works on phones", () => {
   });
 });
 
+test("Scenario: First view on a phone", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 640 });
+  await page.goto("/");
+  await mapIdle(page);
+  // The westernmost and easternmost places with sites, at the time of writing.
+  const xs = await page.evaluate(() =>
+    [-122.8, 172.98].map((lng) => window.atlasMap!.project([lng, 0]).x),
+  );
+  expect(xs[0]).toBeGreaterThanOrEqual(0);
+  expect(xs[1]).toBeLessThanOrEqual(360);
+});
+
 test("Usage analytics: Scenario: Staging without analytics", async ({ page }) => {
   const analytics: string[] = [];
   page.on("request", (r) => {

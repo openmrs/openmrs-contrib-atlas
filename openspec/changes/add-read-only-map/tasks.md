@@ -80,6 +80,7 @@
 - [x] 10.3 Cluster only markers that can't be told apart (0.25 px radius), and act only on the top pin when pins overlap; verify by a Playwright test against the "Overlapping markers stay separate" scenario
 - [x] 10.4 Fade clusters to the average opacity of their markers; verify by a Playwright test against the "Cluster fading" scenario
 - [x] 10.5 Keep site counts at full opacity on faded pins; verify by a Playwright test against the "Counts stay readable" scenario
+- [x] 10.6 Fit the first view to the screen so phones span every marker; verify by a Playwright test against the "First view on a phone" scenario and by eye
 
 ## Workflow follow-up
 
