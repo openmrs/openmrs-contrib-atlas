@@ -31,7 +31,7 @@
 - [x] 4.3 Implement auth for `/publish` (scheduler OIDC token or shared secret; `force` only with the secret); verify that tests reject missing, wrong and expired credentials
 - [x] 4.4 Add `service/Dockerfile` and the staging deploy job (Cloud Build to Cloud Run on push to `atlas-3.0`); verify the deployed service answers a health check
 - [x] 4.5 (manual) Create the nightly Cloud Scheduler job calling `/publish`; verify one scheduled run shows success in the logs and refreshes `atlas.json`
-- [ ] 4.6 Document the service endpoints, configuration and rollback (copying a `history/` file) in `service/README.md`; verify the rollback steps on staging
+- [x] 4.6 Document the service endpoints, configuration and rollback (copying a `history/` file) in `service/README.md`; verify the rollback steps on staging
 
 ## 5. Sheet automation (Apps Script)
 
@@ -70,7 +70,7 @@
 
 - [x] 9.1 Configure the Firebase Hosting site for atlas-stg and the web deploy job on push to `atlas-3.0`; verify the deploy succeeds from CI
 - [x] 9.2 (manual) Point `atlas-stg.openmrs.org` at Firebase Hosting in Cloudflare DNS; verify HTTPS loads the site
-- [ ] 9.3 End-to-end check on staging: edit a marker in the sheet and confirm it appears on atlas-stg within 10 minutes; confirm `/?marker=<id>` works for 5 ids taken from atlas.openmrs.org; confirm the counts match the migration report
+- [x] 9.3 End-to-end check on staging: edit a marker in the sheet and confirm it appears on atlas-stg within 10 minutes; confirm `/?marker=<id>` works for 5 ids taken from atlas.openmrs.org; confirm the counts match the migration report
 - [ ] 9.4 Run Lighthouse against atlas-stg with Fast 3G throttling; verify the map with markers is visible within 3 seconds, or record the gap and the fixes chosen
 
 ## Workflow follow-up
