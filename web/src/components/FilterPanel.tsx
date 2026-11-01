@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { countryName } from "../lib/countries.ts";
 import { hasFilters } from "../lib/filters.ts";
 import { NO_FILTERS, UNKNOWN, type Filters, type PublicMarker } from "../lib/types.ts";
+import { useEscape } from "./useEscape.ts";
 
 interface Props {
   markers: PublicMarker[];
@@ -25,6 +26,8 @@ function ordered(values: Set<string>, order: string[]): string[] {
 }
 
 export function FilterPanel({ markers, order, filters, onChange, onClose }: Props) {
+  useEscape(onClose);
+
   const options = useMemo(() => {
     const countries = [...present(markers, (m) => m.country)]
       .filter((c) => c !== UNKNOWN)

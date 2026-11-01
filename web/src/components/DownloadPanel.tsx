@@ -5,6 +5,7 @@ import { datedFileName, downloadDataFile, saveBlob } from "../export/download.ts
 import { ExportTooLargeError, maxImageSide, renderPng, type Scale } from "../export/png.ts";
 import { track } from "../lib/analytics.ts";
 import type { LegendEntry } from "../lib/colours.ts";
+import { useEscape } from "./useEscape.ts";
 
 interface Props {
   map: MapLibreMap | null;
@@ -22,6 +23,8 @@ export function DownloadPanel({
   render = renderPng,
   maxSide = maxImageSide,
 }: Props) {
+  useEscape(onClose);
+
   const [scale, setScale] = useState<Scale>(2);
   const [showTitle, setShowTitle] = useState(true);
   const [title, setTitle] = useState("OpenMRS Atlas");

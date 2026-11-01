@@ -179,6 +179,36 @@ test.describe("Search", () => {
     await expect(heading).toBeHidden();
   });
 
+  for (const name of ["Filters", "Download"]) {
+    test(`Keyboard access: Scenario: Escape closes the ${name} panel`, async ({ page }) => {
+      await page.goto("/");
+      await mapIdle(page);
+      await page.getByRole("button", { name }).click();
+      const panel = page.getByRole("complementary", { name });
+      await expect(panel).toBeVisible();
+      await page.locator("canvas.maplibregl-canvas").focus();
+      await page.keyboard.press("Escape");
+      await expect(panel).toBeHidden();
+    });
+  }
+
+  test("Keyboard access: Scenario: Escape with a marker selected behind a panel", async ({
+    page,
+  }) => {
+    await page.goto(`/?marker=${ids.makerere}`);
+    await mapIdle(page);
+    const heading = page.getByRole("heading", { name: "Makerere Research Clinic" });
+    await page.getByRole("button", { name: "Filters" }).click();
+    const panel = page.getByRole("complementary", { name: "Filters" });
+    await expect(panel).toBeVisible();
+    await expect(heading).toBeHidden();
+    await page.keyboard.press("Escape");
+    await expect(panel).toBeHidden();
+    await expect(heading).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(heading).toBeHidden();
+  });
+
   test("Keyboard access: Scenario: Escape in the search box", async ({ page }) => {
     await page.goto(`/?marker=${ids.makerere}`);
     await mapIdle(page);

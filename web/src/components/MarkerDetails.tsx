@@ -3,6 +3,7 @@ import { countryName } from "../lib/countries.ts";
 import { lastConfirmed } from "../lib/freshness.ts";
 import { linkify } from "../lib/linkify.ts";
 import type { PublicMarker } from "../lib/types.ts";
+import { useEscape } from "./useEscape.ts";
 
 const monthYear = new Intl.DateTimeFormat("en", {
   month: "long",
@@ -20,14 +21,7 @@ export function MarkerDetails({ marker, onClose }: Props) {
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), [marker.id]);
 
-  // On the document, because focus moves to the map when it is tapped or dragged.
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
+  useEscape(onClose);
 
   const confirmed = lastConfirmed(marker);
   const rows: [string, React.ReactNode][] = [];
