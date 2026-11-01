@@ -137,11 +137,35 @@ The map, search, filters, legend and marker details SHALL be usable on a 360 pix
 - **THEN** the map shows exactly one copy of the world across its width, with no longitudes repeated
 
 ### Requirement: Keyboard access
-Search, filters, the colour-by choice, the download controls and marker details SHALL be operable by keyboard, and search results SHALL give keyboard users a way to reach any marker.
+Search, filters, the colour-by choice, the download controls and marker details SHALL be operable by keyboard, and search results SHALL give keyboard users a way to reach any marker. Escape SHALL close the open marker, filter or download panel wherever focus is, except in the search box, where it SHALL only clear the search. Pressing `/` SHALL move focus to the search box unless the visitor is typing in a field.
 
 #### Scenario: Keyboard-only visitor
 - **WHEN** a visitor uses only the keyboard
 - **THEN** they can search for a site, open its details and close them again
+
+#### Scenario: Escape with focus on the map
+- **WHEN** a marker panel is open and focus is on the map
+- **THEN** pressing Escape closes the panel
+
+#### Scenario: Escape closes the filter or download panel
+- **WHEN** the filter or download panel is open
+- **THEN** pressing Escape closes it
+
+#### Scenario: Escape with a marker selected behind a panel
+- **WHEN** the filter or download panel is open while a marker is selected
+- **THEN** pressing Escape closes that panel and shows the marker panel again, and pressing it again closes the marker panel
+
+#### Scenario: Escape in the search box
+- **WHEN** a panel is open and focus is in the search box
+- **THEN** pressing Escape clears the search and closes its list of results, and the panel stays open
+
+#### Scenario: Slash moves focus to search
+- **WHEN** a visitor presses `/` while not typing in a field
+- **THEN** focus moves to the search box and no `/` is typed into it
+
+#### Scenario: Slash while typing
+- **WHEN** a visitor presses `/` while typing in a field
+- **THEN** the `/` is typed as usual
 
 ### Requirement: Usage analytics
 When a Google Analytics measurement ID is configured, the site SHALL record page views and the events search, filter change, marker opened and download. When none is configured, no analytics requests SHALL be made.
