@@ -44,7 +44,7 @@
 - [x] 6.1 Implement the field mapping, version normalisation and owner/editor derivation as pure functions in `shared/`; verify one unit test per scenario in specs/legacy-migration, using `migration/fixtures/03_demo_data.sql` rows
 - [x] 6.2 Implement the CLI: MySQL read (read-only), logo resize to WebP within 300 × 300 and upload, full replacement of the data tabs, report and `--dry-run`; verify against the demo data loaded into a local MySQL container
 - [x] 6.3 Document running the migration (tunnel or restored dump, credentials, dry run, cutover re-run) in `migration/README.md`; verify a dry run follows the README exactly
-- [ ] 6.4 (manual) Run the migration against production data into the staging sheet, dry run first; verify the report shows 451 markers (or the current 2.0 count) and that a publish succeeds with the same count
+- [x] 6.4 (manual) Run the migration against production data into the staging sheet, dry run first; verify the report shows 451 markers (or the current 2.0 count) and that a publish succeeds with the same count
 
 ## 7. Map site
 
@@ -62,7 +62,7 @@
 
 ## 8. Export
 
-- [ ] 8.1 Add the Firebase redirects for `/data/atlas.json`, `/data/markers.csv` and `/data/markers.geojson`, plus download links with dated file names; verify the links download correctly named files with no private fields
+- [x] 8.1 Add the Firebase redirects for `/data/atlas.json`, `/data/markers.csv` and `/data/markers.geojson`, plus download links with dated file names; verify the links download correctly named files with no private fields
 - [x] 8.2 Implement PNG export at 1x, 2x and 4x with off-screen rendering, title, legend and date toggles, mandatory attribution and dated file name; verify that a Playwright test checks the image dimensions for a 1280 × 720 view at 4x, and inspect a sample image by eye
 - [x] 8.3 Handle canvas allocation failure with a "try a smaller size" message; verify by forcing the failure path in a component test
 
