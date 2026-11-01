@@ -1,3 +1,5 @@
+import { LngLat, MercatorCoordinate } from "maplibre-gl";
+import type { Map as MapLibreMap } from "maplibre-gl";
 import type { MapView } from "../lib/types.ts";
 
 const MAX_ZOOM = 1.5;
@@ -14,4 +16,24 @@ export function worldView(width: number, height: number): MapView {
   const fitWidth = Math.log2(width / ((WORLD_SIZE * LONGITUDES) / 360));
   const fitHeight = Math.log2(height / (WORLD_SIZE * HEIGHT_SHARE));
   return { zoom: Math.min(MAX_ZOOM, fitWidth, fitHeight), ...CENTRE };
+}
+
+/**
+ * MapLibre normally won't zoom out past the point where the world fills the map's height, which
+ * cuts off the sides on a tall phone. This allows it, down to `minZoom`, holding the map still
+ * vertically while the world is shorter than the map.
+ */
+export function allowWorldView(map: MapLibreMap, minZoom: number): void {
+  map.setTransformConstrain((center, requested) => {
+    const zoom = Math.max(requested, minZoom);
+    const worldHeight = WORLD_SIZE * 2 ** zoom;
+    const margin = map.getContainer().clientHeight / 2 / worldHeight;
+    if (margin > 0.5) {
+      return { center: new LngLat(center.lng, CENTRE.lat).wrap(), zoom };
+    }
+    // Otherwise, as MapLibre does by default: don't scroll past the top or bottom of the world.
+    const { x, y } = MercatorCoordinate.fromLngLat(center);
+    const clamped = Math.min(Math.max(y, margin), 1 - margin);
+    return { center: new MercatorCoordinate(x, clamped).toLngLat().wrap(), zoom };
+  });
 }

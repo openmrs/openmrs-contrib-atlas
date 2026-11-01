@@ -7,7 +7,7 @@ import { config } from "../config.ts";
 import type { MapView } from "../lib/types.ts";
 import { LAYERS, SOURCE, layerSpecs, sourceSpec } from "./layers.ts";
 import { installPins } from "./pins.ts";
-import { worldView } from "./worldView.ts";
+import { allowWorldView, worldView } from "./worldView.ts";
 
 interface Props {
   features: GeoJSON.FeatureCollection<GeoJSON.Point>;
@@ -57,6 +57,8 @@ export function AtlasMap({
       dragRotate: false,
       pitchWithRotate: false,
     });
+    allowWorldView(map, Math.min(view.zoom, 0));
+    map.jumpTo({ center: [view.lng, view.lat], zoom: view.zoom });
     map.touchZoomRotate.disableRotation();
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
     installPins(map);

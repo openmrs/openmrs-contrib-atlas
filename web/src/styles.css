@@ -146,6 +146,8 @@ button:disabled {
 .map {
   position: absolute;
   inset: 0;
+  /* The base map's water, for the space above and below the world on a tall screen. */
+  background: rgb(158, 189, 255);
 }
 .message {
   position: absolute;

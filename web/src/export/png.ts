@@ -2,6 +2,7 @@ import * as maplibregl from "maplibre-gl";
 import type { Map as MapLibreMap } from "maplibre-gl";
 import type { LegendEntry } from "../lib/colours.ts";
 import { installPins } from "../map/pins.ts";
+import { allowWorldView } from "../map/worldView.ts";
 
 export type Scale = 1 | 2 | 4;
 
@@ -74,6 +75,8 @@ export async function renderPng(map: MapLibreMap, options: ImageOptions): Promis
       fadeDuration: 0,
       canvasContextAttributes: { preserveDrawingBuffer: true },
     });
+    allowWorldView(offscreen, Math.min(map.getZoom(), 0));
+    offscreen.jumpTo({ center: map.getCenter(), zoom: map.getZoom() });
     installPins(offscreen);
     await offscreen.once("idle");
 
@@ -88,6 +91,9 @@ export async function renderPng(map: MapLibreMap, options: ImageOptions): Promis
     canvas.height = height * scale;
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new ExportTooLargeError();
+    // The base map's water, for the space above and below the world on a tall screen.
+    ctx.fillStyle = "rgb(158, 189, 255)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(mapCanvas, 0, 0);
     ctx.scale(scale, scale);
     drawOverlays(ctx, width, height, options, attributionText(map));
