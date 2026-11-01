@@ -79,6 +79,7 @@
 - [x] 10.2 Draw markers and clusters as teardrop pins, including in PNG export; verify by a Playwright test and by eye
 - [x] 10.3 Cluster only markers that can't be told apart (0.25 px radius), and act only on the top pin when pins overlap; verify by a Playwright test against the "Overlapping markers stay separate" scenario
 - [x] 10.4 Fade clusters to the average opacity of their markers; verify by a Playwright test against the "Cluster fading" scenario
+- [x] 10.5 Keep site counts at full opacity on faded pins; verify by a Playwright test against the "Counts stay readable" scenario
 
 ## Workflow follow-up
 

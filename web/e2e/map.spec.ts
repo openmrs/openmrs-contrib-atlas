@@ -87,6 +87,22 @@ test.describe("Site counts and clusters", () => {
     );
   });
 
+  test("Scenario: Counts stay readable", async ({ page }) => {
+    await page.goto("/?map=2/0.345/32.58");
+    await mapIdle(page);
+    const paint = await page.evaluate(() =>
+      ["clusters", "markers", "cluster-count", "marker-count"].map((layer) => [
+        window.atlasMap!.getPaintProperty(layer, "icon-opacity"),
+        window.atlasMap!.getPaintProperty(layer, "text-opacity"),
+      ]),
+    );
+    const [clusters, markers, clusterCount, markerCount] = paint;
+    expect(clusters![0]).toBeDefined();
+    expect(markers![0]).toBeDefined();
+    expect(clusterCount![1]).toBeUndefined();
+    expect(markerCount![1]).toBeUndefined();
+  });
+
   test("Scenario: Overlapping markers stay separate", async ({ page }) => {
     await page.goto("/?map=7/0.345/32.58");
     await mapIdle(page);

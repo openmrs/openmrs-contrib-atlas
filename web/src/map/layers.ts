@@ -144,7 +144,7 @@ export const layerSpecs: SymbolLayerSpecification[] = [
       "text-size": 12,
       "text-offset": clusterStep((size) => ["literal", countOffset(size, 12)]),
     },
-    paint: { "text-color": "#FFFFFF", "text-opacity": clusterOpacity },
+    paint: { "text-color": "#FFFFFF" },
   },
   {
     id: LAYERS.markerCount,
@@ -157,7 +157,7 @@ export const layerSpecs: SymbolLayerSpecification[] = [
       "text-size": 11,
       "text-offset": countOffset(MULTI_SIZE, 11),
     },
-    paint: { "text-color": "#FFFFFF", "text-opacity": ["get", "opacity"] },
+    paint: { "text-color": "#FFFFFF" },
   },
   {
     id: LAYERS.selected,
