@@ -10,7 +10,7 @@ Atlas 3.0 sheet. Marker ids are kept, so 2.0 links (`/?marker=<id>`) keep workin
 - **Logos** are resized to WebP within 300 × 300 and uploaded to `logos/<id>.webp` in the public
   bucket.
 
-The full rules are in `openspec/changes/add-read-only-map/specs/legacy-migration/spec.md`
+The full rules are in `openspec/specs/legacy-migration/spec.md`
 (`openspec/specs/legacy-migration/` once archived).
 
 ## Before you start
