@@ -20,6 +20,15 @@ export function MarkerDetails({ marker, onClose }: Props) {
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), [marker.id]);
 
+  // On the document, because focus moves to the map when it is tapped or dragged.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
   const confirmed = lastConfirmed(marker);
   const rows: [string, React.ReactNode][] = [];
   if (marker.organisation) rows.push(["Organisation", marker.organisation]);
@@ -31,11 +40,7 @@ export function MarkerDetails({ marker, onClose }: Props) {
   if (confirmed) rows.push(["Last confirmed", monthYear.format(new Date(confirmed))]);
 
   return (
-    <aside
-      className="panel details"
-      aria-label={`Details for ${marker.name}`}
-      onKeyDown={(e) => e.key === "Escape" && onClose()}
-    >
+    <aside className="panel details" aria-label={`Details for ${marker.name}`}>
       <div className="panel-header">
         <h2 ref={heading} tabIndex={-1}>
           {marker.name}

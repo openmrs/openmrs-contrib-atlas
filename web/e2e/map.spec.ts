@@ -169,6 +169,43 @@ test.describe("Search", () => {
     await expect(heading).toBeHidden();
   });
 
+  test("Keyboard access: Scenario: Escape with focus on the map", async ({ page }) => {
+    await page.goto(`/?marker=${ids.makerere}`);
+    await mapIdle(page);
+    const heading = page.getByRole("heading", { name: "Makerere Research Clinic" });
+    await expect(heading).toBeVisible();
+    await page.locator("canvas.maplibregl-canvas").focus();
+    await page.keyboard.press("Escape");
+    await expect(heading).toBeHidden();
+  });
+
+  test("Keyboard access: Scenario: Escape in the search box", async ({ page }) => {
+    await page.goto(`/?marker=${ids.makerere}`);
+    await mapIdle(page);
+    const heading = page.getByRole("heading", { name: "Makerere Research Clinic" });
+    await expect(heading).toBeVisible();
+    const search = page.getByRole("combobox", { name: /Search sites/ });
+    await search.fill("Uganda");
+    await expect(page.getByRole("listbox")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("listbox")).toBeHidden();
+    await expect(heading).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(heading).toBeVisible();
+  });
+
+  test("Keyboard access: Scenario: Slash moves focus to search", async ({ page }) => {
+    await page.goto("/");
+    await mapIdle(page);
+    await page.locator("canvas.maplibregl-canvas").focus();
+    await page.keyboard.press("/");
+    const search = page.getByRole("combobox", { name: /Search sites/ });
+    await expect(search).toBeFocused();
+    await expect(search).toHaveValue("");
+    await page.keyboard.press("/");
+    await expect(search).toHaveValue("/");
+  });
+
   test("selecting a result reveals the marker out of its cluster", async ({ page }) => {
     await page.goto("/");
     await mapIdle(page);

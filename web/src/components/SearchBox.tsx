@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { countryName } from "../lib/countries.ts";
 import { searchMarkers } from "../lib/search.ts";
 import type { PublicMarker } from "../lib/types.ts";
@@ -8,13 +8,30 @@ interface Props {
   onPick: (marker: PublicMarker) => void;
 }
 
-/** A combobox: type to search, arrow keys to move, Enter to pick, Escape to clear. */
+/** Keys that type into these are left alone. */
+function isTyping(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName);
+}
+
+/** A combobox: "/" to focus, type to search, arrow keys to move, Enter to pick, Escape to clear. */
 export function SearchBox({ markers, onPick }: Props) {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const listId = useId();
   const results = useMemo(() => searchMarkers(markers, query), [markers, query]);
   const open = results.length > 0;
+  const input = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey || isTyping(e.target)) return;
+      e.preventDefault();
+      input.current?.focus();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   function pick(marker: PublicMarker) {
     onPick(marker);
@@ -33,6 +50,8 @@ export function SearchBox({ markers, onPick }: Props) {
       e.preventDefault();
       pick(results[active]!);
     } else if (e.key === "Escape") {
+      // Escape here belongs to the search box, not to an open marker panel.
+      e.stopPropagation();
       setQuery("");
     }
   }
@@ -40,6 +59,7 @@ export function SearchBox({ markers, onPick }: Props) {
   return (
     <div className="search">
       <input
+        ref={input}
         type="search"
         role="combobox"
         aria-label="Search sites by name, organisation or country"
