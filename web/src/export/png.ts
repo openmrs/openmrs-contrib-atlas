@@ -1,6 +1,7 @@
 import * as maplibregl from "maplibre-gl";
 import type { Map as MapLibreMap } from "maplibre-gl";
 import type { LegendEntry } from "../lib/colours.ts";
+import { installPins } from "../map/pins.ts";
 
 export type Scale = 1 | 2 | 4;
 
@@ -73,6 +74,7 @@ export async function renderPng(map: MapLibreMap, options: ImageOptions): Promis
       fadeDuration: 0,
       canvasContextAttributes: { preserveDrawingBuffer: true },
     });
+    installPins(offscreen);
     await offscreen.once("idle");
 
     const mapCanvas = offscreen.getCanvas();

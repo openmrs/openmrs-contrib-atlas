@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 import { config } from "../config.ts";
 import type { MapView } from "../lib/types.ts";
 import { LAYERS, SOURCE, layerSpecs, sourceSpec } from "./layers.ts";
+import { installPins } from "./pins.ts";
 
 interface Props {
   features: GeoJSON.FeatureCollection<GeoJSON.Point>;
@@ -58,6 +59,7 @@ export function AtlasMap({
     });
     map.touchZoomRotate.disableRotation();
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
+    installPins(map);
     mapRef.current = map;
     if (config.e2e) window.atlasMap = map;
 
@@ -69,17 +71,21 @@ export function AtlasMap({
       onReady?.(map);
     });
 
-    map.on("click", LAYERS.clusters, async (e) => {
-      const feature = e.features?.[0];
+    // Pins overlap, so act only on the one on top.
+    map.on("click", async (e) => {
+      const feature = map.queryRenderedFeatures(e.point, {
+        layers: [LAYERS.clusters, LAYERS.markers],
+      })[0];
       if (!feature) return;
+      if (feature.layer.id === LAYERS.markers) {
+        const id = feature.properties.id as string | undefined;
+        if (id) latest.current.onSelect(id);
+        return;
+      }
       const source = map.getSource<GeoJSONSource>(SOURCE)!;
       const zoom = await source.getClusterExpansionZoom(feature.properties.cluster_id as number);
       const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
       map.easeTo({ center: [lng, lat], zoom });
-    });
-    map.on("click", LAYERS.markers, (e) => {
-      const id = e.features?.[0]?.properties.id as string | undefined;
-      if (id) latest.current.onSelect(id);
     });
     for (const layer of [LAYERS.clusters, LAYERS.markers]) {
       map.on("mouseenter", layer, () => (map.getCanvas().style.cursor = "pointer"));

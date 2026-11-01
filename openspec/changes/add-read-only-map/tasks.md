@@ -73,6 +73,12 @@
 - [x] 9.3 End-to-end check on staging: edit a marker in the sheet and confirm it appears on atlas-stg within 10 minutes; confirm `/?marker=<id>` works for 5 ids taken from atlas.openmrs.org; confirm the counts match the migration report
 - [ ] 9.4 Run Lighthouse against atlas-stg with Fast 3G throttling; verify the map with markers is visible within 3 seconds, or record the gap and the fixes chosen
 
+## 10. Review changes from staging
+
+- [ ] 10.1 Switch the base map to OpenFreeMap "liberty"; verify on staging
+- [ ] 10.2 Draw markers and clusters as teardrop pins, including in PNG export; verify by a Playwright test and by eye
+- [ ] 10.3 Cluster only markers that can't be told apart (0.25 px radius), and act only on the top pin when pins overlap; verify by a Playwright test against the "Overlapping markers stay separate" scenario
+
 ## Workflow follow-up
 
 - Review with Burke on atlas-stg, then archive this change so its specs become the baseline in `openspec/specs/`.

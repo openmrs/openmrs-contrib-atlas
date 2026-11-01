@@ -38,11 +38,11 @@ Node 24 LTS throughout. The 2.0 files are deleted from the branch in the first c
 ### Front end: React, MapLibre layers, URL as state
 
 - **React + Vite + TypeScript.** OpenMRS 3.x front-end contributors already know React, which matters more for long-term maintenance than bundle size. No router, no state library, no component kit. View state lives in `URLSearchParams`, which also satisfies the shareable URL requirement.
-- **Markers as MapLibre layers, not HTML markers.** One GeoJSON source with `cluster: true` and `clusterProperties: { sites: ['+', ['coalesce', ['get','site_count'], 1]] }` gives count-aware clusters natively. Circle and symbol layers draw the colours, site-count labels and cluster totals. Because everything is drawn on the WebGL canvas, PNG export captures it. *Alternative:* Supercluster + HTML markers, which would be easier to style but invisible to canvas export.
+- **Markers as MapLibre layers, not HTML markers.** One GeoJSON source with `cluster: true` and `clusterProperties: { sites: ['+', ['coalesce', ['get','site_count'], 1]] }` gives count-aware clusters natively. Symbol layers draw teardrop pins (images generated in the browser, one per colour), site-count labels and cluster totals. The cluster radius is 0.25 px, so pins that merely overlap stay separate and the world view shows how many sites there are. Because everything is drawn on the WebGL canvas, PNG export captures it. *Alternative:* Supercluster + HTML markers, which would be easier to style but invisible to canvas export.
 - **Colour-by and filters as layer expressions.** Changing colour-by updates a `match` expression; filters rebuild the source data from the in-memory marker list (around 500 items, so this is cheap) so clusters and stats stay consistent.
 - **Fading computed in the browser** from `confirmed_at` against today's date, written to a feature property at load time. Freshness then never depends on a republish.
 - **Search** is a diacritic-insensitive substring match over name, organisation and country name in memory. Country names come from `Intl.DisplayNames` using the ISO code in the snapshot, so no country-name data is shipped.
-- **Base map:** the OpenFreeMap "positron" style (muted, so coloured markers stand out), set through a single `VITE_MAP_STYLE_URL`.
+- **Base map:** the OpenFreeMap "liberty" style (coloured land and water, chosen over the muted "positron" after review on staging), set through a single `VITE_MAP_STYLE_URL`.
 
 ### Snapshot publishing
 

@@ -7,7 +7,7 @@ export const config = {
   dataFile: (env.VITE_DATA_FILE as string | undefined) || "atlas.json",
   mapStyleUrl:
     (env.VITE_MAP_STYLE_URL as string | undefined) ||
-    "https://tiles.openfreemap.org/styles/positron",
+    "https://tiles.openfreemap.org/styles/liberty",
   /** Google Analytics 4 measurement id; empty disables analytics. */
   gaId: (env.VITE_GA_ID as string | undefined) || "",
   /** Exposes the map on window for end-to-end tests. */

@@ -43,11 +43,15 @@ A marker whose `site_count` is greater than 1 SHALL display that number inside t
 - **THEN** it is drawn with no number
 
 ### Requirement: Clusters count sites
-Where markers overlap at the current zoom, they SHALL be grouped into a cluster labelled with the total sites of its markers (summing `site_count`, blank counting as 1). Selecting a cluster SHALL zoom in until its markers separate.
+Markers SHALL be drawn as teardrop pins with their tip on the site's position. Markers that overlap but can still be told apart SHALL stay separate pins. Only markers effectively indistinguishable at the current zoom (within a fraction of a pixel) SHALL be grouped into a cluster labelled with the total sites of its markers (summing `site_count`, blank counting as 1). Selecting a cluster SHALL zoom in until its markers separate.
 
 #### Scenario: Cluster total
 - **WHEN** markers with site counts 50, blank and 3 form one cluster
 - **THEN** the cluster is labelled "54"
+
+#### Scenario: Overlapping markers stay separate
+- **WHEN** three markers overlap at the current zoom but are a few pixels apart
+- **THEN** three separate pins are drawn, with no cluster
 
 ### Requirement: Gradual fading by freshness
 A marker SHALL be fully opaque until 2 years after its `confirmed_at`, then fade linearly to 35% opacity at 5 years, and never fade below 35% or disappear.

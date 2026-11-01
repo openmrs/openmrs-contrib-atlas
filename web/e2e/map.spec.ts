@@ -36,8 +36,8 @@ test("Map attribution: Scenario: Attribution visible", async ({ page }) => {
 
 test.describe("Site counts and clusters", () => {
   test("Scenario: Cluster total", async ({ page }) => {
-    // Zoomed to Kampala, the 50-site, single-site and 3-site markers form one cluster.
-    await page.goto("/?map=7/0.345/32.58");
+    // At this zoom the 50-site, single-site and 3-site Kampala markers can't be told apart.
+    await page.goto("/?map=2/0.345/32.58");
     await mapIdle(page);
     const clusters = await page.evaluate(() =>
       window
@@ -59,8 +59,22 @@ test.describe("Site counts and clusters", () => {
     expect(labelled).not.toContain(1);
   });
 
-  test("selecting a cluster zooms in", async ({ page }) => {
+  test("Scenario: Overlapping markers stay separate", async ({ page }) => {
     await page.goto("/?map=7/0.345/32.58");
+    await mapIdle(page);
+    const rendered = await page.evaluate(() => ({
+      clusters: window.atlasMap!.queryRenderedFeatures({ layers: ["clusters"] }).length,
+      markers: new Set(
+        window
+          .atlasMap!.queryRenderedFeatures({ layers: ["markers"] })
+          .map((f) => f.properties.id as string),
+      ).size,
+    }));
+    expect(rendered).toEqual({ clusters: 0, markers: 3 });
+  });
+
+  test("selecting a cluster zooms in", async ({ page }) => {
+    await page.goto("/?map=2/0.345/32.58");
     await mapIdle(page);
     const before = await page.evaluate(() => window.atlasMap!.getZoom());
     const point = await page.evaluate(() => {
