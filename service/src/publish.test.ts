@@ -23,7 +23,10 @@ function markerRow(i: number, overrides: Record<string, Cell> = {}): Cell[] {
 
 class FakeSheet implements SheetStore {
   problems: Problem[] | undefined;
-  constructor(public markers: Cell[][]) {}
+  markers: Cell[][];
+  constructor(markers: Cell[][]) {
+    this.markers = markers;
+  }
   async read(): Promise<SheetValues> {
     return {
       markers: [[...COLUMNS.markers], ...this.markers],
@@ -39,7 +42,10 @@ class FakeSheet implements SheetStore {
 
 class FakeBucket implements SnapshotStore {
   files = new Map<string, PublicFile>();
-  constructor(private published?: number) {}
+  private published: number | undefined;
+  constructor(published?: number) {
+    this.published = published;
+  }
   async currentCount() {
     return this.published;
   }

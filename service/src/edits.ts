@@ -61,11 +61,13 @@ export interface EditStore {
 }
 
 export class ApiError extends Error {
-  constructor(
-    public status: 400 | 403 | 404 | 409 | 410 | 422,
-    public body: { error: string; errors?: FieldError[] },
-  ) {
+  status: 400 | 403 | 404 | 409 | 410 | 422;
+  body: { error: string; errors?: FieldError[] };
+
+  constructor(status: ApiError["status"], body: ApiError["body"]) {
     super(body.error);
+    this.status = status;
+    this.body = body;
   }
 }
 
@@ -93,8 +95,10 @@ class Tabs {
   readonly privates: PrivateRow[];
   readonly offers: Offer[];
   readonly lookups: Lookups;
+  readonly values: EditValues;
 
-  constructor(readonly values: EditValues) {
+  constructor(values: EditValues) {
+    this.values = values;
     this.header = {
       ...Object.fromEntries(Object.keys(TABS).map((tab) => [tab, []])),
       markers: (values.markers[0] ?? []).map(text),
@@ -206,10 +210,13 @@ export function parseChangeBody(raw: unknown): ChangeBody {
  * specs/marker-ownership.
  */
 export class MarkerEditor {
-  constructor(
-    private store: EditStore,
-    private now: () => Date,
-  ) {}
+  private store: EditStore;
+  private now: () => Date;
+
+  constructor(store: EditStore, now: () => Date) {
+    this.store = store;
+    this.now = now;
+  }
 
   private async tabs() {
     return new Tabs(await this.store.readEdits());

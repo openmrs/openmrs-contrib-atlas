@@ -8,12 +8,13 @@ export interface FieldError {
 }
 
 export class ApiError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-    public errors: FieldError[] = [],
-  ) {
+  status: number;
+  errors: FieldError[];
+
+  constructor(status: number, message: string, errors: FieldError[] = []) {
     super(message);
+    this.status = status;
+    this.errors = errors;
   }
 }
 
