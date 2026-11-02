@@ -5,7 +5,7 @@
 - [x] 1.1 (manual) On `id-stg.openmrs.org`, realm `openmrs`: create a public `atlas` client with PKCE (S256) and the staging site's root as redirect URI and web origin; put `preferred_username` and a `groups` claim with plain group names in the access token; create the `atlas-administrators` group
 - [x] 1.2 (manual) Provide two test accounts on `id-stg`, and add one to `atlas-administrators` for the admin checks
 - [ ] 1.3 Sign in as a test account and confirm that a real token has the expected issuer, `azp`, `preferred_username` and `groups`, and that the exchange works from the staging origin
-- [ ] 1.4 (manual) Set `KEYCLOAK_ISSUER` and `KEYCLOAK_CLIENT_ID` on the Cloud Run service and matching `VITE_` repository variables
+- [x] 1.4 (manual) Set `KEYCLOAK_ISSUER` and `KEYCLOAK_CLIENT_ID` on the Cloud Run service and matching `VITE_` repository variables
 - [x] 1.5 Document the Keycloak setup and the move to production Keycloak in `service/README.md`
 
 ## 2. Shared rules and sheet
@@ -36,7 +36,7 @@
 - [x] 4.1 Add `oidc-client-ts` behind a lazy auth module; complete the code exchange in `main.tsx` and restore the saved URL
 - [x] 4.2 Add sign-in and sign-out controls, showing the OpenMRS ID and handling unavailable or cancelled sign-in; hide them if Keycloak is not configured
 - [x] 4.3 Add an API client that attaches the token and handles 401 by keeping the draft and asking for sign-in
-- [ ] 4.4 Confirm the first-load bundle hasn't grown materially and that the 3 second budget still holds on Fast 4G
+- [x] 4.4 Confirm the first-load bundle hasn't grown materially and that the 3 second budget still holds on Fast 4G
 
 ## 5. Web: adding and editing
 
@@ -58,10 +58,10 @@
 
 - [x] 7.1 Add the `/api/**` rewrite to `firebase.json` and `VITE_KEYCLOAK_*` to the CI build; set `--max-instances=1` in the Cloud Run deploy
 - [x] 7.2 Add Playwright tests for adding, editing, conflict, delete, editors and transfer, against a stubbed API and token
-- [ ] 7.3 Deploy to staging after all checks pass
+- [x] 7.3 Deploy to staging after all checks pass
 - [ ] 7.4 (manual) Assign test markers to the two test accounts, then walk through staging on a laptop and a phone: sign in, add, edit, confirm, delete, add an editor, transfer, accept, and the admin actions; check that a direct sheet edit leaves `confirmed_at` alone
 - [ ] 7.5 Confirm that a downloaded `atlas.json`, `markers.geojson` and `markers.csv` contain no contact details, owners, editors or offers after that walkthrough
 
 ## 8. Before archiving
 
-- [ ] 8.1 Update the README and `service/README.md`; run `openspec validate add-editing-and-ownership --strict`
+- [x] 8.1 Update the README and `service/README.md`; run `openspec validate add-editing-and-ownership --strict`
