@@ -14,10 +14,12 @@ const monthYear = new Intl.DateTimeFormat("en", {
 interface Props {
   marker: PublicMarker;
   onClose: () => void;
+  /** Controls for those allowed to change this marker. */
+  children?: React.ReactNode;
 }
 
 /** Details for one marker. Blank fields are left out; notes are plain text with links. */
-export function MarkerDetails({ marker, onClose }: Props) {
+export function MarkerDetails({ marker, onClose, children }: Props) {
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), [marker.id]);
 
@@ -72,6 +74,7 @@ export function MarkerDetails({ marker, onClose }: Props) {
           )}
         </p>
       )}
+      {children}
     </aside>
   );
 }

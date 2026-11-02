@@ -21,6 +21,12 @@ const context: {
     now: string,
     newId: () => string,
   ) => Plan;
+  planPrivateEdit?: (
+    header: string[],
+    rows: unknown[][],
+    start: number,
+    count: number,
+  ) => { markerId: string; fields: string[] }[];
 } = {};
 runInNewContext(readFileSync(resolve(import.meta.dirname, "Code.js"), "utf8"), context);
 const plan = context.planMarkerEdit!;
@@ -29,6 +35,25 @@ const header: string[] = [...COLUMNS.markers];
 const col = (name: string) => header.indexOf(name) + 1;
 const NOW = "2026-11-01T12:00:00.000Z";
 const row = (values: Record<string, unknown>) => header.map((h) => values[h] ?? "");
+
+describe("planPrivateEdit (Direct edits to private fields are logged)", () => {
+  it("Scenario: Admin changes an owner in the sheet", () => {
+    const privateHeader: string[] = [...COLUMNS.private];
+    const entries = context.planPrivateEdit!(
+      privateHeader,
+      [["m1", "jdoe", "", "", ""]],
+      privateHeader.indexOf("owner") + 1,
+      1,
+    );
+    expect(entries).toEqual([{ markerId: "m1", fields: ["owner"] }]);
+  });
+
+  it("skips blank rows", () => {
+    expect(context.planPrivateEdit!([...COLUMNS.private], [["", "", "", "", ""]], 2, 1)).toEqual(
+      [],
+    );
+  });
+});
 
 describe("planMarkerEdit (Edit tracking in the sheet)", () => {
   it("Scenario: Admin corrects a website", () => {

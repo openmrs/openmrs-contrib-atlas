@@ -5,6 +5,10 @@ A script bound to the Atlas sheet, which keeps direct edits by admins in step wi
 - **On every edit to `markers`**, it gives new rows an `id` (a UUID), sets `updated_at`, and
   appends one row per edited marker to `changes`: time, editor, marker id, add/edit, and the
   columns edited.
+- **On every edit to `private`**, it appends the same kind of row to `changes`. It doesn't publish,
+  because nothing public changed.
+- **It never changes `confirmed_at`.** Direct edits don't restart a marker's freshness clock, and
+  admins can edit that column themselves.
 - **On edits to `markers` or the lookup tabs**, it asks the publish service for a publish. Edits
   are debounced: the first one schedules a publish a minute later, and edits in that minute ride
   along with it. So publishing happens at most once a minute.

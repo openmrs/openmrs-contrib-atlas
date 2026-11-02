@@ -4,6 +4,7 @@
  * - onAtlasEdit (installable onEdit trigger): gives new marker rows an id, stamps
  *   updated_at, logs each edit to the changes tab, and asks for a publish.
  * - Publishes are debounced: at most one call to the service per minute.
+ * - Edits to the private tab are logged too, but don't publish: nothing public changed.
  * - The "Atlas" menu offers Publish now, Force publish and Install triggers.
  *
  * Script Properties: SERVICE_URL (the Cloud Run service) and PUBLISH_SECRET.
@@ -36,6 +37,10 @@ function installTriggers() {
 function onAtlasEdit(e) {
   var sheet = e.range.getSheet();
   var tab = sheet.getName();
+  if (tab === "private") {
+    logPrivateEdit(e, sheet);
+    return;
+  }
   if (DATA_TABS.indexOf(tab) === -1) return;
 
   if (tab === "markers" && e.range.getLastRow() > 1) {
@@ -66,6 +71,35 @@ function onAtlasEdit(e) {
     });
   }
   requestPublish();
+}
+
+function logPrivateEdit(e, sheet) {
+  if (e.range.getLastRow() < 2) return;
+  var header = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  var firstRow = Math.max(e.range.getRow(), 2);
+  var numRows = e.range.getLastRow() - firstRow + 1;
+  var rows = sheet.getRange(firstRow, 1, numRows, header.length).getValues();
+  var entries = planPrivateEdit(header, rows, e.range.getColumn(), e.range.getNumColumns());
+  var user = (e.user && e.user.getEmail()) || "unknown";
+  var changes = SpreadsheetApp.getActive().getSheetByName("changes");
+  var timestamp = new Date().toISOString();
+  entries.forEach(function (c) {
+    changes.appendRow([timestamp, user, c.markerId, "edit", JSON.stringify(c.fields)]);
+  });
+}
+
+/** Pure: one changes entry per edited row of the private tab. Columns are 1-based. */
+function planPrivateEdit(header, rows, editStartColumn, editNumColumns) {
+  var idIndex = header.indexOf("id");
+  var fields = header.slice(editStartColumn - 1, editStartColumn - 1 + editNumColumns);
+  var entries = [];
+  rows.forEach(function (row) {
+    var blank = row.every(function (cell) {
+      return cell === "" || cell === null;
+    });
+    if (!blank) entries.push({ markerId: String(row[idIndex] || ""), fields: fields });
+  });
+  return entries;
 }
 
 /**

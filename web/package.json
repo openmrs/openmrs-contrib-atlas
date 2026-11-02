@@ -14,10 +14,11 @@
     "e2e": "playwright test"
   },
   "dependencies": {
+    "@openmrs-atlas/shared": "*",
     "maplibre-gl": "^6.16.0",
+    "oidc-client-ts": "^3.5.0",
     "react": "^19.3.1",
-    "react-dom": "^19.3.1",
-    "@openmrs-atlas/shared": "*"
+    "react-dom": "^19.3.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",

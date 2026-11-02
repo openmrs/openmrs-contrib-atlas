@@ -51,7 +51,7 @@ export function buildSnapshot(markers: Marker[], lookups: Lookups, now: Date): A
   };
 }
 
-function toPublicMarker(marker: Marker): PublicMarker {
+export function toPublicMarker(marker: Marker): PublicMarker {
   const country = iso1A2Code([marker.longitude, marker.latitude]) ?? undefined;
   const out: Record<string, unknown> = {};
   for (const field of PUBLIC_FIELDS) {
@@ -83,6 +83,7 @@ export function toCsv(snapshot: AtlasSnapshot): string {
 
 function csvCell(value: unknown): string {
   if (value === undefined || value === null) return "";
-  const s = String(value);
+  // Spreadsheets run text starting with these as a formula; numbers are safe as they are.
+  const s = typeof value === "string" && /^[=+\-@\t\r]/.test(value) ? `'${value}` : String(value);
   return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }

@@ -18,6 +18,28 @@ describe.skipIf(!sheetId)("googleSheetStore against the test sheet", () => {
     expect(values.versions.flat()).toContain("1.10");
   });
 
+  it("appends, updates, reads back and clears rows, storing text literally", async () => {
+    const formula = '=IMPORTXML("http://example.org","//a")';
+    const before = (await store.readEdits()).pending.length;
+    await store.appendRow("pending", ["test-marker", formula, "1.10", "", ""]);
+    const added = await store.readEdits();
+    const row = added.pending.length;
+    expect(row).toBeGreaterThan(before);
+    expect(added.pending[row - 1]?.slice(0, 3)).toEqual(["test-marker", formula, "1.10"]);
+
+    await store.updateCells([{ tab: "pending", row, column: 2, value: "=1+1" }]);
+    expect(await store.readCell("pending", row, 2)).toBe("=1+1");
+
+    await store.clearRow("pending", row);
+    expect(await store.readCell("pending", row, 0)).toBeUndefined();
+  });
+
+  it("reads the private tab for editing, header first", async () => {
+    const values = await store.readEdits();
+    expect(values.private[0]).toEqual([...COLUMNS.private]);
+    expect(values.pending[0]).toEqual([...COLUMNS.pending]);
+  });
+
   it("replaces the problems tab", async () => {
     await store.writeProblems([{ markerId: "test-id", row: 7, reasons: ["a", "b"] }]);
     const { data } = await sheetsClient().spreadsheets.values.get({

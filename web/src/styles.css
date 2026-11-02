@@ -31,7 +31,8 @@ body,
 
 button,
 select,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -325,6 +326,132 @@ button:disabled {
   color: #b42318;
 }
 
+/* Signing in, forms and My markers */
+button.link {
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--accent);
+  text-decoration: underline;
+  text-align: left;
+  cursor: pointer;
+}
+.marker-actions {
+  margin-top: 12px;
+}
+.confirm {
+  margin: 8px 0;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-alt);
+}
+.confirm p {
+  margin: 0 0 8px;
+}
+.marker-form form,
+.sharing {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+}
+.marker-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+}
+.marker-form input:not([type="file"]),
+.marker-form select,
+.marker-form textarea {
+  width: 100%;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.marker-form [aria-invalid="true"] {
+  border-color: #b42318;
+}
+.marker-form fieldset {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  margin: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.marker-form legend {
+  font-weight: 600;
+  padding: 0 4px;
+}
+.marker-form .error {
+  font-size: 13px;
+  margin: 0;
+}
+.place-search {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+.place-search label {
+  flex: 1;
+  min-width: 0;
+}
+.place-results,
+.marker-list,
+.editor-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.place-results li {
+  padding: 3px 0;
+  font-size: 14px;
+}
+.coordinates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.logo-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.logo-preview img {
+  max-width: 80px;
+  max-height: 80px;
+}
+.sharing {
+  margin-top: 16px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.sharing button {
+  align-self: flex-start;
+}
+.panel h3 {
+  font-size: 15px;
+  margin: 12px 0 4px;
+}
+.marker-list li {
+  padding: 8px 0;
+  border-top: 1px solid var(--line);
+}
+.marker-list p {
+  margin: 2px 0 6px;
+}
+.editor-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0;
+}
+
 /* Phones: panels become bottom sheets, stats shrink. */
 @media (max-width: 600px) {
   .topbar {
@@ -338,6 +465,8 @@ button:disabled {
   }
   .topbar button {
     margin-left: auto;
+    padding: 4px 8px;
+    font-size: 14px;
   }
   .stats {
     left: 8px;

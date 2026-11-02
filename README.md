@@ -15,7 +15,8 @@ A world map of OpenMRS implementations, at [atlas.openmrs.org](https://atlas.ope
   sheet is edited and nightly.
 - **The map is a static site** (React, Vite, MapLibre GL JS with OpenFreeMap tiles) that loads
   the snapshot.
-- **Sign-in** (Phase 2) uses OpenMRS Keycloak.
+- **Sign-in** uses OpenMRS Keycloak. People add and edit markers on the site, and the service
+  writes those changes to the sheet.
 
 The requirements and design live in [`openspec/`](openspec/). Each piece of work is an OpenSpec
 change: proposed, applied, then archived into `openspec/specs/`. Background and rationale are in the

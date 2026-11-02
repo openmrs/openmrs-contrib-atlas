@@ -55,6 +55,8 @@ export default defineConfig({
   plugins: [react(), devData(), preloads()],
   // MapLibre alone is ~300 KB gzipped; load time is measured on staging instead (task 9.4).
   build: { chunkSizeWarningLimit: 1600 },
+  // The service, run locally (see service/README.md), as Firebase Hosting forwards it in production.
+  server: { proxy: { "/api": "http://localhost:8080" } },
   test: {
     environment: "jsdom",
     include: ["src/**/*.test.{ts,tsx}"],

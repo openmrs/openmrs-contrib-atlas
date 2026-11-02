@@ -23,6 +23,11 @@ describe("buildSnapshot", () => {
     expect(snapshot.versions).toHaveLength(2);
   });
 
+  it("Scenario: Deleted markers excluded", () => {
+    const snapshot = snapshotOf(markerRow({ id: ids(1), status: "deleted" }));
+    expect(snapshot.markers).toEqual([]);
+  });
+
   it("Scenario: Hidden and closed markers excluded", () => {
     const snapshot = snapshotOf(
       markerRow({ id: ids(1) }),
@@ -59,6 +64,21 @@ describe("buildSnapshot", () => {
 });
 
 // Requirement: Download formats / Private fields stay private
+describe("Spreadsheet-safe CSV", () => {
+  it("Scenario: Formula in a marker name", () => {
+    const name = '=HYPERLINK("http://example.org")';
+    const snapshot = snapshotOf(markerRow({ name }));
+    expect(toCsv(snapshot)).toContain(`"'=HYPERLINK(""http://example.org"")"`);
+    expect(snapshot.markers[0]?.name).toBe(name);
+  });
+
+  it("Scenario: Negative coordinate", () => {
+    const csv = toCsv(snapshotOf(markerRow({ longitude: -1.5 })));
+    expect(csv).toContain(",-1.5,");
+    expect(csv).not.toContain("'-1.5");
+  });
+});
+
 describe("download formats", () => {
   const snapshot = snapshotOf(
     markerRow({ id: ids(1), notes: 'Says "hi", then\nleaves' }),

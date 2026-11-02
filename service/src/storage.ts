@@ -1,4 +1,5 @@
 import { Storage } from "@google-cloud/storage";
+import type { LogoStore } from "./logos.ts";
 import type { PublicFile, SnapshotStore } from "./publish.ts";
 
 /** Public snapshot files: cached at most 5 minutes (specs/snapshot-publishing). */
@@ -32,6 +33,23 @@ export function gcsSnapshotStore(bucketName: string, apiEndpoint?: string): Snap
           },
         });
       }
+    },
+  };
+}
+
+/** Uploaded logos, next to the logos from the migration. Names are unique, so cache for long. */
+export function gcsLogoStore(bucketName: string, apiEndpoint?: string): LogoStore {
+  const storage = new Storage(apiEndpoint ? { apiEndpoint, projectId: "local" } : {});
+  const bucket = storage.bucket(bucketName);
+  const base = apiEndpoint ?? "https://storage.googleapis.com";
+
+  return {
+    async saveLogo(name, body) {
+      await bucket.file(name).save(body, {
+        resumable: false,
+        metadata: { contentType: "image/webp", cacheControl: "public, max-age=31536000" },
+      });
+      return `${base}/${bucketName}/${name}`;
     },
   };
 }

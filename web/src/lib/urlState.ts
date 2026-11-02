@@ -7,9 +7,14 @@ import { NO_FILTERS, type ColourBy, type Filters, type MapView } from "./types.t
  *   colour=distribution|version   (type is the default and is omitted)
  *   type=, dist=, version=, country=   repeated once per selected value
  *   confirmed=<years>
+ *   panel=mine|add|edit   a signed-in panel; edit applies to the marker above
  */
+export type SignedInPanel = "mine" | "add" | "edit";
+const SIGNED_IN_PANELS: SignedInPanel[] = ["mine", "add", "edit"];
+
 export interface UrlState {
   marker?: string;
+  panel?: SignedInPanel;
   view?: MapView;
   colourBy: ColourBy;
   filters: Filters;
@@ -23,6 +28,9 @@ export function parseUrlState(search: string): UrlState {
 
   const marker = params.get("marker");
   if (marker) state.marker = marker;
+
+  const panel = params.get("panel") as SignedInPanel | null;
+  if (panel && SIGNED_IN_PANELS.includes(panel)) state.panel = panel;
 
   const [zoom, lat, lng] = (params.get("map") ?? "").split("/").map(Number);
   if (
@@ -64,6 +72,7 @@ export function formatUrlState(state: UrlState): string {
   if (filters.confirmedWithinYears !== undefined) {
     params.set("confirmed", String(filters.confirmedWithinYears));
   }
+  if (state.panel) params.set("panel", state.panel);
   // "/" is legal in a query string; leaving it unescaped keeps map=5/-1.3/36.8 readable.
   const query = params.toString().replace(/%2F/g, "/");
   return query ? `?${query}` : "";

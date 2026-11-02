@@ -81,7 +81,7 @@ describe("validateMarkers", () => {
         openmrs_version: "9.9",
         url: "ftp://example.org",
         logo_url: "not a url",
-        status: "deleted",
+        status: "gone",
       }),
     );
     expect(problems[0]?.reasons).toEqual([
@@ -89,7 +89,7 @@ describe("validateMarkers", () => {
       "unknown openmrs_version: 9.9",
       "url must be an http or https URL",
       "logo_url must be an http or https URL",
-      "unknown status: deleted",
+      "unknown status: gone",
     ]);
     expect(validate(markerRow({ openmrs_version: "Other" })).problems).toEqual([]);
     expect(validate(markerRow({ openmrs_version: "1.10" })).problems).toEqual([]);

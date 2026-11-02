@@ -15,7 +15,7 @@ context: |
     snapshot in a public Cloud Storage bucket, regenerated on every write and nightly.
   - One TypeScript service on Google Cloud Run does all writes and publishing. Everything
     lives in one OpenMRS Google Cloud project.
-  - Sign-in is OpenMRS Keycloak (OIDC). Admins are the Keycloak group atlas-admin.
+  - Sign-in is OpenMRS Keycloak (OIDC). Admins are the Keycloak group atlas-administrators.
     Editors are added by OpenMRS ID (username) only.
   - Email goes through Mandrill (Mailchimp Transactional). Staging only delivers to an allowlist.
   - Contact emails and owner/editor lists are never published. Contact is an opt-in relay form.

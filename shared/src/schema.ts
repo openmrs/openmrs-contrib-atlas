@@ -7,6 +7,7 @@ export const TABS = {
   markers: "markers",
   private: "private",
   changes: "changes",
+  pending: "pending",
   types: "types",
   distributions: "distributions",
   versions: "versions",
@@ -34,6 +35,7 @@ export const COLUMNS = {
   ],
   private: ["id", "owner", "editors", "contact_name", "contact_email"],
   changes: ["timestamp", "user", "marker_id", "action", "fields"],
+  pending: ["marker_id", "from", "to", "created_at", "expires_at"],
   types: ["name", "colour", "sort"],
   distributions: ["name", "url", "is_standard"],
   versions: ["version", "release_date"],
@@ -52,12 +54,16 @@ export const TEXT_COLUMNS = new Set<string>([
   "timestamp",
   "owner",
   "editors",
+  "marker_id",
+  "from",
+  "to",
+  "expires_at",
 ]);
 
 /** The version value allowed in addition to the versions tab. */
 export const OTHER_VERSION = "Other";
 
-export const MARKER_STATUSES = ["active", "hidden", "closed"] as const;
+export const MARKER_STATUSES = ["active", "hidden", "closed", "deleted"] as const;
 export type MarkerStatus = (typeof MARKER_STATUSES)[number];
 
 /** A cell as returned by the Sheets API with UNFORMATTED_VALUE rendering. */

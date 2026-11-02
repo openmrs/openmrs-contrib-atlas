@@ -4,6 +4,12 @@
       "target": "staging",
       "public": "web/dist",
       "cleanUrls": true,
+      "rewrites": [
+        {
+          "source": "/api/**",
+          "run": { "serviceId": "atlas-service-stg", "region": "us-central1" }
+        }
+      ],
       "redirects": [
         {
           "source": "/data/atlas.json",
