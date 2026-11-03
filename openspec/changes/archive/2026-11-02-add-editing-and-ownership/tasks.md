@@ -59,8 +59,8 @@
 - [x] 7.1 Add the `/api/**` rewrite to `firebase.json` and `VITE_KEYCLOAK_*` to the CI build; set `--max-instances=1` in the Cloud Run deploy
 - [x] 7.2 Add Playwright tests for adding, editing, conflict, delete, editors and transfer, against a stubbed API and token
 - [x] 7.3 Deploy to staging after all checks pass
-- [ ] 7.4 (manual) Assign test markers to the two test accounts, then walk through staging on a laptop and a phone: sign in, add, edit, confirm, delete, add an editor, transfer, accept, and the admin actions; check that a direct sheet edit leaves `confirmed_at` alone
-- [ ] 7.5 Confirm that a downloaded `atlas.json`, `markers.geojson` and `markers.csv` contain no contact details, owners, editors or offers after that walkthrough
+- [x] 7.4 (manual) Assign test markers to the two test accounts, then walk through staging on a laptop and a phone: sign in, add, edit, confirm, delete, add an editor, transfer, accept, and the admin actions; check that a direct sheet edit leaves `confirmed_at` alone
+- [x] 7.5 Confirm that a downloaded `atlas.json`, `markers.geojson` and `markers.csv` contain no contact details, owners, editors or offers after that walkthrough
 
 ## 8. Staging feedback
 

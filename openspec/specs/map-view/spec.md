@@ -4,6 +4,7 @@
 The public world map of OpenMRS implementations: what visitors see, how markers are drawn, and how they search, filter and share what they find.
 
 ## Requirements
+
 ### Requirement: Map loads quickly with all markers
 On first load, the map SHALL show the whole world with every published marker visible, within 3 seconds on a simulated Fast 4G connection with an empty cache. The base map may finish loading after the markers appear.
 
@@ -23,11 +24,15 @@ The map SHALL always display attribution for OpenStreetMap contributors and the 
 - **THEN** OpenStreetMap and OpenFreeMap attribution is visible
 
 ### Requirement: Colour by attribute
-Markers SHALL be coloured by type by default, and visitors SHALL be able to colour them by distribution or by OpenMRS version instead. A legend SHALL show the colour for each value present, with blank values shown as "Unknown".
+Markers SHALL be coloured by type by default, and visitors SHALL be able to colour them by distribution or by OpenMRS version instead. A legend SHALL show the colour for each value present among markers that are not closed, with blank values shown as "Unknown", and SHALL show a "Closed" entry when any closed marker is on the map.
 
 #### Scenario: Switch to distribution
 - **WHEN** a visitor chooses "Colour by distribution"
 - **THEN** markers recolour by distribution and the legend lists the distributions present plus "Unknown" if any marker has none
+
+#### Scenario: Closed sites in the legend
+- **WHEN** a closed marker is the only one with distribution "Bahmni"
+- **THEN** the legend, coloured by distribution, shows "Closed" and does not list "Bahmni"
 
 ### Requirement: Site counts on markers
 A marker whose `site_count` is greater than 1 SHALL display that number inside the marker.
@@ -71,7 +76,7 @@ A marker SHALL be fully opaque until 2 years after its `confirmed_at`, then fade
 - **THEN** the pin is faded and the count is drawn at full opacity
 
 ### Requirement: Marker details
-Selecting a marker SHALL show its name, logo, organisation, type, distribution, OpenMRS version, site count, website link, notes and the month and year it was last confirmed. Fields that are blank SHALL be omitted. Notes SHALL be shown as plain text, with web addresses made into links.
+Selecting a marker SHALL show its name, logo, organisation, type, distribution, OpenMRS version, site count, website link, notes and the month and year it was last confirmed, and SHALL say so if the site is closed. Fields that are blank SHALL be omitted. Notes SHALL be shown as plain text, with web addresses made into links.
 
 #### Scenario: Popup content
 - **WHEN** a visitor selects a marker with a name, website and notes but no logo
@@ -81,6 +86,10 @@ Selecting a marker SHALL show its name, logo, organisation, type, distribution, 
 - **WHEN** a marker's notes contain `<script>` or HTML tags
 - **THEN** they are shown as literal text and nothing is executed
 
+#### Scenario: Closed site details
+- **WHEN** a visitor selects a closed marker
+- **THEN** the details show "Closed" as its status
+
 ### Requirement: Search
 Visitors SHALL be able to search markers by name, organisation or country name. Selecting a result SHALL move the map to that marker and open its details.
 
@@ -89,7 +98,7 @@ Visitors SHALL be able to search markers by name, organisation or country name. 
 - **THEN** the results include markers whose country is Uganda
 
 ### Requirement: Filters
-Visitors SHALL be able to filter markers by type, distribution, OpenMRS version, country, and "confirmed within the last N years". Filters SHALL apply to markers, clusters, legend and headline stats together, and SHALL be clearable in one action.
+Visitors SHALL be able to filter markers by type, distribution, OpenMRS version, country, and "confirmed within the last N years", and to hide closed sites. Closed sites SHALL be shown unless hidden. Filters SHALL apply to markers, clusters, legend and headline stats together, and SHALL be clearable in one action. The control that opens the filters SHALL sit inside the search box and SHALL show when any filter is on.
 
 #### Scenario: Hide old markers on request
 - **WHEN** a visitor selects "confirmed within the last 2 years"
@@ -99,12 +108,20 @@ Visitors SHALL be able to filter markers by type, distribution, OpenMRS version,
 - **WHEN** a visitor chooses "Clear filters"
 - **THEN** every published marker is shown again
 
+#### Scenario: Hide closed sites
+- **WHEN** a visitor turns off "Show closed sites"
+- **THEN** closed markers leave the map and the legend's "Closed" entry goes, and a copied URL keeps that choice
+
 ### Requirement: Headline stats
-The map SHALL show the number of markers, countries and total sites, and how many markers were confirmed in the last 2 years, for the markers currently matching the filters.
+The map SHALL show the number of markers, countries and total sites, and how many markers were confirmed in the last 2 years, for the markers currently matching the filters. Closed markers SHALL NOT be counted in any of them.
 
 #### Scenario: Default stats
 - **WHEN** no filters are applied
-- **THEN** the stats count every published marker, and "confirmed in the last 2 years" counts those with `confirmed_at` within 2 years of today
+- **THEN** the stats count every published marker that is not closed, and "confirmed in the last 2 years" counts those with `confirmed_at` within 2 years of today
+
+#### Scenario: Closed site not counted
+- **WHEN** an owner closes a marker with 50 sites, the only one in its country
+- **THEN** implementations fall by 1, sites by 50 and countries by 1, and the pin stays on the map
 
 ### Requirement: Shareable URLs
 The page URL SHALL reflect the map view, colour-by choice, filters and selected marker, so that opening a copied URL restores the same view. The 2.0 form `/?marker=<id>` SHALL open that marker.
@@ -122,11 +139,15 @@ The page URL SHALL reflect the map view, colour-by choice, filters and selected 
 - **THEN** the same filters, map area and colouring are shown
 
 ### Requirement: Works on phones
-The map, search, filters, legend and marker details SHALL be usable on a 360 pixel wide touch screen without horizontal scrolling.
+The map, search, filters, legend and marker details SHALL be usable on a 360 pixel wide touch screen without horizontal scrolling, and the top bar SHALL fit on one line at that width.
 
 #### Scenario: Phone visitor
 - **WHEN** a visitor opens the Atlas on a 360 pixel wide phone
 - **THEN** they can search, filter and open marker details using touch alone
+
+#### Scenario: Top bar on a phone
+- **WHEN** the Atlas is open on a 360 pixel wide phone, signed in or not
+- **THEN** the name, search box, download and account controls share one line
 
 #### Scenario: First view on a phone
 - **WHEN** a visitor opens the Atlas with no query string on a 360 pixel wide phone
@@ -173,3 +194,18 @@ When a Google Analytics measurement ID is configured, the site SHALL record page
 #### Scenario: Staging without analytics
 - **WHEN** the site is built without a measurement ID
 - **THEN** no requests are sent to Google Analytics
+
+### Requirement: Closed sites on the map
+A marker with status `closed` SHALL be drawn as a grey pin whatever the colour-by choice. It SHALL otherwise behave like any other marker: it shows its site count when greater than 1, fades by freshness, counts towards the total of a cluster it falls into, and can be selected and found by search. It SHALL NOT be more prominent than other markers, and SHALL be drawn beneath them where they overlap.
+
+#### Scenario: Closed site with many sites
+- **WHEN** a closed marker has `site_count` 50 and was confirmed 9 years ago
+- **THEN** it is a grey pin showing "50", drawn at 60% opacity
+
+#### Scenario: Closed pin overlapping an active pin
+- **WHEN** a closed marker and an active marker overlap
+- **THEN** the active pin is drawn on top
+
+#### Scenario: Closed site in search results
+- **WHEN** a visitor's search matches a closed marker
+- **THEN** the result says it is closed
