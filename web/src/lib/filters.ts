@@ -12,6 +12,7 @@ export function applyFilters(markers: PublicMarker[], filters: Filters, now: Dat
       matches(filters.distributions, m.distribution) &&
       matches(filters.versions, m.openmrs_version) &&
       matches(filters.countries, m.country) &&
+      !(filters.hideClosed && m.status === "closed") &&
       (filters.confirmedWithinYears === undefined ||
         yearsSince(lastConfirmed(m), now) <= filters.confirmedWithinYears),
   );
@@ -23,6 +24,8 @@ export function hasFilters(filters: Filters): boolean {
       filters.distributions.length +
       filters.versions.length +
       filters.countries.length >
-      0 || filters.confirmedWithinYears !== undefined
+      0 ||
+    filters.confirmedWithinYears !== undefined ||
+    Boolean(filters.hideClosed)
   );
 }

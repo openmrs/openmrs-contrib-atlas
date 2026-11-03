@@ -8,6 +8,7 @@ import {
   can,
   checkLimits,
   checkMarkerRow,
+  isPublished,
   isUsername,
   normaliseUsername,
   parseLookups,
@@ -314,7 +315,7 @@ export class MarkerEditor {
     return {
       version: text(cells.updated_at),
       status: text(cells.status),
-      marker: marker && marker.status === "active" ? toPublicMarker(marker) : null,
+      marker: marker && isPublished(marker.status) ? toPublicMarker(marker) : null,
       publish,
     };
   }
@@ -515,9 +516,38 @@ export class MarkerEditor {
   async confirm(person: Person, id: string): Promise<MarkerResult> {
     const tabs = await this.tabs();
     const { marker } = this.find(tabs, person, id, "confirm");
+    if (text(marker.cells.status) === "closed") {
+      throw new ApiError(409, { error: "This site is closed. Reopen it instead." });
+    }
     const result = await this.restartClock(tabs, marker);
     await this.log(person, id, "confirm", ["confirmed_at"]);
     return result;
+  }
+
+  /** The implementation has ended. It stays on the map, and says nothing about freshness. */
+  async close(person: Person, id: string): Promise<MarkerResult> {
+    const tabs = await this.tabs();
+    const { marker } = this.find(tabs, person, id, "close");
+    if (text(marker.cells.status) !== "active") {
+      throw new ApiError(409, { error: "Only an active site can be closed." });
+    }
+    const changes = { status: "closed", updated_at: this.stamp() };
+    await this.writeMarker(tabs, marker, changes);
+    await this.log(person, id, "close", ["status"]);
+    return this.result(tabs, { ...marker.cells, ...changes }, true);
+  }
+
+  async reopen(person: Person, id: string): Promise<MarkerResult> {
+    const tabs = await this.tabs();
+    const { marker } = this.find(tabs, person, id, "close");
+    if (text(marker.cells.status) !== "closed") {
+      throw new ApiError(409, { error: "Only a closed site can be reopened." });
+    }
+    const stamp = this.stamp();
+    const changes = { status: "active", updated_at: stamp, confirmed_at: stamp };
+    await this.writeMarker(tabs, marker, changes);
+    await this.log(person, id, "reopen", ["status", "confirmed_at"]);
+    return this.result(tabs, { ...marker.cells, ...changes }, true);
   }
 
   /** Keeps the row, so an admin can restore the marker by changing its status. */

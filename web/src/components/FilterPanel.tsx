@@ -99,6 +99,16 @@ export function FilterPanel({ markers, order, filters, onChange, onClose }: Prop
           ))}
         </select>
       </label>
+      {(filters.hideClosed || markers.some((m) => m.status === "closed")) && (
+        <label>
+          <input
+            type="checkbox"
+            checked={!filters.hideClosed}
+            onChange={(e) => onChange({ ...filters, hideClosed: !e.target.checked || undefined })}
+          />
+          Show closed sites
+        </label>
+      )}
       {group("types", "Type")}
       {group("distributions", "Distribution")}
       {group("versions", "OpenMRS version")}

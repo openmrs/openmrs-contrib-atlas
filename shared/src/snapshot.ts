@@ -25,9 +25,10 @@ export const PUBLIC_FIELDS = [
   "created_at",
   "updated_at",
   "confirmed_at",
+  "status",
 ] as const;
 
-export type PublicMarker = Omit<Marker, "status"> & {
+export type PublicMarker = Marker & {
   /** ISO 3166-1 alpha-2, derived from the coordinates; omitted at sea. */
   country?: string;
 };
@@ -40,14 +41,19 @@ export interface AtlasSnapshot {
   markers: PublicMarker[];
 }
 
-/** Builds atlas.json content: active markers only, public fields only. */
+/** On the public map: closed sites stay there, marked as closed. */
+export function isPublished(status: string): boolean {
+  return status === "active" || status === "closed";
+}
+
+/** Builds atlas.json content: published markers only, public fields only. */
 export function buildSnapshot(markers: Marker[], lookups: Lookups, now: Date): AtlasSnapshot {
   return {
     generated_at: now.toISOString(),
     types: lookups.types,
     distributions: lookups.distributions,
     versions: lookups.versions,
-    markers: markers.filter((m) => m.status === "active").map(toPublicMarker),
+    markers: markers.filter((m) => isPublished(m.status)).map(toPublicMarker),
   };
 }
 
@@ -58,7 +64,7 @@ export function toPublicMarker(marker: Marker): PublicMarker {
     const value = field === "country" ? country : marker[field];
     if (value !== undefined) out[field] = value;
   }
-  return out as PublicMarker;
+  return out as unknown as PublicMarker;
 }
 
 export function toGeoJson(snapshot: AtlasSnapshot) {

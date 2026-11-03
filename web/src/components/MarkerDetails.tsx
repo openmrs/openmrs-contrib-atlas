@@ -27,6 +27,7 @@ export function MarkerDetails({ marker, onClose, children }: Props) {
 
   const confirmed = lastConfirmed(marker);
   const rows: [string, React.ReactNode][] = [];
+  if (marker.status === "closed") rows.push(["Status", "Closed"]);
   if (marker.organisation) rows.push(["Organisation", marker.organisation]);
   if (marker.country) rows.push(["Country", countryName(marker.country)]);
   rows.push(["Type", marker.type]);

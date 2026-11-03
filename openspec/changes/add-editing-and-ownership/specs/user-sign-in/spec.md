@@ -10,8 +10,8 @@ Lets people sign in to the Atlas with their OpenMRS account, and lets the servic
 People SHALL sign in through OpenMRS Keycloak, with no Atlas-specific account or password. After signing in or out they SHALL return to the view they left, and the page SHALL show who is signed in.
 
 #### Scenario: Signing in from a shared view
-- **WHEN** a visitor viewing a filtered map with a marker open chooses "Sign in" and completes sign-in
-- **THEN** they return to the same filters, map area and marker, and their OpenMRS ID is shown
+- **WHEN** a visitor viewing a filtered map chooses "Sign in" and completes sign-in
+- **THEN** they return to the same filters and map area with My markers open, and their OpenMRS ID is shown
 
 #### Scenario: Signing out
 - **WHEN** a signed-in person chooses "Sign out"
@@ -56,3 +56,33 @@ When a session ends while someone is filling in a form, the form's contents SHAL
 #### Scenario: Session expires while editing
 - **WHEN** a person submits an edit after their session has expired
 - **THEN** they are asked to sign in again and return to the form with what they typed still there
+
+#### Scenario: Session ends with the form open
+- **WHEN** a session ends while a person has a form open
+- **THEN** the form stays open with what they typed, and offers signing in again
+
+### Requirement: The page shows when a session has ended
+The page SHALL stop showing a person as signed in as soon as it learns their session has ended: when the service rejects a request, when their token can't be renewed, when they return to the page after their session has lapsed, or when the session's known end time passes with the page open. The Atlas SHALL NOT extend a session beyond Keycloak's settings. A brief network failure SHALL NOT end a session.
+
+#### Scenario: Returning after a while
+- **WHEN** a person returns to an open Atlas page after their session has lapsed
+- **THEN** the top bar shows "Sign in", edit controls are gone, and a notice says the session has ended
+
+#### Scenario: Request rejected
+- **WHEN** the service answers any request with 401
+- **THEN** the top bar shows "Sign in" and a notice says the session has ended
+
+#### Scenario: Opening a form after the session has ended
+- **WHEN** an edit form can't load because the session has ended
+- **THEN** it offers signing in again, shows no empty form, and clicking the map does not place a pin
+
+#### Scenario: Network failure
+- **WHEN** a person's token can't be renewed because the network is down
+- **THEN** they stay signed in, and the request that needed the token reports an error
+
+### Requirement: Signing in explains itself
+Choosing "Sign in" SHALL first show a short panel saying that signing in lets a person add or update their site, with a button that starts sign-in.
+
+#### Scenario: Visitor chooses Sign in
+- **WHEN** a visitor chooses "Sign in" in the top bar
+- **THEN** a panel says "Sign in to add or update your site", and sign-in starts only when they confirm

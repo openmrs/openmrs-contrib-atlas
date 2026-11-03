@@ -107,6 +107,14 @@ export function createApi(deps: ApiDeps) {
     c.json(await write(() => editor.confirm(c.get("person"), c.req.param("id")))),
   );
 
+  api.post("/markers/:id/close", async (c) =>
+    c.json(await write(() => editor.close(c.get("person"), c.req.param("id")))),
+  );
+
+  api.post("/markers/:id/reopen", async (c) =>
+    c.json(await write(() => editor.reopen(c.get("person"), c.req.param("id")))),
+  );
+
   api.delete("/markers/:id", async (c) =>
     c.json(await write(() => editor.remove(c.get("person"), c.req.param("id")))),
   );

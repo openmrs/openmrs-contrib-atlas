@@ -40,6 +40,7 @@ export function toFeatures(
         colour: colourOf(m, colourBy, colours),
         opacity: opacityFor(m, now),
         sites: m.site_count ?? 1,
+        closed: m.status === "closed",
       },
     })),
   };
@@ -63,6 +64,9 @@ export function sourceSpec(
 }
 
 const isMulti: ExpressionSpecification = [">", ["get", "sites"], 1];
+const isClosed: ExpressionSpecification = ["boolean", ["get", "closed"], false];
+/** Closed sites are drawn beneath the others. */
+const closedBelow: ExpressionSpecification = ["case", isClosed, 0, 1];
 
 const MULTI_SIZE = 1.35;
 const markerSize: ExpressionSpecification = ["case", isMulti, MULTI_SIZE, 1];
@@ -130,6 +134,7 @@ export const layerSpecs: SymbolLayerSpecification[] = [
         ["get", "colour"],
       ] as ExpressionSpecification,
       "icon-size": markerSize,
+      "symbol-sort-key": closedBelow,
     },
     paint: { "icon-opacity": ["get", "opacity"] },
   },
@@ -156,8 +161,10 @@ export const layerSpecs: SymbolLayerSpecification[] = [
       "text-field": ["to-string", ["get", "sites"]],
       "text-size": 11,
       "text-offset": countOffset(MULTI_SIZE, 11),
+      "symbol-sort-key": closedBelow,
     },
-    paint: { "text-color": "#FFFFFF" },
+    // White wouldn't read on a closed site's pale grey.
+    paint: { "text-color": ["case", isClosed, "#3D4852", "#FFFFFF"] },
   },
   {
     id: LAYERS.selected,

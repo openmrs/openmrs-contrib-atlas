@@ -22,8 +22,12 @@ Any signed-in person SHALL be able to add a marker by choosing a location and co
 - **THEN** the marker is created and they become its owner
 
 #### Scenario: Not signed in
-- **WHEN** a visitor chooses to add a marker without being signed in
-- **THEN** they are asked to sign in first, and then continue adding it
+- **WHEN** a visitor wants to add a marker without being signed in
+- **THEN** signing in takes them to My markers, where "Add a site" is the first action
+
+#### Scenario: Latitude and longitude labels
+- **WHEN** a person opens the form on any screen
+- **THEN** the latitude and longitude labels each fit on one line and their fields line up, under a "Location (required)" heading
 
 ### Requirement: Optional marker fields
 The form SHALL offer organisation, website, logo, notes, distribution, OpenMRS version, site count, contact name and contact email, and SHALL explain that contact details are not published.
@@ -79,8 +83,12 @@ A person allowed to edit a marker SHALL be able to mark it "still current" in on
 - **WHEN** an editor chooses "Still current" on a marker last confirmed 4 years ago
 - **THEN** its `confirmed_at` becomes the current time and it is drawn at full opacity
 
+#### Scenario: Closed site
+- **WHEN** a person views a closed marker they may edit
+- **THEN** "Still current" is not offered, and a request to confirm it is refused with 409
+
 ### Requirement: Activity restarts the freshness clock
-Saving the add or edit form, "Still current", changing editors, offering or accepting a transfer, an admin setting the owner, and setting `status` to `active` on the website SHALL set `confirmed_at` to the current time. Requests SHALL NOT be able to choose the value.
+Saving the add or edit form, "Still current", changing editors, offering or accepting a transfer, an admin setting the owner, reopening a site, and setting `status` to `active` on the website SHALL set `confirmed_at` to the current time. Requests SHALL NOT be able to choose the value.
 
 #### Scenario: Owner adds an editor
 - **WHEN** an owner adds an editor to a marker last confirmed 4 years ago
@@ -91,8 +99,34 @@ Saving the add or edit form, "Still current", changing editors, offering or acce
 - **THEN** its `confirmed_at` becomes the current time
 
 #### Scenario: Actions that do not restart the clock
-- **WHEN** a marker is deleted, its status is set to `closed` or `hidden`, or a transfer offer is declined, cancelled or expires
+- **WHEN** a marker is deleted, a site is closed, its status is set to `closed` or `hidden`, or a transfer offer is declined, cancelled or expires
 - **THEN** its `confirmed_at` is unchanged
+
+### Requirement: Close and reopen a site
+The owner or an admin SHALL be able to close an `active` marker, meaning the implementation has ended, and to reopen a `closed` one. Closing SHALL keep the marker on the public map, and SHALL NOT change `confirmed_at`. Reopening SHALL set `status` to `active` and restart the clock. Each SHALL be logged and published.
+
+#### Scenario: Owner closes a site
+- **WHEN** an owner chooses "Close site"
+- **THEN** its status is `closed`, it stays on the map as a closed site, and its `confirmed_at` is unchanged
+
+#### Scenario: Owner reopens a site
+- **WHEN** an owner chooses "Reopen site" on a closed marker
+- **THEN** its status is `active` and its `confirmed_at` is the current time
+
+#### Scenario: Marker in another status
+- **WHEN** a request closes a `hidden` marker or reopens an `active` one
+- **THEN** it is refused with 409 and nothing changes
+
+### Requirement: Less common actions are set apart
+"Edit" and "Still current" SHALL be shown directly in a marker's details. "Close site" or "Reopen site" and "Delete" SHALL be in a separate actions menu, which SHALL work by keyboard and which people without those rights SHALL NOT see.
+
+#### Scenario: Owner's menu
+- **WHEN** an owner opens the actions menu on an active marker
+- **THEN** it offers "Close site" and "Delete"
+
+#### Scenario: Editor has no menu
+- **WHEN** an editor views a marker
+- **THEN** no actions menu is shown
 
 ### Requirement: Delete a marker
 The owner or an admin SHALL be able to delete a marker after confirming. Deleting SHALL set its `status` to `deleted` so that it leaves the public map, and SHALL keep its row so an admin can restore it by changing `status`.

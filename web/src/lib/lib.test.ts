@@ -21,6 +21,7 @@ const monthsAgo = (months: number): PublicMarker => ({
   latitude: 0,
   longitude: 0,
   type: "Clinical",
+  status: "active",
   confirmed_at: new Date(now.getTime() - months * 30.44 * 86_400_000).toISOString(),
 });
 
@@ -72,6 +73,53 @@ describe("applyFilters", () => {
     expect(applyFilters(markers, f, now).map((m) => m.name)).toEqual(["Nairobi Teaching Hospital"]);
     expect(hasFilters(f)).toBe(true);
     expect(hasFilters(NO_FILTERS)).toBe(false);
+  });
+});
+
+describe("closed sites", () => {
+  const open = {
+    id: "a",
+    name: "A",
+    latitude: 0,
+    longitude: 0,
+    type: "Clinical",
+    status: "active",
+  };
+  const closed = {
+    ...open,
+    id: "b",
+    type: "Research",
+    status: "closed",
+    site_count: 50,
+    country: "KE",
+  };
+  const markers = [open, closed] as PublicMarker[];
+
+  it("Scenario: Closed site not counted", () => {
+    const stats = computeStats(markers, new Date("2026-11-01"));
+    expect(stats).toMatchObject({ markers: 1, sites: 1, countries: 0 });
+  });
+
+  it("Scenario: Hide closed sites", () => {
+    const filters = { ...NO_FILTERS, hideClosed: true };
+    expect(applyFilters(markers, NO_FILTERS, new Date()).map((m) => m.id)).toEqual(["a", "b"]);
+    expect(applyFilters(markers, filters, new Date()).map((m) => m.id)).toEqual(["a"]);
+    expect(hasFilters(filters)).toBe(true);
+    const search = formatUrlState({ colourBy: "type", filters });
+    expect(search).toBe("?closed=hide");
+    expect(parseUrlState(search).filters.hideClosed).toBe(true);
+  });
+
+  it("Scenario: Closed sites in the legend", () => {
+    const colours = new Map([
+      ["Clinical", "#111111"],
+      ["Research", "#222222"],
+    ]);
+    expect(legendEntries(markers, "type", colours).map((e) => e.value)).toEqual([
+      "Clinical",
+      "Closed",
+    ]);
+    expect(colourOf(closed as PublicMarker, "type", colours)).toBe("#B8BDC4");
   });
 });
 

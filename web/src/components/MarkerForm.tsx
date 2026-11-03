@@ -86,12 +86,13 @@ function saveDraft(draft: Draft) {
   }
 }
 
-type Loaded = { form: FormData_ } | { error: string };
+type Loaded = { form: FormData_ } | { error: string } | { expired: true };
 
 async function loadForm(id: string): Promise<Loaded> {
   try {
     return { form: await api<FormData_>(markerPath(id)) };
   } catch (err) {
+    if (err instanceof ApiError && err.status === 401) return { expired: true };
     return { error: err instanceof ApiError ? err.message : "This marker could not be loaded." };
   }
 }
@@ -115,6 +116,8 @@ interface Props {
   onChanged: (result: MarkerResult, id: string) => void;
   onClose: () => void;
   onSignIn: () => void;
+  /** The session ended with this form open. */
+  sessionEnded: boolean;
 }
 
 export function MarkerForm({
@@ -126,6 +129,7 @@ export function MarkerForm({
   onChanged,
   onClose,
   onSignIn,
+  sessionEnded,
 }: Props) {
   const draftKey = markerId ?? "add";
   const [values, setValues] = useState<Values>(() =>
@@ -145,11 +149,15 @@ export function MarkerForm({
 
   const role: Role | undefined = form?.role;
   const canContact = !markerId || role === "owner" || role === "admin";
+  // A marker that didn't load has no form to fill in, so no location to set.
+  const ready = !markerId || Boolean(form);
 
   const applyLoaded = useCallback(
     (loaded: Loaded) => {
       if ("error" in loaded) {
         setLoadError(loaded.error);
+      } else if ("expired" in loaded) {
+        setExpired(true);
       } else {
         const fresh = toValues(loaded.form);
         const draft = takeDraft(draftKey);
@@ -208,14 +216,14 @@ export function MarkerForm({
   }, []);
 
   useEffect(() => {
-    if (!map) return;
+    if (!map || !ready) return;
     const onClick = (e: { lngLat: { lat: number; lng: number } }) =>
       place(e.lngLat.lat, e.lngLat.lng);
     map.on("click", onClick);
     return () => {
       map.off("click", onClick);
     };
-  }, [map, place]);
+  }, [map, ready, place]);
 
   useEffect(() => {
     if (!map || !located) {
@@ -338,12 +346,15 @@ export function MarkerForm({
 
   const errorFor = (field: string) => errors.filter((e) => e.field === field).map(friendly);
 
-  function textField(field: string, options: { required?: boolean; type?: string } = {}) {
+  function textField(
+    field: string,
+    options: { required?: boolean; type?: string; inRequiredGroup?: boolean } = {},
+  ) {
     const fieldErrors = errorFor(field);
     return (
       <label>
         {LABELS[field]}
-        {options.required && " (required)"}
+        {options.required && !options.inRequiredGroup && " (required)"}
         <input
           type={options.type ?? "text"}
           value={values[field]}
@@ -416,9 +427,13 @@ export function MarkerForm({
         </div>
       )}
 
-      {expired && (
+      {(expired || sessionEnded) && (
         <div role="alert" className="confirm">
-          <p>Your session has ended. Sign in again to carry on; what you typed will be kept.</p>
+          <p>
+            {ready
+              ? "Your session has ended. Sign in again to carry on; what you typed will be kept."
+              : "Your session has ended. Sign in again to edit this marker."}
+          </p>
           <button type="button" className="primary" onClick={signInAgain}>
             Sign in again
           </button>
@@ -444,7 +459,7 @@ export function MarkerForm({
         </p>
       )}
 
-      {!loading && !loadError && (
+      {!loading && !loadError && ready && (
         <>
           {form && form.problems.length > 0 && (
             <p className="error">Needs fixing: {form.problems.join("; ")}</p>
@@ -498,8 +513,8 @@ export function MarkerForm({
                 </>
               )}
               <div className="coordinates">
-                {textField("latitude", { required: true })}
-                {textField("longitude", { required: true })}
+                {textField("latitude", { required: true, inRequiredGroup: true })}
+                {textField("longitude", { required: true, inRequiredGroup: true })}
               </div>
             </fieldset>
 

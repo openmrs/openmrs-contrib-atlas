@@ -16,6 +16,7 @@ export type Action =
   | "edit"
   | "confirm"
   | "delete"
+  | "close"
   | "contact"
   | "manage-editors"
   | "transfer"
@@ -24,11 +25,12 @@ export type Action =
 
 const ALLOWED: Record<Role, readonly Action[]> = {
   editor: ["edit", "confirm"],
-  owner: ["edit", "confirm", "delete", "contact", "manage-editors", "transfer"],
+  owner: ["edit", "confirm", "delete", "close", "contact", "manage-editors", "transfer"],
   admin: [
     "edit",
     "confirm",
     "delete",
+    "close",
     "contact",
     "manage-editors",
     "transfer",

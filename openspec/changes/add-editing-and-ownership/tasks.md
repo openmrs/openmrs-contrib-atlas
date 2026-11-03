@@ -4,7 +4,7 @@
 
 - [x] 1.1 (manual) On `id-stg.openmrs.org`, realm `openmrs`: create a public `atlas` client with PKCE (S256) and the staging site's root as redirect URI and web origin; put `preferred_username` and a `groups` claim with plain group names in the access token; create the `atlas-administrators` group
 - [x] 1.2 (manual) Provide two test accounts on `id-stg`, and add one to `atlas-administrators` for the admin checks
-- [ ] 1.3 Sign in as a test account and confirm that a real token has the expected issuer, `azp`, `preferred_username` and `groups`, and that the exchange works from the staging origin
+- [x] 1.3 Sign in as a test account and confirm that a real token has the expected issuer, `azp`, `preferred_username` and `groups`, and that the exchange works from the staging origin
 - [x] 1.4 (manual) Set `KEYCLOAK_ISSUER` and `KEYCLOAK_CLIENT_ID` on the Cloud Run service and matching `VITE_` repository variables
 - [x] 1.5 Document the Keycloak setup and the move to production Keycloak in `service/README.md`
 
@@ -14,7 +14,7 @@
 - [x] 2.2 Add shared permission rules (role of a person on a marker; what each role may do), with tests covering every row of the role table
 - [x] 2.3 Prefix formula-like text cells in `toCsv`, with tests including negative coordinates
 - [x] 2.4 (manual) Run `setup:sheet` against the staging sheet to add the `pending` tab
-- [ ] 2.5 Log direct `private` tab edits in Apps Script without requesting a publish, with tests; (manual) redeploy the script to the staging sheet
+- [x] 2.5 Log direct `private` tab edits in Apps Script without requesting a publish, with tests; (manual) redeploy the script to the staging sheet
 
 ## 3. Service
 
@@ -62,6 +62,18 @@
 - [ ] 7.4 (manual) Assign test markers to the two test accounts, then walk through staging on a laptop and a phone: sign in, add, edit, confirm, delete, add an editor, transfer, accept, and the admin actions; check that a direct sheet edit leaves `confirmed_at` alone
 - [ ] 7.5 Confirm that a downloaded `atlas.json`, `markers.geojson` and `markers.csv` contain no contact details, owners, editors or offers after that walkthrough
 
-## 8. Before archiving
+## 8. Staging feedback
 
-- [x] 8.1 Update the README and `service/README.md`; run `openspec validate add-editing-and-ownership --strict`
+- [x] 8.1 Publish `closed` markers with a public `status` field, as the last CSV column, with tests
+- [x] 8.2 Add the `close` permission, close and reopen routes, and refuse confirming a closed site; test permissions, statuses, the clock, logging and publishing
+- [x] 8.3 Draw closed sites as grey pins beneath others; leave them out of the stats and legend values; add a "Closed" legend entry, details row, search label, and the "Show closed sites" filter with its URL parameter, with tests
+- [x] 8.4 Move Close or Reopen and Delete into a keyboard-operable actions menu, shown only to owners and admins; hide "Still current" on closed sites
+- [x] 8.5 Report ended sessions from the API client, check on returning to the tab and at the refresh token's expiry, and keep sessions through network failures, with tests
+- [x] 8.6 Keep an open form through an ended session; offer sign-in when a form can't load, with no empty form and no pin placement
+- [x] 8.7 Rework the top bar to fit one line at 360 pixels: filter control in search, download icon, account control; add the sign-in panel; move "Add a site" to My markers
+- [x] 8.8 Drop "(required)" from the latitude and longitude labels
+- [x] 8.9 Update the README and `service/README.md`, run every check, deploy to staging
+
+## 9. Before archiving
+
+- [x] 9.1 Update the README and `service/README.md`; run `openspec validate add-editing-and-ownership --strict`

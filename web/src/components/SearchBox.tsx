@@ -6,6 +6,8 @@ import type { PublicMarker } from "../lib/types.ts";
 interface Props {
   markers: PublicMarker[];
   onPick: (marker: PublicMarker) => void;
+  /** Controls shown inside the box. */
+  children?: React.ReactNode;
 }
 
 /** Keys that type into these are left alone. */
@@ -15,7 +17,7 @@ function isTyping(target: EventTarget | null): boolean {
 }
 
 /** A combobox: "/" to focus, type to search, arrow keys to move, Enter to pick, Escape to clear. */
-export function SearchBox({ markers, onPick }: Props) {
+export function SearchBox({ markers, onPick, children }: Props) {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
   const listId = useId();
@@ -67,7 +69,7 @@ export function SearchBox({ markers, onPick }: Props) {
         aria-controls={listId}
         aria-activedescendant={open ? `${listId}-${active}` : undefined}
         aria-autocomplete="list"
-        placeholder="Search sites or countries"
+        placeholder="Search sites"
         value={query}
         onChange={(e) => {
           setQuery(e.target.value);
@@ -75,6 +77,7 @@ export function SearchBox({ markers, onPick }: Props) {
         }}
         onKeyDown={onKeyDown}
       />
+      {children}
       {open && (
         <ul id={listId} role="listbox" className="search-results">
           {results.map((m, i) => (
@@ -88,7 +91,9 @@ export function SearchBox({ markers, onPick }: Props) {
             >
               <span className="result-name">{m.name}</span>
               <span className="result-meta">
-                {[m.organisation, countryName(m.country)].filter(Boolean).join(" · ")}
+                {[m.status === "closed" ? "Closed" : "", m.organisation, countryName(m.country)]
+                  .filter(Boolean)
+                  .join(" · ")}
               </span>
             </li>
           ))}

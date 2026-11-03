@@ -28,13 +28,21 @@ describe("buildSnapshot", () => {
     expect(snapshot.markers).toEqual([]);
   });
 
-  it("Scenario: Hidden and closed markers excluded", () => {
+  it("Scenario: Hidden markers excluded", () => {
     const snapshot = snapshotOf(
       markerRow({ id: ids(1) }),
       markerRow({ id: ids(2), status: "hidden" }),
-      markerRow({ id: ids(3), status: "closed" }),
     );
     expect(snapshot.markers.map((m) => m.id)).toEqual([ids(1)]);
+  });
+
+  it("Scenario: Closed markers included", () => {
+    const snapshot = snapshotOf(markerRow({ id: ids(1), status: "closed" }));
+    expect(snapshot.markers.map((m) => m.status)).toEqual(["closed"]);
+    expect(toGeoJson(snapshot).features[0]?.properties.status).toBe("closed");
+    const [header, row] = toCsv(snapshot).split("\r\n");
+    expect(header?.endsWith(",confirmed_at,status")).toBe(true);
+    expect(row?.endsWith(",closed")).toBe(true);
   });
 
   it("Scenario: Invalid rows excluded", () => {
@@ -55,9 +63,9 @@ describe("buildSnapshot", () => {
     expect(snapshot.markers[0]).not.toHaveProperty("country");
   });
 
-  it("publishes no status and omits blank optional fields", () => {
+  it("publishes status and omits blank optional fields", () => {
     const marker = snapshotOf(markerRow({ organisation: "", logo_url: "" })).markers[0];
-    expect(marker).not.toHaveProperty("status");
+    expect(marker).toHaveProperty("status", "active");
     expect(marker).not.toHaveProperty("organisation");
     expect(marker).not.toHaveProperty("logo_url");
   });

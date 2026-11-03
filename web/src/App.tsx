@@ -4,10 +4,12 @@ import { signIn, signInEnabled, signOut } from "./auth/session.ts";
 import { useSession } from "./auth/useSession.ts";
 import { DownloadPanel } from "./components/DownloadPanel.tsx";
 import { FilterPanel } from "./components/FilterPanel.tsx";
+import { DownloadIcon, FilterIcon, PersonIcon } from "./components/Icons.tsx";
 import { Legend } from "./components/Legend.tsx";
 import { MarkerActions } from "./components/MarkerActions.tsx";
 import { MarkerDetails } from "./components/MarkerDetails.tsx";
 import { SearchBox } from "./components/SearchBox.tsx";
+import { SignInPanel } from "./components/SignInPanel.tsx";
 import { StatsBar } from "./components/StatsBar.tsx";
 import { config } from "./config.ts";
 import { track } from "./lib/analytics.ts";
@@ -28,7 +30,7 @@ const MyMarkers = lazy(() =>
   import("./components/MyMarkers.tsx").then((m) => ({ default: m.MyMarkers })),
 );
 
-type Panel = "filters" | "download" | SignedInPanel;
+type Panel = "filters" | "download" | "sign-in" | SignedInPanel;
 
 type Load = { state: "loading" } | { state: "error" } | { state: "ready"; snapshot: AtlasSnapshot };
 
@@ -54,11 +56,19 @@ export function App({ signInError }: { signInError?: string }) {
   const [notice, setNotice] = useState<string | undefined>(signInError);
   // Saved changes, shown at once: the published files catch up within minutes.
   const [saved, setSaved] = useState<ReadonlyMap<string, PublicMarker | null>>(new Map());
-  const { session, refresh } = useSession();
+  const onSessionEnded = useCallback(
+    () => setNotice("Your session has ended. Sign in again to make changes."),
+    [],
+  );
+  const { session, refresh } = useSession(onSessionEnded);
   const me = session.status === "signed-in" ? session.me : undefined;
+  // A form left open when the session ended stays, so what was typed can be kept.
+  const endedAdmin = session.status === "anonymous" ? session.wasAdmin : undefined;
+  const keepsForm = (openPanel === "add" || openPanel === "edit") && endedAdmin !== undefined;
   // A signed-in panel in a link means nothing to someone who isn't signed in.
   const signedInPanel = openPanel === "mine" || openPanel === "add" || openPanel === "edit";
-  const panel = signedInPanel && session.status === "anonymous" ? undefined : openPanel;
+  const panel =
+    signedInPanel && session.status === "anonymous" && !keepsForm ? undefined : openPanel;
   const formOpen = panel === "add" || panel === "edit";
   const mapRef = useRef<MapLibreMap | null>(null);
   const [map, setMap] = useState<MapLibreMap | null>(null);
@@ -193,7 +203,7 @@ export function App({ signInError }: { signInError?: string }) {
     if (marker) {
       select(marker);
     } else {
-      // Hidden, closed and invalid markers aren't on the map; they open straight in the form.
+      // Hidden and invalid markers aren't on the map; they open straight in the form.
       setSelectedId(id);
       setPanel("edit");
     }
@@ -208,7 +218,9 @@ export function App({ signInError }: { signInError?: string }) {
     <div className="app">
       <header className="topbar">
         <h1>
-          <a href="/">OpenMRS Atlas</a>
+          <a href="/">
+            OpenMRS <span>Atlas</span>
+          </a>
         </h1>
         <SearchBox
           markers={allMarkers}
@@ -217,58 +229,59 @@ export function App({ signInError }: { signInError?: string }) {
             track("search");
             select(m);
           }}
-        />
-        <button
-          type="button"
-          className={hasFilters(filters) ? "primary" : "secondary"}
-          aria-expanded={panel === "filters"}
-          disabled={formOpen}
-          onClick={() => setPanel((p) => (p === "filters" ? undefined : "filters"))}
         >
-          Filters{hasFilters(filters) ? " (on)" : ""}
-        </button>
+          <button
+            type="button"
+            className="search-filter"
+            aria-label={hasFilters(filters) ? "Filters (on)" : "Filters"}
+            title="Filters"
+            aria-expanded={panel === "filters"}
+            disabled={formOpen}
+            onClick={() => setPanel((p) => (p === "filters" ? undefined : "filters"))}
+          >
+            <FilterIcon />
+            {hasFilters(filters) && <span className="dot" />}
+          </button>
+        </SearchBox>
         <button
           type="button"
-          className="secondary"
+          className="secondary tool"
+          aria-label="Download"
+          title="Download"
           aria-expanded={panel === "download"}
           disabled={!snapshot || formOpen}
           onClick={() => setPanel((p) => (p === "download" ? undefined : "download"))}
         >
-          Download
+          <DownloadIcon />
         </button>
-        {signInEnabled && (
-          <>
+        {signInEnabled &&
+          (me ? (
             <button
               type="button"
-              className="secondary"
-              disabled={!snapshot || formOpen || session.status === "loading"}
-              onClick={() => (me ? setPanel("add") : startSignIn("add"))}
+              className="secondary tool account"
+              title={me.username}
+              aria-expanded={panel === "mine"}
+              disabled={formOpen}
+              onClick={() => setPanel((p) => (p === "mine" ? undefined : "mine"))}
             >
-              Add a site
-            </button>
-            {me ? (
-              <button
-                type="button"
-                className="secondary"
-                aria-expanded={panel === "mine"}
-                disabled={formOpen}
-                onClick={() => setPanel((p) => (p === "mine" ? undefined : "mine"))}
-              >
+              <PersonIcon />
+              <span className="account-name">
                 {me.username}
                 {me.offers.length > 0 ? ` (${me.offers.length} waiting)` : ""}
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="secondary"
-                disabled={session.status === "loading"}
-                onClick={() => startSignIn()}
-              >
-                Sign in
-              </button>
-            )}
-          </>
-        )}
+              </span>
+              {me.offers.length > 0 && <span className="dot" />}
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="secondary sign-in"
+              aria-expanded={panel === "sign-in"}
+              disabled={formOpen || session.status === "loading"}
+              onClick={() => setPanel((p) => (p === "sign-in" ? undefined : "sign-in"))}
+            >
+              Sign in
+            </button>
+          ))}
       </header>
 
       <main className="stage">
@@ -329,13 +342,17 @@ export function App({ signInError }: { signInError?: string }) {
         {panel === "download" && snapshot && (
           <DownloadPanel map={map} legend={legend} onClose={() => setPanel(undefined)} />
         )}
+        {panel === "sign-in" && (
+          <SignInPanel onSignIn={() => startSignIn("mine")} onClose={() => setPanel(undefined)} />
+        )}
         {selected && !panel && (
           <MarkerDetails marker={selected} onClose={() => setSelectedId(undefined)}>
             {roleOnSelected && (
               <MarkerActions
                 key={selected.id}
                 markerId={selected.id}
-                canDelete={roleOnSelected !== "editor"}
+                canManage={roleOnSelected !== "editor"}
+                closed={selected.status === "closed"}
                 onEdit={() => setPanel("edit")}
                 onResult={(result) => {
                   applyResult(selected.id, result);
@@ -358,16 +375,18 @@ export function App({ signInError }: { signInError?: string }) {
               onOpen={openMine}
               onResult={applyResult}
               onChanged={() => void refresh()}
+              onAdd={() => setPanel("add")}
               onSignOut={startSignOut}
               onClose={() => setPanel(undefined)}
             />
           )}
-          {formOpen && me && snapshot && (
+          {formOpen && (me || keepsForm) && snapshot && (
             <MarkerForm
               key={panel === "edit" ? selectedId : "add"}
               markerId={panel === "edit" ? selectedId : undefined}
               snapshot={snapshot}
-              admin={me.admin}
+              admin={me ? me.admin : Boolean(endedAdmin)}
+              sessionEnded={!me}
               map={map}
               onSaved={(result, id) => {
                 applyResult(id, result);

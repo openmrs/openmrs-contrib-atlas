@@ -19,6 +19,7 @@ describe("MarkerDetails", () => {
       latitude: 0,
       longitude: 0,
       type: "Clinical",
+      status: "active",
       url: "https://example.org",
       notes: "Open weekdays",
       confirmed_at: "2025-06-01T00:00:00.000Z",

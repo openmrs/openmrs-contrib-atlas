@@ -14,7 +14,7 @@ Each marker SHALL have at most one owner and any number of editors, identified b
 - **THEN** no edit controls are shown, and requests to change it are rejected with 403
 
 ### Requirement: Role permissions
-Editors SHALL be able to edit public fields, upload a logo and confirm a marker. Only the owner and admins SHALL be able to delete it, see or change contact details, manage editors or transfer ownership.
+Editors SHALL be able to edit public fields, upload a logo and confirm a marker. Only the owner and admins SHALL be able to close, reopen or delete it, see or change contact details, manage editors or transfer ownership.
 
 #### Scenario: Editor tries to delete
 - **WHEN** an editor sends a request to delete a marker
@@ -23,6 +23,10 @@ Editors SHALL be able to edit public fields, upload a logo and confirm a marker.
 #### Scenario: Editor opens the form
 - **WHEN** an editor opens the edit form
 - **THEN** it does not show or return the marker's contact name, contact email, owner or other editors
+
+#### Scenario: Editor tries to close
+- **WHEN** an editor sends a request to close or reopen a marker
+- **THEN** it is rejected with 403 and nothing changes
 
 ### Requirement: Admin permissions
 Admins SHALL be able to do everything an owner can on any marker, set `owner` and `editors` directly without acceptance, set `status`, and add a marker on behalf of a named owner.
@@ -94,7 +98,11 @@ A signed-in person SHALL be able to list every marker they own or edit, with the
 
 #### Scenario: Closed marker
 - **WHEN** a person's marker has status `closed`
-- **THEN** it is listed with that status
+- **THEN** it is listed with that status, and choosing it opens its details on the map
+
+#### Scenario: Adding from My markers
+- **WHEN** a person opens My markers
+- **THEN** "Add a site" is the first action in the panel
 
 #### Scenario: Deleted marker
 - **WHEN** a person's marker has status `deleted`

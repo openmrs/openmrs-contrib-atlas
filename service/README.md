@@ -31,6 +31,8 @@ and are never cached. Firebase Hosting forwards `/api/**` from the site to this 
 | `POST /api/markers`                      | anyone signed in      | Adds a marker; they become its owner.             |
 | `PATCH /api/markers/:id`                 | editor, owner, admin  | Saves the form. `409` if the marker has changed.  |
 | `POST /api/markers/:id/confirm`          | editor, owner, admin  | "Still current".                                  |
+| `POST /api/markers/:id/close`            | owner, admin          | Closes a site; it stays on the map.               |
+| `POST /api/markers/:id/reopen`           | owner, admin          | Reopens a closed site; restarts the clock.        |
 | `DELETE /api/markers/:id`                | owner, admin          | Sets `status` to `deleted`; the row stays.        |
 | `POST /api/markers/:id/editors`          | owner, admin          | Adds an editor by OpenMRS ID.                     |
 | `DELETE /api/markers/:id/editors/:name`  | owner, admin          | Removes an editor.                                |

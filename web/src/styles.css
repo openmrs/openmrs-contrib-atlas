@@ -61,6 +61,32 @@ textarea {
   color: inherit;
   text-decoration: none;
 }
+button.tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  position: relative;
+}
+.topbar .tool:first-of-type {
+  margin-left: auto;
+}
+.account-name {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dot {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f3a712;
+  box-shadow: 0 0 0 1px #ffffff;
+}
 
 button.primary,
 button.secondary {
@@ -104,9 +130,24 @@ button:disabled {
 }
 .search input {
   width: 100%;
-  padding: 7px 10px;
+  padding: 7px 38px 7px 10px;
   border-radius: var(--radius);
   border: 0;
+}
+.search-filter {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 36px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-left: 1px solid var(--line);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
 }
 .search-results {
   position: absolute;
@@ -237,6 +278,15 @@ button:disabled {
   overflow-y: auto;
   padding: 12px 16px;
 }
+.panel.compact {
+  bottom: auto;
+}
+.sign-in-action {
+  margin: 12px 0 4px;
+}
+.add-site {
+  margin: 10px 0;
+}
 .panel-header {
   display: flex;
   justify-content: space-between;
@@ -338,6 +388,33 @@ button.link {
 }
 .marker-actions {
   margin-top: 12px;
+}
+.menu-anchor {
+  position: relative;
+}
+.menu {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 4px);
+  min-width: 150px;
+  padding: 4px 0;
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.menu button {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.menu button:hover,
+.menu button:focus-visible {
+  background: var(--surface-alt);
 }
 .confirm {
   margin: 8px 0;
@@ -455,18 +532,45 @@ button.link {
 /* Phones: panels become bottom sheets, stats shrink. */
 @media (max-width: 600px) {
   .topbar {
-    flex-wrap: wrap;
+    gap: 8px;
     padding: 8px 12px;
   }
+  .topbar h1 {
+    font-size: 13px;
+    line-height: 1.1;
+  }
+  .topbar h1 span {
+    display: block;
+  }
   .search {
-    order: 3;
-    flex-basis: 100%;
+    min-width: 0;
     max-width: none;
   }
-  .topbar button {
-    margin-left: auto;
+  /* The box is narrow here, so results take the width of the screen. */
+  .search-results {
+    position: fixed;
+    top: 54px;
+    left: 8px;
+    right: 8px;
+  }
+  .topbar button.secondary {
+    min-height: 34px;
     padding: 4px 8px;
     font-size: 14px;
+  }
+  .topbar .tool:first-of-type {
+    margin-left: 0;
+  }
+  .topbar .sign-in {
+    white-space: nowrap;
+  }
+  /* Only the icon shows, but it keeps its name for screen readers. */
+  .account-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
   }
   .stats {
     left: 8px;
@@ -494,5 +598,8 @@ button.link {
     width: auto;
     max-height: 60%;
     border-radius: var(--radius) var(--radius) 0 0;
+  }
+  .panel.compact {
+    bottom: 0;
   }
 }

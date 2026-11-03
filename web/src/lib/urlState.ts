@@ -7,6 +7,7 @@ import { NO_FILTERS, type ColourBy, type Filters, type MapView } from "./types.t
  *   colour=distribution|version   (type is the default and is omitted)
  *   type=, dist=, version=, country=   repeated once per selected value
  *   confirmed=<years>
+ *   closed=hide
  *   panel=mine|add|edit   a signed-in panel; edit applies to the marker above
  */
 export type SignedInPanel = "mine" | "add" | "edit";
@@ -53,6 +54,8 @@ export function parseUrlState(search: string): UrlState {
   const years = Number(params.get("confirmed"));
   if (params.has("confirmed") && years > 0) state.filters.confirmedWithinYears = years;
 
+  if (params.get("closed") === "hide") state.filters.hideClosed = true;
+
   return state;
 }
 
@@ -72,6 +75,7 @@ export function formatUrlState(state: UrlState): string {
   if (filters.confirmedWithinYears !== undefined) {
     params.set("confirmed", String(filters.confirmedWithinYears));
   }
+  if (filters.hideClosed) params.set("closed", "hide");
   if (state.panel) params.set("panel", state.panel);
   // "/" is legal in a query string; leaving it unescaped keeps map=5/-1.3/36.8 readable.
   const query = params.toString().replace(/%2F/g, "/");

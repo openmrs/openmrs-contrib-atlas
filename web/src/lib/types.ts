@@ -14,6 +14,8 @@ export interface Filters {
   countries: string[];
   /** Only markers confirmed within this many years. */
   confirmedWithinYears?: number;
+  /** Closed sites are shown unless this is set. */
+  hideClosed?: boolean;
 }
 
 export const NO_FILTERS: Filters = {

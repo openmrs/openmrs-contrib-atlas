@@ -608,6 +608,46 @@ describe("My markers", () => {
     expect((await me("jdoe")).markers).toMatchObject([{ status: "closed" }]);
   });
 
+  it("Close and reopen: Scenario: Owner closes a site", async () => {
+    const res = await call("jdoe", "POST", `/markers/${ID}/close`);
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { status: string; marker: { status: string } };
+    expect(body.status).toBe("closed");
+    expect(body.marker.status).toBe("closed");
+    expect(sheet.marker("status")).toBe("closed");
+    expect(sheet.marker("confirmed_at")).toBe(OLD);
+    expect(sheet.tabs.changes!.at(-1)).toContain("close");
+  });
+
+  it("Close and reopen: Scenario: Owner reopens a site", async () => {
+    sheet.setMarker("status", "closed");
+    const res = await call("jdoe", "POST", `/markers/${ID}/reopen`);
+    expect(res.status).toBe(200);
+    expect(sheet.marker("status")).toBe("active");
+    expect(sheet.marker("confirmed_at")).toBe(NOW_ISO);
+    expect(sheet.tabs.changes!.at(-1)).toContain("reopen");
+  });
+
+  it("Close and reopen: Scenario: Marker in another status", async () => {
+    sheet.setMarker("status", "hidden");
+    expect((await call("jdoe", "POST", `/markers/${ID}/close`)).status).toBe(409);
+    expect((await call("jdoe", "POST", `/markers/${ID}/reopen`)).status).toBe(409);
+    expect(sheet.marker("status")).toBe("hidden");
+  });
+
+  it("Scenario: Editor tries to close", async () => {
+    expect((await call("asmith", "POST", `/markers/${ID}/close`)).status).toBe(403);
+    sheet.setMarker("status", "closed");
+    expect((await call("asmith", "POST", `/markers/${ID}/reopen`)).status).toBe(403);
+    expect(sheet.marker("status")).toBe("closed");
+  });
+
+  it("Still current: Scenario: Closed site", async () => {
+    sheet.setMarker("status", "closed");
+    expect((await call("jdoe", "POST", `/markers/${ID}/confirm`)).status).toBe(409);
+    expect(sheet.marker("confirmed_at")).toBe(OLD);
+  });
+
   it("Scenario: Deleted marker", async () => {
     sheet.setMarker("status", "deleted");
     expect((await me("jdoe")).markers).toEqual([]);

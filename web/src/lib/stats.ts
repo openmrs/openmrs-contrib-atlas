@@ -9,7 +9,9 @@ export interface Stats {
   confirmedLastTwoYears: number;
 }
 
-export function computeStats(markers: PublicMarker[], now: Date): Stats {
+/** How many implementations are running: closed sites are on the map but don't count. */
+export function computeStats(all: PublicMarker[], now: Date): Stats {
+  const markers = all.filter((m) => m.status !== "closed");
   return {
     markers: markers.length,
     countries: new Set(markers.map((m) => m.country).filter(Boolean)).size,

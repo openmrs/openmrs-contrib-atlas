@@ -7,6 +7,7 @@ interface Props {
   onOpen: (id: string) => void;
   onResult: (id: string, result: MarkerResult) => void;
   onChanged: () => void;
+  onAdd: () => void;
   onSignOut: () => void;
   onClose: () => void;
 }
@@ -22,7 +23,7 @@ function lastConfirmedLabel(iso: string): string {
 }
 
 /** Everything a person owns or edits, and the offers waiting for their answer. */
-export function MyMarkers({ me, onOpen, onResult, onChanged, onSignOut, onClose }: Props) {
+export function MyMarkers({ me, onOpen, onResult, onChanged, onAdd, onSignOut, onClose }: Props) {
   useEscape(onClose);
   const [error, setError] = useState<string>();
 
@@ -52,6 +53,11 @@ export function MyMarkers({ me, onOpen, onResult, onChanged, onSignOut, onClose 
           Sign out
         </button>
       </p>
+      <div className="button-row add-site">
+        <button type="button" className="primary" onClick={onAdd}>
+          Add a site
+        </button>
+      </div>
       {error && (
         <p className="error" role="alert">
           {error}

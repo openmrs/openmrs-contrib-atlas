@@ -1,13 +1,36 @@
 # Spec Delta
 
-## MODIFIED Requirements
+## REMOVED Requirements
 
 ### Requirement: Snapshot contents
-A publish SHALL produce `atlas.json` containing the generation time, the `types`, `distributions` and `versions` lists, and every valid marker whose `status` is `active`, with only public marker fields plus a derived `country` (ISO 3166-1 alpha-2).
+**Reason**: Closed markers are now published, so the scenario excluding them no longer holds.
+**Migration**: Replaced by "Published snapshot contents" below.
 
-#### Scenario: Hidden and closed markers excluded
-- **WHEN** a marker's `status` is `hidden` or `closed`
+## MODIFIED Requirements
+
+### Requirement: Publish safety check
+A publish SHALL be refused, keeping the previous snapshot in place, when it would publish fewer than 80% of the markers in the current snapshot, unless an admin explicitly forces it. A refused publish SHALL be recorded in `problems`.
+
+#### Scenario: Rows accidentally deleted
+- **WHEN** someone deletes 200 of 450 marker rows and a publish runs
+- **THEN** the publish is refused, the public map still shows 450 markers, and `problems` explains why
+
+#### Scenario: Intentional large cleanup
+- **WHEN** an admin hides 150 stale markers and forces the publish
+- **THEN** the new snapshot is published without those markers
+
+## ADDED Requirements
+
+### Requirement: Published snapshot contents
+A publish SHALL produce `atlas.json` containing the generation time, the `types`, `distributions` and `versions` lists, and every valid marker whose `status` is `active` or `closed`, with only public marker fields, including `status`, plus a derived `country` (ISO 3166-1 alpha-2).
+
+#### Scenario: Hidden markers excluded
+- **WHEN** a marker's `status` is `hidden`
 - **THEN** it does not appear in any published file
+
+#### Scenario: Closed markers included
+- **WHEN** a marker's `status` is `closed`
+- **THEN** it appears in every published file with `status` `closed`
 
 #### Scenario: Deleted markers excluded
 - **WHEN** a marker's `status` is `deleted`
@@ -21,8 +44,6 @@ A publish SHALL produce `atlas.json` containing the generation time, the `types`
 #### Scenario: Country derived from coordinates
 - **WHEN** a marker is at latitude -1.29, longitude 36.82
 - **THEN** its published `country` is `KE`
-
-## ADDED Requirements
 
 ### Requirement: Publish after Atlas edits
 Each change to public marker data through the Atlas SHALL be published before the service reports it finished, unless a publish is refused or fails. Changes made close together SHALL share a publish rather than wait in turn.

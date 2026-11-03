@@ -47,10 +47,25 @@ Rows are found by `id` from a fresh read inside the queue, and written with `val
 A human inserting or sorting rows in the moment between read and write could still misdirect a write. Sheets has no compare-and-set, so the service re-reads the `id` cell after the write and logs an error on a mismatch, and the sheet's version history is the recovery. This is accepted given how rarely it could happen.
 
 ### Delete means `deleted`
-Deleting sets the new status `deleted` and keeps the row. `closed` keeps its own meaning, that the implementation has ended, so admins can tell the two apart in the sheet. Neither is published. The row and its `changes` history stay meaningful, and a mistaken or malicious delete is undone by changing one cell. A hard delete would need row-shifting writes on a sheet humans also edit.
+Deleting sets the new status `deleted` and keeps the row. It isn't published. The row and its `changes` history stay meaningful, and a mistaken or malicious delete is undone by changing one cell. A hard delete would need row-shifting writes on a sheet humans also edit.
+
+### Closed sites stay on the map
+`closed` means the implementation has ended. That history is worth keeping on the map, so owners and admins can close and reopen a site, and closed markers are published with a new public `status` field. They are grey and otherwise behave like any other pin: they show a site count, fade with age and join clusters, and are drawn beneath active pins so that they are never more prominent. A cluster's total includes them, because a cluster is rare and a separate count would need a second cluster property for little gain.
+
+The headline stats leave them out, since those answer "where is OpenMRS running now?". The legend's values also ignore them, because a closed pin doesn't show that colour. Grey needs care: `Unknown` is already mid-grey, so closed pins use a lighter grey with dark count text, which keeps counts readable.
+
+Admins clearing out stale markers now use `hidden`, which leaves the map. All 451 migrated markers were `active`, so nothing already in the sheet changes meaning. "Still current" is refused on a closed site, because reopening is the way to say it is running again.
+
+### Ended sessions show at once; their length is Keycloak's
+Sessions keep Keycloak's length: offline tokens would leave a long-lived token in the browser, and realm settings are shared with other OpenMRS services. The page only has to stay truthful. The API client reports any 401, or a token that can't be renewed, and the session then becomes anonymous and its stored user is removed. Because nothing calls the service while a page sits idle, the page also checks on returning to the tab, and at the moment Keycloak's refresh token says the session ends. Neither check calls the service, and neither renews a token that is still valid, so an idle tab doesn't keep a session alive. A network failure isn't treated as the end of a session.
+
+An open form stays open when the session ends, or the typing would be lost, and offers signing in again.
+
+### One line for the top bar
+On a 360 pixel phone the bar holds the name on two short lines, search, a download icon and "Sign in" or an account icon. The filter control moves inside the search box, since both narrow down what's on the map. "Add a site" moves into My markers. Because adding sites is the project's main goal, "Sign in" first opens a small panel saying "Sign in to add or update your site", so a visitor learns why they'd sign in, at the cost of one extra click.
 
 ### Website activity restarts the clock
-As in 2.0, using the site counts as evidence that a marker is alive, so `confirmed_at` is set by saving the form (even unchanged), "Still current", changing editors, offering or accepting a transfer, an admin setting the owner, and setting `status` to `active`. The second Phase 2 change adds the emailed link as one more route.
+As in 2.0, using the site counts as evidence that a marker is alive, so `confirmed_at` is set by saving the form (even unchanged), "Still current", changing editors, offering or accepting a transfer, an admin setting the owner, reopening a site, and setting `status` to `active`. The second Phase 2 change adds the emailed link as one more route.
 
 Deleting, closing, hiding, and a declined, cancelled or expired offer don't restart it, because none of them shows the marker is in use. Direct sheet edits don't either: `onEdit` stamps only `updated_at`, and admins can set `confirmed_at` by hand. The value is always the service's clock.
 
@@ -63,7 +78,7 @@ Accepting a transfer makes the previous owner an editor, and the new owner can r
 One row per offer, and at most one per marker. A new offer replaces the old one. Expiry is checked when an offer is read or accepted, and expired rows are deleted during later writes, so no scheduled job is needed. The design doc's `pending` tab also anticipated claims. C9 can add a `kind` column later, because columns are found by header.
 
 ### My markers as a panel, not a page
-It uses the same panel pattern as Filters and Download, with the state `?panel=mine` in the URL. This needs no router and keeps the map in view, so choosing an entry can reveal the marker. Hidden, closed and invalid markers have no map position in the snapshot, so they open directly in the edit form.
+It uses the same panel pattern as Filters and Download, with the state `?panel=mine` in the URL. This needs no router and keeps the map in view, so choosing an entry can reveal the marker. Hidden and invalid markers have no map position in the snapshot, so they open directly in the edit form.
 
 `GET /api/me` returns username, admin flag, role per marker id and pending offers, so the details panel can decide on edit controls with no per-marker call. Only the entries a person holds are returned, and never another person's owner or editors.
 

@@ -1,5 +1,5 @@
 import type { PublicMarker, Role } from "@openmrs-atlas/shared";
-import { getToken } from "../auth/session.ts";
+import { getToken, sessionEnded } from "../auth/session.ts";
 import { config } from "../config.ts";
 
 export interface FieldError {
@@ -67,7 +67,10 @@ export interface MarkerResult {
 
 export async function api<T>(path: string, method = "GET", body?: unknown): Promise<T> {
   const token = await getToken();
-  if (token === undefined) throw new ApiError(401, "Please sign in.");
+  if (token === undefined) {
+    sessionEnded();
+    throw new ApiError(401, "Please sign in.");
+  }
   const form = body instanceof FormData;
   const res = await fetch(`${config.apiBaseUrl}${path}`, {
     method,
@@ -81,6 +84,7 @@ export async function api<T>(path: string, method = "GET", body?: unknown): Prom
     error?: string;
     errors?: FieldError[];
   };
+  if (res.status === 401) sessionEnded();
   if (!res.ok) {
     throw new ApiError(res.status, data.error ?? "Something went wrong.", data.errors);
   }

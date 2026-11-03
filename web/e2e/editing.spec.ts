@@ -1,5 +1,7 @@
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import type { Page, Route } from "@playwright/test";
-import { expect, ids, mapIdle, stat, test } from "./fixtures.ts";
+import { STATIC_DIR, expect, ids, mapIdle, stat, test } from "./fixtures.ts";
 
 const NOW = "2026-11-01T00:00:00.000Z";
 
@@ -11,6 +13,8 @@ interface State {
   requests: { method: string; path: string; body: unknown }[];
   /** Status and body for the next PATCH. */
   nextPatch?: { status: number; body: unknown };
+  /** The session has ended by the time a form loads. */
+  expireMarkerReads?: boolean;
   me: Record<string, unknown>;
 }
 
@@ -85,6 +89,7 @@ async function stubApi(page: Page, overrides: Partial<State> = {}): Promise<Stat
     }
     if (path === `/markers/${ids.kampala}`) {
       if (method === "GET") {
+        if (state.expireMarkerReads) return json(401, { error: "Please sign in." });
         return json(200, {
           id: ids.kampala,
           role: state.role,
@@ -118,6 +123,10 @@ async function stubApi(page: Page, overrides: Partial<State> = {}): Promise<Stat
       if (method === "DELETE") return saved({ marker: null, status: "deleted" });
     }
     if (path.endsWith("/confirm")) return saved({ marker: kampala });
+    if (path.endsWith("/close")) {
+      return saved({ marker: { ...kampala, status: "closed" }, status: "closed" });
+    }
+    if (path.endsWith("/reopen")) return saved({ marker: kampala });
     if (path.endsWith("/editors") && method === "POST") {
       state.editors = [...state.editors, (body as { username: string }).username];
       return saved({ marker: kampala, editors: state.editors });
@@ -164,8 +173,13 @@ test.describe("Sign in with OpenMRS Keycloak", () => {
     await page.addInitScript(() => localStorage.setItem("atlas.e2e.account", "jdoe"));
     await page.goto("/?type=Clinical&map=4/0.3/32.5");
     await mapIdle(page);
-    await page.getByRole("button", { name: "Sign in" }).click();
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await expect(
+      page.getByRole("heading", { name: "Sign in to add or update your site" }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "Sign in with OpenMRS ID" }).click();
     await expect(page.getByRole("button", { name: "jdoe" })).toBeVisible();
+    await expect(page.getByRole("complementary", { name: "My markers" })).toBeVisible();
     await expect(page).toHaveURL(/type=Clinical/);
     await expect(page).toHaveURL(/map=4\.00\/0\.3000\/32\.5000/);
   });
@@ -215,6 +229,8 @@ test.describe("Add a marker", () => {
     await page.addInitScript(() => localStorage.setItem("atlas.e2e.account", "jdoe"));
     await page.goto("/");
     await mapIdle(page);
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await page.getByRole("button", { name: "Sign in with OpenMRS ID" }).click();
     await page.getByRole("button", { name: "Add a site" }).click();
     await expect(page.getByRole("complementary", { name: "Add a site" })).toBeVisible();
   });
@@ -228,7 +244,7 @@ test.describe("Add a marker", () => {
         body: JSON.stringify([{ display_name: "Eldoret, Kenya", lat: "0.5143", lon: "35.2698" }]),
       }),
     );
-    await page.goto("/");
+    await page.goto("/?panel=mine");
     await mapIdle(page);
     await page.getByRole("button", { name: "Add a site" }).click();
     await page.getByLabel("Find a place").fill("Eldoret");
@@ -242,7 +258,7 @@ test.describe("Add a marker", () => {
   test("Scenario: Choosing a place on the map", async ({ page }) => {
     await stubApi(page);
     await signedIn(page);
-    await page.goto("/");
+    await page.goto("/?panel=mine");
     await mapIdle(page);
     await page.getByRole("button", { name: "Add a site" }).click();
     await expect(page.getByLabel("Latitude")).toHaveValue("");
@@ -254,7 +270,7 @@ test.describe("Add a marker", () => {
   test("Scenario: Only required fields", async ({ page }) => {
     const state = await stubApi(page);
     await signedIn(page);
-    await page.goto("/");
+    await page.goto("/?panel=mine");
     await mapIdle(page);
     await page.getByRole("button", { name: "Add a site" }).click();
     await page.getByLabel("Name (required)").fill("New Site");
@@ -425,7 +441,8 @@ test.describe("Delete a marker", () => {
     const state = await stubApi(page);
     await signedIn(page);
     await page.goto(openKampala);
-    await page.getByRole("button", { name: "Delete" }).click();
+    await page.getByRole("button", { name: "More actions" }).click();
+    await page.getByRole("menuitem", { name: "Delete" }).click();
     await page.getByRole("button", { name: "Yes, delete" }).click();
     await expect(page.getByRole("heading", { name: "Kampala Rollout" })).toHaveCount(0);
     await expect(stat(page, "implementations")).toHaveText("7");
@@ -436,7 +453,8 @@ test.describe("Delete a marker", () => {
     const state = await stubApi(page);
     await signedIn(page);
     await page.goto(openKampala);
-    await page.getByRole("button", { name: "Delete" }).click();
+    await page.getByRole("button", { name: "More actions" }).click();
+    await page.getByRole("menuitem", { name: "Delete" }).click();
     await page.getByRole("button", { name: "Cancel" }).click();
     await expect(page.getByRole("heading", { name: "Kampala Rollout" })).toBeVisible();
     expect(state.requests).toEqual([]);
@@ -463,11 +481,190 @@ test.describe("Delete a marker", () => {
     await signedIn(page, "asmith");
     await page.goto(openKampala);
     await expect(page.getByRole("button", { name: "Edit" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Delete" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "More actions" })).toHaveCount(0);
     await page.getByRole("button", { name: "Edit" }).click();
     await expect(page.getByLabel("Website")).toBeVisible();
     await expect(page.getByLabel("Contact email")).toHaveCount(0);
     await expect(page.getByText("Add an editor")).toHaveCount(0);
+  });
+});
+
+/** Serves the map's data with Kampala closed. */
+async function kampalaClosed(page: Page, siteCount?: number) {
+  await page.route("**/e2e/atlas.json", async (route) => {
+    const snapshot = JSON.parse(await readFile(resolve(STATIC_DIR, "atlas.json"), "utf8")) as {
+      markers: Record<string, unknown>[];
+    };
+    for (const marker of snapshot.markers) {
+      if (marker.id === ids.kampala) {
+        marker.status = "closed";
+        if (siteCount) marker.site_count = siteCount;
+      }
+    }
+    await route.fulfill({ contentType: "application/json", body: JSON.stringify(snapshot) });
+  });
+}
+
+test.describe("Close and reopen a site", () => {
+  test("Scenario: Owner closes a site", async ({ page }) => {
+    const state = await stubApi(page);
+    await signedIn(page);
+    await page.goto(openKampala);
+    await mapIdle(page);
+    await expect(stat(page, "implementations")).toHaveText("8");
+    await page.getByRole("button", { name: "More actions" }).click();
+    await page.getByRole("menuitem", { name: "Close site" }).click();
+    const details = page.getByRole("complementary", { name: /Details for/ });
+    await expect(details.getByText("Closed", { exact: true })).toBeVisible();
+    await expect(stat(page, "implementations")).toHaveText("7");
+    expect(state.requests[0]).toMatchObject({
+      method: "POST",
+      path: `/markers/${ids.kampala}/close`,
+    });
+    await expect(page.getByRole("button", { name: "Still current" })).toHaveCount(0);
+  });
+
+  test("Scenario: Owner reopens a site", async ({ page }) => {
+    await kampalaClosed(page);
+    const state = await stubApi(page);
+    await signedIn(page);
+    await page.goto(openKampala);
+    await expect(stat(page, "implementations")).toHaveText("7");
+    await page.getByRole("button", { name: "More actions" }).click();
+    await page.getByRole("menuitem", { name: "Reopen site" }).click();
+    await expect(page.getByRole("button", { name: "Still current" })).toBeVisible();
+    await expect(stat(page, "implementations")).toHaveText("8");
+    expect(state.requests[0]?.path).toBe(`/markers/${ids.kampala}/reopen`);
+  });
+
+  test("the menu works by keyboard, and Escape leaves the marker open", async ({ page }) => {
+    await stubApi(page);
+    await signedIn(page);
+    await page.goto(openKampala);
+    const trigger = page.getByRole("button", { name: "More actions" });
+    await trigger.focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByRole("menuitem", { name: "Close site" })).toBeFocused();
+    await page.keyboard.press("ArrowDown");
+    await expect(page.getByRole("menuitem", { name: "Delete" })).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("menu")).toHaveCount(0);
+    await expect(trigger).toBeFocused();
+    await expect(page.getByRole("heading", { name: "Kampala Rollout" })).toBeVisible();
+  });
+});
+
+test.describe("Closed sites on the map", () => {
+  test("Scenario: Closed site with many sites", async ({ page }) => {
+    await kampalaClosed(page, 50);
+    await page.goto("/?map=14/0.3476/32.5825");
+    await mapIdle(page);
+    const properties = await page.evaluate(
+      (id) =>
+        window.atlasMap!.querySourceFeatures("markers").find((f) => f.properties.id === id)
+          ?.properties,
+      ids.kampala,
+    );
+    expect(properties).toMatchObject({ closed: true, sites: 50, colour: "#B8BDC4" });
+    await expect(page.locator(".legend")).toContainText("Closed");
+  });
+
+  test("Scenario: Hide closed sites", async ({ page }) => {
+    await kampalaClosed(page);
+    await page.goto("/");
+    await mapIdle(page);
+    await page.getByRole("button", { name: "Filters" }).click();
+    await page.getByLabel("Show closed sites").uncheck();
+    await expect(page).toHaveURL(/closed=hide/);
+    await expect(page.getByRole("button", { name: "Filters (on)" })).toBeVisible();
+    await expect(page.locator(".legend")).not.toContainText("Closed");
+  });
+
+  test("Scenario: Closed site in search results", async ({ page }) => {
+    await kampalaClosed(page);
+    await page.goto("/");
+    await mapIdle(page);
+    await page.getByRole("combobox", { name: /Search sites/ }).fill("Kampala Rollout");
+    await expect(page.getByRole("option", { name: /Kampala Rollout/ })).toContainText("Closed");
+  });
+});
+
+test.describe("The page shows when a session has ended", () => {
+  test("Scenario: Returning after a while", async ({ page }) => {
+    await stubApi(page);
+    await signedIn(page);
+    await page.goto(openKampala);
+    await expect(page.getByRole("button", { name: "Edit" })).toBeVisible();
+    await page.evaluate(() => {
+      sessionStorage.removeItem("atlas.e2e.token");
+      window.dispatchEvent(new Event("focus"));
+    });
+    await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Edit" })).toHaveCount(0);
+    await expect(page.getByRole("status")).toContainText("session has ended");
+  });
+
+  test("Scenario: Opening a form after the session has ended", async ({ page }) => {
+    const state = await stubApi(page);
+    state.expireMarkerReads = true;
+    await signedIn(page);
+    await page.goto(openKampala);
+    await mapIdle(page);
+    await page.getByRole("button", { name: "Edit" }).click();
+    const form = page.getByRole("complementary", { name: "Edit marker" });
+    await expect(form.getByRole("button", { name: "Sign in again" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
+    await expect(page.getByLabel("Name (required)")).toHaveCount(0);
+    await page.mouse.click(300, 400);
+    await expect(page.locator(".maplibregl-marker")).toHaveCount(0);
+  });
+
+  test("Scenario: Session ends with the form open", async ({ page }) => {
+    await stubApi(page);
+    await signedIn(page);
+    await page.goto(openKampala);
+    await page.getByRole("button", { name: "Edit" }).click();
+    await page.getByLabel("Notes").fill("Do not lose me");
+    await page.evaluate(() => {
+      sessionStorage.removeItem("atlas.e2e.token");
+      window.dispatchEvent(new Event("focus"));
+    });
+    await expect(page.getByRole("button", { name: "Sign in again" })).toBeVisible();
+    await expect(page.getByLabel("Notes")).toHaveValue("Do not lose me");
+  });
+});
+
+test.describe("Top bar and labels", () => {
+  for (const name of ["visitor", "signed in"]) {
+    test(`Scenario: Top bar on a phone (${name})`, async ({ page }) => {
+      await page.setViewportSize({ width: 360, height: 740 });
+      await stubApi(page);
+      if (name === "signed in") await signedIn(page);
+      await page.goto("/");
+      await mapIdle(page);
+      const bar = page.locator(".topbar");
+      const boxes = await bar
+        .locator("h1, .search, > button")
+        .evaluateAll((els) => els.map((el) => el.getBoundingClientRect().toJSON()));
+      expect(boxes.length).toBe(4);
+      const barBox = await bar.boundingBox();
+      for (const box of boxes) {
+        expect(box.top).toBeGreaterThanOrEqual(barBox!.y);
+        expect(box.bottom).toBeLessThanOrEqual(barBox!.y + barBox!.height);
+        expect(box.right).toBeLessThanOrEqual(360);
+      }
+      expect(barBox!.height).toBeLessThan(56);
+    });
+  }
+
+  test("Scenario: Latitude and longitude labels", async ({ page }) => {
+    await stubApi(page);
+    await signedIn(page);
+    await page.goto("/?panel=add");
+    const latitude = await page.getByLabel("Latitude").boundingBox();
+    const longitude = await page.getByLabel("Longitude").boundingBox();
+    expect(latitude!.y).toBe(longitude!.y);
+    await expect(page.getByText("Location (required)")).toBeVisible();
   });
 });
 

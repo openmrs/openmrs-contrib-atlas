@@ -6,6 +6,9 @@ export interface LegendEntry {
 }
 
 const UNKNOWN_COLOUR = "#9AA0A6";
+/** Lighter than Unknown, so a closed site recedes. */
+const CLOSED_COLOUR = "#B8BDC4";
+export const CLOSED = "Closed";
 
 /** Distinct colours for distributions, in lookup order. */
 const CATEGORICAL = [
@@ -59,6 +62,7 @@ export function palette(snapshot: AtlasSnapshot, by: ColourBy): Map<string, stri
 }
 
 export function colourOf(marker: PublicMarker, by: ColourBy, colours: Map<string, string>) {
+  if (marker.status === "closed") return CLOSED_COLOUR;
   return colours.get(valueOf(marker, by)) ?? UNKNOWN_COLOUR;
 }
 
@@ -68,7 +72,8 @@ export function legendEntries(
   by: ColourBy,
   colours: Map<string, string>,
 ): LegendEntry[] {
-  const present = new Set(markers.map((m) => valueOf(m, by)));
+  const open = markers.filter((m) => m.status !== "closed");
+  const present = new Set(open.map((m) => valueOf(m, by)));
   const entries: LegendEntry[] = [];
   for (const [value, colour] of colours) {
     if (value !== UNKNOWN && present.has(value)) entries.push({ value, colour });
@@ -77,5 +82,6 @@ export function legendEntries(
     if (value !== UNKNOWN && !colours.has(value)) entries.push({ value, colour: UNKNOWN_COLOUR });
   }
   if (present.has(UNKNOWN)) entries.push({ value: UNKNOWN, colour: UNKNOWN_COLOUR });
+  if (open.length < markers.length) entries.push({ value: CLOSED, colour: CLOSED_COLOUR });
   return entries;
 }

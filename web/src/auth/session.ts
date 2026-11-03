@@ -22,12 +22,30 @@ function read(storage: Storage, key: string): string | null {
   }
 }
 
+const USER_KEY = `oidc.user:${config.keycloakIssuer}:${config.keycloakClientId}`;
+
 export function hasSession(): boolean {
   if (config.e2e) return read(sessionStorage, E2E_TOKEN) !== null;
   if (!signInEnabled) return false;
-  return (
-    read(sessionStorage, `oidc.user:${config.keycloakIssuer}:${config.keycloakClientId}`) !== null
-  );
+  return read(sessionStorage, USER_KEY) !== null;
+}
+
+const endedListeners = new Set<() => void>();
+
+/** Subscribes to the end of the session; returns how to unsubscribe. */
+export function onSessionEnded(listener: () => void): () => void {
+  endedListeners.add(listener);
+  return () => endedListeners.delete(listener);
+}
+
+/** Forgets the session and tells the page. */
+export function sessionEnded(): void {
+  try {
+    sessionStorage.removeItem(config.e2e ? E2E_TOKEN : USER_KEY);
+  } catch {
+    // Without storage there was no stored session to forget.
+  }
+  endedListeners.forEach((listener) => listener());
 }
 
 /** Keycloak has just sent the browser back here after signing in or out. */
@@ -77,4 +95,18 @@ export async function getToken(): Promise<string | undefined> {
   if (config.e2e) return read(sessionStorage, E2E_TOKEN) ?? undefined;
   if (!hasSession()) return undefined;
   return (await oidc()).accessToken();
+}
+
+/** Ends the session here if it has lapsed. A network failure proves nothing, so it is ignored. */
+export async function checkSession(): Promise<void> {
+  try {
+    if ((await getToken()) === undefined) sessionEnded();
+  } catch {
+    // The next request will find out.
+  }
+}
+
+export async function sessionEndsAt(): Promise<number | undefined> {
+  if (config.e2e || !hasSession()) return undefined;
+  return (await oidc()).sessionEndsAt();
 }
