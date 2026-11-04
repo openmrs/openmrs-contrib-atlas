@@ -13,6 +13,7 @@ import {
 import { AccountsUnavailable, type Accounts } from "./accounts.ts";
 import type { EditStore } from "./edits.ts";
 import type { LinkSigner } from "./links.ts";
+import { NO_REPLY_HTML, NO_REPLY_TEXT } from "./help.ts";
 import type { Mailer } from "./mailer.ts";
 
 /**
@@ -175,7 +176,6 @@ export interface ReminderEmailInput {
   name: string;
   markers: DueMarker[];
   siteUrl: string;
-  helpUrl: string;
   confirmLink: (due: DueMarker) => string;
   unsubscribeLink: string;
 }
@@ -192,7 +192,6 @@ export function renderReminder(input: ReminderEmailInput) {
   const why = `You're receiving this because your OpenMRS ID (${input.username}) is listed as an owner or editor of ${many ? "these entries" : "this entry"} on the OpenMRS Atlas, and ${many ? "they haven't" : "it hasn't"} been confirmed for a while.`;
   const fade =
     'Entries fade on the map until someone confirms them, so a quick confirmation keeps your site visible to the community. "Still current" works without signing in, once, for 30 days.';
-  const noReply = `Please don't reply to this email; replies aren't read. For help with the Atlas, visit ${input.helpUrl}`;
 
   const entries = input.markers.map((due) => {
     const m = due.marker;
@@ -223,7 +222,7 @@ export function renderReminder(input: ReminderEmailInput) {
     ]),
     fade,
     "",
-    noReply,
+    NO_REPLY_TEXT,
     "",
     `To stop these reminders: ${input.unsubscribeLink}`,
     "",
@@ -243,9 +242,7 @@ export function renderReminder(input: ReminderEmailInput) {
         `${a(e.confirm, "Still current")} · ${a(e.markerUrl, "Update details")} · ${a(e.markerUrl, "This site has closed")}</p>`,
     ),
     p(escape(fade)),
-    p(
-      `Please don't reply to this email; replies aren't read. For help with the Atlas, visit ${a(input.helpUrl, input.helpUrl)}.`,
-    ),
+    p(NO_REPLY_HTML),
     p(`${a(input.unsubscribeLink, "Unsubscribe")} from these reminders.`),
     "</body></html>",
   ].join("\n");
@@ -259,7 +256,6 @@ export interface ReminderJobDeps {
   mailer: Mailer;
   signer: LinkSigner;
   siteUrl: string;
-  helpUrl: string;
   now: () => Date;
 }
 
@@ -347,7 +343,6 @@ export async function runReminders(deps: ReminderJobDeps): Promise<ReminderRun> 
         name: account!.name,
         markers: person.markers,
         siteUrl: site,
-        helpUrl: deps.helpUrl,
         confirmLink: (due) =>
           `${site}/reminder#${deps.signer.confirm(due.marker.id, due.confirmedAt, person.username, now)}`,
         unsubscribeLink: `${site}/reminder#${deps.signer.unsubscribe(person.username, now)}`,

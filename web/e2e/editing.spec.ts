@@ -421,6 +421,25 @@ test.describe("Edit a marker", () => {
     await expect(page.getByRole("heading", { name: "Kampala Rollout" })).toBeVisible();
   });
 
+  test("Cancel at the bottom of a scrolled form shows the question in view", async ({ page }) => {
+    await stubApi(page);
+    await signedIn(page);
+    await page.goto(openKampala);
+    await page.getByRole("button", { name: "Edit" }).click();
+    await page.getByLabel("Notes").fill("Unsaved");
+    const cancel = page.getByRole("button", { name: "Cancel" });
+    await cancel.scrollIntoViewIfNeeded();
+    await cancel.click();
+    const dialog = page.getByRole("alertdialog", { name: "Discard your changes?" });
+    await expect(dialog).toBeInViewport({ ratio: 1 });
+    await expect(dialog.getByRole("button", { name: "Keep editing" })).toBeFocused();
+    // The form doesn't jump: where the person was stays in view.
+    await expect(cancel).toBeInViewport();
+    await dialog.getByRole("button", { name: "Keep editing" }).click();
+    await expect(dialog).toBeHidden();
+    await expect(page.getByLabel("Notes")).toHaveValue("Unsaved");
+  });
+
   test("Escape with no changes closes the form at once", async ({ page }) => {
     await stubApi(page);
     await signedIn(page);

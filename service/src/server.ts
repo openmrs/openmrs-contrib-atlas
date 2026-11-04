@@ -25,7 +25,6 @@ const clientId = process.env.KEYCLOAK_CLIENT_ID;
 const serviceClientId = process.env.KEYCLOAK_SERVICE_CLIENT_ID;
 const serviceClientSecret = secret("KEYCLOAK_SERVICE_CLIENT_SECRET");
 const linkKey = secret("LINK_SIGNING_KEY");
-const helpUrl = process.env.HELP_URL ?? "https://talk.openmrs.org";
 
 const accounts =
   issuer && serviceClientId && serviceClientSecret
@@ -52,13 +51,12 @@ const app = createApp({
         }
       : undefined,
   accounts,
-  reminders: linkKey ? { mailer, signer: linkSigner(linkKey), helpUrl } : undefined,
+  reminders: linkKey ? { mailer, signer: linkSigner(linkKey) } : undefined,
   notices: {
     mailer,
     to: process.env.NOTICE_EMAIL || undefined,
     siteUrl,
     sheetUrl: `https://docs.google.com/spreadsheets/d/${sheetId}/edit`,
-    helpUrl,
   },
   auth: {
     publishSecret: required("PUBLISH_SECRET"),

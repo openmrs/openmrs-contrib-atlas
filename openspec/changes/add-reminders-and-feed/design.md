@@ -79,7 +79,6 @@ Configuration, all optional so local runs and tests need none:
 | `KEYCLOAK_SERVICE_CLIENT_SECRET` | Secret `atlas-keycloak-service-secret`; surrounding whitespace is trimmed. |
 | `MANDRILL_API_KEY` | Secret. No key: email is off and logged as such. |
 | `EMAIL_FROM` | `OpenMRS Atlas <atlas-noreply@openmrs.org>` |
-| `HELP_URL` | Where emails send people instead of replying: the Atlas category on OpenMRS Talk. |
 | `EMAIL_ALLOWLIST` | Comma-separated. Set on staging (`burke@openmrs.org`), unset in production. |
 | `NOTICE_EMAIL` | One address for new-entry notices. Unset: no notices. |
 | `LINK_SIGNING_KEY` | Secret, 32 random bytes. |
@@ -136,4 +135,4 @@ Rollback: pause the scheduler job or unset `MANDRILL_API_KEY` to stop email; uns
 
 - The production notice address.
 
-Settled: email comes from `atlas-noreply@openmrs.org` with no reply-to, and points people to OpenMRS Talk for help; the daily send runs at 14:00 UTC.
+Settled: email comes from `atlas-noreply@openmrs.org` with no reply-to, and points people to OpenMRS Talk or OpenMRS on Slack for help (fixed text in `service/src/help.ts`, not a setting); the daily send runs at 14:00 UTC.

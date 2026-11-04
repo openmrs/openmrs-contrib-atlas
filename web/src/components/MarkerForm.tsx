@@ -203,6 +203,13 @@ export function MarkerForm({
   }, [dirty, onClose]);
   useEscape(close);
 
+  // The question floats at the top of the panel wherever it is scrolled; focus goes to it so
+  // keyboard and screen reader users meet it too.
+  const keepEditing = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (discarding) keepEditing.current?.focus();
+  }, [discarding]);
+
   // The location: a draggable pin, placed by clicking the map or choosing a search result.
   const latitude = Number(values.latitude);
   const longitude = Number(values.longitude);
@@ -415,13 +422,18 @@ export function MarkerForm({
       </div>
 
       {discarding && (
-        <div role="alertdialog" aria-label="Discard your changes?" className="confirm">
+        <div role="alertdialog" aria-label="Discard your changes?" className="confirm floating">
           <p>Discard your changes?</p>
           <div className="button-row">
             <button type="button" className="primary" onClick={onClose}>
               Discard
             </button>
-            <button type="button" className="secondary" onClick={() => setDiscarding(false)}>
+            <button
+              ref={keepEditing}
+              type="button"
+              className="secondary"
+              onClick={() => setDiscarding(false)}
+            >
               Keep editing
             </button>
           </div>

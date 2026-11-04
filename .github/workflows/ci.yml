@@ -104,7 +104,6 @@ jobs:
             EMAIL_FROM=OpenMRS Atlas <atlas-noreply@openmrs.org>
             EMAIL_ALLOWLIST=${{ vars.STAGING_EMAIL_ALLOWLIST || 'none' }}
             NOTICE_EMAIL=${{ vars.STAGING_NOTICE_EMAIL }}
-            HELP_URL=https://talk.openmrs.org
           secrets: |
             KEYCLOAK_SERVICE_CLIENT_SECRET=atlas-keycloak-service-secret:latest
             MANDRILL_API_KEY=atlas-mandrill-api-key:latest

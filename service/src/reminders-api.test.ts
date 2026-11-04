@@ -77,13 +77,12 @@ function build(overrides: Partial<AppDeps> = {}) {
       logos: { saveLogo: async (name) => name },
     },
     accounts,
-    reminders: { mailer, signer, helpUrl: "https://talk.openmrs.org" },
+    reminders: { mailer, signer },
     notices: {
       mailer,
       to: "admins@example.org",
       siteUrl: "https://atlas.example.org",
       sheetUrl: "https://docs.google.com/spreadsheets/d/x/edit",
-      helpUrl: "https://talk.openmrs.org",
     },
     ...overrides,
   });
@@ -457,11 +456,12 @@ describe("Notice when a marker is added", () => {
     expect(notice.text).toContain("Country: KE");
     expect(notice.text).toContain("https://atlas.example.org/?marker=");
     expect(notice.text).toContain("https://docs.google.com/spreadsheets/d/x/edit");
+    expect(notice.text).toContain("OpenMRS on Slack (https://openmrs.slack.com/)");
   });
 
   it("Scenario: No notice address", async () => {
     const quiet = build({
-      notices: { mailer, siteUrl: "s", sheetUrl: "s", helpUrl: "h" },
+      notices: { mailer, siteUrl: "s", sheetUrl: "s" },
     });
     expect((await call("person:newbie", "POST", "/api/markers", { fields }, quiet)).status).toBe(
       201,

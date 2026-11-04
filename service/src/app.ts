@@ -27,7 +27,7 @@ export interface AppDeps {
    */
   accounts?: Accounts;
   /** Reminder emails and their links. Needs `editing` and `accounts`. */
-  reminders?: { mailer: Mailer; signer: LinkSigner; helpUrl: string };
+  reminders?: { mailer: Mailer; signer: LinkSigner };
   /** The notice sent when a marker is added. */
   notices?: NoticeConfig;
 }
@@ -78,9 +78,9 @@ export function createApp(deps: AppDeps) {
     }
     const { store } = deps.editing;
     const { accounts } = deps;
-    const { mailer, signer, helpUrl } = deps.reminders;
+    const { mailer, signer } = deps.reminders;
     const result = await queue.run(() =>
-      runReminders({ store, accounts, mailer, signer, siteUrl: deps.siteUrl, helpUrl, now }),
+      runReminders({ store, accounts, mailer, signer, siteUrl: deps.siteUrl, now }),
     );
     console.log(JSON.stringify({ event: "reminders", caller, ...result }));
     return c.json(result);

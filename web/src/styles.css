@@ -426,6 +426,13 @@ button.link {
 .confirm p {
   margin: 0 0 8px;
 }
+/* Stays in view at the top of the scrolling panel, however far down the form is. */
+.confirm.floating {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  box-shadow: var(--shadow);
+}
 .marker-form form,
 .sharing {
   display: flex;

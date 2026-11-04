@@ -135,7 +135,6 @@ async function run(
     mailer,
     signer,
     siteUrl: SITE,
-    helpUrl: "https://talk.openmrs.org",
     now: () => now,
   });
   const rows = sheet.appended.map((r) =>
@@ -370,7 +369,6 @@ describe("Reminder content", () => {
       name: "Jane Doe",
       markers: due,
       siteUrl: SITE,
-      helpUrl: "https://talk.openmrs.org",
       confirmLink: () => `${SITE}/reminder#confirm-token`,
       unsubscribeLink: `${SITE}/reminder#unsub-token`,
     });
@@ -385,7 +383,8 @@ describe("Reminder content", () => {
       expect(body).toContain("June 2024");
       expect(body).toContain("jdoe");
       expect(body).toContain("don't reply");
-      expect(body).toContain("https://talk.openmrs.org");
+      expect(body).toContain("https://talk.openmrs.org/");
+      expect(body).toContain("https://openmrs.slack.com/");
       expect(body).toContain("fade");
     }
     expect(email.html).not.toContain("<img");
@@ -415,7 +414,6 @@ describe("Reminder content", () => {
       name: "",
       markers,
       siteUrl: SITE,
-      helpUrl: "h",
       confirmLink: () => "c",
       unsubscribeLink: "u",
     });

@@ -1,4 +1,5 @@
 import type { PublicMarker } from "@openmrs-atlas/shared";
+import { NO_REPLY_HTML, NO_REPLY_TEXT } from "./help.ts";
 import type { Mailer } from "./mailer.ts";
 
 /**
@@ -12,7 +13,6 @@ export interface NoticeConfig {
   to?: string;
   siteUrl: string;
   sheetUrl: string;
-  helpUrl: string;
 }
 
 const escape = (value: string) =>
@@ -30,7 +30,6 @@ export function renderNotice(
     ["Country", marker.country ?? "Unknown"],
     ["Added by", addedBy],
   ] as const;
-  const noReply = "Please don't reply to this email; replies aren't read.";
   const subject = `New on the OpenMRS Atlas: ${marker.name}`;
   const text = [
     `${addedBy} added ${marker.name} to the OpenMRS Atlas.`,
@@ -40,7 +39,7 @@ export function renderNotice(
     `On the map: ${markerUrl}`,
     `In the sheet: ${config.sheetUrl}`,
     "",
-    `${noReply} For help with the Atlas, visit ${config.helpUrl}`,
+    NO_REPLY_TEXT,
     "",
   ].join("\n");
   const a = (href: string, label: string) => `<a href="${escape(href)}">${escape(label)}</a>`;
@@ -49,7 +48,7 @@ export function renderNotice(
     `<p>${escape(addedBy)} added <strong>${escape(marker.name)}</strong> to the OpenMRS Atlas.</p>`,
     `<p>${facts.map(([label, value]) => `${label}: ${escape(value)}`).join("<br>")}</p>`,
     `<p>${a(markerUrl, "See it on the map")} · ${a(config.sheetUrl, "Open the sheet")}</p>`,
-    `<p>${noReply} For help with the Atlas, visit ${a(config.helpUrl, config.helpUrl)}.</p>`,
+    `<p>${NO_REPLY_HTML}</p>`,
     "</body></html>",
   ].join("\n");
   return { subject, text, html };

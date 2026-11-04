@@ -103,7 +103,6 @@ left alone.
 | `EMAIL_FROM`                     | Default `OpenMRS Atlas <atlas-noreply@openmrs.org>`.              |
 | `EMAIL_ALLOWLIST`                | Comma-separated. Set: only these get email. Unset: everyone.      |
 | `NOTICE_EMAIL`                   | Gets a notice for each marker added. Unset: no notices.           |
-| `HELP_URL`                       | Where emails send people instead of replying.                     |
 
 ## Keycloak
 

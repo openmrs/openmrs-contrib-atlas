@@ -11,7 +11,7 @@ All Atlas email SHALL be sent through Mandrill from one no-reply address on a do
 
 #### Scenario: Where to get help
 - **WHEN** a person reads any Atlas email
-- **THEN** it says not to reply, and links to the OpenMRS Talk forum for help with the Atlas
+- **THEN** it says not to reply, and links to OpenMRS Talk (https://talk.openmrs.org/) and OpenMRS on Slack (https://openmrs.slack.com/) for help with the Atlas
 
 ### Requirement: Staging delivers only to an allowlist
 When an allowlist is configured, email SHALL be delivered only to addresses on it. Email to any other address SHALL NOT be sent, and SHALL be logged with its kind and marker, but without the address or the body.
