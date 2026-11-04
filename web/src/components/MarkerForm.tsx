@@ -10,6 +10,7 @@ import {
   type MarkerResult,
 } from "../lib/api.ts";
 import { searchPlaces, type Place } from "../lib/places.ts";
+import { AccountPicker } from "./AccountPicker.tsx";
 import { SharingControls } from "./SharingControls.tsx";
 import { useEscape } from "./useEscape.ts";
 
@@ -583,7 +584,16 @@ export function MarkerForm({
             {admin && (
               <fieldset>
                 <legend>Admin</legend>
-                {textField("owner")}
+                <AccountPicker
+                  label={LABELS.owner!}
+                  value={values.owner ?? ""}
+                  onChange={(username) => set("owner", username)}
+                />
+                {errorFor("owner").map((reason) => (
+                  <span key={reason} className="error">
+                    {reason}
+                  </span>
+                ))}
                 {markerId && selectField("status", STATUSES, { required: true })}
               </fieldset>
             )}

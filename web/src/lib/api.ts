@@ -37,8 +37,25 @@ export interface Offer {
 export interface Me {
   username: string;
   admin: boolean;
+  /** Their own email, from their sign-in: where reminders go. */
+  email?: string;
+  /** False once they have unsubscribed from reminders. */
+  reminders?: boolean;
   markers: MyMarker[];
   offers: Offer[];
+}
+
+export interface AccountSummary {
+  username: string;
+  name: string;
+}
+
+/** Suggestions for an OpenMRS ID field: usernames and names only. */
+export async function searchAccounts(q: string): Promise<AccountSummary[]> {
+  const { accounts } = await api<{ accounts: AccountSummary[] }>(
+    `/accounts?q=${encodeURIComponent(q)}`,
+  );
+  return accounts;
 }
 
 export interface MarkerForm {

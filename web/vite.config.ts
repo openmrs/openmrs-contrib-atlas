@@ -54,7 +54,17 @@ function preloads(): Plugin {
 export default defineConfig({
   plugins: [react(), devData(), preloads()],
   // MapLibre alone is ~300 KB gzipped; load time is measured on staging instead (task 9.4).
-  build: { chunkSizeWarningLimit: 1600 },
+  build: {
+    chunkSizeWarningLimit: 1600,
+    // The page behind links in reminder emails is separate, so it never loads the map. It must
+    // not import styles.css: shared CSS is split out and then loses to MapLibre's.
+    rollupOptions: {
+      input: {
+        main: resolve(import.meta.dirname, "index.html"),
+        reminder: resolve(import.meta.dirname, "reminder.html"),
+      },
+    },
+  },
   // The service, run locally (see service/README.md), as Firebase Hosting forwards it in production.
   server: { proxy: { "/api": "http://localhost:8080" } },
   test: {

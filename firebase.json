@@ -40,6 +40,13 @@
         {
           "source": "/index.html",
           "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+        },
+        {
+          "source": "/reminder{,.html}",
+          "headers": [
+            { "key": "Cache-Control", "value": "no-cache" },
+            { "key": "Referrer-Policy", "value": "no-referrer" }
+          ]
         }
       ]
     }

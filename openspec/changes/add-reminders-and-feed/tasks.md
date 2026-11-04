@@ -20,7 +20,7 @@
 ## 3. Sheet
 
 - [x] 3.1 Add `reminders` and `unsubscribed` to `TABS` and `COLUMNS`, with `marker_id`, `confirmed_at`, `username` and `sent_at` as text columns
-- [ ] 3.2 Make `setup:sheet` add both tabs, protected like `private`, and run it on staging
+- [x] 3.2 Make `setup:sheet` add both tabs (private like the rest of the sheet, which only admins and the service can open), and run it on staging
 - [x] 3.3 Confirm both tabs are never read by the snapshot builder; extend the snapshot test that checks no private tab leaks
 
 ## 4. Email
@@ -59,11 +59,11 @@
 
 ## 9. Web
 
-- [ ] 9.1 Account picker in the add-editor, transfer and admin owner fields: search as you type after 3 characters, show username and name, and show "not found" and "try again" errors
-- [ ] 9.2 My markers: show the email reminders go to, with a link to change it on the OpenMRS ID site, and a reminders on/off switch
-- [ ] 9.3 Add a `reminder.html` Vite entry with no map: reads the token from the fragment, shows the marker, and one "Still current" or "Unsubscribe" button
-- [ ] 9.4 Messages for done, already confirmed, expired (with a sign-in link to the marker) and invalid links; works on a phone and by keyboard
-- [ ] 9.5 Playwright tests for the picker, the reminder setting and the reminder page against a stubbed API, including that loading the reminder page alone sends no confirm
+- [x] 9.1 Account picker in the add-editor, transfer and admin owner fields: search as you type after 3 characters, show username and name, and show "not found" and "try again" errors
+- [x] 9.2 My markers: show the email reminders go to, with a link to change it on the OpenMRS ID site, and a reminders on/off switch
+- [x] 9.3 Add a `reminder.html` Vite entry with no map: reads the token from the fragment, shows the marker, and one "Still current" or "Unsubscribe" button
+- [x] 9.4 Messages for done, already confirmed, expired (with a sign-in link to the marker) and invalid links; works on a phone and by keyboard
+- [x] 9.5 Playwright tests for the picker, the reminder setting and the reminder page against a stubbed API, including that loading the reminder page alone sends no confirm
 
 ## 10. Staging
 

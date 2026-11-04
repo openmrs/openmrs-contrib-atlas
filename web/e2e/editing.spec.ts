@@ -28,6 +28,13 @@ const kampala = {
   confirmed_at: NOW,
 };
 
+/** Accounts the stubbed service knows: usernames and names only, as the real one returns. */
+const ACCOUNTS = [
+  { username: "asmith", name: "Al Smith" },
+  { username: "bob", name: "Bob Jones" },
+  { username: "carol", name: "Carol Smithers" },
+];
+
 /** The service, stubbed: permissions and sheet writes are tested in service/src/api.test.ts. */
 async function stubApi(page: Page, overrides: Partial<State> = {}): Promise<State> {
   const state: State = {
@@ -69,6 +76,15 @@ async function stubApi(page: Page, overrides: Partial<State> = {}): Promise<Stat
       });
 
     if (path === "/me") return json(200, state.me);
+    if (path === "/me/reminders" && method === "PUT") {
+      return json(200, { reminders: (body as { on: boolean }).on });
+    }
+    if (path === "/accounts") {
+      const q = (new URL(request.url()).searchParams.get("q") ?? "").toLowerCase();
+      return json(200, {
+        accounts: ACCOUNTS.filter((a) => `${a.username} ${a.name}`.toLowerCase().includes(q)),
+      });
+    }
     if (path === "/logos") return json(201, { url: "/e2e/logo.png" });
     if (path === "/markers" && method === "POST") {
       return json(201, {
@@ -127,6 +143,13 @@ async function stubApi(page: Page, overrides: Partial<State> = {}): Promise<Stat
       return saved({ marker: { ...kampala, status: "closed" }, status: "closed" });
     }
     if (path.endsWith("/reopen")) return saved({ marker: kampala });
+    const named = (body as { username?: string } | undefined)?.username;
+    if (named && !ACCOUNTS.some((a) => a.username === named)) {
+      return json(422, {
+        error: "Please check the OpenMRS ID.",
+        errors: [{ field: "username", reason: `The OpenMRS ID "${named}" was not found.` }],
+      });
+    }
     if (path.endsWith("/editors") && method === "POST") {
       state.editors = [...state.editors, (body as { username: string }).username];
       return saved({ marker: kampala, editors: state.editors });
@@ -673,7 +696,6 @@ test.describe("Manage editors and transfer", () => {
     const state = await stubApi(page);
     await signedIn(page);
     await page.goto(`/?panel=edit&marker=${ids.kampala}`);
-    await expect(page.getByText("can't check that an OpenMRS ID exists").first()).toBeVisible();
     await page.getByLabel("Add an editor by OpenMRS ID").fill("bob");
     await page.getByRole("button", { name: "Add editor" }).click();
     await expect(page.getByRole("button", { name: "Remove bob" })).toBeVisible();
@@ -691,6 +713,54 @@ test.describe("Manage editors and transfer", () => {
     await expect(page.getByText("Waiting for carol to accept")).toBeVisible();
     await page.getByRole("button", { name: "Cancel offer" }).click();
     await expect(page.getByLabel("New owner's OpenMRS ID")).toBeVisible();
+  });
+});
+
+test.describe("Account picker", () => {
+  test("Scenario: Find a colleague, by keyboard", async ({ page }) => {
+    const state = await stubApi(page);
+    await signedIn(page);
+    await page.goto(`/?panel=edit&marker=${ids.kampala}`);
+    const field = page.getByRole("combobox", { name: "Add an editor by OpenMRS ID" });
+    await field.fill("sm");
+    await page.waitForTimeout(400);
+    await expect(page.getByRole("listbox", { name: "Matching OpenMRS IDs" })).toHaveCount(0);
+    await field.fill("smit");
+    const options = page.getByRole("listbox", { name: "Matching OpenMRS IDs" }).getByRole("option");
+    await expect(options).toHaveText(["asmithAl Smith", "carolCarol Smithers"]);
+    await field.press("ArrowDown");
+    await field.press("Enter");
+    await expect(field).toHaveValue("carol");
+    await page.getByRole("button", { name: "Add editor" }).click();
+    await expect(page.getByRole("button", { name: "Remove carol" })).toBeVisible();
+    expect(state.requests[0]?.body).toEqual({ username: "carol" });
+    const searches = await page.evaluate(() =>
+      performance
+        .getEntriesByType("resource")
+        .map((e) => e.name)
+        .filter((n) => n.includes("/api/accounts")),
+    );
+    expect(searches.every((n) => new URL(n).searchParams.get("q")!.length >= 3)).toBe(true);
+  });
+
+  test("Scenario: Unknown OpenMRS ID", async ({ page }) => {
+    await stubApi(page);
+    await signedIn(page);
+    await page.goto(`/?panel=edit&marker=${ids.kampala}`);
+    await page.getByLabel("Add an editor by OpenMRS ID").fill("asmiht");
+    await page.getByRole("button", { name: "Add editor" }).click();
+    await expect(page.getByRole("alert")).toHaveText('The OpenMRS ID "asmiht" was not found.');
+    await expect(page.getByRole("button", { name: "Remove asmiht" })).toHaveCount(0);
+  });
+
+  test("Scenario: Offer to an unknown OpenMRS ID", async ({ page }) => {
+    await stubApi(page);
+    await signedIn(page);
+    await page.goto(`/?panel=edit&marker=${ids.kampala}`);
+    await page.getByLabel("New owner's OpenMRS ID").fill("nobody");
+    await page.getByRole("button", { name: "Offer ownership" }).click();
+    await expect(page.getByRole("alert")).toContainText("was not found");
+    await expect(page.getByText("Waiting for nobody")).toHaveCount(0);
   });
 });
 
@@ -746,6 +816,21 @@ test.describe("My markers", () => {
     await expect
       .poll(() => state.requests[0]?.path)
       .toBe(`/markers/${ids.nairobi}/transfer/accept`);
+  });
+
+  test("Scenario: Reminder setting", async ({ page }) => {
+    const state = await stubApi(page, {
+      me: { ...offerMe, email: "al@example.org", reminders: false },
+    });
+    await signedIn(page, "asmith");
+    await page.goto("/?panel=mine");
+    const panel = page.getByRole("complementary", { name: "My markers" });
+    await expect(panel.getByText("Reminders go to al@example.org")).toBeVisible();
+    const box = panel.getByRole("checkbox", { name: "Email me when my markers need confirming" });
+    await expect(box).not.toBeChecked();
+    await box.check();
+    await expect(box).toBeChecked();
+    expect(state.requests).toEqual([{ method: "PUT", path: "/me/reminders", body: { on: true } }]);
   });
 
   test("Hidden markers open straight in the form", async ({ page }) => {

@@ -511,6 +511,25 @@ button.link {
 .sharing button {
   align-self: flex-start;
 }
+.reminder-setting label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+.reminder-setting .hint {
+  margin: 4px 0 0;
+}
+.account-picker {
+  position: relative;
+}
+.account-picker .search-results {
+  z-index: 5;
+  max-height: 240px;
+}
+.account-picker .hint {
+  margin: 4px 0 0;
+}
 .panel h3 {
   font-size: 15px;
   margin: 12px 0 4px;

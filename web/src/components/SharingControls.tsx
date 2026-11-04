@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ApiError, api, markerPath, type MarkerResult } from "../lib/api.ts";
+import { AccountPicker } from "./AccountPicker.tsx";
 
 interface Props {
   markerId: string;
@@ -10,9 +11,6 @@ interface Props {
   onEditors: (editors: string[]) => void;
   onOffer: (to: string | undefined) => void;
 }
-
-const UNCHECKED =
-  "The Atlas can't check that an OpenMRS ID exists, so please check the spelling carefully.";
 
 /** Editors and transfers take effect at once, separately from the form's Save. */
 export function SharingControls({
@@ -35,7 +33,11 @@ export function SharingControls({
     try {
       await task();
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "That didn't work. Please try again.");
+      setError(
+        err instanceof ApiError
+          ? (err.errors[0]?.reason ?? err.message)
+          : "That didn't work. Please try again.",
+      );
     } finally {
       setBusy(false);
     }
@@ -101,11 +103,15 @@ export function SharingControls({
           ))}
         </ul>
       )}
-      <label>
-        Add an editor by OpenMRS ID
-        <input type="text" value={editor} onChange={(e) => setEditor(e.target.value)} />
-      </label>
-      <p className="hint">{UNCHECKED}</p>
+      <AccountPicker
+        label="Add an editor by OpenMRS ID"
+        value={editor}
+        onChange={setEditor}
+        onSubmit={() => {
+          if (editor.trim() && !busy) void addEditor();
+        }}
+        disabled={busy}
+      />
       <button
         type="button"
         className="secondary"
@@ -135,16 +141,17 @@ export function SharingControls({
             </>
           ) : (
             <>
-              <label>
-                New owner's OpenMRS ID
-                <input
-                  type="text"
-                  value={recipient}
-                  onChange={(e) => setRecipient(e.target.value)}
-                />
-              </label>
+              <AccountPicker
+                label="New owner's OpenMRS ID"
+                value={recipient}
+                onChange={setRecipient}
+                onSubmit={() => {
+                  if (recipient.trim() && !busy) void offer();
+                }}
+                disabled={busy}
+              />
               <p className="hint">
-                They must accept within 30 days. You stay on as an editor afterwards. {UNCHECKED}
+                They must accept within 30 days. You stay on as an editor afterwards.
               </p>
               <button
                 type="button"

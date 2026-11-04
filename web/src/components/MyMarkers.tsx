@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { config } from "../config.ts";
 import { ApiError, api, markerPath, type Me, type MarkerResult } from "../lib/api.ts";
 import { useEscape } from "./useEscape.ts";
 
@@ -26,6 +27,23 @@ function lastConfirmedLabel(iso: string): string {
 export function MyMarkers({ me, onOpen, onResult, onChanged, onAdd, onSignOut, onClose }: Props) {
   useEscape(onClose);
   const [error, setError] = useState<string>();
+  const [reminders, setReminders] = useState(me.reminders !== false);
+  const [savingReminders, setSavingReminders] = useState(false);
+
+  async function changeReminders(on: boolean) {
+    setError(undefined);
+    setSavingReminders(true);
+    setReminders(on);
+    try {
+      const result = await api<{ reminders: boolean }>("/me/reminders", "PUT", { on });
+      setReminders(result.reminders);
+    } catch (err) {
+      setReminders(!on);
+      setError(err instanceof ApiError ? err.message : "That didn't work. Please try again.");
+    } finally {
+      setSavingReminders(false);
+    }
+  }
 
   async function answer(id: string, verb: "accept" | "decline") {
     setError(undefined);
@@ -114,6 +132,30 @@ export function MyMarkers({ me, onOpen, onResult, onChanged, onAdd, onSignOut, o
           ))}
         </ul>
       )}
+      <section className="reminder-setting" aria-label="Reminders">
+        <h3>Reminders</h3>
+        <label>
+          <input
+            type="checkbox"
+            checked={reminders}
+            disabled={savingReminders}
+            onChange={(e) => void changeReminders(e.target.checked)}
+          />
+          Email me when my markers need confirming
+        </label>
+        <p className="hint">
+          {me.email ? (
+            <>Reminders go to {me.email}, the email on your OpenMRS ID. </>
+          ) : (
+            <>Your OpenMRS ID has no email, so reminders can't reach you. </>
+          )}
+          {config.keycloakIssuer && (
+            <a href={`${config.keycloakIssuer}/account`} target="_blank" rel="noreferrer">
+              {me.email ? "Change it" : "Add one"} in your OpenMRS ID account
+            </a>
+          )}
+        </p>
+      </section>
     </aside>
   );
 }
