@@ -5,8 +5,8 @@
 - [ ] 1.1 Add a `report:accounts` script that prints only counts and usernames, never emails: active markers by reminder stage, markers with no owner or editors, and owners or editors that don't exist, are disabled or have no email. Run it against staging and record the counts in design.md
 - [x] 1.2 (manual) On `id-stg.openmrs.org`, create the confidential client `atlas-service` with only service accounts enabled, and give its service account only `realm-management` `view-users`
 - [ ] 1.3 (manual) Store the client secret as `atlas-keycloak-service-secret` in Secret Manager in `atlas-stg-513316`, readable by `atlas-service@`
-- [ ] 1.4 (manual) Verify the sending domain in Mandrill and add its SPF and DKIM records in Cloudflare
-- [ ] 1.5 (manual) Create a Mandrill API key limited to Messages > Send, and store it with a new 32-byte link-signing key in Secret Manager
+- [x] 1.4 (manual) Sending domain: `openmrs.org` is already verified in Mandrill, with SPF and DKIM, for OpenMRS community email
+- [ ] 1.5 (manual) Store the Mandrill API key (Messages > Send) as `atlas-mandrill-api-key` and a generated 32-byte key as `atlas-link-signing-key` in Secret Manager, both readable by `atlas-service@`
 
 ## 2. Accounts
 
