@@ -6,11 +6,11 @@ Turns the Atlas sheet into the public snapshot files the map and downloads read,
 ## Requirements
 
 ### Requirement: Download formats
-Each publish SHALL also produce `markers.geojson` (a FeatureCollection of the same markers) and `markers.csv` (one row per marker, public fields only), generated from the same data as `atlas.json`.
+Each publish SHALL also produce `markers.geojson` (a FeatureCollection of the same markers), `markers.csv` (one row per marker, public fields only) and `rss.xml` (the change feed), generated from the same data as `atlas.json`.
 
 #### Scenario: Formats agree
 - **WHEN** a publish completes
-- **THEN** `atlas.json`, `markers.geojson` and `markers.csv` contain the same set of marker ids
+- **THEN** `atlas.json`, `markers.geojson` and `markers.csv` contain the same set of marker ids, and every marker in `rss.xml` is among them
 
 ### Requirement: Publish on sheet edits
 A direct edit to the `markers` or lookup tabs SHALL cause a publish within 5 minutes. Several edits made close together SHALL result in at most one publish per minute.

@@ -133,6 +133,6 @@ Rollback: pause the scheduler job or unset `MANDRILL_API_KEY` to stop email; uns
 
 ## Open Questions
 
-- The production notice address.
+None.
 
-Settled: email comes from `atlas-noreply@openmrs.org` with no reply-to, and points people to OpenMRS Talk or OpenMRS on Slack for help (fixed text in `service/src/help.ts`, not a setting); the daily send runs at 14:00 UTC.
+Settled: production notices go to `infrastructure@openmrs.org`; email comes from `atlas-noreply@openmrs.org` with no reply-to, and points people to OpenMRS Talk or OpenMRS on Slack for help (fixed text in `service/src/help.ts`, not a setting); the daily send runs at 14:00 UTC.

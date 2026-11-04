@@ -6,7 +6,7 @@ Defines how Atlas markers and their lookup lists are stored in the Atlas Google 
 ## Requirements
 
 ### Requirement: Sheet structure
-The Atlas sheet SHALL contain the tabs `markers`, `private`, `changes`, `pending`, `types`, `distributions`, `versions` and `problems`. Each marker is one row in `markers`; its private fields are one row in `private` with the same `id`.
+The Atlas sheet SHALL contain the tabs `markers`, `private`, `changes`, `pending`, `reminders`, `unsubscribed`, `types`, `distributions`, `versions` and `problems`. Each marker is one row in `markers`; its private fields are one row in `private` with the same `id`.
 
 #### Scenario: Marker columns
 - **WHEN** the `markers` tab is read
@@ -23,6 +23,14 @@ The Atlas sheet SHALL contain the tabs `markers`, `private`, `changes`, `pending
 #### Scenario: Pending columns
 - **WHEN** the `pending` tab is read
 - **THEN** its header row contains `marker_id`, `from`, `to`, `created_at` and `expires_at`
+
+#### Scenario: Reminder columns
+- **WHEN** the `reminders` tab is read
+- **THEN** its header row contains `marker_id`, `stage`, `confirmed_at`, `username`, `sent_at` and `result`, where `result` is `sent`, `withheld` or a reason it was skipped
+
+#### Scenario: Unsubscribed columns
+- **WHEN** the `unsubscribed` tab is read
+- **THEN** its header row contains `username` and `unsubscribed_at`
 
 ### Requirement: Required marker fields
 A marker row SHALL be valid only if `id`, `name`, `latitude`, `longitude`, `type` and `status` are present and well-formed.
@@ -135,3 +143,10 @@ A person's direct edit to the `private` tab SHALL append to `changes` the time, 
 #### Scenario: Admin changes an owner in the sheet
 - **WHEN** an admin changes an `owner` cell in the `private` tab
 - **THEN** `changes` gains a row naming the admin, the marker id and `owner`, and no publish runs
+
+### Requirement: Reminder tabs stay private
+The `reminders` and `unsubscribed` tabs SHALL never be published. Neither tab SHALL hold email addresses. Admins MAY delete a row from `unsubscribed` to start reminders to that person again.
+
+#### Scenario: Resubscribe
+- **WHEN** an admin deletes a person's row from `unsubscribed`
+- **THEN** that person gets reminders again when their markers are next due

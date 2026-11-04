@@ -69,7 +69,7 @@
 
 - [x] 10.1 (manual) CI now sets the service settings and secrets on `atlas-service-stg`; set the repository variable `STAGING_EMAIL_ALLOWLIST=burke@openmrs.org` (staging emails no one without it) and, optionally, `STAGING_NOTICE_EMAIL`, then re-run the latest deploy
 - [x] 10.2 Document the variables and routes in `service/README.md`, and the Keycloak client and other setup in `infra/staging/README.md`
-- [ ] 10.3 (manual) Walk through staging: add an editor by name search; try an unknown ID; make a test marker owned by an allowlisted account 13 months old; run the job; confirm from the email; unsubscribe from a second reminder and turn reminders back on in My markers; add a marker and check the notice; subscribe to `/rss` in a feed reader
+- [x] 10.3 (manual) Walk through staging: add an editor by name search; try an unknown ID; make a test marker owned by an allowlisted account 13 months old; run the job; confirm from the email; unsubscribe from a second reminder and turn reminders back on in My markers; add a marker and check the notice; subscribe to `/rss` in a feed reader
 - [x] 10.4 Check the `reminders` tab after a staging run: real people show `withheld`, and Cloud Run logs and the sheet hold no addresses or tokens (2026-11-04: on staging real people show `no account`, as id-stg doesn't hold their accounts; one `sent` to the test account; 282 log entries and 405 rows checked, no addresses or tokens)
 
 ## 11. Before archiving
