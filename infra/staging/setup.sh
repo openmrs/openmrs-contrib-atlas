@@ -15,6 +15,7 @@ SITE_ORIGIN="${SITE_ORIGIN:-https://atlas-stg.openmrs.org}"
 SERVICE="atlas-service-stg"
 SECRET="atlas-publish-secret"
 SCHEDULE="${SCHEDULE:-0 3 * * *}" # nightly, 03:00 UTC
+REMINDER_SCHEDULE="${REMINDER_SCHEDULE:-0 14 * * *}" # daily, 14:00 UTC
 : "${SHEET_ID:?Set SHEET_ID to the staging sheet id (see README step 2)}"
 
 RUNTIME_SA="atlas-service@${PROJECT}.iam.gserviceaccount.com"
@@ -113,6 +114,18 @@ if exists gcloud scheduler jobs describe atlas-nightly-publish --location="$REGI
   gcloud scheduler jobs update http atlas-nightly-publish "${job_flags[@]}" >/dev/null
 else
   gcloud scheduler jobs create http atlas-nightly-publish "${job_flags[@]}"
+fi
+
+step "Daily reminder job"
+# Sends due reminder emails (specs/reminder-emails). The service delivers only to the
+# STAGING_EMAIL_ALLOWLIST repository variable on staging, and to no one without it.
+reminder_flags=(--location="$REGION" --schedule="$REMINDER_SCHEDULE" --time-zone=UTC
+  --uri="${SERVICE_URL}/reminders" --http-method=POST --attempt-deadline=600s
+  --oidc-service-account-email="$SCHEDULER_SA" --oidc-token-audience="$SERVICE_URL")
+if exists gcloud scheduler jobs describe atlas-daily-reminders --location="$REGION"; then
+  gcloud scheduler jobs update http atlas-daily-reminders "${reminder_flags[@]}" >/dev/null
+else
+  gcloud scheduler jobs create http atlas-daily-reminders "${reminder_flags[@]}"
 fi
 
 step "Workload Identity Federation for ${GITHUB_REPO}@${DEPLOY_BRANCH}"

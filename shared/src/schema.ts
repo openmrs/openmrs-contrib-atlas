@@ -8,6 +8,8 @@ export const TABS = {
   private: "private",
   changes: "changes",
   pending: "pending",
+  reminders: "reminders",
+  unsubscribed: "unsubscribed",
   types: "types",
   distributions: "distributions",
   versions: "versions",
@@ -36,6 +38,8 @@ export const COLUMNS = {
   private: ["id", "owner", "editors", "contact_name", "contact_email"],
   changes: ["timestamp", "user", "marker_id", "action", "fields"],
   pending: ["marker_id", "from", "to", "created_at", "expires_at"],
+  reminders: ["marker_id", "stage", "confirmed_at", "username", "sent_at", "result"],
+  unsubscribed: ["username", "unsubscribed_at"],
   types: ["name", "colour", "sort"],
   distributions: ["name", "url", "is_standard"],
   versions: ["version", "release_date"],
@@ -58,6 +62,9 @@ export const TEXT_COLUMNS = new Set<string>([
   "from",
   "to",
   "expires_at",
+  "username",
+  "sent_at",
+  "unsubscribed_at",
 ]);
 
 /** The version value allowed in addition to the versions tab. */

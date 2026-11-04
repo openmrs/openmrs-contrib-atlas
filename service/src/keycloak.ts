@@ -24,7 +24,13 @@ export function keycloakVerifier(config: KeycloakConfig, keys?: JWTVerifyGetKey)
       const username = payload.preferred_username;
       if (typeof username !== "string" || !username) return undefined;
       const groups = Array.isArray(payload.groups) ? payload.groups : [];
-      return { username: normaliseUsername(username), admin: groups.includes(ADMIN_GROUP) };
+      const person: Person = {
+        username: normaliseUsername(username),
+        admin: groups.includes(ADMIN_GROUP),
+      };
+      // The `email` scope puts it in the token; it is only ever shown back to this person.
+      if (typeof payload.email === "string" && payload.email) person.email = payload.email;
+      return person;
     } catch {
       return undefined;
     }

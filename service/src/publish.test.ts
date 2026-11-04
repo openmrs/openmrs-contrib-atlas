@@ -21,9 +21,12 @@ function markerRow(i: number, overrides: Record<string, Cell> = {}): Cell[] {
   return COLUMNS.markers.map((c) => row[c] ?? "");
 }
 
+const SITE = "https://atlas.example.org";
+
 class FakeSheet implements SheetStore {
   problems: Problem[] | undefined;
   markers: Cell[][];
+  changes: Cell[][] = [];
   constructor(markers: Cell[][]) {
     this.markers = markers;
   }
@@ -33,6 +36,7 @@ class FakeSheet implements SheetStore {
       types: [[...COLUMNS.types], ...SEED_LOOKUPS.types],
       distributions: [[...COLUMNS.distributions], ...SEED_LOOKUPS.distributions],
       versions: [[...COLUMNS.versions], ...SEED_LOOKUPS.versions],
+      changes: [[...COLUMNS.changes], ...this.changes],
     };
   }
   async writeProblems(problems: Problem[]) {
@@ -65,7 +69,7 @@ const verify: IdTokenVerifier = async (token) =>
 function setup(rows: Cell[][], published?: number) {
   const sheet = new FakeSheet(rows);
   const bucket = new FakeBucket(published);
-  const app = createApp({ sheet, snapshots: bucket, auth, verify, now: () => now });
+  const app = createApp({ sheet, snapshots: bucket, auth, verify, now: () => now, siteUrl: SITE });
   const call = (headers: Record<string, string> = {}, query = "") =>
     app.request(`/publish${query}`, { method: "POST", headers });
   return { sheet, bucket, call };
@@ -84,6 +88,7 @@ describe("POST /publish", () => {
       "atlas.json",
       "markers.geojson",
       "markers.csv",
+      "rss.xml",
       "history/atlas-2026-11-01T12-00-00-000Z.json",
     ]);
     const snapshot = JSON.parse(bucket.files.get("atlas.json")!.body);
@@ -106,6 +111,21 @@ describe("POST /publish", () => {
     const res = await call(asSecret, "?force=true");
     expect(res.status).toBe(200);
     expect(JSON.parse(bucket.files.get("atlas.json")!.body).markers).toHaveLength(300);
+  });
+});
+
+// Requirement: Download formats / The feed is current
+describe("feed", () => {
+  it("Scenario: Formats agree, with the feed written by every publish", async () => {
+    const { sheet, bucket, call } = setup([markerRow(1)]);
+    const id = String(markerRow(1)[0]);
+    sheet.changes = [["2026-11-01T11:00:00.000Z", "jdoe", id, "edit", '["url"]']];
+    await call(asSecret);
+    const rss = bucket.files.get("rss.xml")!;
+    expect(rss.contentType).toBe("application/rss+xml; charset=utf-8");
+    expect(rss.body).toContain("<title>Site 1 entry updated</title>");
+    expect(rss.body).toContain(`${SITE}/?marker=${id}`);
+    expect(rss.body).not.toContain("jdoe");
   });
 });
 

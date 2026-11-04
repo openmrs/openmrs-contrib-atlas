@@ -27,6 +27,7 @@ import {
   type RawRow,
   type Role,
 } from "@openmrs-atlas/shared";
+import { AccountsUnavailable, type Accounts } from "./accounts.ts";
 
 /** How long a transfer offer stays open. See specs/marker-ownership. */
 const OFFER_DAYS = 30;
@@ -38,6 +39,8 @@ export interface EditValues {
   markers: Cell[][];
   private: Cell[][];
   pending: Cell[][];
+  reminders: Cell[][];
+  unsubscribed: Cell[][];
   types: Cell[][];
   distributions: Cell[][];
   versions: Cell[][];
@@ -56,13 +59,15 @@ export interface EditStore {
   readEdits(): Promise<EditValues>;
   /** Text is stored literally: a value like "=1+1" must never become a formula. */
   appendRow(tab: Tab, cells: Cell[]): Promise<void>;
+  /** Several rows in one call. */
+  appendRows(tab: Tab, rows: Cell[][]): Promise<void>;
   updateCells(updates: CellUpdate[]): Promise<void>;
   clearRow(tab: Tab, row: number): Promise<void>;
   readCell(tab: Tab, row: number, column: number): Promise<Cell>;
 }
 
 export class ApiError extends Error {
-  status: 400 | 403 | 404 | 409 | 410 | 422;
+  status: 400 | 403 | 404 | 409 | 410 | 422 | 429 | 503;
   body: { error: string; errors?: FieldError[] };
 
   constructor(status: ApiError["status"], body: ApiError["body"]) {
@@ -75,6 +80,10 @@ export class ApiError extends Error {
 const notFound = () => new ApiError(404, { error: "That marker was not found." });
 const forbidden = () => new ApiError(403, { error: "You don't have permission to do that." });
 const offerGone = () => new ApiError(410, { error: "That offer is no longer open." });
+export const accountsUnavailable = () =>
+  new ApiError(503, {
+    error: "We couldn't check OpenMRS IDs just now. Please try again shortly.",
+  });
 
 interface PrivateRow extends RawRow {
   owner: string;
@@ -95,6 +104,7 @@ class Tabs {
   readonly markers: RawRow[];
   readonly privates: PrivateRow[];
   readonly offers: Offer[];
+  readonly unsubscribed: { row: number; username: string }[];
   readonly lookups: Lookups;
   readonly values: EditValues;
 
@@ -119,6 +129,9 @@ class Tabs {
       to: text(cells.to),
       expires_at: text(cells.expires_at),
     }));
+    this.unsubscribed = toRawRows(values.unsubscribed, COLUMNS.unsubscribed).map(
+      ({ row, cells }) => ({ row, username: normaliseUsername(text(cells.username)) }),
+    );
     this.lookups = parseLookups(values);
   }
 
@@ -213,10 +226,36 @@ export function parseChangeBody(raw: unknown): ChangeBody {
 export class MarkerEditor {
   private store: EditStore;
   private now: () => Date;
+  private accounts: Accounts | undefined;
 
-  constructor(store: EditStore, now: () => Date) {
+  /** Without `accounts`, OpenMRS IDs are accepted unchecked (specs/account-lookup). */
+  constructor(store: EditStore, now: () => Date, accounts?: Accounts) {
     this.store = store;
     this.now = now;
+    this.accounts = accounts;
+  }
+
+  /** Refuses OpenMRS IDs that don't exist or are disabled, before anything is written. */
+  private async requireAccounts(usernames: string[], field: string) {
+    if (!this.accounts) return;
+    for (const username of usernames) {
+      let ok: boolean;
+      try {
+        ok = await this.accounts.check(username);
+      } catch (err) {
+        if (err instanceof AccountsUnavailable) {
+          console.error(JSON.stringify({ event: "accounts-unavailable", message: err.message }));
+          throw accountsUnavailable();
+        }
+        throw err;
+      }
+      if (!ok) {
+        throw new ApiError(422, {
+          error: "Please check the OpenMRS ID.",
+          errors: [{ field, reason: `The OpenMRS ID "${username}" was not found.` }],
+        });
+      }
+    }
   }
 
   private async tabs() {
@@ -260,10 +299,10 @@ export class MarkerEditor {
     }
   }
 
-  private async log(person: Person, id: string, action: string, fields: unknown[]) {
+  private async log(person: Person | string, id: string, action: string, fields: unknown[]) {
     await this.store.appendRow("changes", [
       this.stamp(),
-      person.username,
+      typeof person === "string" ? person : person.username,
       id,
       action,
       JSON.stringify(fields),
@@ -366,7 +405,15 @@ export class MarkerEditor {
         from: o.from,
         expires_at: o.expires_at,
       }));
-    return { username: person.username, admin: person.admin, markers, offers };
+    return {
+      username: person.username,
+      admin: person.admin,
+      // The person's own email, from their own token: where their reminders go.
+      email: person.email ?? "",
+      reminders: !tabs.unsubscribed.some((u) => u.username === person.username),
+      markers,
+      offers,
+    };
   }
 
   /** The form's starting values. Private values only for those entitled to them. */
@@ -425,6 +472,8 @@ export class MarkerEditor {
     const owner = normaliseUsername(body.owner ?? person.username);
     const editors = checkEditors(body.editors ?? []);
     if (!isUsername(owner)) throw invalidUsername("owner");
+    if (owner !== person.username) await this.requireAccounts([owner], "owner");
+    await this.requireAccounts(editors, "editors");
     await this.store.appendRow(
       "markers",
       tabs.header.markers.map((column) => cells[column] ?? ""),
@@ -493,13 +542,20 @@ export class MarkerEditor {
       const owner = normaliseUsername(body.owner);
       if (owner && !isUsername(owner)) throw invalidUsername("owner");
       if (owner !== normaliseUsername(priv?.owner ?? "")) {
+        if (owner) await this.requireAccounts([owner], "owner");
         privateChanges.owner = owner;
         log.push({ field: "owner", from: priv?.owner ?? "", to: owner });
         ownerChanged = true;
       }
     }
     if (body.editors !== undefined) {
-      const editors = checkEditors(body.editors).join(",");
+      const added = checkEditors(body.editors);
+      const already = new Set((priv?.editors ?? []).map(normaliseUsername));
+      await this.requireAccounts(
+        added.filter((e) => !already.has(e)),
+        "editors",
+      );
+      const editors = added.join(",");
       const before = (priv?.editors ?? []).join(",");
       if (editors !== before) {
         privateChanges.editors = editors;
@@ -571,6 +627,7 @@ export class MarkerEditor {
     if (listed || editor === normaliseUsername(priv?.owner ?? "")) {
       return { ...this.result(tabs, marker.cells, false), editors: current };
     }
+    await this.requireAccounts([editor], "username");
     const editors = [...current, editor];
     return this.saveEditors(person, tabs, marker, id, current, editors);
   }
@@ -611,6 +668,7 @@ export class MarkerEditor {
     if (to === normaliseUsername(priv.owner)) {
       throw new ApiError(422, { error: "That person already owns this marker." });
     }
+    await this.requireAccounts([to], "username");
     const now = this.now();
     const expires = new Date(now.getTime() + OFFER_DAYS * MS_PER_DAY).toISOString();
     await this.clearOffers(tabs, id);
@@ -669,6 +727,59 @@ export class MarkerEditor {
       { field: "owner", from: offer.from, to: person.username },
     ]);
     return result;
+  }
+
+  /** Turns a person's reminders on or off. Takes a username so emailed links can use it. */
+  async setReminders(username: string, on: boolean) {
+    const tabs = await this.tabs();
+    const who = normaliseUsername(username);
+    const rows = tabs.unsubscribed.filter((u) => u.username === who);
+    if (on) {
+      for (const { row } of rows) await this.store.clearRow("unsubscribed", row);
+    } else if (rows.length === 0) {
+      await this.store.appendRow("unsubscribed", [who, this.stamp()]);
+    }
+    return { reminders: on };
+  }
+
+  /**
+   * "Still current" from an emailed link, already checked for signature and expiry. The link
+   * names the `confirmed_at` it was sent for, so it works once and dies as soon as the marker
+   * is confirmed any other way. See specs/reminder-emails.
+   */
+  async confirmFromLink(
+    id: string,
+    sentFor: string,
+    username: string,
+  ): Promise<
+    | { ok: true; result: MarkerResult }
+    | { ok: false; reason: "gone" | "inactive" | "confirmed"; confirmed_at?: string }
+  > {
+    const tabs = await this.tabs();
+    const marker = tabs.marker(id);
+    if (!marker || text(marker.cells.status) === "deleted") return { ok: false, reason: "gone" };
+    const confirmedAt = toIsoDate(marker.cells.confirmed_at) ?? "";
+    if (text(marker.cells.status) !== "active") return { ok: false, reason: "inactive" };
+    if (confirmedAt !== sentFor) {
+      return { ok: false, reason: "confirmed", confirmed_at: confirmedAt };
+    }
+    const result = await this.restartClock(tabs, marker);
+    await this.log(`reminder-link:${normaliseUsername(username)}`, id, "confirm", ["confirmed_at"]);
+    return { ok: true, result };
+  }
+
+  /** What an emailed link's page shows: public details only. */
+  async viewForLink(id: string) {
+    const tabs = await this.tabs();
+    const marker = tabs.marker(id);
+    if (!marker || text(marker.cells.status) === "deleted") return undefined;
+    return {
+      id,
+      name: text(marker.cells.name),
+      organisation: text(marker.cells.organisation),
+      status: text(marker.cells.status),
+      confirmed_at: toIsoDate(marker.cells.confirmed_at) ?? "",
+    };
   }
 
   async decline(person: Person, id: string) {

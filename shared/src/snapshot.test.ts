@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { lookupValues, markerRow, markerValues } from "./fixtures.ts";
 import { parseLookups } from "./rows.ts";
 import { COLUMNS } from "./schema.ts";
-import { buildSnapshot, toCsv, toGeoJson } from "./snapshot.ts";
+import { buildSnapshot, PUBLIC_FIELDS, toCsv, toGeoJson } from "./snapshot.ts";
 import { validateMarkers } from "./validate.ts";
 
 const lookups = parseLookups(lookupValues);
@@ -120,8 +120,14 @@ describe("download formats", () => {
       JSON.stringify(toGeoJson(snapshot)),
       toCsv(snapshot),
     ];
+    // Requirement: Reminder tabs stay private
+    const privateColumns = [
+      ...COLUMNS.private,
+      ...COLUMNS.reminders,
+      ...COLUMNS.unsubscribed,
+    ].filter((c) => !(PUBLIC_FIELDS as readonly string[]).includes(c));
     for (const output of outputs) {
-      for (const field of COLUMNS.private.filter((c) => c !== "id")) {
+      for (const field of privateColumns) {
         expect(output).not.toContain(field);
       }
     }

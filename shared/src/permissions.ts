@@ -8,6 +8,8 @@ export const ADMIN_GROUP = "atlas-administrators";
 export interface Person {
   username: string;
   admin: boolean;
+  /** From the person's own sign-in token; only ever shown back to them. */
+  email?: string;
 }
 
 export type Role = "admin" | "owner" | "editor";

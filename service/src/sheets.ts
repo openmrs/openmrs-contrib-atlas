@@ -11,7 +11,7 @@ export function sheetsClient(): sheets_v4.Sheets {
 }
 
 const READ_TABS = [TABS.markers, TABS.types, TABS.distributions, TABS.versions] as const;
-const EDIT_TABS = [TABS.private, TABS.pending] as const;
+const EDIT_TABS = [TABS.private, TABS.pending, TABS.reminders, TABS.unsubscribed] as const;
 
 /** A1 column letters from a 0-based index. */
 function columnLetter(index: number): string {
@@ -36,20 +36,22 @@ export function googleSheetStore(
 
   return {
     async read(): Promise<SheetValues> {
-      const [markers, types, distributions, versions] = await batchRead(READ_TABS);
+      const [markers, types, distributions, versions, changes] = await batchRead([
+        ...READ_TABS,
+        TABS.changes,
+      ]);
       return {
         markers: markers!,
         types: types!,
         distributions: distributions!,
         versions: versions!,
+        changes: changes!,
       };
     },
 
     async readEdits(): Promise<EditValues> {
-      const [markers, types, distributions, versions, priv, pending] = await batchRead([
-        ...READ_TABS,
-        ...EDIT_TABS,
-      ]);
+      const [markers, types, distributions, versions, priv, pending, reminders, unsubscribed] =
+        await batchRead([...READ_TABS, ...EDIT_TABS]);
       return {
         markers: markers!,
         types: types!,
@@ -57,6 +59,8 @@ export function googleSheetStore(
         versions: versions!,
         private: priv!,
         pending: pending!,
+        reminders: reminders!,
+        unsubscribed: unsubscribed!,
       };
     },
 
@@ -68,6 +72,17 @@ export function googleSheetStore(
         valueInputOption: "RAW",
         insertDataOption: "INSERT_ROWS",
         requestBody: { values: [cells] },
+      });
+    },
+
+    async appendRows(tab, rows) {
+      if (rows.length === 0) return;
+      await client.spreadsheets.values.append({
+        spreadsheetId,
+        range: `${TABS[tab]}!A:A`,
+        valueInputOption: "RAW",
+        insertDataOption: "INSERT_ROWS",
+        requestBody: { values: rows },
       });
     },
 

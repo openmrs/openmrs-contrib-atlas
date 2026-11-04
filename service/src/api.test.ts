@@ -1,108 +1,8 @@
-import { ADMIN_GROUP, COLUMNS, TABS, text, type Cell, type Problem } from "@openmrs-atlas/shared";
-import { SEED_LOOKUPS } from "@openmrs-atlas/shared/seed";
+import { ADMIN_GROUP, text } from "@openmrs-atlas/shared";
 import sharp from "sharp";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "./app.ts";
-import type { CellUpdate, EditStore, EditValues } from "./edits.ts";
-import type { PublicFile, SheetStore, SheetValues, SnapshotStore } from "./publish.ts";
-
-const ID = "00000000-0000-4000-8000-000000000001";
-const OLD = "2022-01-01T00:00:00.000Z";
-const NOW = new Date("2026-11-02T12:00:00.000Z");
-const NOW_ISO = NOW.toISOString();
-const SECRET_EMAIL = "secret-contact@example.org";
-
-type Tab = keyof typeof TABS;
-
-/** The sheet in memory, behaving as Sheets does: blank rows stay, cleared rows are blank. */
-class FakeSheet implements SheetStore, EditStore {
-  tabs: Record<string, Cell[][]>;
-  problems: Problem[] = [];
-  constructor() {
-    this.tabs = {
-      markers: [
-        [...COLUMNS.markers],
-        COLUMNS.markers.map(
-          (c) =>
-            (
-              ({
-                id: ID,
-                name: "Clinic",
-                latitude: -1.29,
-                longitude: 36.82,
-                type: "Clinical",
-                created_at: OLD,
-                updated_at: OLD,
-                confirmed_at: OLD,
-                status: "active",
-              }) as Record<string, Cell>
-            )[c] ?? "",
-        ),
-      ],
-      private: [[...COLUMNS.private], [ID, "jdoe", "asmith", "J Doe", SECRET_EMAIL]],
-      pending: [[...COLUMNS.pending]],
-      changes: [[...COLUMNS.changes]],
-    };
-  }
-  async read(): Promise<SheetValues> {
-    return {
-      markers: this.tabs.markers!,
-      types: [[...COLUMNS.types], ...SEED_LOOKUPS.types],
-      distributions: [[...COLUMNS.distributions], ...SEED_LOOKUPS.distributions],
-      versions: [[...COLUMNS.versions], ...SEED_LOOKUPS.versions],
-    };
-  }
-  async readEdits(): Promise<EditValues> {
-    return {
-      ...(await this.read()),
-      private: this.tabs.private!,
-      pending: this.tabs.pending!,
-    };
-  }
-  async writeProblems(problems: Problem[]) {
-    this.problems = problems;
-  }
-  async appendRow(tab: Tab, cells: Cell[]) {
-    this.tabs[tab]!.push(cells);
-  }
-  async updateCells(updates: CellUpdate[]) {
-    for (const u of updates) this.tabs[u.tab]![u.row - 1]![u.column] = u.value;
-  }
-  async clearRow(tab: Tab, row: number) {
-    this.tabs[tab]![row - 1] = [];
-  }
-  async readCell(tab: Tab, row: number, column: number) {
-    return this.tabs[tab]![row - 1]![column];
-  }
-
-  marker(field: string, row = 1): Cell {
-    return this.tabs.markers![row]![COLUMNS.markers.indexOf(field as never)];
-  }
-  setMarker(field: string, value: Cell) {
-    this.tabs.markers![1]![COLUMNS.markers.indexOf(field as never)] = value;
-  }
-  priv(field: string, row = 1): Cell {
-    return this.tabs.private![row]![COLUMNS.private.indexOf(field as never)];
-  }
-  lastChange() {
-    const [timestamp, user, marker_id, action, fields] = this.tabs.changes!.at(-1)!;
-    return { timestamp, user, marker_id, action, fields: JSON.parse(String(fields)) };
-  }
-}
-
-class FakeBucket implements SnapshotStore {
-  files = new Map<string, PublicFile>();
-  writes = 0;
-  failing = false;
-  async currentCount() {
-    return undefined;
-  }
-  async write(files: PublicFile[]) {
-    if (this.failing) throw new Error("storage down");
-    this.writes++;
-    for (const f of files) this.files.set(f.name, f);
-  }
-}
+import { FakeBucket, FakeSheet, ID, NOW, NOW_ISO, OLD, SECRET_EMAIL } from "./testing.ts";
 
 let sheet: FakeSheet;
 let bucket: FakeBucket;
@@ -119,6 +19,7 @@ beforeEach(() => {
   bucket = new FakeBucket();
   saved = new Map();
   const app = createApp({
+    siteUrl: "https://atlas.example.org",
     sheet,
     snapshots: bucket,
     auth: { publishSecret: "s", schedulerEmail: "", audience: "" },
@@ -162,6 +63,7 @@ describe("Requests are checked by the service", () => {
 
   it("answers 503 when sign-in isn't configured", async () => {
     const app = createApp({
+      siteUrl: "https://atlas.example.org",
       sheet,
       snapshots: bucket,
       auth: { publishSecret: "s", schedulerEmail: "", audience: "" },
@@ -734,6 +636,7 @@ describe("Logo upload", () => {
     const form = new FormData();
     form.set("logo", new File([new Uint8Array(bytes)], name));
     const app = createApp({
+      siteUrl: "https://atlas.example.org",
       sheet,
       snapshots: bucket,
       auth: { publishSecret: "s", schedulerEmail: "", audience: "" },

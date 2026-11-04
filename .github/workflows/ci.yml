@@ -10,6 +10,8 @@ name: CI
 #   STAGING_DATA_URL     public base URL of the staging bucket, e.g. https://storage.googleapis.com/openmrs-atlas-stg
 #   KEYCLOAK_ISSUER      Keycloak realm URL, e.g. https://id-stg.openmrs.org/realms/openmrs
 #   KEYCLOAK_CLIENT_ID   the Atlas client in that realm, e.g. atlas
+#   STAGING_EMAIL_ALLOWLIST  comma-separated addresses staging may email; unset delivers to no one
+#   STAGING_NOTICE_EMAIL     optional address for new-marker notices on staging
 
 on:
   pull_request:
@@ -92,9 +94,21 @@ jobs:
           # PUBLISH_SECRET comes from Secret Manager. See service/README.md.
           # One instance, so its in-memory queue can serialise every sheet write.
           flags: --max-instances=1
+          # Staging must never mail real implementers: with no allowlist variable it delivers
+          # to no one ("none" matches no address).
           env_vars: |
             KEYCLOAK_ISSUER=${{ vars.KEYCLOAK_ISSUER }}
             KEYCLOAK_CLIENT_ID=${{ vars.KEYCLOAK_CLIENT_ID }}
+            KEYCLOAK_SERVICE_CLIENT_ID=atlas-service
+            SITE_URL=https://atlas-stg.openmrs.org
+            EMAIL_FROM=OpenMRS Atlas <atlas-noreply@openmrs.org>
+            EMAIL_ALLOWLIST=${{ vars.STAGING_EMAIL_ALLOWLIST || 'none' }}
+            NOTICE_EMAIL=${{ vars.STAGING_NOTICE_EMAIL }}
+            HELP_URL=https://talk.openmrs.org
+          secrets: |
+            KEYCLOAK_SERVICE_CLIENT_SECRET=atlas-keycloak-service-secret:latest
+            MANDRILL_API_KEY=atlas-mandrill-api-key:latest
+            LINK_SIGNING_KEY=atlas-link-signing-key:latest
 
       - uses: actions/setup-node@v7
         with:

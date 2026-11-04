@@ -4,6 +4,7 @@ import {
   parseLookups,
   toCsv,
   toGeoJson,
+  toRss,
   validateMarkers,
   type Cell,
   type Problem,
@@ -15,6 +16,8 @@ export interface SheetValues {
   types: Cell[][];
   distributions: Cell[][];
   versions: Cell[][];
+  /** The change log, for the feed. Only the time, marker and kind of each change are used. */
+  changes: Cell[][];
 }
 
 export interface SheetStore {
@@ -46,7 +49,8 @@ export type PublishResult =
 export async function publish(
   sheet: SheetStore,
   snapshots: SnapshotStore,
-  options: { force: boolean; now: Date },
+  /** `siteUrl` is the public site, for links in the feed. */
+  options: { force: boolean; now: Date; siteUrl: string },
 ): Promise<PublishResult> {
   const values = await sheet.read();
   const lookups = parseLookups(values);
@@ -73,6 +77,11 @@ export async function publish(
       contentType: "application/geo+json",
     },
     { name: "markers.csv", body: toCsv(snapshot), contentType: "text/csv; charset=utf-8" },
+    {
+      name: "rss.xml",
+      body: toRss(snapshot, values.changes, options.siteUrl),
+      contentType: "application/rss+xml; charset=utf-8",
+    },
     { name: `history/atlas-${stamp}.json`, body: json, contentType: "application/json" },
   ]);
   await sheet.writeProblems(problems);

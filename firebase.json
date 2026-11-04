@@ -12,6 +12,11 @@
       ],
       "redirects": [
         {
+          "source": "/rss",
+          "destination": "https://storage.googleapis.com/openmrs-atlas-stg/rss.xml",
+          "type": 302
+        },
+        {
           "source": "/data/atlas.json",
           "destination": "https://storage.googleapis.com/openmrs-atlas-stg/atlas.json",
           "type": 302

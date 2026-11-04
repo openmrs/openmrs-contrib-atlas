@@ -41,6 +41,14 @@ describe("Requests are checked by the service", () => {
     expect(await verify("not-a-token")).toBeUndefined();
   });
 
+  it("keeps the person's own email from the token", async () => {
+    expect(await verify(await sign({ email: "jdoe@example.org" }))).toEqual({
+      username: "jdoe",
+      admin: false,
+      email: "jdoe@example.org",
+    });
+  });
+
   it("rejects a token with no username", async () => {
     expect(await verify(await sign({ preferred_username: "" }))).toBeUndefined();
   });

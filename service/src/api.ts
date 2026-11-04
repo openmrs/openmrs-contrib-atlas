@@ -9,8 +9,11 @@ import {
   type EditStore,
   type MarkerResult,
 } from "./edits.ts";
+import { AccountsUnavailable, type Accounts } from "./accounts.ts";
+import { accountsUnavailable } from "./edits.ts";
 import type { PersonVerifier } from "./keycloak.ts";
 import { MAX_LOGO_BYTES, logoName, processLogo, type LogoStore } from "./logos.ts";
+import { sendNotice, type NoticeConfig } from "./notices.ts";
 import type { WriteQueue } from "./queue.ts";
 
 export interface ApiDeps {
@@ -21,15 +24,54 @@ export interface ApiDeps {
   /** Runs a publish, reporting whether the public files were replaced. */
   publish: () => Promise<boolean>;
   now: () => Date;
+  /** Read-only OpenMRS account lookups; without it, IDs are accepted unchecked. */
+  accounts?: Accounts;
+  /** Without it, no notices are sent. */
+  notices?: NoticeConfig;
 }
 
 type Env = { Variables: { person: Person } };
 
 const SMALL_BODY = 64 * 1024;
+export const MIN_SEARCH = 3;
+export const SEARCHES_PER_MINUTE = 30;
 
 export function createApi(deps: ApiDeps) {
   const api = new Hono<Env>();
-  const editor = new MarkerEditor(deps.store, deps.now);
+  const editor = new MarkerEditor(deps.store, deps.now, deps.accounts);
+  const searches = new Map<string, number[]>();
+
+  /** 30 account searches a minute per person, kept in memory on the single instance. */
+  function allowSearch(username: string): boolean {
+    const now = deps.now().getTime();
+    const recent = (searches.get(username) ?? []).filter((t) => now - t < 60_000);
+    if (recent.length >= SEARCHES_PER_MINUTE) {
+      searches.set(username, recent);
+      return false;
+    }
+    recent.push(now);
+    searches.set(username, recent);
+    return true;
+  }
+
+  function requireAccounts(): Accounts {
+    if (!deps.accounts) {
+      throw new ApiError(503, { error: "Looking up OpenMRS IDs is not set up." });
+    }
+    return deps.accounts;
+  }
+
+  async function fromKeycloak<T>(lookup: () => Promise<T>): Promise<T> {
+    try {
+      return await lookup();
+    } catch (err) {
+      if (err instanceof AccountsUnavailable) {
+        console.error(JSON.stringify({ event: "accounts-unavailable", message: err.message }));
+        throw accountsUnavailable();
+      }
+      throw err;
+    }
+  }
 
   api.onError((err, c) => {
     if (err instanceof ApiError) return c.json(err.body, err.status as ContentfulStatusCode);
@@ -89,13 +131,50 @@ export function createApi(deps: ApiDeps) {
 
   api.get("/me", async (c) => c.json(await editor.me(c.get("person"))));
 
+  api.put("/me/reminders", small, async (c) => {
+    const body = (await jsonBody(c)) as { on?: unknown } | null;
+    if (typeof body?.on !== "boolean")
+      throw new ApiError(400, { error: "That request is not valid." });
+    const on = body.on;
+    return c.json(await deps.queue.run(() => editor.setReminders(c.get("person").username, on)));
+  });
+
+  // Account search and check: usernames and names only, never emails (specs/account-lookup).
+  api.get("/accounts", async (c) => {
+    const accounts = requireAccounts();
+    const q = (c.req.query("q") ?? "").trim();
+    if (q.length < MIN_SEARCH) {
+      throw new ApiError(400, { error: `Type at least ${MIN_SEARCH} characters to search.` });
+    }
+    if (q.length > 100) throw new ApiError(400, { error: "That search is too long." });
+    if (!allowSearch(c.get("person").username)) {
+      throw new ApiError(429, { error: "Too many searches. Please wait a minute and try again." });
+    }
+    return c.json({ accounts: await fromKeycloak(() => accounts.search(q)) });
+  });
+
+  api.get("/accounts/:username", async (c) => {
+    const accounts = requireAccounts();
+    if (!allowSearch(c.get("person").username)) {
+      throw new ApiError(429, { error: "Too many searches. Please wait a minute and try again." });
+    }
+    const account = await fromKeycloak(() => accounts.lookup(c.req.param("username")));
+    if (!account?.enabled) throw new ApiError(404, { error: "That OpenMRS ID was not found." });
+    return c.json({ username: account.username, name: account.name });
+  });
+
   api.get("/markers/:id", async (c) =>
     c.json(await editor.read(c.get("person"), c.req.param("id"))),
   );
 
   api.post("/markers", small, async (c) => {
     const body = parseChangeBody(await jsonBody(c));
-    return c.json(await write(() => editor.add(c.get("person"), body)), 201);
+    const result = await write(() => editor.add(c.get("person"), body));
+    if (deps.notices && result.marker) {
+      // Not awaited: the person who added the marker never waits on Mandrill.
+      void sendNotice(deps.notices, result.marker, c.get("person").username);
+    }
+    return c.json(result, 201);
   });
 
   api.patch("/markers/:id", small, async (c) => {
