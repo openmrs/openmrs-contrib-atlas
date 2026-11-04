@@ -76,10 +76,10 @@ Configuration, all optional so local runs and tests need none:
 | Variable | Use |
 |---|---|
 | `KEYCLOAK_SERVICE_CLIENT_ID` | `atlas-service`. With no ID or secret, checks and search are off and IDs are accepted unchecked, as today. |
-| `KEYCLOAK_SERVICE_CLIENT_SECRET` | Secret. |
+| `KEYCLOAK_SERVICE_CLIENT_SECRET` | Secret `atlas-keycloak-service-secret`; surrounding whitespace is trimmed. |
 | `MANDRILL_API_KEY` | Secret. No key: email is off and logged as such. |
-| `EMAIL_FROM` | e.g. `OpenMRS Atlas <atlas@openmrs.org>` |
-| `EMAIL_REPLY_TO` | Where replies go, e.g. the admins' address |
+| `EMAIL_FROM` | `OpenMRS Atlas <atlas-noreply@openmrs.org>` |
+| `HELP_URL` | Where emails send people instead of replying: the Atlas category on OpenMRS Talk. |
 | `EMAIL_ALLOWLIST` | Comma-separated. Set on staging (`burke@openmrs.org`), unset in production. |
 | `NOTICE_EMAIL` | One address for new-entry notices. Unset: no notices. |
 | `LINK_SIGNING_KEY` | Secret, 32 random bytes. |
@@ -114,12 +114,12 @@ Alternative considered: derive events from `created_at` and `updated_at`. That c
 2. `setup:sheet` adds the two tabs to staging.
 3. (manual) Verify the sending domain, create the Mandrill key and the signing key, set the variables, create the scheduler job.
 4. Deploy. Run the job by hand as an admin with only the allowlist set, and check `reminders`.
-5. Production follows at cutover: the same client on `id.openmrs.org`, agreed with whoever runs it, and the allowlist unset only after reviewing the first day's `reminders` rows.
+5. Production follows at cutover: the same client on `id.openmrs.org`, and the allowlist unset only after reviewing the first day's `reminders` rows.
 
 Rollback: pause the scheduler job or unset `MANDRILL_API_KEY` to stop email; unset the Keycloak client variables to return to unchecked IDs.
 
 ## Open Questions
 
-- The sender and reply-to addresses (assumed `atlas@openmrs.org`, replies to the Atlas admins).
 - The production notice address.
-- Whether 14:00 UTC suits the community, or another hour is better.
+
+Settled: email comes from `atlas-noreply@openmrs.org` with no reply-to, and points people to OpenMRS Talk for help; the daily send runs at 14:00 UTC.

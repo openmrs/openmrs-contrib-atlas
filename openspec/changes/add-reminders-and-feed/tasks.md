@@ -3,9 +3,10 @@
 ## 1. Before building
 
 - [ ] 1.1 Add a `report:accounts` script that prints only counts and usernames, never emails: active markers by reminder stage, markers with no owner or editors, and owners or editors that don't exist, are disabled or have no email. Run it against staging and record the counts in design.md
-- [ ] 1.2 (manual) On `id-stg.openmrs.org`, create the confidential client `atlas-service` with only service accounts enabled, give its service account only `realm-management` `view-users`, and store its secret in Secret Manager, readable by `atlas-service`
-- [ ] 1.3 (manual) Verify the sending domain in Mandrill and add its SPF and DKIM records in Cloudflare
-- [ ] 1.4 (manual) Create a Mandrill API key limited to Messages > Send, and store it with a new 32-byte link-signing key in Secret Manager
+- [x] 1.2 (manual) On `id-stg.openmrs.org`, create the confidential client `atlas-service` with only service accounts enabled, and give its service account only `realm-management` `view-users`
+- [ ] 1.3 (manual) Store the client secret as `atlas-keycloak-service-secret` in Secret Manager in `atlas-stg-513316`, readable by `atlas-service@`
+- [ ] 1.4 (manual) Verify the sending domain in Mandrill and add its SPF and DKIM records in Cloudflare
+- [ ] 1.5 (manual) Create a Mandrill API key limited to Messages > Send, and store it with a new 32-byte link-signing key in Secret Manager
 
 ## 2. Accounts
 
@@ -40,13 +41,13 @@
 
 - [ ] 6.1 Write the due-reminder selection as a pure function: latest stage passed, calendar months in UTC, per marker and person not already recorded, grouped by person, oldest first, daily limit counting only today's `sent` emails
 - [ ] 6.2 Add `POST /reminders`, protected like `/publish` and also open to signed-in admins, running the selection inside the queue, looking each person up once, and recording one `reminders` row per marker and person
-- [ ] 6.3 Write the reminder email: text and HTML, why it was sent, each marker's details, last confirmed date and three links, the fading note, and the unsubscribe link
+- [ ] 6.3 Write the reminder email: text and HTML, why it was sent, not to reply and where to get help, each marker's details, last confirmed date and three links, the fading note, and the unsubscribe link
 - [ ] 6.4 Tests: 300 people sends 50 with the oldest markers, a rerun sends nothing, a 5-year-old marker gets only the 24-month reminder, three markers make one email, orphan, unsubscribed, disabled and no-email cases are recorded, a Mandrill or Keycloak failure records nothing
 - [ ] 6.5 (manual) Create the daily Cloud Scheduler job at 14:00 UTC in `infra/staging/setup.sh` and run it
 
 ## 7. Notices
 
-- [ ] 7.1 After a successful add, send the notice outside the queue when `NOTICE_EMAIL` is set; log failures
+- [ ] 7.1 After a successful add, with the same no-reply wording, send the notice outside the queue when `NOTICE_EMAIL` is set; log failures
 - [ ] 7.2 Tests: notice sent on add only, none without an address, a failed send leaves the add successful
 
 ## 8. Feed
@@ -66,7 +67,7 @@
 
 ## 10. Staging
 
-- [ ] 10.1 (manual) Set the Keycloak service client variables, `EMAIL_FROM`, `EMAIL_REPLY_TO`, `EMAIL_ALLOWLIST=burke@openmrs.org`, `NOTICE_EMAIL`, `SITE_URL` and the secrets on `atlas-service-stg`
+- [ ] 10.1 (manual) Set the Keycloak service client variables, `EMAIL_FROM=OpenMRS Atlas <atlas-noreply@openmrs.org>`, `HELP_URL`, `EMAIL_ALLOWLIST=burke@openmrs.org`, `NOTICE_EMAIL`, `SITE_URL` and the secrets on `atlas-service-stg`
 - [ ] 10.2 Document the variables and routes in `service/README.md`, and the Keycloak client and other setup in `infra/staging/README.md`
 - [ ] 10.3 (manual) Walk through staging: add an editor by name search; try an unknown ID; make a test marker owned by an allowlisted account 13 months old; run the job; confirm from the email; unsubscribe from a second reminder and turn reminders back on in My markers; add a marker and check the notice; subscribe to `/rss` in a feed reader
 - [ ] 10.4 Check the `reminders` tab after a staging run: real people show `withheld`, and Cloud Run logs and the sheet hold no addresses or tokens

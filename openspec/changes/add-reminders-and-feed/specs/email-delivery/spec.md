@@ -7,11 +7,11 @@ Rules shared by every email the Atlas sends, so staging never mails real impleme
 ## ADDED Requirements
 
 ### Requirement: One sender
-All Atlas email SHALL be sent through Mandrill from one configured address on a domain verified with SPF and DKIM, with a reply-to address that reaches the Atlas admins.
+All Atlas email SHALL be sent through Mandrill from one no-reply address on a domain verified with SPF and DKIM, `atlas-noreply@openmrs.org` in production. Every email SHALL say that replies are not read and say where to get help instead.
 
-#### Scenario: Reply to a reminder
-- **WHEN** a person replies to a reminder
-- **THEN** the reply goes to the configured admin address, not to an unattended mailbox
+#### Scenario: Where to get help
+- **WHEN** a person reads any Atlas email
+- **THEN** it says not to reply, and links to the OpenMRS Talk forum for help with the Atlas
 
 ### Requirement: Staging delivers only to an allowlist
 When an allowlist is configured, email SHALL be delivered only to addresses on it. Email to any other address SHALL NOT be sent, and SHALL be logged with its kind and marker, but without the address or the body.
