@@ -14,7 +14,7 @@ Saving the add or edit form, "Still current" on the map or from an emailed link,
 - **THEN** its `confirmed_at` becomes the current time
 
 #### Scenario: Confirmed from a reminder
-- **WHEN** a contact presses "Still current" on the page opened from a reminder
+- **WHEN** an owner presses "Still current" on the page opened from a reminder
 - **THEN** its `confirmed_at` becomes the current time
 
 #### Scenario: Actions that do not restart the clock

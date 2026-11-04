@@ -23,17 +23,17 @@ The Atlas sheet SHALL contain the tabs `markers`, `private`, `changes`, `pending
 
 #### Scenario: Reminder columns
 - **WHEN** the `reminders` tab is read
-- **THEN** its header row contains `marker_id`, `stage`, `confirmed_at`, `sent_at` and `result`, where `result` is `sent`, `withheld` or a reason it was skipped
+- **THEN** its header row contains `marker_id`, `stage`, `confirmed_at`, `username`, `sent_at` and `result`, where `result` is `sent`, `withheld` or a reason it was skipped
 
 #### Scenario: Unsubscribed columns
 - **WHEN** the `unsubscribed` tab is read
-- **THEN** its header row contains `email` and `unsubscribed_at`
+- **THEN** its header row contains `username` and `unsubscribed_at`
 
 ## ADDED Requirements
 
 ### Requirement: Reminder tabs stay private
-The `reminders` and `unsubscribed` tabs SHALL never be published. Admins MAY delete a row from `unsubscribed` to start reminders to that address again.
+The `reminders` and `unsubscribed` tabs SHALL never be published. Neither tab SHALL hold email addresses. Admins MAY delete a row from `unsubscribed` to start reminders to that person again.
 
 #### Scenario: Resubscribe
-- **WHEN** an admin deletes an address's row from `unsubscribed`
-- **THEN** that address gets reminders again when its markers are next due
+- **WHEN** an admin deletes a person's row from `unsubscribed`
+- **THEN** that person gets reminders again when their markers are next due

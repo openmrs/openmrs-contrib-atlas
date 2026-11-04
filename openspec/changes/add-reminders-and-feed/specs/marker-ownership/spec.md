@@ -1,0 +1,99 @@
+# Spec Delta
+
+## MODIFIED Requirements
+
+### Requirement: Admin permissions
+Admins SHALL be able to do everything an owner can on any marker, set `owner` and `editors` directly without acceptance, set `status`, and add a marker on behalf of a named owner. An owner or editor set on the website SHALL be an existing, enabled OpenMRS ID.
+
+#### Scenario: Admin assigns an orphan
+- **WHEN** an admin sets the owner of an orphaned marker to `jdoe`
+- **THEN** `jdoe` is the owner at once
+
+#### Scenario: Admin adds on behalf of someone
+- **WHEN** an admin adds a marker and names `asmith` as owner
+- **THEN** `asmith` is the owner and the change log names the admin
+
+#### Scenario: Admin names an unknown owner
+- **WHEN** an admin sets the owner to `nosuchuser`, which is not an OpenMRS ID
+- **THEN** the change is refused with a message that the OpenMRS ID was not found
+
+### Requirement: Manage editors
+An owner SHALL be able to add and remove editors by OpenMRS ID, finding them by username or name. An editor SHALL be added only if the OpenMRS ID exists and is enabled.
+
+#### Scenario: Add an editor
+- **WHEN** an owner adds `asmith` as an editor
+- **THEN** `asmith` can edit the marker the next time they sign in or reload
+
+#### Scenario: Unknown OpenMRS ID
+- **WHEN** an owner adds `asmiht`, which is not an OpenMRS ID
+- **THEN** nothing changes and the owner is told the OpenMRS ID was not found
+
+#### Scenario: Remove an editor
+- **WHEN** an owner removes `asmith`
+- **THEN** further edits from `asmith` are rejected with 403
+
+#### Scenario: Owner listed as editor
+- **WHEN** an owner adds their own OpenMRS ID, or one already listed, as an editor
+- **THEN** the list does not change
+
+### Requirement: Transfer ownership
+An owner SHALL be able to offer ownership to one existing, enabled OpenMRS ID at a time, finding it by username or name. Nothing SHALL change until the recipient accepts. An offer SHALL expire after 30 days, and the owner SHALL be able to cancel it earlier.
+
+#### Scenario: Offer made
+- **WHEN** an owner offers a marker to `asmith`
+- **THEN** the owner is still the owner, `confirmed_at` becomes the current time, the offer appears in `asmith`'s My markers, and the owner sees that it is pending and is told to let `asmith` know
+
+#### Scenario: Offer to an unknown OpenMRS ID
+- **WHEN** an owner offers a marker to an OpenMRS ID that does not exist
+- **THEN** no offer is made and the owner is told the OpenMRS ID was not found
+
+#### Scenario: Offer accepted
+- **WHEN** `asmith` accepts an offer
+- **THEN** `asmith` is the owner and leaves the editor list, the previous owner becomes an editor, and `confirmed_at` becomes the current time
+
+#### Scenario: Offer declined
+- **WHEN** `asmith` declines an offer
+- **THEN** the owner is unchanged and the offer is gone
+
+#### Scenario: Offer expired or cancelled
+- **WHEN** `asmith` tries to accept an offer that has expired or been cancelled
+- **THEN** the request is refused and the owner is unchanged
+
+#### Scenario: Someone else accepts
+- **WHEN** anyone other than the named recipient tries to accept an offer
+- **THEN** it is rejected with 403
+
+#### Scenario: Ownership changes while an offer is pending
+- **WHEN** an admin sets a new owner on a marker with a pending offer
+- **THEN** the offer is cancelled
+
+### Requirement: My markers
+A signed-in person SHALL be able to list every marker they own or edit, with their role, its status and when it was last confirmed, along with offers awaiting their answer. Each entry SHALL open that marker's details, and hidden or invalid markers SHALL still be listed. It SHALL show the email reminders go to and let the person turn reminders off and on.
+
+#### Scenario: Owner and editor
+- **WHEN** a person who owns two markers and edits one opens My markers
+- **THEN** all three are listed with their roles
+
+#### Scenario: Pending offer
+- **WHEN** a person has an offer waiting
+- **THEN** My markers shows it with accept and decline actions, and the page shows that an offer is waiting
+
+#### Scenario: Marker failing validation
+- **WHEN** a person's marker has a row that fails validation
+- **THEN** it is listed with the reasons, and they can open it, correct it and save
+
+#### Scenario: Closed marker
+- **WHEN** a person's marker has status `closed`
+- **THEN** it is listed with that status, and choosing it opens its details on the map
+
+#### Scenario: Adding from My markers
+- **WHEN** a person opens My markers
+- **THEN** "Add a site" is the first action in the panel
+
+#### Scenario: Deleted marker
+- **WHEN** a person's marker has status `deleted`
+- **THEN** it is not listed for that person
+
+#### Scenario: Reminder setting
+- **WHEN** a person who unsubscribed opens My markers and turns reminders on
+- **THEN** they are removed from `unsubscribed` and get reminders when their markers are next due
