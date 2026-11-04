@@ -43,7 +43,7 @@
 - [x] 6.2 Add `POST /reminders`, protected like `/publish` and also open to signed-in admins, running the selection inside the queue, looking each person up once, and recording one `reminders` row per marker and person
 - [x] 6.3 Write the reminder email: text and HTML, why it was sent, not to reply and where to get help, each marker's details, last confirmed date and three links, the fading note, and the unsubscribe link
 - [x] 6.4 Tests: 300 people sends 50 with the oldest markers, a rerun sends nothing, a 5-year-old marker gets only the 24-month reminder, three markers make one email, orphan, unsubscribed, disabled and no-email cases are recorded, a Mandrill or Keycloak failure records nothing
-- [ ] 6.5 (manual) Create the daily Cloud Scheduler job at 14:00 UTC in `infra/staging/setup.sh` and run it
+- [x] 6.5 (manual) Create the daily Cloud Scheduler job at 14:00 UTC in `infra/staging/setup.sh` and run it
 
 ## 7. Notices
 
@@ -67,10 +67,10 @@
 
 ## 10. Staging
 
-- [ ] 10.1 (manual) CI now sets the service settings and secrets on `atlas-service-stg`; set the repository variable `STAGING_EMAIL_ALLOWLIST=burke@openmrs.org` (staging emails no one without it) and, optionally, `STAGING_NOTICE_EMAIL`, then re-run the latest deploy
+- [x] 10.1 (manual) CI now sets the service settings and secrets on `atlas-service-stg`; set the repository variable `STAGING_EMAIL_ALLOWLIST=burke@openmrs.org` (staging emails no one without it) and, optionally, `STAGING_NOTICE_EMAIL`, then re-run the latest deploy
 - [x] 10.2 Document the variables and routes in `service/README.md`, and the Keycloak client and other setup in `infra/staging/README.md`
 - [ ] 10.3 (manual) Walk through staging: add an editor by name search; try an unknown ID; make a test marker owned by an allowlisted account 13 months old; run the job; confirm from the email; unsubscribe from a second reminder and turn reminders back on in My markers; add a marker and check the notice; subscribe to `/rss` in a feed reader
-- [ ] 10.4 Check the `reminders` tab after a staging run: real people show `withheld`, and Cloud Run logs and the sheet hold no addresses or tokens
+- [x] 10.4 Check the `reminders` tab after a staging run: real people show `withheld`, and Cloud Run logs and the sheet hold no addresses or tokens (2026-11-04: on staging real people show `no account`, as id-stg doesn't hold their accounts; one `sent` to the test account; 282 log entries and 405 rows checked, no addresses or tokens)
 
 ## 11. Before archiving
 
