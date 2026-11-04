@@ -108,13 +108,27 @@ Alternative considered: derive events from `created_at` and `updated_at`. That c
 - **Someone forwards a reminder** → the recipient can confirm those markers once. That is the intended trade for one-click confirmation without sign-in, and the design spec accepted it.
 - **Existing unchecked IDs** → editors and owners already in the sheet aren't re-checked; task 1.1 reports any that don't exist so admins can fix them.
 
+## Staging counts (task 1.1)
+
+`npm run report:accounts` against the staging sheet on 3 November 2026:
+
+| | |
+|---|---|
+| Active markers | 452 |
+| Confirmed within 12 months | 87, including all 85 orphans |
+| Past 12 / 18 / 24 months | 1 / 7 / 357 |
+| Owners and editors of active markers | 178 |
+| People due on the first run | 177, about 4 days at 50 a day |
+
+Staging Keycloak (`id-stg`) holds test accounts, not the production directory, so 177 of the 178 OpenMRS IDs were "not found" there. Disabled and no-email counts are only meaningful against `id.openmrs.org`; run the report there before cutover.
+
 ## Migration Plan
 
 1. (manual) Create `atlas-service` on `id-stg.openmrs.org` and store its secret.
 2. `setup:sheet` adds the two tabs to staging.
 3. (manual) Verify the sending domain, create the Mandrill key and the signing key, set the variables, create the scheduler job.
 4. Deploy. Run the job by hand as an admin with only the allowlist set, and check `reminders`.
-5. Production follows at cutover: the same client on `id.openmrs.org`, and the allowlist unset only after reviewing the first day's `reminders` rows.
+5. Production follows at cutover: the same client on `id.openmrs.org`, `npm run report:accounts` against it to fix unknown or emailless owners first, and the allowlist unset only after reviewing the first day's `reminders` rows.
 
 Rollback: pause the scheduler job or unset `MANDRILL_API_KEY` to stop email; unset the Keycloak client variables to return to unchecked IDs.
 

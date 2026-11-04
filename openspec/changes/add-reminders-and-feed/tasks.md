@@ -2,7 +2,7 @@
 
 ## 1. Before building
 
-- [ ] 1.1 Add a `report:accounts` script that prints only counts and usernames, never emails: active markers by reminder stage, markers with no owner or editors, and owners or editors that don't exist, are disabled or have no email. Run it against staging and record the counts in design.md
+- [x] 1.1 Add a `report:accounts` script that prints only counts and usernames, never emails: active markers by reminder stage, markers with no owner or editors, and owners or editors that don't exist, are disabled or have no email. Run it against staging and record the counts in design.md
 - [x] 1.2 (manual) On `id-stg.openmrs.org`, create the confidential client `atlas-service` with only service accounts enabled, and give its service account only `realm-management` `view-users`
 - [x] 1.3 (manual) Store the client secret as `atlas-keycloak-service-secret` in Secret Manager in `atlas-stg-513316`, readable by `atlas-service@`
 - [x] 1.4 (manual) Sending domain: `openmrs.org` is already verified in Mandrill, with SPF and DKIM, for OpenMRS community email
