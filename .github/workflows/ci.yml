@@ -1,6 +1,6 @@
 name: CI
 
-# The deploy-staging job deploys atlas-3.0 to atlas-stg.openmrs.org after the tests pass.
+# The deploy-staging job deploys main to atlas-stg.openmrs.org after the tests pass.
 # Authenticates to Google Cloud with Workload Identity Federation (no stored keys).
 # Repository variables to set (Settings > Secrets and variables > Actions > Variables):
 #   GCP_PROJECT          Google Cloud project id
@@ -15,9 +15,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [atlas-3.0]
+    branches: [main]
   push:
-    branches: [atlas-3.0]
+    branches: [main]
 
 permissions:
   contents: read
@@ -56,10 +56,10 @@ jobs:
           path: web/test-results/
 
   deploy-staging:
-    # Deploys pushes to atlas-3.0 once both test jobs pass. Skipped until the Google Cloud
+    # Deploys pushes to main once both test jobs pass. Skipped until the Google Cloud
     # project is set up (the GCP_* repository variables exist).
     needs: [check, e2e]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/atlas-3.0' && vars.GCP_PROJECT != ''
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.GCP_PROJECT != ''
     permissions:
       contents: read
       id-token: write

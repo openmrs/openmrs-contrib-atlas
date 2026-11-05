@@ -2,9 +2,9 @@
 
 A world map of OpenMRS implementations, at [atlas.openmrs.org](https://atlas.openmrs.org).
 
-> **Status:** Atlas 3.0 is being built on the `atlas-3.0` branch and will be previewed at
-> atlas-stg.openmrs.org. Atlas 2.0 (Express + MySQL) remains on `master` and keeps serving
-> atlas.openmrs.org until cutover.
+> **Status:** Atlas 3.0 is built on `main` and previewed at atlas-stg.openmrs.org. Atlas 2.0
+> (Express + MySQL) keeps serving atlas.openmrs.org until cutover; its code is kept, unmaintained,
+> on the `2.x` branch.
 
 ## How it works
 
@@ -112,4 +112,4 @@ code that reads or writes the sheet.
 
 Changes go through OpenSpec: propose a change (`/opsx:propose` in Claude Code, or by hand under
 `openspec/changes/`), get it reviewed, implement it, then archive it. Pull requests target
-`atlas-3.0` until cutover.
+`main`.

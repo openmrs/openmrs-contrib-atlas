@@ -4,9 +4,9 @@ schema: spec-driven
 # Background and rationale: "OpenMRS Atlas 3.0 — Requirements & Design Spec"
 # https://claude.ai/artifact/GKHHVKkbSRPtCpya5DZVfZ (requirement IDs such as M1, C4, O3 come from there).
 context: |
-  Atlas 3.0 replaces Atlas 2.0 (the Express + MySQL app on master) at atlas.openmrs.org.
-  Work happens on the atlas-3.0 branch and deploys to atlas-stg.openmrs.org until cutover.
-  The 2.0 code remains on master and in git history; 3.0 shares no runtime code with it.
+  Atlas 3.0 replaces Atlas 2.0 (the Express + MySQL app) at atlas.openmrs.org.
+  Work happens on the main branch, and every push to main deploys to atlas-stg.openmrs.org.
+  The 2.0 code remains on the 2.x branch (kept for the record, never built) and in git history; 3.0 shares no runtime code with it.
 
   Architecture decisions (settled; do not re-open in proposals without saying so):
   - Static front end (TypeScript, Vite, React) on Firebase Hosting; MapLibre GL JS with

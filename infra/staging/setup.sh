@@ -10,7 +10,7 @@ PROJECT="${PROJECT:-atlas-stg-513316}"
 REGION="${REGION:-us-central1}"
 BUCKET="${BUCKET:-openmrs-atlas-stg}" # firebase.json redirects to this name
 GITHUB_REPO="${GITHUB_REPO:-openmrs/openmrs-contrib-atlas}"
-DEPLOY_BRANCH="${DEPLOY_BRANCH:-atlas-3.0}"
+DEPLOY_BRANCH="${DEPLOY_BRANCH:-main}"
 SITE_ORIGIN="${SITE_ORIGIN:-https://atlas-stg.openmrs.org}"
 SERVICE="atlas-service-stg"
 SECRET="atlas-publish-secret"
@@ -132,13 +132,20 @@ step "Workload Identity Federation for ${GITHUB_REPO}@${DEPLOY_BRANCH}"
 exists gcloud iam workload-identity-pools describe github --location=global ||
   gcloud iam workload-identity-pools create github --location=global \
     --display-name="GitHub Actions"
-exists gcloud iam workload-identity-pools providers describe github --location=global \
-  --workload-identity-pool=github ||
+# Only this repository's deploy branch may deploy. Updated on every run, so a renamed branch
+# only needs this script run again.
+wif_condition="assertion.repository=='${GITHUB_REPO}' && assertion.ref=='refs/heads/${DEPLOY_BRANCH}'"
+if exists gcloud iam workload-identity-pools providers describe github --location=global \
+  --workload-identity-pool=github; then
+  gcloud iam workload-identity-pools providers update-oidc github --location=global \
+    --workload-identity-pool=github --attribute-condition="$wif_condition" >/dev/null
+else
   gcloud iam workload-identity-pools providers create-oidc github --location=global \
     --workload-identity-pool=github --display-name="GitHub Actions" \
     --issuer-uri=https://token.actions.githubusercontent.com \
     --attribute-mapping=google.subject=assertion.sub,attribute.repository=assertion.repository,attribute.ref=assertion.ref \
-    --attribute-condition="assertion.repository=='${GITHUB_REPO}' && assertion.ref=='refs/heads/${DEPLOY_BRANCH}'"
+    --attribute-condition="$wif_condition"
+fi
 POOL="projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/github"
 gcloud iam service-accounts add-iam-policy-binding "$DEPLOY_SA" \
   --role=roles/iam.workloadIdentityUser \

@@ -18,7 +18,7 @@ again, and it records the setup until it moves to Terraform.
 
 The service accounts are `atlas-service` (reads and writes the sheet, writes the bucket),
 `atlas-scheduler` (signs the nightly request) and `atlas-deploy` (GitHub Actions, only from the
-`atlas-3.0` branch of `openmrs/openmrs-contrib-atlas`).
+`main` branch of `openmrs/openmrs-contrib-atlas`).
 
 ## Setting it up
 
@@ -39,7 +39,7 @@ The service accounts are `atlas-service` (reads and writes the sheet, writes the
 
 4. **Set the GitHub repository variables** it printed, under Settings › Secrets and variables ›
    Actions › Variables, or with `gh variable set <NAME> --body <value>`. Once `GCP_PROJECT`
-   exists, the `deploy-staging` job runs on every push to `atlas-3.0` that passes the tests.
+   exists, the `deploy-staging` job runs on every push to `main` that passes the tests.
 5. **Prepare the sheet** as the service account. This replaces your Application Default
    Credentials, so sign in again as `atlas-dev` afterwards for `npm run test:sheet`:
 
@@ -74,7 +74,7 @@ The service accounts are `atlas-service` (reads and writes the sheet, writes the
    `STAGING_EMAIL_ALLOWLIST` to the addresses staging may email; without it staging emails no one.
    `STAGING_NOTICE_EMAIL` is optional.
 
-8. **Deploy.** Push to `atlas-3.0`, or re-run the latest CI run. Then check:
+8. **Deploy.** Push to `main`, or re-run the latest CI run. Then check:
 
    ```sh
    curl https://<service url>/health
