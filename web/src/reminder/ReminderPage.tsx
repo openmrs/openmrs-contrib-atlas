@@ -90,7 +90,10 @@ export function ReminderPage({ token }: { token: string }) {
       <header className="topbar">
         <h1>
           <a href="/">
-            OpenMRS <span>Atlas</span>
+            <img className="logo" src="/openmrs-cross.png" alt="" width="28" height="28" />
+            <span className="wordmark">
+              OpenMRS <span>Atlas</span>
+            </span>
           </a>
         </h1>
       </header>

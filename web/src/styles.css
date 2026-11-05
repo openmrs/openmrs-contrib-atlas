@@ -58,8 +58,16 @@ textarea {
   white-space: nowrap;
 }
 .topbar h1 a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   color: inherit;
   text-decoration: none;
+}
+.topbar h1 .logo {
+  flex: none;
+  width: 28px;
+  height: 28px;
 }
 button.tool {
   display: inline-flex;
@@ -565,8 +573,12 @@ button.link {
     font-size: 13px;
     line-height: 1.1;
   }
-  .topbar h1 span {
+  .topbar h1 .wordmark span {
     display: block;
+  }
+  .topbar h1 .logo {
+    width: 24px;
+    height: 24px;
   }
   .search {
     min-width: 0;
