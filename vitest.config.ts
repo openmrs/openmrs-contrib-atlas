@@ -9,7 +9,10 @@ export default defineConfig({
       {
         test: {
           name: "node",
-          include: ["{shared,service,migration,apps-script}/src/**/*.test.ts"],
+          include: [
+            "{shared,service,migration,apps-script}/src/**/*.test.ts",
+            "infra/**/*.test.ts",
+          ],
           exclude: ["**/node_modules/**", "**/*.sheet.test.ts"],
         },
       },

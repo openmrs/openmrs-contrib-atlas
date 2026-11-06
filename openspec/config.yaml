@@ -6,6 +6,8 @@ schema: spec-driven
 context: |
   Atlas 3.0 replaces Atlas 2.0 (the Express + MySQL app) at atlas.openmrs.org.
   Work happens on the main branch, and every push to main deploys to atlas-stg.openmrs.org.
+  Production (atlas.openmrs.org, Google Cloud project openmrs-atlas) deploys only from approved
+  release tags of the form <major>.<minor>. Each environment has its own project.
   The 2.0 code remains on the 2.x branch (kept for the record, never built) and in git history; 3.0 shares no runtime code with it.
 
   Architecture decisions (settled; do not re-open in proposals without saying so):
@@ -14,7 +16,7 @@ context: |
   - A Google Sheet is the source of truth. Visitors never read the sheet; they read a JSON
     snapshot in a public Cloud Storage bucket, regenerated on every write and nightly.
   - One TypeScript service on Google Cloud Run does all writes and publishing. Everything
-    lives in one OpenMRS Google Cloud project.
+    for an environment lives in that environment's own Google Cloud project.
   - Sign-in is OpenMRS Keycloak (OIDC). Admins are the Keycloak group atlas-administrators.
     Editors are added by OpenMRS ID (username) only.
   - Email goes through Mandrill (Mailchimp Transactional). Staging only delivers to an allowlist.

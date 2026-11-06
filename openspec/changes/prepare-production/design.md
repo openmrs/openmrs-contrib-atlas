@@ -49,10 +49,10 @@ Each environment holds the same variable names:
 | `HOSTING_TARGET` | `staging` | `production` |
 | `SITE_URL` | `https://atlas-stg.openmrs.org` | `https://atlas.openmrs.org` |
 | `DATA_URL` | `https://storage.googleapis.com/openmrs-atlas-stg` | `https://storage.googleapis.com/openmrs-atlas` |
-| `KEYCLOAK_ISSUER`, `KEYCLOAK_CLIENT_ID` | `id-stg` realm, `atlas` | `id.openmrs.org` realm, `atlas` |
+| `KEYCLOAK_ISSUER`, `KEYCLOAK_CLIENT_ID` | `https://id-stg.openmrs.org/realms/openmrs`, `atlas` | `https://id.openmrs.org/realms/openmrs`, `atlas` |
 | `EMAIL_ALLOWLIST` | `burke@openmrs.org` | `burke@openmrs.org` at first, removed after review |
 | `NOTICE_EMAIL` | optional | `infrastructure@openmrs.org` |
-| `GA_ID` | not set | the OpenMRS measurement ID |
+| `GA_ID` | not set | `G-9XFSTG4KZ0` (required) |
 
 A job that names an environment also sees repository variables, and an environment variable only overrides one of the same name. A production setting left out by mistake would silently fall back to a staging value. So once staging deploys from its environment, every repository variable is deleted, and the deploy workflow's first step fails the run if any required variable is empty.
 
@@ -63,7 +63,7 @@ Secret names in Secret Manager stay the same in both projects (`atlas-publish-se
 - `VITE_GA_ID` is passed only when `inputs.environment == 'production'`.
 - The required-settings check above means production can never borrow a staging value.
 
-Alternative considered: change the service so an empty allowlist means "no one" everywhere and add an explicit "everyone" value. That needs a service change for something the workflow can guarantee. The service rule is unchanged.
+Production with no allowlist is sent `EMAIL_ALLOWLIST=*`, which the service reads as "no allowlist". Found during implementation: the service reads an empty value as an allowlist of no one, and a Cloud Run deploy keeps a variable's old value when the deploy leaves it out, so production could otherwise never stop using its first allowlist. A `*` in any other environment fails the deploy.
 
 ### A release guard job before approval
 `release-guard` runs on tag refs only, before `deploy-production`, and fails unless:
@@ -132,5 +132,4 @@ Rollback: revert the commit and recreate the repository variables. Staging's Goo
 
 ## Open Questions
 
-- The OpenMRS Google Analytics measurement ID for production. Atlas 2.0's code has none to copy; it can be set in the `production` environment any time before the first tag.
-- The production Keycloak realm URL, expected to be `https://id.openmrs.org/realms/openmrs`; confirmed during the walkthrough.
+None. Answered by the maintainer: the Google Analytics measurement ID is `G-9XFSTG4KZ0`, and production Keycloak's realm is `https://id.openmrs.org/realms/openmrs`. Both go in the `production` environment and `infra/production.env`.

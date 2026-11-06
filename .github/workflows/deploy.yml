@@ -1,0 +1,147 @@
+name: Deploy
+
+# Deploys one environment: the service to Cloud Run and the map site to Firebase Hosting.
+# Called by ci.yml, never run on its own. Every setting comes from the GitHub Environment named
+# by `environment` (Settings > Environments); see infra/README.md for the variables. There are
+# deliberately no repository variables, so one environment can never borrow another's value.
+#
+# Authenticates to Google Cloud with Workload Identity Federation (no stored keys). Each project
+# trusts only its own environment: staging pushes to main, production approved release tags.
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: staging or production
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    environment:
+      name: ${{ inputs.environment }}
+      url: ${{ vars.SITE_URL }}
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: deploy-${{ inputs.environment }}
+      cancel-in-progress: false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the environment's settings
+        id: settings
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          GCP_PROJECT: ${{ vars.GCP_PROJECT }}
+          GCP_REGION: ${{ vars.GCP_REGION }}
+          GCP_WIF_PROVIDER: ${{ vars.GCP_WIF_PROVIDER }}
+          GCP_DEPLOY_SA: ${{ vars.GCP_DEPLOY_SA }}
+          SERVICE: ${{ vars.SERVICE }}
+          HOSTING_TARGET: ${{ vars.HOSTING_TARGET }}
+          SITE_URL: ${{ vars.SITE_URL }}
+          DATA_URL: ${{ vars.DATA_URL }}
+          KEYCLOAK_ISSUER: ${{ vars.KEYCLOAK_ISSUER }}
+          KEYCLOAK_CLIENT_ID: ${{ vars.KEYCLOAK_CLIENT_ID }}
+          EMAIL_ALLOWLIST: ${{ vars.EMAIL_ALLOWLIST }}
+          GA_ID: ${{ vars.GA_ID }}
+        run: |
+          required="GCP_PROJECT GCP_REGION GCP_WIF_PROVIDER GCP_DEPLOY_SA SERVICE HOSTING_TARGET SITE_URL DATA_URL KEYCLOAK_ISSUER KEYCLOAK_CLIENT_ID"
+          if [ "$ENVIRONMENT" = production ]; then required="$required GA_ID"; fi
+          missing=""
+          for name in $required; do
+            if [ -z "${!name}" ]; then missing="$missing $name"; fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::The $ENVIRONMENT environment is missing:$missing"
+            exit 1
+          fi
+          if [ "$HOSTING_TARGET" != "$ENVIRONMENT" ]; then
+            echo "::error::HOSTING_TARGET is '$HOSTING_TARGET' in the $ENVIRONMENT environment"
+            exit 1
+          fi
+
+          # Safety rules, whatever the settings say:
+          # - Only production may email people not on an allowlist. Anywhere else, no allowlist
+          #   means "none", which matches no address.
+          # - Only production is built with Google Analytics.
+          # Production with no allowlist sends "*" (everyone): Cloud Run keeps a variable's old
+          # value when a deploy leaves it out, so it can't simply be dropped.
+          if [ "$ENVIRONMENT" = production ]; then
+            allowlist="${EMAIL_ALLOWLIST:-*}"
+            ga_id="$GA_ID"
+          else
+            case "$EMAIL_ALLOWLIST" in
+              *'*'*)
+                echo "::error::EMAIL_ALLOWLIST may only be '*' in production"
+                exit 1
+                ;;
+            esac
+            allowlist="${EMAIL_ALLOWLIST:-none}"
+            ga_id=""
+          fi
+          echo "allowlist=$allowlist" >> "$GITHUB_OUTPUT"
+          echo "ga_id=$ga_id" >> "$GITHUB_OUTPUT"
+          echo "image=$GCP_REGION-docker.pkg.dev/$GCP_PROJECT/atlas/atlas-service:$GITHUB_SHA" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v7
+
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+      - uses: google-github-actions/setup-gcloud@v3
+
+      - name: Build and push the service image
+        env:
+          IMAGE: ${{ steps.settings.outputs.image }}
+          REGISTRY: ${{ vars.GCP_REGION }}-docker.pkg.dev
+        run: |
+          gcloud auth configure-docker "$REGISTRY" --quiet
+          docker build -f service/Dockerfile -t "$IMAGE" .
+          docker push "$IMAGE"
+
+      - name: Deploy the service to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v3
+        with:
+          service: ${{ vars.SERVICE }}
+          region: ${{ vars.GCP_REGION }}
+          image: ${{ steps.settings.outputs.image }}
+          # SHEET_ID, BUCKET, SCHEDULER_SA_EMAIL and SERVICE_URL are set once on the service by
+          # infra/setup.sh; PUBLISH_SECRET comes from Secret Manager. See service/README.md.
+          # One instance, so its in-memory queue can serialise every sheet write.
+          flags: --max-instances=1
+          # Values are quoted so an allowlist of several addresses keeps its commas.
+          env_vars: |
+            KEYCLOAK_ISSUER=${{ vars.KEYCLOAK_ISSUER }}
+            KEYCLOAK_CLIENT_ID=${{ vars.KEYCLOAK_CLIENT_ID }}
+            KEYCLOAK_SERVICE_CLIENT_ID=atlas-service
+            SITE_URL=${{ vars.SITE_URL }}
+            EMAIL_FROM=OpenMRS Atlas <atlas-noreply@openmrs.org>
+            EMAIL_ALLOWLIST="${{ steps.settings.outputs.allowlist }}"
+            NOTICE_EMAIL=${{ vars.NOTICE_EMAIL }}
+          secrets: |
+            KEYCLOAK_SERVICE_CLIENT_SECRET=atlas-keycloak-service-secret:latest
+            MANDRILL_API_KEY=atlas-mandrill-api-key:latest
+            LINK_SIGNING_KEY=atlas-link-signing-key:latest
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Build the map site
+        run: npm run build -w web
+        env:
+          VITE_DATA_BASE_URL: ${{ vars.DATA_URL }}
+          VITE_KEYCLOAK_ISSUER: ${{ vars.KEYCLOAK_ISSUER }}
+          VITE_KEYCLOAK_CLIENT_ID: ${{ vars.KEYCLOAK_CLIENT_ID }}
+          VITE_GA_ID: ${{ steps.settings.outputs.ga_id }}
+      - name: Deploy the map site to Firebase Hosting
+        env:
+          HOSTING_TARGET: ${{ vars.HOSTING_TARGET }}
+          GCP_PROJECT: ${{ vars.GCP_PROJECT }}
+        run: npx firebase-tools@15.34.2 deploy --only "hosting:$HOSTING_TARGET" --project "$GCP_PROJECT" --non-interactive

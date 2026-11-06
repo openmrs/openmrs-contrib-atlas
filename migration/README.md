@@ -74,6 +74,8 @@ against that.
 
 ## At cutover
 
-Run the migration once more, from the final 2.0 data into the production sheet, right before
-atlas.openmrs.org switches to 3.0. Edits made in 2.0 during staging are then carried over. Edits
-made only in the staging sheet are not.
+Run the migration once more, from the final 2.0 data into the production sheet and bucket
+(`--bucket openmrs-atlas`, in the `openmrs-atlas` project), right before atlas.openmrs.org switches
+to 3.0. Edits made in 2.0 during staging are then carried over. Edits made only in the staging
+sheet are not. Staging uses `--bucket openmrs-atlas-stg`. The order of the other cutover steps is
+in the production checklist in [`infra/README.md`](../infra/README.md#production-checklist).

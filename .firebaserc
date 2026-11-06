@@ -1,11 +1,17 @@
 {
   "projects": {
-    "staging": "atlas-stg-513316"
+    "staging": "atlas-stg-513316",
+    "production": "openmrs-atlas"
   },
   "targets": {
     "atlas-stg-513316": {
       "hosting": {
         "staging": ["atlas-stg-513316"]
+      }
+    },
+    "openmrs-atlas": {
+      "hosting": {
+        "production": ["openmrs-atlas"]
       }
     }
   }

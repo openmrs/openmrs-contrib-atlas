@@ -110,6 +110,18 @@ describe("Staging delivers only to an allowlist", () => {
     );
     expect(await mailer.send(EMAIL)).toEqual({ status: "withheld" });
   });
+
+  it("Scenario: Production after review (`*` means no allowlist)", async () => {
+    const { requests, fetchFn } = mandrill(() => Response.json([{ status: "sent" }]));
+    const mailer = mandrillMailer({ apiKey: "k", from, allowlist: parseAllowlist(" * ") }, fetchFn);
+    expect(await mailer.send(EMAIL)).toEqual({ status: "sent" });
+    expect(requests).toHaveLength(1);
+  });
+
+  it("treats an empty allowlist as no one", () => {
+    expect(parseAllowlist("")).toEqual([]);
+    expect(parseAllowlist(undefined)).toBeUndefined();
+  });
 });
 
 describe("Email is never sent without configuration", () => {

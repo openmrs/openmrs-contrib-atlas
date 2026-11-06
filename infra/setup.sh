@@ -1,22 +1,30 @@
 #!/usr/bin/env bash
-# Sets up the Atlas staging environment in Google Cloud. See infra/staging/README.md.
+# Sets up one Atlas environment in Google Cloud. See infra/README.md.
 #
-#   CLOUDSDK_ACTIVE_CONFIG_NAME=openmrs SHEET_ID=<staging sheet id> bash infra/staging/setup.sh
+#   CLOUDSDK_ACTIVE_CONFIG_NAME=openmrs SHEET_ID=<sheet id> bash infra/setup.sh staging
+#   CLOUDSDK_ACTIVE_CONFIG_NAME=openmrs SHEET_ID=<sheet id> bash infra/setup.sh production
 #
-# Safe to run again: each step skips what already exists. Run it as a project owner.
+# Reads infra/<environment>.env for the project, bucket, service and deploy rule. Safe to run
+# again: each step skips what already exists. Run it as a project owner.
 set -euo pipefail
 
-PROJECT="${PROJECT:-atlas-stg-513316}"
-REGION="${REGION:-us-central1}"
-BUCKET="${BUCKET:-openmrs-atlas-stg}" # firebase.json redirects to this name
-GITHUB_REPO="${GITHUB_REPO:-openmrs/openmrs-contrib-atlas}"
-DEPLOY_BRANCH="${DEPLOY_BRANCH:-main}"
-SITE_ORIGIN="${SITE_ORIGIN:-https://atlas-stg.openmrs.org}"
-SERVICE="atlas-service-stg"
+ENVIRONMENT="${1:-}"
+case "$ENVIRONMENT" in
+  staging | production) ;;
+  *)
+    echo "Usage: SHEET_ID=<sheet id> bash infra/setup.sh staging|production" >&2
+    exit 2
+    ;;
+esac
+# shellcheck source=/dev/null
+source "$(dirname "$0")/${ENVIRONMENT}.env"
+: "${PROJECT:?}" "${REGION:?}" "${BUCKET:?}" "${SERVICE:?}" "${SITE_ORIGIN:?}"
+: "${HOSTING_TARGET:?}" "${KEYCLOAK_ISSUER:?}" "${WIF_CONDITION:?}"
+GITHUB_REPO="openmrs/openmrs-contrib-atlas"
 SECRET="atlas-publish-secret"
 SCHEDULE="${SCHEDULE:-0 3 * * *}" # nightly, 03:00 UTC
 REMINDER_SCHEDULE="${REMINDER_SCHEDULE:-0 14 * * *}" # daily, 14:00 UTC
-: "${SHEET_ID:?Set SHEET_ID to the staging sheet id (see README step 2)}"
+: "${SHEET_ID:?Set SHEET_ID to the ${ENVIRONMENT} sheet id (see infra/README.md)}"
 
 RUNTIME_SA="atlas-service@${PROJECT}.iam.gserviceaccount.com"
 SCHEDULER_SA="atlas-scheduler@${PROJECT}.iam.gserviceaccount.com"
@@ -25,7 +33,7 @@ ME="$(gcloud config get-value account 2>/dev/null)"
 
 gcloud config set project "$PROJECT" >/dev/null
 PROJECT_NUMBER="$(gcloud projects describe "$PROJECT" --format='value(projectNumber)')"
-echo "Project $PROJECT ($PROJECT_NUMBER), region $REGION, as $ME"
+echo "Setting up ${ENVIRONMENT}: project $PROJECT ($PROJECT_NUMBER), region $REGION, as $ME"
 
 step() { printf '\n== %s\n' "$*"; }
 exists() { "$@" >/dev/null 2>&1; }
@@ -82,6 +90,23 @@ fi
 gcloud secrets add-iam-policy-binding "$SECRET" \
   --member="serviceAccount:${RUNTIME_SA}" --role=roles/secretmanager.secretAccessor >/dev/null
 
+step "Service secrets"
+# The link-signing key can be generated here. The Keycloak client secret and the Mandrill key
+# are created empty; add their values by hand (infra/README.md). Until they have values, Cloud
+# Run refuses new revisions and keeps the running one.
+if ! exists gcloud secrets describe atlas-link-signing-key; then
+  openssl rand -base64 32 | tr -d '\n' |
+    gcloud secrets create atlas-link-signing-key --replication-policy=automatic --data-file=-
+fi
+for s in atlas-keycloak-service-secret atlas-mandrill-api-key; do
+  exists gcloud secrets describe "$s" ||
+    gcloud secrets create "$s" --replication-policy=automatic
+done
+for s in atlas-keycloak-service-secret atlas-mandrill-api-key atlas-link-signing-key; do
+  gcloud secrets add-iam-policy-binding "$s" \
+    --member="serviceAccount:${RUNTIME_SA}" --role=roles/secretmanager.secretAccessor >/dev/null
+done
+
 step "Cloud Run service ${SERVICE}"
 if ! exists gcloud run services describe "$SERVICE" --region="$REGION"; then
   # A placeholder image; the first CI deploy replaces it and keeps this configuration.
@@ -118,7 +143,7 @@ fi
 
 step "Daily reminder job"
 # Sends due reminder emails (specs/reminder-emails). The service delivers only to the
-# STAGING_EMAIL_ALLOWLIST repository variable on staging, and to no one without it.
+# environment's EMAIL_ALLOWLIST when one is set; on staging, to no one without it.
 reminder_flags=(--location="$REGION" --schedule="$REMINDER_SCHEDULE" --time-zone=UTC
   --uri="${SERVICE_URL}/reminders" --http-method=POST --attempt-deadline=600s
   --oidc-service-account-email="$SCHEDULER_SA" --oidc-token-audience="$SERVICE_URL")
@@ -126,15 +151,19 @@ if exists gcloud scheduler jobs describe atlas-daily-reminders --location="$REGI
   gcloud scheduler jobs update http atlas-daily-reminders "${reminder_flags[@]}" >/dev/null
 else
   gcloud scheduler jobs create http atlas-daily-reminders "${reminder_flags[@]}"
+  if [[ "${PAUSE_NEW_REMINDER_JOB:-no}" == yes ]]; then
+    gcloud scheduler jobs pause atlas-daily-reminders --location="$REGION"
+    echo "The reminder job is paused until the cutover."
+  fi
 fi
 
-step "Workload Identity Federation for ${GITHUB_REPO}@${DEPLOY_BRANCH}"
+step "Workload Identity Federation for ${GITHUB_REPO} (${ENVIRONMENT})"
 exists gcloud iam workload-identity-pools describe github --location=global ||
   gcloud iam workload-identity-pools create github --location=global \
     --display-name="GitHub Actions"
-# Only this repository's deploy branch may deploy. Updated on every run, so a renamed branch
+# Who may deploy (WIF_CONDITION in the settings file). Updated on every run, so a changed rule
 # only needs this script run again.
-wif_condition="assertion.repository=='${GITHUB_REPO}' && assertion.ref=='refs/heads/${DEPLOY_BRANCH}'"
+wif_condition="$WIF_CONDITION"
 if exists gcloud iam workload-identity-pools providers describe github --location=global \
   --workload-identity-pool=github; then
   gcloud iam workload-identity-pools providers update-oidc github --location=global \
@@ -166,15 +195,28 @@ gcloud iam service-accounts add-iam-policy-binding "$RUNTIME_SA" \
 
 cat <<EOF
 
-Done. GitHub repository variables (Settings > Secrets and variables > Actions > Variables):
+Done. Variables for the GitHub environment "${ENVIRONMENT}" (Settings > Environments >
+${ENVIRONMENT}, or gh variable set <NAME> --env ${ENVIRONMENT} --body <value>):
 
-  GCP_PROJECT       ${PROJECT}
-  GCP_REGION        ${REGION}
-  GCP_WIF_PROVIDER  ${POOL}/providers/github
-  GCP_DEPLOY_SA     ${DEPLOY_SA}
-  STAGING_DATA_URL  https://storage.googleapis.com/${BUCKET}
+  GCP_PROJECT         ${PROJECT}
+  GCP_REGION          ${REGION}
+  GCP_WIF_PROVIDER    ${POOL}/providers/github
+  GCP_DEPLOY_SA       ${DEPLOY_SA}
+  SERVICE             ${SERVICE}
+  HOSTING_TARGET      ${HOSTING_TARGET}
+  SITE_URL            ${SITE_ORIGIN}
+  DATA_URL            https://storage.googleapis.com/${BUCKET}
+  KEYCLOAK_ISSUER     ${KEYCLOAK_ISSUER}
+  KEYCLOAK_CLIENT_ID  atlas
+  EMAIL_ALLOWLIST     addresses this environment may email (see infra/README.md)
+  NOTICE_EMAIL        where new-marker notices go (optional)
+EOF
+if [[ "$ENVIRONMENT" == production ]]; then
+  echo "  GA_ID               the Google Analytics measurement ID"
+fi
+cat <<EOF
 
-Apps Script properties for the staging sheet:
+Apps Script properties for the ${ENVIRONMENT} sheet:
 
   SERVICE_URL       ${SERVICE_URL}
   PUBLISH_SECRET    gcloud secrets versions access latest --secret=${SECRET}

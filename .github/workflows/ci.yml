@@ -1,23 +1,19 @@
 name: CI
 
-# The deploy-staging job deploys main to atlas-stg.openmrs.org after the tests pass.
-# Authenticates to Google Cloud with Workload Identity Federation (no stored keys).
-# Repository variables to set (Settings > Secrets and variables > Actions > Variables):
-#   GCP_PROJECT          Google Cloud project id
-#   GCP_REGION           Cloud Run / Artifact Registry region, e.g. us-central1
-#   GCP_WIF_PROVIDER     projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider>
-#   GCP_DEPLOY_SA        deploy service account email
-#   STAGING_DATA_URL     public base URL of the staging bucket, e.g. https://storage.googleapis.com/openmrs-atlas-stg
-#   KEYCLOAK_ISSUER      Keycloak realm URL, e.g. https://id-stg.openmrs.org/realms/openmrs
-#   KEYCLOAK_CLIENT_ID   the Atlas client in that realm, e.g. atlas
-#   STAGING_EMAIL_ALLOWLIST  comma-separated addresses staging may email; unset delivers to no one
-#   STAGING_NOTICE_EMAIL     optional address for new-marker notices on staging
+# Tests every pull request and push. After the tests pass:
+#   - a push to main (or "Run workflow" on main) deploys staging, atlas-stg.openmrs.org;
+#   - a release tag such as 3.0 (or "Run workflow" on an older tag, to roll back) deploys
+#     production, atlas.openmrs.org, once release-guard passes and a maintainer approves.
+# The deploy steps are in deploy.yml; the settings are in the GitHub Environments `staging` and
+# `production`. See infra/README.md.
 
 on:
   pull_request:
     branches: [main]
   push:
     branches: [main]
+    tags: ["*.*"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -56,70 +52,63 @@ jobs:
           path: web/test-results/
 
   deploy-staging:
-    # Deploys pushes to main once both test jobs pass. Skipped until the Google Cloud
-    # project is set up (the GCP_* repository variables exist).
     needs: [check, e2e]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.GCP_PROJECT != ''
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     permissions:
       contents: read
       id-token: write
-    concurrency:
-      group: deploy-staging
-      cancel-in-progress: false
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: staging
+
+  release-guard:
+    # Only a tag named <major>.<minor> (3.0, 3.12) on a commit in main is a release. Runs before
+    # the production approval, so any other tag fails here and never asks for one.
+    if: github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
-    env:
-      IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT }}/atlas/atlas-service:${{ github.sha }}
     steps:
       - uses: actions/checkout@v7
-
-      - uses: google-github-actions/auth@v3
         with:
-          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
-          service_account: ${{ vars.GCP_DEPLOY_SA }}
-      - uses: google-github-actions/setup-gcloud@v3
-
-      - name: Build and push the service image
-        run: |
-          gcloud auth configure-docker ${{ vars.GCP_REGION }}-docker.pkg.dev --quiet
-          docker build -f service/Dockerfile -t "$IMAGE" .
-          docker push "$IMAGE"
-
-      - name: Deploy the service to Cloud Run
-        uses: google-github-actions/deploy-cloudrun@v3
-        with:
-          service: atlas-service-stg
-          region: ${{ vars.GCP_REGION }}
-          image: ${{ env.IMAGE }}
-          # SHEET_ID, BUCKET, SCHEDULER_SA_EMAIL and SERVICE_URL are set once on the service;
-          # PUBLISH_SECRET comes from Secret Manager. See service/README.md.
-          # One instance, so its in-memory queue can serialise every sheet write.
-          flags: --max-instances=1
-          # Staging must never mail real implementers: with no allowlist variable it delivers
-          # to no one ("none" matches no address).
-          env_vars: |
-            KEYCLOAK_ISSUER=${{ vars.KEYCLOAK_ISSUER }}
-            KEYCLOAK_CLIENT_ID=${{ vars.KEYCLOAK_CLIENT_ID }}
-            KEYCLOAK_SERVICE_CLIENT_ID=atlas-service
-            SITE_URL=https://atlas-stg.openmrs.org
-            EMAIL_FROM=OpenMRS Atlas <atlas-noreply@openmrs.org>
-            EMAIL_ALLOWLIST=${{ vars.STAGING_EMAIL_ALLOWLIST || 'none' }}
-            NOTICE_EMAIL=${{ vars.STAGING_NOTICE_EMAIL }}
-          secrets: |
-            KEYCLOAK_SERVICE_CLIENT_SECRET=atlas-keycloak-service-secret:latest
-            MANDRILL_API_KEY=atlas-mandrill-api-key:latest
-            LINK_SIGNING_KEY=atlas-link-signing-key:latest
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: npm
-      - run: npm ci
-      - name: Build the map site
-        run: npm run build -w web
+          fetch-depth: 0
+      - name: Check the tag is a release on main
         env:
-          VITE_DATA_BASE_URL: ${{ vars.STAGING_DATA_URL }}
-          VITE_KEYCLOAK_ISSUER: ${{ vars.KEYCLOAK_ISSUER }}
-          VITE_KEYCLOAK_CLIENT_ID: ${{ vars.KEYCLOAK_CLIENT_ID }}
-          # No VITE_GA_ID on staging, so analytics stays off.
-      - name: Deploy the map site to Firebase Hosting
-        run: npx firebase-tools@15.34.2 deploy --only hosting:staging --project "${{ vars.GCP_PROJECT }}" --non-interactive
+          TAG: ${{ github.ref_name }}
+        run: |
+          if ! [[ "$TAG" =~ ^[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::$TAG is not a release tag (expected <major>.<minor>, like 3.0); nothing is deployed."
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::$TAG points at a commit that is not on main; nothing is deployed."
+            exit 1
+          fi
+          echo "$TAG is a release on main."
+
+  deploy-production:
+    needs: [check, e2e, release-guard]
+    permissions:
+      contents: read
+      id-token: write
+    uses: ./.github/workflows/deploy.yml
+    with:
+      environment: production
+
+  release:
+    # Records the release on GitHub once production runs it. A redeploy (rollback) of a tag that
+    # already has a release leaves it alone.
+    needs: deploy-production
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists."
+          else
+            gh release create "$TAG" --verify-tag --generate-notes --title "$TAG"
+          fi

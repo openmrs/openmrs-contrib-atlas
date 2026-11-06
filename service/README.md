@@ -84,31 +84,33 @@ left alone.
 
 ## Configuration
 
-| Variable                         | Purpose                                                           |
-| -------------------------------- | ----------------------------------------------------------------- |
-| `SHEET_ID`                       | The Atlas sheet. The service account needs edit access to it.     |
-| `BUCKET`                         | The public bucket.                                                |
-| `PUBLISH_SECRET`                 | Shared secret for the Apps Script (from Secret Manager).          |
-| `SCHEDULER_SA_EMAIL`             | Service account the nightly Cloud Scheduler job signs in as.      |
-| `SERVICE_URL`                    | This service's URL, the audience of the scheduler's OIDC token.   |
-| `STORAGE_ENDPOINT`               | Local development only: fake-gcs-server, `http://localhost:4443`. |
-| `PORT`                           | Default 8080.                                                     |
-| `KEYCLOAK_ISSUER`                | Keycloak realm URL. Without it and the next one, `/api` is `503`. |
-| `KEYCLOAK_CLIENT_ID`             | The Atlas client in that realm: `atlas`.                          |
-| `SITE_URL`                       | The public site, for links in the feed and email. Required.       |
-| `KEYCLOAK_SERVICE_CLIENT_ID`     | `atlas-service`. Without it and its secret, IDs go unchecked.     |
-| `KEYCLOAK_SERVICE_CLIENT_SECRET` | Secret `atlas-keycloak-service-secret`.                           |
-| `MANDRILL_API_KEY`               | Secret `atlas-mandrill-api-key`. Without it, no email is sent.    |
-| `LINK_SIGNING_KEY`               | Secret `atlas-link-signing-key`. Without it, no reminders.        |
-| `EMAIL_FROM`                     | Default `OpenMRS Atlas <atlas-noreply@openmrs.org>`.              |
-| `EMAIL_ALLOWLIST`                | Comma-separated. Set: only these get email. Unset: everyone.      |
-| `NOTICE_EMAIL`                   | Gets a notice for each marker added. Unset: no notices.           |
+| Variable                         | Purpose                                                             |
+| -------------------------------- | ------------------------------------------------------------------- |
+| `SHEET_ID`                       | The Atlas sheet. The service account needs edit access to it.       |
+| `BUCKET`                         | The public bucket.                                                  |
+| `PUBLISH_SECRET`                 | Shared secret for the Apps Script (from Secret Manager).            |
+| `SCHEDULER_SA_EMAIL`             | Service account the nightly Cloud Scheduler job signs in as.        |
+| `SERVICE_URL`                    | This service's URL, the audience of the scheduler's OIDC token.     |
+| `STORAGE_ENDPOINT`               | Local development only: fake-gcs-server, `http://localhost:4443`.   |
+| `PORT`                           | Default 8080.                                                       |
+| `KEYCLOAK_ISSUER`                | Keycloak realm URL. Without it and the next one, `/api` is `503`.   |
+| `KEYCLOAK_CLIENT_ID`             | The Atlas client in that realm: `atlas`.                            |
+| `SITE_URL`                       | The public site, for links in the feed and email. Required.         |
+| `KEYCLOAK_SERVICE_CLIENT_ID`     | `atlas-service`. Without it and its secret, IDs go unchecked.       |
+| `KEYCLOAK_SERVICE_CLIENT_SECRET` | Secret `atlas-keycloak-service-secret`.                             |
+| `MANDRILL_API_KEY`               | Secret `atlas-mandrill-api-key`. Without it, no email is sent.      |
+| `LINK_SIGNING_KEY`               | Secret `atlas-link-signing-key`. Without it, no reminders.          |
+| `EMAIL_FROM`                     | Default `OpenMRS Atlas <atlas-noreply@openmrs.org>`.                |
+| `EMAIL_ALLOWLIST`                | Comma-separated. Set: only these get email. Unset or `*`: everyone. |
+| `NOTICE_EMAIL`                   | Gets a notice for each marker added. Unset: no notices.             |
 
 ## Keycloak
 
-Staging uses `https://id-stg.openmrs.org/realms/openmrs`. The issuer and client id are the
-repository variables `KEYCLOAK_ISSUER` and `KEYCLOAK_CLIENT_ID`; the CI deploy gives them to both
-this service and the site's build, so moving to production Keycloak changes only those. The client needs:
+Staging uses `https://id-stg.openmrs.org/realms/openmrs` and production
+`https://id.openmrs.org/realms/openmrs`. The issuer and client id are the variables
+`KEYCLOAK_ISSUER` and `KEYCLOAK_CLIENT_ID` in each GitHub environment (see
+[`infra/README.md`](../infra/README.md)); the deploy gives them to both this service and the site's
+build. The client needs:
 
 - **Client authentication** and **Authorization** off: it is a public client, as a browser can't
   keep a secret. **Standard flow** on, and **Require PKCE** with **S256**.
