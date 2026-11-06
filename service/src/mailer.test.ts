@@ -118,6 +118,10 @@ describe("Staging delivers only to an allowlist", () => {
     expect(requests).toHaveLength(1);
   });
 
+  it("accepts addresses separated by commas or spaces", () => {
+    expect(parseAllowlist("a@x.org, B@x.org c@x.org")).toEqual(["a@x.org", "b@x.org", "c@x.org"]);
+  });
+
   it("treats an empty allowlist as no one", () => {
     expect(parseAllowlist("")).toEqual([]);
     expect(parseAllowlist(undefined)).toBeUndefined();

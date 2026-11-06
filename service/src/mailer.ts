@@ -47,14 +47,14 @@ function parseFrom(from: string): { from_email: string; from_name?: string } {
 }
 
 /**
- * Parses EMAIL_ALLOWLIST: comma-separated, case-insensitive. Unset, or `*`, means no allowlist
+ * Parses EMAIL_ALLOWLIST: separated by commas or spaces, case-insensitive. Unset, or `*`, means no allowlist
  * (everyone). `*` exists because a Cloud Run deploy can't unset a variable it once set; the deploy
  * workflow sends it only to production. Empty means an allowlist of no one.
  */
 export function parseAllowlist(value: string | undefined): string[] | undefined {
   if (value === undefined || value.trim() === "*") return undefined;
   return value
-    .split(",")
+    .split(/[\s,]+/)
     .map((a) => a.trim().toLowerCase())
     .filter(Boolean);
 }

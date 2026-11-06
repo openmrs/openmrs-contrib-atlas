@@ -83,7 +83,9 @@ jobs:
             allowlist="${EMAIL_ALLOWLIST:-none}"
             ga_id=""
           fi
-          echo "allowlist=$allowlist" >> "$GITHUB_OUTPUT"
+          # Spaces, not commas: the Cloud Run action splits its env_vars on commas, and keeps any
+          # quotes as part of the value. The service accepts either separator.
+          echo "allowlist=${allowlist//,/ }" >> "$GITHUB_OUTPUT"
           echo "ga_id=$ga_id" >> "$GITHUB_OUTPUT"
           echo "image=$GCP_REGION-docker.pkg.dev/$GCP_PROJECT/atlas/atlas-service:$GITHUB_SHA" >> "$GITHUB_OUTPUT"
 
@@ -114,14 +116,13 @@ jobs:
           # infra/setup.sh; PUBLISH_SECRET comes from Secret Manager. See service/README.md.
           # One instance, so its in-memory queue can serialise every sheet write.
           flags: --max-instances=1
-          # Values are quoted so an allowlist of several addresses keeps its commas.
           env_vars: |
             KEYCLOAK_ISSUER=${{ vars.KEYCLOAK_ISSUER }}
             KEYCLOAK_CLIENT_ID=${{ vars.KEYCLOAK_CLIENT_ID }}
             KEYCLOAK_SERVICE_CLIENT_ID=atlas-service
             SITE_URL=${{ vars.SITE_URL }}
             EMAIL_FROM=OpenMRS Atlas <atlas-noreply@openmrs.org>
-            EMAIL_ALLOWLIST="${{ steps.settings.outputs.allowlist }}"
+            EMAIL_ALLOWLIST=${{ steps.settings.outputs.allowlist }}
             NOTICE_EMAIL=${{ vars.NOTICE_EMAIL }}
           secrets: |
             KEYCLOAK_SERVICE_CLIENT_SECRET=atlas-keycloak-service-secret:latest
