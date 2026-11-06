@@ -103,8 +103,7 @@ with a project owner's gcloud account (`CLOUDSDK_ACTIVE_CONFIG_NAME=openmrs`).
    OpenMRS measurement ID instead). Open _Hosting_ and click _Get started_ to create the default
    site, which is named after the project. Skip the CLI steps; CI does the deploys.
 2. **Create the sheet** in the OpenMRS Google Drive ("OpenMRS Atlas", or "OpenMRS Atlas
-   (staging)"). Share it as an Editor with `atlas-service@<project>.iam.gserviceaccount.com`,
-   and copy its id from the URL.
+   (staging)") and copy its id from the URL.
 3. **Run the setup script:**
 
    ```sh
@@ -112,7 +111,8 @@ with a project owner's gcloud account (`CLOUDSDK_ACTIVE_CONFIG_NAME=openmrs`).
    ```
 
    It ends by printing the GitHub environment variables and the Apps Script properties. In
-   production it creates the reminder job paused.
+   production it creates the reminder job paused. Now that the service account exists, share
+   the sheet with `atlas-service@<project>.iam.gserviceaccount.com` as an Editor.
 
 4. **Set the GitHub environment variables** it printed, plus those in the table above:
    `gh variable set <NAME> --env <environment> --body <value>`.
@@ -162,8 +162,9 @@ with a project owner's gcloud account (`CLOUDSDK_ACTIVE_CONFIG_NAME=openmrs`).
 Done together with the maintainer, in this order.
 
 - [ ] Firebase added to `openmrs-atlas`, Hosting site `openmrs-atlas` created (step 1)
-- [ ] Production sheet created and shared with `atlas-service@openmrs-atlas.iam.gserviceaccount.com` (step 2)
-- [ ] `bash infra/setup.sh production` run (step 3); reminder job paused
+- [ ] Production sheet created (step 2)
+- [ ] `bash infra/setup.sh production` run (step 3); reminder job paused; sheet shared with
+      `atlas-service@openmrs-atlas.iam.gserviceaccount.com`
 - [ ] `production` environment variables set (step 4), including `GA_ID`,
       `EMAIL_ALLOWLIST=burke@openmrs.org` and `NOTICE_EMAIL=infrastructure@openmrs.org`
 - [ ] Sheet prepared; a first migration loaded to rehearse (step 5)
