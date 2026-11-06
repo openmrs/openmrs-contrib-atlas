@@ -23,7 +23,7 @@
 - [x] 4.1 Move `infra/staging/setup.sh` to `infra/setup.sh <staging|production>`, reading `infra/staging.env` or `infra/production.env` (project, region, bucket, service, site origin, deploy condition); `SHEET_ID` still on the command line
 - [x] 4.2 Create `atlas-link-signing-key` with a random value if missing, and the Keycloak and Mandrill secrets with no value; grant the runtime account access to all four
 - [x] 4.3 Print the GitHub environment variables for that environment
-- [ ] 4.4 (manual) Run `bash infra/setup.sh staging` and confirm it changes nothing in staging beyond what it already had
+- [x] 4.4 (manual) Run `bash infra/setup.sh staging` and confirm it changes nothing in staging beyond what it already had
 
 ## 5. Docs
 

@@ -21,6 +21,7 @@ source "$(dirname "$0")/${ENVIRONMENT}.env"
 : "${PROJECT:?}" "${REGION:?}" "${BUCKET:?}" "${SERVICE:?}" "${SITE_ORIGIN:?}"
 : "${HOSTING_TARGET:?}" "${KEYCLOAK_ISSUER:?}" "${WIF_CONDITION:?}"
 GITHUB_REPO="openmrs/openmrs-contrib-atlas"
+export CLOUDSDK_CORE_DISABLE_PROMPTS=1 # never wait on a question the hidden checks can't show
 SECRET="atlas-publish-secret"
 SCHEDULE="${SCHEDULE:-0 3 * * *}" # nightly, 03:00 UTC
 REMINDER_SCHEDULE="${REMINDER_SCHEDULE:-0 14 * * *}" # daily, 14:00 UTC
@@ -36,7 +37,9 @@ PROJECT_NUMBER="$(gcloud projects describe "$PROJECT" --format='value(projectNum
 echo "Setting up ${ENVIRONMENT}: project $PROJECT ($PROJECT_NUMBER), region $REGION, as $ME"
 
 step() { printf '\n== %s\n' "$*"; }
-exists() { "$@" >/dev/null 2>&1; }
+# Hides the output of an existence check. Its input is closed too, so a gcloud question can't
+# wait unseen; prompts are also off for the whole script (CLOUDSDK_CORE_DISABLE_PROMPTS, set above).
+exists() { "$@" </dev/null >/dev/null 2>&1; }
 
 step "APIs"
 gcloud services enable \
