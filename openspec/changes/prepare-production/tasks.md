@@ -33,10 +33,10 @@
 ## 6. Switch staging over
 
 - [x] 6.1 All checks pass and `openspec validate --strict` passes
-- [ ] 6.2 Push to `main`; confirm staging deployed through `deploy.yml` from the `staging` environment, with the same service settings as before and a working site
-- [ ] 6.3 Delete the repository variables and re-run the staging deploy to confirm it no longer needs them
-- [ ] 6.4 Confirm a non-release tag (for example `0.0-test`, deleted afterwards) runs the tests and deploys nothing
-- [ ] 6.5 Add the tag ruleset for `[0-9]*.[0-9]*`: restrict creation to admins and maintainers, block updates and deletion
+- [x] 6.2 Push to `main`; confirm staging deployed through `deploy.yml` from the `staging` environment, with the same service settings as before and a working site
+- [x] 6.3 Delete the repository variables and re-run the staging deploy to confirm it no longer needs them
+- [x] 6.4 Confirm a non-release tag (for example `0.0-test`, deleted afterwards) runs the tests and deploys nothing
+- [x] 6.5 Add the tag ruleset for `[0-9]*.[0-9]*`: restrict creation to admins and maintainers, block updates and deletion
 
 ## Workflow follow-up
 
