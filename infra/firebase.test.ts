@@ -57,6 +57,16 @@ describe("Firebase hosting targets", () => {
     expect(json).not.toContain(`storage.googleapis.com/${other.bucket}/`);
   });
 
+  it.each(Object.entries(ENVIRONMENTS))(
+    "%s sends /api and the /marker permalinks to its service",
+    (name, env) => {
+      const rewrites = target(name).rewrites as { source: string; run?: { serviceId: string } }[];
+      for (const source of ["/api/**", "/marker/**"]) {
+        expect(rewrites.find((r) => r.source === source)?.run?.serviceId).toBe(env.service);
+      }
+    },
+  );
+
   it.each(Object.entries(ENVIRONMENTS))("%s deploys to its own Firebase project", (name, env) => {
     expect(firebaserc.projects[name]).toBe(env.project);
     expect(firebaserc.targets[env.project]?.hosting[name]).toEqual([env.project]);

@@ -56,7 +56,8 @@ successful publish, described in `social-cards`.
   service already uses for logos); a card step in `publish`; public routes `GET /marker/:id` and
   `GET /marker/:id/card.png`, reading the published `atlas.json`, not the sheet; card storage in
   the public bucket; a bundled font for card text.
-- **Shared:** country outlines from `@rapideditor/country-coder`, already a dependency.
+- **Map data:** Natural Earth country shapes from `world-atlas` (public domain), with
+  `topojson-client`. `@rapideditor/country-coder`, already used, says which country to pick out.
 - **Hosting:** `firebase.json` rewrites `/marker/**` to the service in both targets, and
   `infra/firebase.test.ts` checks it.
 - **Site:** preview tags in `web/index.html`, with the image address set per environment at build

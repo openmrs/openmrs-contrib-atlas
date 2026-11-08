@@ -138,6 +138,7 @@ jobs:
         run: npm run build -w web
         env:
           VITE_DATA_BASE_URL: ${{ vars.DATA_URL }}
+          VITE_SITE_URL: ${{ vars.SITE_URL }}
           VITE_KEYCLOAK_ISSUER: ${{ vars.KEYCLOAK_ISSUER }}
           VITE_KEYCLOAK_CLIENT_ID: ${{ vars.KEYCLOAK_CLIENT_ID }}
           VITE_GA_ID: ${{ steps.settings.outputs.ga_id }}

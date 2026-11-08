@@ -17,6 +17,8 @@ RUN npm ci --omit=dev --workspace service --ignore-scripts && npm cache clean --
 
 COPY shared/src shared/src
 COPY service/src service/src
+# Fonts and the logo for social cards.
+COPY service/assets service/assets
 
 USER node
 ENV PORT=8080

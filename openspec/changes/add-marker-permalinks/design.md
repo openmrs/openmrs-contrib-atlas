@@ -13,7 +13,8 @@
 - **Public bucket.** `BUCKET`, read by visitors at `DATA_URL`. Snapshot files are cached for 5
   minutes, and logos for a year under unique names.
 - **Country outlines.** `@rapideditor/country-coder`, already used to derive `country`, exports
-  `borders`: 392 simplified GeoJSON features.
+  `borders`, but those are maritime boundaries, not coastlines: drawn as land, they look like
+  shards. It is still the right tool to say which country a point is in.
 - **Site build.** `web/vite.config.ts` already has a `preloads()` plugin that edits
   `index.html` from build-time environment variables. `deploy.yml` passes `VITE_DATA_BASE_URL`
   and others, but no site URL.
@@ -60,7 +61,8 @@
 ### Cards are SVG built in code, with text as paths, turned into PNG by sharp
 - `service/src/cards/` builds each card as an SVG string and converts it with
   `sharp(Buffer.from(svg)).png()`.
-- Text is laid out with `opentype.js` (new dependency) from a bundled OFL font, Noto Sans Regular
+- Text is laid out with `opentype.js` (new dependency; path data is formatted in our code, because
+  its `toPathData` rounding produces `NaN` for some coordinates) from a bundled OFL font, Noto Sans Regular
   and Bold in `service/assets/fonts/`, and drawn as `<path>`s. This gives exact width
   measurement for two-line wrapping and the ellipsis, and identical output on a Mac and on Cloud
   Run, with no fonts or fontconfig needed in the image.
@@ -70,9 +72,12 @@
   and "Closed" in a left text column about 520 pixels wide; a regional map filling the right of
   the card and fading under the text column; the site address at the bottom left.
 - **Map:** a Web Mercator projection centred on the marker, about 40 degrees of longitude
-  across, drawn from country-coder's country features. Longitudes are shifted to within 180
-  degrees of the marker so the antimeridian works. The marker's own country is filled in the
-  accent colour, and a teardrop pin marks its position.
+  across. It is drawn from Natural Earth's public-domain country shapes in the `world-atlas`
+  package (1:50m for cards, 1:110m for the world image), read with `topojson-client`. Both are
+  new dependencies. Longitudes are shifted to within 180
+  degrees of the marker so the antimeridian works. The country containing the marker
+  (country-coder's ISO numeric code, matched to Natural Earth's ids) is filled in a tint of the
+  accent colour, and a teardrop pin marks its position. Lakes aren't drawn.
 - **World image:** the same renderer, at a fixed world view, with a dot for each marker and the
   counts.
 
@@ -127,5 +132,5 @@
   new card. Previews already posted keep their old image, which is how those platforms work.
 - [Production previews need the DNS switch] → `SITE_URL` is atlas.openmrs.org, which serves
   Atlas 2.0 until the switch. Test on staging. Production previews start working at the switch.
-- [Coarse outlines] → country-coder's borders are simplified. That's fine at a 40-degree regional
-  view, and very small island states may look blocky.
+- [Map detail] → Natural Earth at 1:50m is fine at a 40-degree regional view. Lakes such as
+  Victoria show as land.

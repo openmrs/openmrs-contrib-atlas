@@ -11,6 +11,13 @@
             "serviceId": "atlas-service-stg",
             "region": "us-central1"
           }
+        },
+        {
+          "source": "/marker/**",
+          "run": {
+            "serviceId": "atlas-service-stg",
+            "region": "us-central1"
+          }
         }
       ],
       "redirects": [
@@ -76,6 +83,13 @@
       "rewrites": [
         {
           "source": "/api/**",
+          "run": {
+            "serviceId": "atlas-service",
+            "region": "us-central1"
+          }
+        },
+        {
+          "source": "/marker/**",
           "run": {
             "serviceId": "atlas-service",
             "region": "us-central1"

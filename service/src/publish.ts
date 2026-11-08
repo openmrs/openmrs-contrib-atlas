@@ -9,6 +9,7 @@ import {
   type Cell,
   type Problem,
 } from "@openmrs-atlas/shared";
+import { refreshCards, type CardOptions, type CardStore } from "./cards/refresh.ts";
 
 /** The tabs a publish reads, as the Sheets API returns them (header row first). */
 export interface SheetValues {
@@ -50,7 +51,13 @@ export async function publish(
   sheet: SheetStore,
   snapshots: SnapshotStore,
   /** `siteUrl` is the public site, for links in the feed. */
-  options: { force: boolean; now: Date; siteUrl: string },
+  options: {
+    force: boolean;
+    now: Date;
+    siteUrl: string;
+    /** Social cards to bring up to date after a successful publish (specs/social-cards). */
+    cards?: { store: CardStore } & Omit<CardOptions, "siteUrl">;
+  },
 ): Promise<PublishResult> {
   const values = await sheet.read();
   const lookups = parseLookups(values);
@@ -85,5 +92,18 @@ export async function publish(
     { name: `history/atlas-${stamp}.json`, body: json, contentType: "application/json" },
   ]);
   await sheet.writeProblems(problems);
+  if (options.cards) {
+    // Cards never hold up or undo a publish; what's missed is drawn next time.
+    try {
+      const { store, ...cardOptions } = options.cards;
+      const result = await refreshCards(snapshot, store, {
+        ...cardOptions,
+        siteUrl: options.siteUrl,
+      });
+      console.log(JSON.stringify({ event: "cards", ...result }));
+    } catch (err) {
+      console.error(JSON.stringify({ event: "cards-failed", error: String(err) }));
+    }
+  }
   return { status: "published", markers: snapshot.markers.length, problems: problems.length };
 }

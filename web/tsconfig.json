@@ -5,5 +5,13 @@
     "jsx": "react-jsx",
     "types": ["vite/client", "node"]
   },
-  "include": ["src", "e2e", "scripts", "vite.config.ts", "playwright.config.ts"]
+  // The permalink e2e test runs the service's page code, which needs its opentype.js types.
+  "include": [
+    "src",
+    "e2e",
+    "scripts",
+    "vite.config.ts",
+    "playwright.config.ts",
+    "../service/src/cards/opentype.d.ts"
+  ]
 }

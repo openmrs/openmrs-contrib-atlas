@@ -4,6 +4,7 @@ import react from "@vitejs/plugin-react";
 import type { Plugin } from "vite";
 import { defineConfig } from "vitest/config";
 import { DEFAULT_COUNT_FONT_URL, DEFAULT_MAP_STYLE_URL } from "./src/mapStyle.ts";
+import { previewTags } from "./src/previewTags.ts";
 
 /** Serves web/dev-data/ at /dev-data/ in the dev server only, so it never ships in a build. */
 function devData(): Plugin {
@@ -34,7 +35,7 @@ function preloads(): Plugin {
     configResolved(config) {
       env = config.env as Record<string, string>;
     },
-    transformIndexHtml() {
+    transformIndexHtml(_html, ctx) {
       const data = env.VITE_DATA_BASE_URL;
       const urls = [
         ...(data ? [`${data}/${env.VITE_DATA_FILE || "atlas.json"}`] : []),
@@ -42,11 +43,16 @@ function preloads(): Plugin {
           ? [env.VITE_MAP_STYLE_URL]
           : [DEFAULT_MAP_STYLE_URL, DEFAULT_COUNT_FONT_URL]),
       ];
-      return urls.map((href) => ({
+      const preload = urls.map((href) => ({
         tag: "link",
         attrs: { rel: "preload", as: "fetch", href, crossorigin: "anonymous" },
         injectTo: "head" as const,
       }));
+      // Link previews for the home page; reminder.html has nothing to preview.
+      const previews = ctx.filename.endsWith("index.html")
+        ? previewTags(env.VITE_SITE_URL, data).map((t) => ({ ...t, injectTo: "head" as const }))
+        : [];
+      return [...preload, ...previews];
     },
   };
 }

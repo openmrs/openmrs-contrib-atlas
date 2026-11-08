@@ -6,14 +6,18 @@ import { MarkerEditor } from "./edits.ts";
 import type { LinkSigner } from "./links.ts";
 import type { Mailer } from "./mailer.ts";
 import type { NoticeConfig } from "./notices.ts";
+import type { CardStore } from "./cards/refresh.ts";
 import { publish, type SheetStore, type SnapshotStore } from "./publish.ts";
 import { WriteQueue } from "./queue.ts";
+import { createPermalinks } from "./permalinks.ts";
 import { createReminderLinks } from "./reminder-links.ts";
 import { runReminders } from "./reminders.ts";
 
 export interface AppDeps {
   sheet: SheetStore;
   snapshots: SnapshotStore;
+  /** Social cards and the permalink pages that show them; without it, neither runs. */
+  cards?: CardStore;
   auth: AuthConfig;
   verify?: IdTokenVerifier;
   now?: () => Date;
@@ -32,14 +36,29 @@ export interface AppDeps {
   notices?: NoticeConfig;
 }
 
+/** Cards drawn by a publish that isn't the nightly one (specs/social-cards). */
+export const EDIT_CARD_LIMIT = 10;
+
 export function createApp(deps: AppDeps) {
   const app = new Hono();
   const queue = new WriteQueue();
   const now = () => deps.now?.() ?? new Date();
 
+  // The nightly run draws every card and clears old files; other publishes draw a few at most.
+  const cards = (nightly: boolean) =>
+    deps.cards &&
+    (nightly
+      ? { store: deps.cards, limit: Infinity, sweep: true }
+      : { store: deps.cards, limit: EDIT_CARD_LIMIT, sweep: false });
+
   const publishAfterEdit = async (caller: string) => {
     const result = await queue.shared(() =>
-      publish(deps.sheet, deps.snapshots, { force: false, now: now(), siteUrl: deps.siteUrl }),
+      publish(deps.sheet, deps.snapshots, {
+        force: false,
+        now: now(),
+        siteUrl: deps.siteUrl,
+        cards: cards(false),
+      }),
     );
     console.log(JSON.stringify({ event: "publish", caller, ...result }));
     return result.status === "published";
@@ -47,6 +66,10 @@ export function createApp(deps: AppDeps) {
 
   // Not /healthz: Cloud Run reserves some paths ending in "z" and answers them itself.
   app.get("/health", (c) => c.json({ ok: true }));
+
+  // Public permalink pages: Firebase Hosting sends /marker/** here (specs/marker-permalinks).
+  if (deps.cards)
+    app.route("/marker", createPermalinks({ cards: deps.cards, siteUrl: deps.siteUrl }));
 
   // ?force=true skips the safety check; only the sheet's admin menu (shared secret) may force.
   app.post("/publish", async (c) => {
@@ -56,7 +79,12 @@ export function createApp(deps: AppDeps) {
     if (force && caller !== "apps-script") return c.json({ error: "forbidden" }, 403);
 
     const run = () =>
-      publish(deps.sheet, deps.snapshots, { force, now: now(), siteUrl: deps.siteUrl });
+      publish(deps.sheet, deps.snapshots, {
+        force,
+        now: now(),
+        siteUrl: deps.siteUrl,
+        cards: cards(caller === "scheduler"),
+      });
     const result = await (force ? queue.run(run) : queue.shared(run));
     console.log(JSON.stringify({ event: "publish", caller, force, ...result }));
     return c.json(result, result.status === "published" ? 200 : 409);

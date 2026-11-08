@@ -37,7 +37,8 @@ from pushes to `main`; production accepts only tokens issued to the `production`
 environment on a tag, which GitHub grants only after the release checks and approval.
 
 `firebase.json` lists one hosting target per environment, because its rewrites and redirects
-can't read variables. They must differ only in the service and bucket names;
+can't read variables. Each sends `/api/**` and the `/marker/**` permalink pages to its Cloud Run
+service. They must differ only in the service and bucket names;
 [`firebase.test.ts`](firebase.test.ts) fails CI if they drift apart.
 
 ## GitHub environments

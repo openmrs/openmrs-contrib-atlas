@@ -5,7 +5,7 @@ import { keycloakVerifier } from "./keycloak.ts";
 import { linkSigner } from "./links.ts";
 import { mandrillMailer, parseAllowlist } from "./mailer.ts";
 import { googleSheetStore } from "./sheets.ts";
-import { gcsLogoStore, gcsSnapshotStore } from "./storage.ts";
+import { gcsCardStore, gcsLogoStore, gcsSnapshotStore } from "./storage.ts";
 
 function required(name: string): string {
   const value = process.env[name];
@@ -42,6 +42,7 @@ const app = createApp({
   sheet,
   siteUrl,
   snapshots: gcsSnapshotStore(bucket, process.env.STORAGE_ENDPOINT),
+  cards: gcsCardStore(bucket, process.env.STORAGE_ENDPOINT),
   editing:
     issuer && clientId
       ? {

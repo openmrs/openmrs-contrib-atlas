@@ -11,6 +11,8 @@ snapshot files to Cloud Storage, and makes every change people save on the site.
 | `POST /publish`            | the sheet's Apps Script, or Cloud Scheduler       | Validates the sheet, rewrites `problems`, and publishes unless the safety check refuses. `200` when published, `409` when refused. |
 | `POST /publish?force=true` | the sheet's Apps Script ("Atlas › Force publish") | The same, but skips the safety check.                                                                                              |
 | `POST /reminders`          | Cloud Scheduler, or a signed-in admin             | Sends due reminder emails, at most 50 a day, and records each outcome in `reminders`.                                              |
+| `GET /marker/:id`          | anyone (Firebase Hosting sends `/marker/**` here) | A page with link preview tags that hands over to `/?marker=<id>`. `404` for unpublished ids.                                       |
+| `GET /marker/:id/card.png` | anyone                                            | `302` to the marker's current social card, or `404`.                                                                               |
 
 Callers authenticate with `Authorization: Bearer <token>`:
 
@@ -78,6 +80,21 @@ run one at a time through a queue in memory, so the service must run as **one in
 | `history/atlas-<time>.json` | `no-store` (kept 90 days) |
 
 All of them are stored gzipped. Clients that don't accept gzip are served the plain file.
+
+Social cards (specs/social-cards) are written after a successful publish:
+
+| File                    | Cache-Control                         |
+| ----------------------- | ------------------------------------- |
+| `cards/<id>-<hash>.png` | `public, max-age=31536000, immutable` |
+| `cards/world.png`       | `public, max-age=3600`                |
+| `cards/manifest.json`   | `public, max-age=300`                 |
+
+A card's name changes whenever what it shows changes (name, country, sites, status or position),
+so previews of a fresh share show the new card. The nightly publish (Cloud Scheduler) draws every
+missing or out-of-date card and deletes card files the manifest no longer names. Every other
+publish draws at most 10. A failure drawing cards is logged (`cards-failed`, `card-failed`) and
+never stops the publish. The `/marker` pages read `atlas.json` and the manifest, kept in memory for
+a minute, and never the sheet.
 
 A publish is refused if it would publish fewer than 80% of the markers in the current
 `atlas.json`. The reason is then written to the first row of `problems`, and the public files are

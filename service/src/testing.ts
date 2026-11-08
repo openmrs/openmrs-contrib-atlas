@@ -1,5 +1,6 @@
-import { COLUMNS, TABS, type Cell, type Problem } from "@openmrs-atlas/shared";
+import { COLUMNS, TABS, type AtlasSnapshot, type Cell, type Problem } from "@openmrs-atlas/shared";
 import { SEED_LOOKUPS } from "@openmrs-atlas/shared/seed";
+import type { CardManifest, CardStore } from "./cards/refresh.ts";
 import type { CellUpdate, EditStore, EditValues } from "./edits.ts";
 import type { PublicFile, SheetStore, SheetValues, SnapshotStore } from "./publish.ts";
 
@@ -108,5 +109,40 @@ export class FakeBucket implements SnapshotStore {
     if (this.failing) throw new Error("storage down");
     this.writes++;
     for (const f of files) this.files.set(f.name, f);
+  }
+}
+
+/** Cards and the published snapshot, in memory. `failFor` makes drawing that marker's card fail. */
+export class FakeCards implements CardStore {
+  snapshot: AtlasSnapshot | undefined;
+  manifest: CardManifest | undefined;
+  files = new Map<string, Buffer>();
+  reads = 0;
+  failFor = new Set<string>();
+  async readSnapshot() {
+    this.reads++;
+    return this.snapshot;
+  }
+  async readManifest() {
+    return this.manifest;
+  }
+  async writeManifest(manifest: CardManifest) {
+    this.manifest = structuredClone(manifest);
+  }
+  async writeCard(name: string, png: Buffer) {
+    if ([...this.failFor].some((id) => name.includes(id))) throw new Error("render failed");
+    this.files.set(name, png);
+  }
+  async writeWorld(png: Buffer) {
+    this.files.set("cards/world.png", png);
+  }
+  async list(prefix: string) {
+    return [...this.files.keys()].filter((n) => n.startsWith(prefix));
+  }
+  async remove(names: string[]) {
+    for (const n of names) this.files.delete(n);
+  }
+  publicUrl(name: string) {
+    return `https://storage.example.org/bucket/${name}`;
   }
 }
