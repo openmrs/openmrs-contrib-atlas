@@ -6,12 +6,11 @@ Work not yet proposed as an OpenSpec change. When an item is picked up, it becom
 
 ## Before the announcement
 
-Agreed 2026-11-07, in this order: `simplify-confirming` (done 2026-11-08), then the list view,
+Agreed 2026-11-07, in this order: `simplify-confirming` (done 2026-11-08), then the list view (`add-list-view`),
 then share cards and the website badge, then orphan claims.
 
 ## Phase 3 · Grow (from the design spec)
 
-- **List view (M8, Should).** A sortable list of the sites on screen, beside the map.
 - **Share cards and a website badge (Adoption).** After adding or confirming a marker, offer a
   shareable card (map snippet and name) for social media, and a "Find us on the OpenMRS Atlas"
   badge or embed snippet for the implementation's own website.

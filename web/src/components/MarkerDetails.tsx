@@ -24,14 +24,22 @@ function isTyping(target: EventTarget | null): boolean {
 interface Props {
   marker: PublicMarker;
   onClose: () => void;
-  /** Set when the marker was opened from My markers: a "<" control and Backspace return there. */
+  /** Set when the marker was opened from a list: a "<" control and Backspace return there. */
   onBack?: () => void;
+  /** Names where "<" goes, such as "Back to My markers". */
+  backLabel?: string;
   /** Controls for those allowed to change this marker. */
   children?: React.ReactNode;
 }
 
 /** Details for one marker. Blank fields are left out; notes are plain text with links. */
-export function MarkerDetails({ marker, onClose, onBack, children }: Props) {
+export function MarkerDetails({
+  marker,
+  onClose,
+  onBack,
+  backLabel = "Back to My markers",
+  children,
+}: Props) {
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), [marker.id]);
 
@@ -69,7 +77,7 @@ export function MarkerDetails({ marker, onClose, onBack, children }: Props) {
           <button
             type="button"
             className="icon-button back"
-            aria-label="Back to My markers"
+            aria-label={backLabel}
             onClick={onBack}
           >
             &lt;

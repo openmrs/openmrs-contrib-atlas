@@ -4,18 +4,20 @@ import { signIn, signInEnabled, signOut } from "./auth/session.ts";
 import { useSession } from "./auth/useSession.ts";
 import { DownloadPanel } from "./components/DownloadPanel.tsx";
 import { FilterPanel } from "./components/FilterPanel.tsx";
-import { DownloadIcon, FilterIcon, PersonIcon } from "./components/Icons.tsx";
+import { DownloadIcon, FilterIcon, ListIcon, PersonIcon } from "./components/Icons.tsx";
 import { Legend } from "./components/Legend.tsx";
 import { MarkerActions } from "./components/MarkerActions.tsx";
 import { MarkerDetails } from "./components/MarkerDetails.tsx";
 import { SearchBox } from "./components/SearchBox.tsx";
 import { SignInPanel } from "./components/SignInPanel.tsx";
+import { SiteList } from "./components/SiteList.tsx";
 import { StatsBar } from "./components/StatsBar.tsx";
 import { config } from "./config.ts";
 import { track } from "./lib/analytics.ts";
 import { savedNotice, type MarkerResult } from "./lib/api.ts";
 import { legendEntries, palette } from "./lib/colours.ts";
 import { applyFilters, hasFilters } from "./lib/filters.ts";
+import { inView, sortMarkers, type Bounds, type ListSort } from "./lib/list.ts";
 import { computeStats } from "./lib/stats.ts";
 import type { AtlasSnapshot, ColourBy, Filters, MapView, PublicMarker } from "./lib/types.ts";
 import { formatUrlState, parseUrlState, type SignedInPanel } from "./lib/urlState.ts";
@@ -30,7 +32,10 @@ const MyMarkers = lazy(() =>
   import("./components/MyMarkers.tsx").then((m) => ({ default: m.MyMarkers })),
 );
 
-type Panel = "filters" | "download" | "sign-in" | SignedInPanel;
+type Panel = "filters" | "download" | "sign-in" | "list" | SignedInPanel;
+
+/** Lists a marker can be opened from, which "<" and Backspace return to. */
+type ListPanel = "mine" | "list";
 
 type Load = { state: "loading" } | { state: "error" } | { state: "ready"; snapshot: AtlasSnapshot };
 
@@ -54,9 +59,12 @@ export function App({ signInError }: { signInError?: string }) {
   const [view, setView] = useState<MapView | undefined>(initial.view);
   const [openPanel, setPanel] = useState<Panel | undefined>(initial.panel);
   const [notice, setNotice] = useState<string | undefined>(signInError);
-  // The marker opened from My markers, which can go back there; and the entry to return to.
-  const [fromMine, setFromMine] = useState<string>();
-  const [mineFocus, setMineFocus] = useState<string>();
+  // The marker opened from My markers or the list, which can go back there; and the entry to
+  // return to.
+  const [cameFrom, setCameFrom] = useState<{ panel: ListPanel; id: string }>();
+  const [backFocus, setBackFocus] = useState<string>();
+  const [bounds, setBounds] = useState<Bounds>();
+  const [sort, setSort] = useState<ListSort>(initial.sort ?? "name");
   // Saved changes, shown at once: the published files catch up within minutes.
   const [saved, setSaved] = useState<ReadonlyMap<string, PublicMarker | null>>(new Map());
   const onSessionEnded = useCallback(
@@ -116,6 +124,16 @@ export function App({ signInError }: { signInError?: string }) {
     [markers, colourBy, colours],
   );
   const stats = useMemo(() => computeStats(markers, now), [markers, now]);
+  const listed = useMemo(
+    () =>
+      panel === "list" && bounds
+        ? sortMarkers(
+            markers.filter((m) => inView(m, bounds)),
+            sort,
+          )
+        : [],
+    [panel, markers, bounds, sort],
+  );
   const selected = allMarkers.find((m) => m.id === selectedId);
   const order = useMemo(
     () => ({
@@ -133,10 +151,14 @@ export function App({ signInError }: { signInError?: string }) {
       view,
       colourBy,
       filters,
-      panel: panel === "mine" || panel === "add" || panel === "edit" ? panel : undefined,
+      panel:
+        panel === "mine" || panel === "add" || panel === "edit" || panel === "list"
+          ? panel
+          : undefined,
+      sort,
     });
     window.history.replaceState(null, "", `${window.location.pathname}${query}`);
-  }, [selectedId, view, colourBy, filters, panel]);
+  }, [selectedId, view, colourBy, filters, panel, sort]);
 
   const select = useCallback((marker: PublicMarker) => {
     setSelectedId(marker.id);
@@ -205,8 +227,8 @@ export function App({ signInError }: { signInError?: string }) {
     const marker = allMarkers.find((m) => m.id === id);
     if (marker) {
       select(marker);
-      setFromMine(id);
-      setMineFocus(undefined);
+      setCameFrom({ panel: "mine", id });
+      setBackFocus(undefined);
     } else {
       // Hidden and invalid markers aren't on the map; they open straight in the form.
       setSelectedId(id);
@@ -214,12 +236,28 @@ export function App({ signInError }: { signInError?: string }) {
     }
   };
 
-  const backToMine = useCallback(() => {
-    setMineFocus(fromMine);
-    setFromMine(undefined);
+  const openFromList = (marker: PublicMarker) => {
+    select(marker);
+    setCameFrom({ panel: "list", id: marker.id });
+    setBackFocus(undefined);
+  };
+
+  const goBack = useCallback(() => {
+    if (!cameFrom) return;
+    setBackFocus(cameFrom.id);
+    setCameFrom(undefined);
     setSelectedId(undefined);
-    setPanel("mine");
-  }, [fromMine]);
+    setPanel(cameFrom.panel);
+  }, [cameFrom]);
+
+  // My markers needs a session; the list doesn't.
+  const canGoBack =
+    selected && cameFrom?.id === selected.id && (cameFrom.panel === "list" || Boolean(me));
+
+  const closePanel = () => {
+    setBackFocus(undefined);
+    setPanel(undefined);
+  };
 
   const changeFilters = (next: Filters) => {
     setFilters(next);
@@ -258,6 +296,21 @@ export function App({ signInError }: { signInError?: string }) {
             {hasFilters(filters) && <span className="dot" />}
           </button>
         </SearchBox>
+        <button
+          type="button"
+          className="secondary tool"
+          aria-label="List"
+          title="List"
+          aria-expanded={panel === "list"}
+          disabled={!snapshot || formOpen}
+          onClick={() => {
+            if (panel !== "list") track("list_open");
+            setBackFocus(undefined);
+            setPanel((p) => (p === "list" ? undefined : "list"));
+          }}
+        >
+          <ListIcon />
+        </button>
         <button
           type="button"
           className="secondary tool"
@@ -326,6 +379,7 @@ export function App({ signInError }: { signInError?: string }) {
                 if (marker) select(marker);
               }}
               onViewChange={setView}
+              onBoundsChange={setBounds}
               onReady={onMapReady}
             />
             <StatsBar stats={stats} />
@@ -357,6 +411,16 @@ export function App({ signInError }: { signInError?: string }) {
         {panel === "download" && snapshot && (
           <DownloadPanel map={map} legend={legend} onClose={() => setPanel(undefined)} />
         )}
+        {panel === "list" && snapshot && (
+          <SiteList
+            markers={listed}
+            sort={sort}
+            onSortChange={setSort}
+            onOpen={openFromList}
+            onClose={closePanel}
+            focusId={backFocus}
+          />
+        )}
         {panel === "sign-in" && (
           <SignInPanel onSignIn={() => startSignIn("mine")} onClose={() => setPanel(undefined)} />
         )}
@@ -364,7 +428,8 @@ export function App({ signInError }: { signInError?: string }) {
           <MarkerDetails
             marker={selected}
             onClose={() => setSelectedId(undefined)}
-            onBack={fromMine === selected.id && me ? backToMine : undefined}
+            onBack={canGoBack ? goBack : undefined}
+            backLabel={cameFrom?.panel === "list" ? "Back to the list" : "Back to My markers"}
           >
             {roleOnSelected && (
               <MarkerActions
@@ -397,11 +462,8 @@ export function App({ signInError }: { signInError?: string }) {
               onChanged={() => void refresh()}
               onAdd={() => setPanel("add")}
               onSignOut={startSignOut}
-              onClose={() => {
-                setMineFocus(undefined);
-                setPanel(undefined);
-              }}
-              focusId={mineFocus}
+              onClose={closePanel}
+              focusId={backFocus}
             />
           )}
           {formOpen && (me || keepsForm) && snapshot && (

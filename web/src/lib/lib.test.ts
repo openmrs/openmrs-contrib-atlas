@@ -234,4 +234,24 @@ describe("URL state (Shareable URLs)", () => {
     expect(state.colourBy).toBe("type");
     expect(state.filters.confirmedWithinYears).toBeUndefined();
   });
+
+  it("Scenario: Copied list (the open list and its sort)", () => {
+    const query = formatUrlState({
+      colourBy: "type",
+      filters: NO_FILTERS,
+      panel: "list",
+      sort: "sites",
+    });
+    expect(query).toBe("?panel=list&sort=sites");
+    expect(parseUrlState(query)).toMatchObject({ panel: "list", sort: "sites" });
+  });
+
+  it("keeps a sort only with the list, and never the default", () => {
+    const base = { colourBy: "type" as const, filters: NO_FILTERS };
+    expect(formatUrlState({ ...base, panel: "list", sort: "name" })).toBe("?panel=list");
+    expect(formatUrlState({ ...base, panel: "mine", sort: "sites" })).toBe("?panel=mine");
+    expect(parseUrlState("?sort=sites").sort).toBeUndefined();
+    expect(parseUrlState("?panel=list&sort=colour").sort).toBeUndefined();
+    expect(parseUrlState("?panel=other").panel).toBeUndefined();
+  });
 });

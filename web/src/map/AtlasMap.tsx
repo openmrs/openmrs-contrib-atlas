@@ -4,6 +4,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?url";
 import { useEffect, useRef } from "react";
 import { config } from "../config.ts";
+import type { Bounds } from "../lib/list.ts";
 import type { MapView } from "../lib/types.ts";
 import { LAYERS, SOURCE, layerSpecs, sourceSpec } from "./layers.ts";
 import { installPins } from "./pins.ts";
@@ -15,6 +16,8 @@ interface Props {
   selectedId?: string;
   onSelect: (id: string) => void;
   onViewChange: (view: MapView) => void;
+  /** The visible area, once the map is ready and whenever it stops moving. */
+  onBoundsChange?: (bounds: Bounds) => void;
   onReady?: (map: MapLibreMap) => void;
 }
 
@@ -33,15 +36,16 @@ export function AtlasMap({
   selectedId,
   onSelect,
   onViewChange,
+  onBoundsChange,
   onReady,
 }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const loaded = useRef(false);
   // Latest props for handlers registered once.
-  const latest = useRef({ features, selectedId, onSelect, onViewChange });
+  const latest = useRef({ features, selectedId, onSelect, onViewChange, onBoundsChange });
   useEffect(() => {
-    latest.current = { features, selectedId, onSelect, onViewChange };
+    latest.current = { features, selectedId, onSelect, onViewChange, onBoundsChange };
   });
 
   useEffect(() => {
@@ -70,6 +74,7 @@ export function AtlasMap({
       for (const layer of layerSpecs) map.addLayer(layer);
       loaded.current = true;
       highlight(map, latest.current.selectedId);
+      latest.current.onBoundsChange?.(boundsOf(map));
       onReady?.(map);
     });
 
@@ -96,6 +101,7 @@ export function AtlasMap({
     map.on("moveend", () => {
       const c = map.getCenter();
       latest.current.onViewChange({ zoom: map.getZoom(), lat: c.lat, lng: c.lng });
+      latest.current.onBoundsChange?.(boundsOf(map));
     });
 
     return () => {
@@ -120,6 +126,11 @@ export function AtlasMap({
   return (
     <div ref={container} className="map" role="region" aria-label="World map of OpenMRS sites" />
   );
+}
+
+function boundsOf(map: MapLibreMap): Bounds {
+  const b = map.getBounds();
+  return { west: b.getWest(), south: b.getSouth(), east: b.getEast(), north: b.getNorth() };
 }
 
 function highlight(map: MapLibreMap, id: string | undefined) {

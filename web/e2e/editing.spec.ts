@@ -748,7 +748,7 @@ test.describe("Top bar and labels", () => {
       const boxes = await bar
         .locator("h1, .search, > button")
         .evaluateAll((els) => els.map((el) => el.getBoundingClientRect().toJSON()));
-      expect(boxes.length).toBe(4);
+      expect(boxes.length).toBe(5);
       const barBox = await bar.boundingBox();
       for (const box of boxes) {
         expect(box.top).toBeGreaterThanOrEqual(barBox!.y);
