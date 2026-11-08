@@ -31,4 +31,4 @@
 
 - [x] 5.1 Update the URL parameter comment in `urlState.ts` and any README section that lists URL parameters or analytics events; remove the list view from `openspec/backlog.md`
 - [x] 5.2 All checks pass (`format:check`, `typecheck`, `lint`, unit tests, e2e, build) and `openspec validate --strict`
-- [ ] 5.3 (manual) On staging, open the list on a desktop and a phone, sort it, open a marker and go back, and share a list link
+- [x] 5.3 (manual) On staging, open the list on a desktop and a phone, sort it, open a marker and go back, and share a list link

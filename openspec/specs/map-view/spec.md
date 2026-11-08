@@ -124,7 +124,7 @@ The map SHALL show the number of markers, countries and total sites, and how man
 - **THEN** implementations fall by 1, sites by 50 and countries by 1, and the pin stays on the map
 
 ### Requirement: Shareable URLs
-The page URL SHALL reflect the map view, colour-by choice, filters and selected marker, so that opening a copied URL restores the same view. The 2.0 form `/?marker=<id>` SHALL open that marker.
+The page URL SHALL reflect the map view, colour-by choice, filters, selected marker, and whether the list is open and how it is sorted, so that opening a copied URL restores the same view. The 2.0 form `/?marker=<id>` SHALL open that marker.
 
 #### Scenario: Legacy marker link
 - **WHEN** a visitor opens `/?marker=<id>` for a published marker
@@ -138,16 +138,20 @@ The page URL SHALL reflect the map view, colour-by choice, filters and selected 
 - **WHEN** a visitor filters to Research markers in Kenya, copies the URL and opens it in another browser
 - **THEN** the same filters, map area and colouring are shown
 
+#### Scenario: Copied list
+- **WHEN** a visitor opens the list sorted by number of sites, copies the URL and opens it in another browser
+- **THEN** the list is open, sorted by number of sites, for the same map area
+
 ### Requirement: Works on phones
-The map, search, filters, legend and marker details SHALL be usable on a 360 pixel wide touch screen without horizontal scrolling, and the top bar SHALL fit on one line at that width.
+The map, search, filters, list, legend and marker details SHALL be usable on a 360 pixel wide touch screen without horizontal scrolling, and the top bar SHALL fit on one line at that width.
 
 #### Scenario: Phone visitor
 - **WHEN** a visitor opens the Atlas on a 360 pixel wide phone
-- **THEN** they can search, filter and open marker details using touch alone
+- **THEN** they can search, filter, open the list and open marker details using touch alone
 
 #### Scenario: Top bar on a phone
 - **WHEN** the Atlas is open on a 360 pixel wide phone, signed in or not
-- **THEN** the name, search box, download and account controls share one line
+- **THEN** the name, search box, list, download and account controls share one line
 
 #### Scenario: First view on a phone
 - **WHEN** a visitor opens the Atlas with no query string on a 360 pixel wide phone
@@ -204,7 +208,7 @@ When a marker was opened from My markers, pressing Backspace or Delete SHALL ret
 - **THEN** nothing happens
 
 ### Requirement: Usage analytics
-When a Google Analytics measurement ID is configured, the site SHALL record page views and the events search, filter change, marker opened and download. When none is configured, no analytics requests SHALL be made.
+When a Google Analytics measurement ID is configured, the site SHALL record page views and the events search, filter change, marker opened, list opened and download. When none is configured, no analytics requests SHALL be made.
 
 #### Scenario: Staging without analytics
 - **WHEN** the site is built without a measurement ID
