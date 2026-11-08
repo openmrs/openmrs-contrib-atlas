@@ -47,8 +47,20 @@ export function useSession(onEnded: () => void) {
     // Only when a session exists: visitors never call the service.
     if (!hasSession()) return;
     let current = true;
-    void loadSession().then((next) => {
+    void loadSession().then(async (next) => {
       if (current) setSession((was) => merge(was, next));
+      if (next.status !== "signed-in") return;
+      // A session has started: the service confirms this person's recently confirmed markers
+      // (specs/marker-editing). It never blocks signing in.
+      try {
+        const { confirmed } = await api<{ confirmed: string[] }>("/me/confirm-recent", "POST");
+        if (confirmed.length > 0 && current) {
+          const again = await loadSession();
+          if (current) setSession((was) => merge(was, again));
+        }
+      } catch (err) {
+        console.warn("Confirming recent markers failed", err);
+      }
     });
     return () => {
       current = false;

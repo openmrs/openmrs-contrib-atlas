@@ -7,3 +7,4 @@ export * from "./safety.ts";
 export * from "./permissions.ts";
 export * from "./input.ts";
 export * from "./migrate.ts";
+export * from "./freshness.ts";

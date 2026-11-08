@@ -211,6 +211,79 @@ describe("Still current", () => {
   });
 });
 
+describe("Signing in keeps recent markers current", () => {
+  const ago = (days: number) => new Date(NOW.getTime() - days * 86_400_000).toISOString();
+  const signIn = async (who: string) => {
+    const res = await call(who, "POST", "/me/confirm-recent");
+    expect(res.status).toBe(200);
+    return (await res.json()) as { confirmed: string[]; published: boolean };
+  };
+
+  it("Scenario: Owner signs in", async () => {
+    sheet.setMarker("confirmed_at", ago(150));
+    expect((await signIn("jdoe")).confirmed).toEqual([ID]);
+    expect(sheet.marker("confirmed_at")).toBe(NOW_ISO);
+    expect(sheet.marker("updated_at")).toBe(NOW_ISO);
+    expect(sheet.lastChange()).toMatchObject({
+      user: "jdoe",
+      marker_id: ID,
+      action: "confirm-on-sign-in",
+      fields: ["confirmed_at"],
+    });
+    expect(bucket.writes).toBe(1);
+  });
+
+  it("Scenario: Editor signs in", async () => {
+    sheet.setMarker("confirmed_at", ago(335));
+    expect((await signIn("asmith")).confirmed).toEqual([ID]);
+    expect(sheet.marker("confirmed_at")).toBe(NOW_ISO);
+  });
+
+  it("Scenario: Old marker", async () => {
+    sheet.setMarker("confirmed_at", ago(425));
+    expect((await signIn("jdoe")).confirmed).toEqual([]);
+    expect(sheet.marker("confirmed_at")).toBe(ago(425));
+  });
+
+  it("leaves a never-confirmed marker for a deliberate confirmation", async () => {
+    sheet.setMarker("confirmed_at", "");
+    expect((await signIn("jdoe")).confirmed).toEqual([]);
+    expect(sheet.marker("confirmed_at")).toBe("");
+  });
+
+  it("Scenario: Confirmed today", async () => {
+    sheet.setMarker("confirmed_at", ago(0.5));
+    const changes = sheet.tabs.changes!.length;
+    expect((await signIn("jdoe")).confirmed).toEqual([]);
+    expect(sheet.tabs.changes!.length).toBe(changes);
+    expect(bucket.writes).toBe(0);
+  });
+
+  it("Scenario: Admin", async () => {
+    sheet.setMarker("confirmed_at", ago(90));
+    expect((await signIn("admin:boss")).confirmed).toEqual([]);
+    expect(sheet.marker("confirmed_at")).toBe(ago(90));
+  });
+
+  it("Scenario: Closed marker (and hidden or deleted ones)", async () => {
+    for (const status of ["closed", "hidden", "deleted"]) {
+      sheet.setMarker("status", status);
+      sheet.setMarker("confirmed_at", ago(90));
+      expect((await signIn("jdoe")).confirmed).toEqual([]);
+      expect(sheet.marker("confirmed_at")).toBe(ago(90));
+    }
+  });
+
+  it("confirms nothing for someone with no markers", async () => {
+    sheet.setMarker("confirmed_at", ago(90));
+    expect((await signIn("stranger")).confirmed).toEqual([]);
+  });
+
+  it("needs a signed-in person", async () => {
+    expect((await call(undefined, "POST", "/me/confirm-recent")).status).toBe(401);
+  });
+});
+
 describe("Activity restarts the freshness clock", () => {
   it("Scenario: Owner adds an editor", async () => {
     await call("jdoe", "POST", `/markers/${ID}/editors`, { username: "bob" });

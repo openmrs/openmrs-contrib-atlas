@@ -131,6 +131,23 @@ export function createApi(deps: ApiDeps) {
 
   api.get("/me", async (c) => c.json(await editor.me(c.get("person"))));
 
+  // Called once by the site when a signed-in session starts (specs/marker-editing).
+  api.post("/me/confirm-recent", async (c) => {
+    const { publish, confirmed } = await deps.queue.run(() =>
+      editor.confirmRecent(c.get("person")),
+    );
+    let published = false;
+    if (publish) {
+      try {
+        published = await deps.publish();
+      } catch (err) {
+        // The change is safely in the sheet; the next publish picks it up.
+        console.error(JSON.stringify({ event: "publish-failed", message: (err as Error).message }));
+      }
+    }
+    return c.json({ confirmed, published });
+  });
+
   api.put("/me/reminders", small, async (c) => {
     const body = (await jsonBody(c)) as { on?: unknown } | null;
     if (typeof body?.on !== "boolean")

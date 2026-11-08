@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { needsConfirming } from "@openmrs-atlas/shared/freshness";
 import { ApiError, api, markerPath, type MarkerResult } from "../lib/api.ts";
 
 interface Props {
@@ -6,12 +7,24 @@ interface Props {
   /** May close, reopen and delete: the owner or an admin. */
   canManage: boolean;
   closed: boolean;
+  /** When it was last confirmed: "Still current" is offered only once that is 12 months ago. */
+  confirmedAt: string | undefined;
   onEdit: () => void;
   onResult: (result: MarkerResult) => void;
 }
 
-/** Edit and "Still current", with rarer actions in a menu. The service checks again. */
-export function MarkerActions({ markerId, canManage, closed, onEdit, onResult }: Props) {
+/**
+ * Edit, and "Still current" once a marker is 12 months past its last confirmation (until then,
+ * signing in keeps it current), with rarer actions in a menu. The service checks again.
+ */
+export function MarkerActions({
+  markerId,
+  canManage,
+  closed,
+  confirmedAt,
+  onEdit,
+  onResult,
+}: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -71,7 +84,7 @@ export function MarkerActions({ markerId, canManage, closed, onEdit, onResult }:
         <button type="button" className="primary" onClick={onEdit}>
           Edit
         </button>
-        {!closed && (
+        {!closed && needsConfirming(confirmedAt, new Date()) && (
           <button
             type="button"
             className="secondary"

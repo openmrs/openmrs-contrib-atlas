@@ -10,6 +10,7 @@ import {
   checkMarkerRow,
   isPublished,
   isUsername,
+  needsConfirming,
   normaliseUsername,
   parseLookups,
   roleOn,
@@ -578,6 +579,60 @@ export class MarkerEditor {
     const result = await this.restartClock(tabs, marker);
     await this.log(person, id, "confirm", ["confirmed_at"]);
     return result;
+  }
+
+  /**
+   * A signed-in session started: confirm the person's active markers that were confirmed less
+   * than 12 months ago (and more than a day ago, so reloads write nothing). Older markers wait
+   * for a deliberate "Still current", so a sign-in for one site can't revive an ended one.
+   * Admin rights alone don't make a marker eligible.
+   */
+  async confirmRecent(person: Person): Promise<{ confirmed: string[]; publish: boolean }> {
+    const tabs = await this.tabs();
+    const now = this.now();
+    const dayAgo = now.getTime() - 86_400_000;
+    const due = tabs.markers.filter((marker) => {
+      const id = text(marker.cells.id);
+      if (!id || text(marker.cells.status) !== "active") return false;
+      if (!roleOn({ ...person, admin: false }, tabs.privateOf(id))) return false;
+      const confirmed = toIsoDate(marker.cells.confirmed_at);
+      if (!confirmed || needsConfirming(confirmed, now)) return false;
+      return new Date(confirmed).getTime() < dayAgo;
+    });
+    if (due.length === 0) return { confirmed: [], publish: false };
+
+    const stamp = this.stamp();
+    const header = tabs.header.markers;
+    await this.store.updateCells(
+      due.flatMap((marker) =>
+        (["updated_at", "confirmed_at"] as const).map((field) => ({
+          tab: "markers" as const,
+          row: marker.row,
+          column: header.indexOf(field),
+          value: stamp,
+        })),
+      ),
+    );
+    const idColumn = header.indexOf("id");
+    for (const marker of due) {
+      const id = text(marker.cells.id);
+      if (text(await this.store.readCell("markers", marker.row, idColumn)) !== id) {
+        // A person moved rows in the sheet between the read and the write. Version history recovers.
+        console.error(JSON.stringify({ event: "row-moved", marker: id, row: marker.row }));
+      }
+    }
+    const confirmed = due.map((marker) => text(marker.cells.id));
+    await this.store.appendRows(
+      "changes",
+      confirmed.map((id) => [
+        stamp,
+        person.username,
+        id,
+        "confirm-on-sign-in",
+        JSON.stringify(["confirmed_at"]),
+      ]),
+    );
+    return { confirmed, publish: true };
   }
 
   /** The implementation has ended. It stays on the map, and says nothing about freshness. */

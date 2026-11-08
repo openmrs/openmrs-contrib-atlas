@@ -16,6 +16,10 @@ interface State {
   /** The session has ended by the time a form loads. */
   expireMarkerReads?: boolean;
   me: Record<string, unknown>;
+  /** What POST /me/confirm-recent answers, and how often it and GET /me were called. */
+  recentConfirmed: string[];
+  confirmRecentCalls: number;
+  meReads: number;
 }
 
 const kampala = {
@@ -42,6 +46,9 @@ async function stubApi(page: Page, overrides: Partial<State> = {}): Promise<Stat
     role: "owner",
     editors: ["asmith"],
     requests: [],
+    recentConfirmed: [],
+    confirmRecentCalls: 0,
+    meReads: 0,
     me: {
       username: "jdoe",
       admin: false,
@@ -63,6 +70,14 @@ async function stubApi(page: Page, overrides: Partial<State> = {}): Promise<Stat
     const path = new URL(request.url()).pathname.replace(/^\/api/, "");
     const method = request.method();
     const body = request.postData() ? safeJson(request.postData()!) : undefined;
+    if (path === "/me/confirm-recent" && method === "POST") {
+      // Sent by every signed-in page load; kept out of `requests`, which the tests inspect.
+      state.confirmRecentCalls++;
+      return route.fulfill({
+        contentType: "application/json",
+        body: JSON.stringify({ confirmed: state.recentConfirmed, published: true }),
+      });
+    }
     if (method !== "GET") state.requests.push({ method, path, body });
     const json = (status: number, data: unknown) =>
       route.fulfill({ status, contentType: "application/json", body: JSON.stringify(data) });
@@ -75,7 +90,10 @@ async function stubApi(page: Page, overrides: Partial<State> = {}): Promise<Stat
         ...extra,
       });
 
-    if (path === "/me") return json(200, state.me);
+    if (path === "/me") {
+      state.meReads++;
+      return json(200, state.me);
+    }
     if (path === "/me/reminders" && method === "PUT") {
       return json(200, { reminders: (body as { on: boolean }).on });
     }
@@ -466,15 +484,54 @@ test.describe("Edit a marker", () => {
   });
 });
 
-test("Still current: Scenario: Confirming a faded marker", async ({ page }) => {
-  const state = await stubApi(page);
-  await signedIn(page);
-  await page.goto(openKampala);
-  await page.getByRole("button", { name: "Still current" }).click();
-  await expect(page.getByRole("status")).toContainText("Saved");
-  expect(state.requests[0]).toMatchObject({
-    method: "POST",
-    path: `/markers/${ids.kampala}/confirm`,
+test.describe("Still current", () => {
+  test("Scenario: Confirming a faded marker", async ({ page }) => {
+    const state = await stubApi(page);
+    await kampalaWith(page, { confirmed_at: "2022-01-01T00:00:00.000Z" });
+    await signedIn(page);
+    await page.goto(openKampala);
+    await page.getByRole("button", { name: "Still current" }).click();
+    await expect(page.getByRole("status")).toContainText("Saved");
+    expect(state.requests[0]).toMatchObject({
+      method: "POST",
+      path: `/markers/${ids.kampala}/confirm`,
+    });
+  });
+
+  test("Scenario: Recently confirmed marker", async ({ page }) => {
+    await stubApi(page);
+    await signedIn(page);
+    await page.goto(openKampala); // Kampala was confirmed ten months ago.
+    await expect(page.getByRole("button", { name: "Edit" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Still current" })).toHaveCount(0);
+  });
+});
+
+test.describe("Signing in keeps recent markers current", () => {
+  test("a signed-in page load asks once, and reloads My markers when something changed", async ({
+    page,
+  }) => {
+    const state = await stubApi(page, { recentConfirmed: [ids.kampala] });
+    await signedIn(page);
+    await page.goto("/?panel=mine");
+    await expect(page.getByRole("complementary", { name: "My markers" })).toBeVisible();
+    await expect.poll(() => state.meReads).toBe(2);
+    expect(state.confirmRecentCalls).toBe(1);
+  });
+
+  test("nothing confirmed: My markers isn't reloaded", async ({ page }) => {
+    const state = await stubApi(page);
+    await signedIn(page);
+    await page.goto("/?panel=mine");
+    await expect.poll(() => state.confirmRecentCalls).toBe(1);
+    expect(state.meReads).toBe(1);
+  });
+
+  test("visitors never ask", async ({ page }) => {
+    const state = await stubApi(page);
+    await page.goto("/");
+    await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+    expect(state.confirmRecentCalls).toBe(0);
   });
 });
 
@@ -531,20 +588,22 @@ test.describe("Delete a marker", () => {
   });
 });
 
-/** Serves the map's data with Kampala closed. */
-async function kampalaClosed(page: Page, siteCount?: number) {
+/** Serves the map's data with these fields changed on Kampala. */
+async function kampalaWith(page: Page, fields: Record<string, unknown>) {
   await page.route("**/e2e/atlas.json", async (route) => {
     const snapshot = JSON.parse(await readFile(resolve(STATIC_DIR, "atlas.json"), "utf8")) as {
       markers: Record<string, unknown>[];
     };
     for (const marker of snapshot.markers) {
-      if (marker.id === ids.kampala) {
-        marker.status = "closed";
-        if (siteCount) marker.site_count = siteCount;
-      }
+      if (marker.id === ids.kampala) Object.assign(marker, fields);
     }
     await route.fulfill({ contentType: "application/json", body: JSON.stringify(snapshot) });
   });
+}
+
+/** Serves the map's data with Kampala closed. */
+async function kampalaClosed(page: Page, siteCount?: number) {
+  await kampalaWith(page, { status: "closed", ...(siteCount ? { site_count: siteCount } : {}) });
 }
 
 test.describe("Close and reopen a site", () => {
@@ -574,8 +633,9 @@ test.describe("Close and reopen a site", () => {
     await expect(stat(page, "implementations")).toHaveText("7");
     await page.getByRole("button", { name: "More actions" }).click();
     await page.getByRole("menuitem", { name: "Reopen site" }).click();
-    await expect(page.getByRole("button", { name: "Still current" })).toBeVisible();
     await expect(stat(page, "implementations")).toHaveText("8");
+    // Reopening restarts the clock, so "Still current" isn't offered again.
+    await expect(page.getByRole("button", { name: "Still current" })).toHaveCount(0);
     expect(state.requests[0]?.path).toBe(`/markers/${ids.kampala}/reopen`);
   });
 
@@ -822,7 +882,7 @@ test.describe("My markers", () => {
     await expect(panel.getByText("Editor. Last confirmed June 2025.")).toBeVisible();
     await expect(panel.getByText("Owner, closed.")).toBeVisible();
     await expect(panel.getByText("Needs fixing: unknown type: Hospital")).toBeVisible();
-    await panel.getByRole("button", { name: "Kampala Rollout" }).click();
+    await panel.getByRole("button", { name: "Kampala Rollout", exact: true }).click();
     await expect(page.getByRole("heading", { name: "Kampala Rollout" })).toBeVisible();
   });
 
@@ -850,6 +910,78 @@ test.describe("My markers", () => {
     await box.check();
     await expect(box).toBeChecked();
     expect(state.requests).toEqual([{ method: "PUT", path: "/me/reminders", body: { on: true } }]);
+  });
+
+  test("Scenario: Back to the list", async ({ page }) => {
+    await stubApi(page);
+    await signedIn(page);
+    await page.goto("/?panel=mine");
+    const panel = page.getByRole("complementary", { name: "My markers" });
+    await panel.getByRole("button", { name: "Kampala Rollout", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Kampala Rollout" })).toBeFocused();
+    await page.getByRole("button", { name: "Back to My markers" }).click();
+    await expect(panel.getByRole("button", { name: "Kampala Rollout", exact: true })).toBeFocused();
+
+    // And with Backspace (Delete on a Mac).
+    await panel.getByRole("button", { name: "Kampala Rollout", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Kampala Rollout" })).toBeFocused();
+    await page.keyboard.press("Backspace");
+    await expect(panel.getByRole("button", { name: "Kampala Rollout", exact: true })).toBeFocused();
+  });
+
+  test("Scenario: Opened from the map", async ({ page }) => {
+    await stubApi(page);
+    await signedIn(page);
+    await page.goto(openKampala);
+    await expect(page.getByRole("heading", { name: "Kampala Rollout" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Back to My markers" })).toHaveCount(0);
+    await page.keyboard.press("Backspace");
+    await expect(page.getByRole("heading", { name: "Kampala Rollout" })).toBeVisible();
+  });
+
+  test("Scenario: Update an old marker", async ({ page }) => {
+    const state = await stubApi(page); // Kampala was last confirmed in 2020.
+    await signedIn(page);
+    await page.goto("/?panel=mine");
+    const panel = page.getByRole("complementary", { name: "My markers" });
+    const update = panel.getByRole("button", { name: "Mark Kampala Rollout still current" });
+    await expect(update).toBeVisible();
+    state.me = {
+      ...state.me,
+      markers: [{ ...(state.me.markers as object[])[0], confirmed_at: "2026-11-01T00:00:00.000Z" }],
+    };
+    await update.click();
+    await expect(page.getByRole("status")).toContainText("Saved");
+    expect(state.requests[0]).toMatchObject({
+      method: "POST",
+      path: `/markers/${ids.kampala}/confirm`,
+    });
+    await expect(panel.getByText("Last confirmed November 2026.")).toBeVisible();
+    await expect(panel.getByRole("button", { name: /still current/ })).toHaveCount(0);
+  });
+
+  test("Scenario: Recent marker", async ({ page }) => {
+    await stubApi(page, {
+      me: {
+        username: "jdoe",
+        admin: false,
+        markers: [
+          {
+            id: ids.kampala,
+            name: "Kampala Rollout",
+            role: "owner",
+            status: "active",
+            confirmed_at: "2026-09-01T00:00:00.000Z",
+          },
+        ],
+        offers: [],
+      },
+    });
+    await signedIn(page);
+    await page.goto("/?panel=mine");
+    const panel = page.getByRole("complementary", { name: "My markers" });
+    await expect(panel.getByText("Last confirmed September 2026.")).toBeVisible();
+    await expect(panel.getByRole("button", { name: /still current/ })).toHaveCount(0);
   });
 
   test("Hidden markers open straight in the form", async ({ page }) => {

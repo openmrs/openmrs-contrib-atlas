@@ -54,6 +54,9 @@ export function App({ signInError }: { signInError?: string }) {
   const [view, setView] = useState<MapView | undefined>(initial.view);
   const [openPanel, setPanel] = useState<Panel | undefined>(initial.panel);
   const [notice, setNotice] = useState<string | undefined>(signInError);
+  // The marker opened from My markers, which can go back there; and the entry to return to.
+  const [fromMine, setFromMine] = useState<string>();
+  const [mineFocus, setMineFocus] = useState<string>();
   // Saved changes, shown at once: the published files catch up within minutes.
   const [saved, setSaved] = useState<ReadonlyMap<string, PublicMarker | null>>(new Map());
   const onSessionEnded = useCallback(
@@ -202,12 +205,21 @@ export function App({ signInError }: { signInError?: string }) {
     const marker = allMarkers.find((m) => m.id === id);
     if (marker) {
       select(marker);
+      setFromMine(id);
+      setMineFocus(undefined);
     } else {
       // Hidden and invalid markers aren't on the map; they open straight in the form.
       setSelectedId(id);
       setPanel("edit");
     }
   };
+
+  const backToMine = useCallback(() => {
+    setMineFocus(fromMine);
+    setFromMine(undefined);
+    setSelectedId(undefined);
+    setPanel("mine");
+  }, [fromMine]);
 
   const changeFilters = (next: Filters) => {
     setFilters(next);
@@ -349,13 +361,18 @@ export function App({ signInError }: { signInError?: string }) {
           <SignInPanel onSignIn={() => startSignIn("mine")} onClose={() => setPanel(undefined)} />
         )}
         {selected && !panel && (
-          <MarkerDetails marker={selected} onClose={() => setSelectedId(undefined)}>
+          <MarkerDetails
+            marker={selected}
+            onClose={() => setSelectedId(undefined)}
+            onBack={fromMine === selected.id && me ? backToMine : undefined}
+          >
             {roleOnSelected && (
               <MarkerActions
                 key={selected.id}
                 markerId={selected.id}
                 canManage={roleOnSelected !== "editor"}
                 closed={selected.status === "closed"}
+                confirmedAt={selected.confirmed_at}
                 onEdit={() => setPanel("edit")}
                 onResult={(result) => {
                   applyResult(selected.id, result);
@@ -380,7 +397,11 @@ export function App({ signInError }: { signInError?: string }) {
               onChanged={() => void refresh()}
               onAdd={() => setPanel("add")}
               onSignOut={startSignOut}
-              onClose={() => setPanel(undefined)}
+              onClose={() => {
+                setMineFocus(undefined);
+                setPanel(undefined);
+              }}
+              focusId={mineFocus}
             />
           )}
           {formOpen && (me || keepsForm) && snapshot && (

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { needsConfirming } from "@openmrs-atlas/shared/freshness";
+import { useEffect, useRef, useState } from "react";
 import { config } from "../config.ts";
 import { ApiError, api, markerPath, type Me, type MarkerResult } from "../lib/api.ts";
 import { useEscape } from "./useEscape.ts";
@@ -11,6 +12,8 @@ interface Props {
   onAdd: () => void;
   onSignOut: () => void;
   onClose: () => void;
+  /** The marker the person came back from, whose entry gets focus. */
+  focusId?: string;
 }
 
 const monthYear = new Intl.DateTimeFormat("en", {
@@ -24,8 +27,29 @@ function lastConfirmedLabel(iso: string): string {
 }
 
 /** Everything a person owns or edits, and the offers waiting for their answer. */
-export function MyMarkers({ me, onOpen, onResult, onChanged, onAdd, onSignOut, onClose }: Props) {
+export function MyMarkers({
+  me,
+  onOpen,
+  onResult,
+  onChanged,
+  onAdd,
+  onSignOut,
+  onClose,
+  focusId,
+}: Props) {
   useEscape(onClose);
+  const list = useRef<HTMLUListElement>(null);
+  const [updating, setUpdating] = useState<string>();
+
+  // Back from a marker: return to its entry, where the person left the list.
+  useEffect(() => {
+    if (!focusId) return;
+    const entry = list.current?.querySelector<HTMLButtonElement>(
+      `button[data-marker-id="${CSS.escape(focusId)}"]`,
+    );
+    entry?.focus();
+    entry?.scrollIntoView?.({ block: "nearest" });
+  }, [focusId]);
   const [error, setError] = useState<string>();
   const [reminders, setReminders] = useState(me.reminders !== false);
   const [savingReminders, setSavingReminders] = useState(false);
@@ -42,6 +66,19 @@ export function MyMarkers({ me, onOpen, onResult, onChanged, onAdd, onSignOut, o
       setError(err instanceof ApiError ? err.message : "That didn't work. Please try again.");
     } finally {
       setSavingReminders(false);
+    }
+  }
+
+  /** "Update": confirms a marker 12 months past its last confirmation, without opening it. */
+  async function update(id: string) {
+    setError(undefined);
+    setUpdating(id);
+    try {
+      onResult(id, await api<MarkerResult>(`${markerPath(id)}/confirm`, "POST"));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "That didn't work. Please try again.");
+    } finally {
+      setUpdating(undefined);
     }
   }
 
@@ -114,16 +151,35 @@ export function MyMarkers({ me, onOpen, onResult, onChanged, onAdd, onSignOut, o
       {me.markers.length === 0 ? (
         <p>You don't own or edit any markers yet.</p>
       ) : (
-        <ul className="marker-list">
+        <ul className="marker-list" ref={list}>
           {me.markers.map((marker) => (
             <li key={marker.id}>
-              <button type="button" className="link" onClick={() => onOpen(marker.id)}>
+              <button
+                type="button"
+                className="link"
+                data-marker-id={marker.id}
+                onClick={() => onOpen(marker.id)}
+              >
                 {marker.name || "(no name)"}
               </button>
               <p className="hint">
                 {marker.role === "owner" ? "Owner" : "Editor"}
                 {marker.status !== "active" ? `, ${marker.status}` : ""}.{" "}
                 {lastConfirmedLabel(marker.confirmed_at)}
+                {marker.status === "active" && needsConfirming(marker.confirmed_at, new Date()) && (
+                  <>
+                    {" "}
+                    <button
+                      type="button"
+                      className="link"
+                      aria-label={`Mark ${marker.name || "this marker"} still current`}
+                      disabled={updating !== undefined}
+                      onClick={() => void update(marker.id)}
+                    >
+                      {updating === marker.id ? "Updating…" : "Update"}
+                    </button>
+                  </>
+                )}
               </p>
               {marker.problems && (
                 <p className="error">Needs fixing: {marker.problems.join("; ")}</p>

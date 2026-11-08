@@ -301,6 +301,14 @@ button:disabled {
   align-items: flex-start;
   gap: 8px;
 }
+.panel-header h2 {
+  flex: 1;
+}
+/* "<" back to My markers, flush with the panel's edge. */
+.icon-button.back {
+  margin-left: -8px;
+  padding-right: 4px;
+}
 .panel h2 {
   font-size: 18px;
   margin: 4px 0 8px;

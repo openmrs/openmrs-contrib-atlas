@@ -1,18 +1,11 @@
-import { COLUMNS, type Cell } from "@openmrs-atlas/shared";
+import { COLUMNS, addMonths, type Cell } from "@openmrs-atlas/shared";
 import { SEED_LOOKUPS } from "@openmrs-atlas/shared/seed";
 import { describe, expect, it } from "vitest";
 import { AccountsUnavailable, type Account, type Accounts } from "./accounts.ts";
 import type { EditValues } from "./edits.ts";
 import { linkSigner } from "./links.ts";
 import type { Email, Mailer, SendResult } from "./mailer.ts";
-import {
-  DAILY_LIMIT,
-  addMonths,
-  renderReminder,
-  runReminders,
-  selectDue,
-  stageFor,
-} from "./reminders.ts";
+import { DAILY_LIMIT, renderReminder, runReminders, selectDue, stageFor } from "./reminders.ts";
 
 const NOW = new Date("2026-11-03T14:00:00.000Z");
 const SITE = "https://atlas.example.org";

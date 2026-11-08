@@ -1,5 +1,6 @@
 import {
   COLUMNS,
+  addMonths,
   normaliseUsername,
   parseLookups,
   text,
@@ -50,26 +51,6 @@ export interface Selection {
   skipped: ReminderRow[];
   /** Emails already sent today, which count against the daily limit. */
   sentToday: number;
-}
-
-/** `iso` plus whole calendar months, in UTC. */
-export function addMonths(iso: string, months: number): Date {
-  const d = new Date(iso);
-  const out = new Date(
-    Date.UTC(
-      d.getUTCFullYear(),
-      d.getUTCMonth() + months,
-      1,
-      d.getUTCHours(),
-      d.getUTCMinutes(),
-      d.getUTCSeconds(),
-      d.getUTCMilliseconds(),
-    ),
-  );
-  // Keep the day of the month, or the month's last day if it is shorter (31 Jan + 1 = 28 Feb).
-  const lastDay = new Date(Date.UTC(out.getUTCFullYear(), out.getUTCMonth() + 1, 0)).getUTCDate();
-  out.setUTCDate(Math.min(d.getUTCDate(), lastDay));
-  return out;
 }
 
 /** The latest stage `confirmedAt` has passed, if any. */

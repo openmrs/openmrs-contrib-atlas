@@ -11,19 +11,45 @@ const monthYear = new Intl.DateTimeFormat("en", {
   timeZone: "UTC",
 });
 
+function isTyping(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return (
+    target.isContentEditable ||
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement
+  );
+}
+
 interface Props {
   marker: PublicMarker;
   onClose: () => void;
+  /** Set when the marker was opened from My markers: a "<" control and Backspace return there. */
+  onBack?: () => void;
   /** Controls for those allowed to change this marker. */
   children?: React.ReactNode;
 }
 
 /** Details for one marker. Blank fields are left out; notes are plain text with links. */
-export function MarkerDetails({ marker, onClose, children }: Props) {
+export function MarkerDetails({ marker, onClose, onBack, children }: Props) {
   const heading = useRef<HTMLHeadingElement>(null);
   useEffect(() => heading.current?.focus(), [marker.id]);
 
   useEscape(onClose);
+
+  // Backspace (Delete on a Mac) goes back, unless the person is typing or holding a modifier.
+  useEffect(() => {
+    if (!onBack) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Backspace" && e.key !== "Delete") return;
+      if (e.ctrlKey || e.altKey || e.metaKey || e.defaultPrevented) return;
+      if (isTyping(e.target)) return;
+      e.preventDefault();
+      onBack();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [onBack]);
 
   const confirmed = lastConfirmed(marker);
   const rows: [string, React.ReactNode][] = [];
@@ -39,6 +65,16 @@ export function MarkerDetails({ marker, onClose, children }: Props) {
   return (
     <aside className="panel details" aria-label={`Details for ${marker.name}`}>
       <div className="panel-header">
+        {onBack && (
+          <button
+            type="button"
+            className="icon-button back"
+            aria-label="Back to My markers"
+            onClick={onBack}
+          >
+            &lt;
+          </button>
+        )}
         <h2 ref={heading} tabIndex={-1}>
           {marker.name}
         </h2>
