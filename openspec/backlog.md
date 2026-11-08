@@ -4,20 +4,11 @@ Work not yet proposed as an OpenSpec change. When an item is picked up, it becom
 `openspec/changes/` and is removed from here. Requirement IDs (M8, C7, …) are from the
 [Atlas 3.0 design spec](https://claude.ai/artifact/GKHHVKkbSRPtCpya5DZVfZ).
 
-## Proposed after the 3.0 release (2026-11-07)
+## Before the announcement
 
-- **Back from a marker to My markers.** After opening a marker from My markers there is no easy
-  way back to the list. Add a `<` before the marker's name in its details, and make Backspace
-  (Delete on a Mac) do the same, returning to My markers where the person left it.
-- **Signing in confirms your markers.** Treat an owner or editor signing in as confirming their
-  active markers, so keeping the Atlas current needs no extra step. To decide: whether every
-  sign-in counts or only the first in some period; whether it covers markers a person edits but
-  doesn't own; how someone who signs in for one marker avoids confirming others they no longer
-  run (for example, a "not current?" prompt in My markers for markers past 12 months); and
-  whether reminders and the emailed "still current" link stay as they are for people who never
-  sign in.
-- **No "Still current" for recently confirmed markers.** Don't offer it on a marker confirmed
-  recently. If signing in confirms markers, the button may not be needed at all.
+Agreed 2026-11-07, in this order: `simplify-confirming` (proposed: back to My markers, signing in
+confirms recent markers, "Still current" and "Update" only past 12 months), then the list view,
+then share cards and the website badge, then orphan claims.
 
 ## Phase 3 · Grow (from the design spec)
 
