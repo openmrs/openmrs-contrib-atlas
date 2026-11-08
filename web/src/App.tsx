@@ -347,7 +347,8 @@ export function App({ signInError }: { signInError?: string }) {
               disabled={formOpen || session.status === "loading"}
               onClick={() => setPanel((p) => (p === "sign-in" ? undefined : "sign-in"))}
             >
-              Sign in
+              <PersonIcon />
+              <span className="sign-in-label">Sign in</span>
             </button>
           ))}
       </header>

@@ -79,6 +79,10 @@ button.tool {
 .topbar .tool:first-of-type {
   margin-left: auto;
 }
+/* "Sign in" is a word on wide screens and an icon on phones. */
+.sign-in svg {
+  display: none;
+}
 .account-name {
   max-width: 180px;
   overflow: hidden;
@@ -633,7 +637,7 @@ button.link {
 /* Phones: panels become bottom sheets, stats shrink. */
 @media (max-width: 600px) {
   .topbar {
-    gap: 8px;
+    gap: 6px;
     padding: 8px 12px;
   }
   .topbar h1 {
@@ -660,16 +664,18 @@ button.link {
   }
   .topbar button.secondary {
     min-height: 34px;
-    padding: 4px 8px;
+    padding: 4px 6px;
     font-size: 14px;
   }
   .topbar .tool:first-of-type {
     margin-left: 0;
   }
-  .topbar .sign-in {
-    white-space: nowrap;
+  /* Room for the search box: icon-only buttons, a little closer together. */
+  .topbar .sign-in svg {
+    display: block;
   }
   /* Only the icon shows, but it keeps its name for screen readers. */
+  .sign-in-label,
   .account-name {
     position: absolute;
     width: 1px;
