@@ -6,8 +6,7 @@ Work not yet proposed as an OpenSpec change. When an item is picked up, it becom
 
 ## Before the announcement
 
-Agreed 2026-11-07, in this order: `simplify-confirming` (proposed: back to My markers, signing in
-confirms recent markers, "Still current" and "Update" only past 12 months), then the list view,
+Agreed 2026-11-07, in this order: `simplify-confirming` (done 2026-11-08), then the list view,
 then share cards and the website badge, then orphan claims.
 
 ## Phase 3 · Grow (from the design spec)

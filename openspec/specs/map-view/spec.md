@@ -188,6 +188,21 @@ Search, filters, the colour-by choice, the download controls and marker details 
 - **WHEN** a visitor presses `/` while typing in a field
 - **THEN** the `/` is typed as usual
 
+### Requirement: Backspace returns to My markers
+When a marker was opened from My markers, pressing Backspace or Delete SHALL return to My markers unless the person is typing in a field or holding Ctrl, Alt or Meta.
+
+#### Scenario: Backspace back to My markers
+- **WHEN** a person opened a marker from My markers and presses Backspace (Delete on a Mac) while not typing in a field
+- **THEN** My markers is shown again where they left it
+
+#### Scenario: Backspace while typing
+- **WHEN** a person presses Backspace while typing in a field
+- **THEN** a character is deleted as usual and the panel stays open
+
+#### Scenario: Backspace on a marker opened from the map
+- **WHEN** a marker was opened from the map and the person presses Backspace
+- **THEN** nothing happens
+
 ### Requirement: Usage analytics
 When a Google Analytics measurement ID is configured, the site SHALL record page views and the events search, filter change, marker opened and download. When none is configured, no analytics requests SHALL be made.
 

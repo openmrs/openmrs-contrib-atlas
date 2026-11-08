@@ -29,4 +29,4 @@
 
 - [x] 5.1 Update the help text in My markers, if any mentions "Still current", and `service/README.md`'s endpoint list
 - [x] 5.2 All checks pass (`format:check`, `typecheck`, `lint`, unit tests, e2e) and `openspec validate --strict`
-- [ ] 5.3 (manual) On staging, sign in as `atlas-user` and confirm a recently confirmed marker's date moves to today, an old one shows "Update", and "<" and Backspace return to My markers
+- [x] 5.3 (manual) On staging, sign in as `atlas-user` and confirm a recently confirmed marker's date moves to today, an old one shows "Update", and "<" and Backspace return to My markers

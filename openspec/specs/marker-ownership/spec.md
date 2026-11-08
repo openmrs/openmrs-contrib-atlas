@@ -122,3 +122,25 @@ A signed-in person SHALL be able to list every marker they own or edit, with the
 #### Scenario: Reminder setting
 - **WHEN** a person who unsubscribed opens My markers and turns reminders on
 - **THEN** they are removed from `unsubscribed` and get reminders when their markers are next due
+
+### Requirement: Update from My markers
+Each `active` marker confirmed 12 or more months ago, or never, SHALL show an "Update" link that confirms it in one click, exactly as "Still current" does, and then shows its new last-confirmed date. Markers confirmed less than 12 months ago, and closed or hidden markers, SHALL NOT show the link.
+
+#### Scenario: Update an old marker
+- **WHEN** an owner presses "Update" beside a marker last confirmed 20 months ago
+- **THEN** its `confirmed_at` becomes the current time, the entry shows it was confirmed this month, and the link disappears
+
+#### Scenario: Recent marker
+- **WHEN** an owner's marker was confirmed 2 months ago
+- **THEN** its entry in My markers shows no "Update" link
+
+### Requirement: Back to My markers
+A marker opened from My markers SHALL show a back control before its name that returns to My markers, scrolled to where the person left it and with focus on that marker's entry.
+
+#### Scenario: Back to the list
+- **WHEN** a person opens a marker from My markers and chooses the back control
+- **THEN** My markers is shown again where they left it, with focus on that marker's entry
+
+#### Scenario: Opened from the map
+- **WHEN** a person opens a marker by choosing it on the map
+- **THEN** its details show no back control
