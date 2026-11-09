@@ -1,7 +1,14 @@
 import { needsConfirming } from "@openmrs-atlas/shared/freshness";
 import { useEffect, useRef, useState } from "react";
 import { config } from "../config.ts";
-import { ApiError, api, markerPath, type Me, type MarkerResult } from "../lib/api.ts";
+import {
+  ApiError,
+  api,
+  markerPath,
+  withdrawClaim,
+  type Me,
+  type MarkerResult,
+} from "../lib/api.ts";
 import { useEscape } from "./useEscape.ts";
 
 interface Props {
@@ -83,6 +90,19 @@ export function MyMarkers({
     }
   }
 
+  async function withdraw(markerId: string, claimId: string) {
+    setError(undefined);
+    try {
+      await withdrawClaim(markerId, claimId);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "That didn't work. Please try again.");
+    }
+    onChanged();
+  }
+
+  const review = me.review ?? [];
+  const claims = me.claims ?? [];
+
   async function answer(id: string, verb: "accept" | "decline") {
     setError(undefined);
     try {
@@ -118,6 +138,21 @@ export function MyMarkers({
         <p className="error" role="alert">
           {error}
         </p>
+      )}
+      {review.length > 0 && (
+        <section aria-labelledby="review-heading">
+          <h3 id="review-heading">Claims to review</h3>
+          <ul className="marker-list">
+            {review.map((claim) => (
+              <li key={claim.id}>
+                <button type="button" className="link" onClick={() => onOpen(claim.marker_id)}>
+                  {claim.name || "(no name)"}
+                </button>
+                <p className="hint">Claimed by {claim.username}.</p>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
       {me.offers.length > 0 && (
         <section aria-label="Offers waiting for you">
@@ -188,6 +223,31 @@ export function MyMarkers({
             </li>
           ))}
         </ul>
+      )}
+      {claims.length > 0 && (
+        <section aria-labelledby="claims-heading">
+          <h3 id="claims-heading">Your claims</h3>
+          <ul className="marker-list">
+            {claims.map((claim) => (
+              <li key={claim.id}>
+                <button type="button" className="link" onClick={() => onOpen(claim.marker_id)}>
+                  {claim.name || "(no name)"}
+                </button>
+                <p className="hint">
+                  Waiting for an admin.{" "}
+                  <button
+                    type="button"
+                    className="link"
+                    aria-label={`Withdraw your claim for ${claim.name || "this site"}`}
+                    onClick={() => void withdraw(claim.marker_id, claim.id)}
+                  >
+                    Withdraw
+                  </button>
+                </p>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
       <section className="reminder-setting" aria-label="Reminders">
         <h3>Reminders</h3>

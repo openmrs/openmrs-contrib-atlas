@@ -41,6 +41,7 @@ export class FakeSheet implements SheetStore, EditStore {
       ],
       private: [[...COLUMNS.private], [ID, "jdoe", "asmith", "J Doe", SECRET_EMAIL]],
       pending: [[...COLUMNS.pending]],
+      claims: [[...COLUMNS.claims]],
       changes: [[...COLUMNS.changes]],
       reminders: [[...COLUMNS.reminders]],
       unsubscribed: [[...COLUMNS.unsubscribed]],
@@ -60,6 +61,7 @@ export class FakeSheet implements SheetStore, EditStore {
       ...(await this.read()),
       private: this.tabs.private!,
       pending: this.tabs.pending!,
+      claims: this.tabs.claims!,
       reminders: this.tabs.reminders!,
       unsubscribed: this.tabs.unsubscribed!,
     };

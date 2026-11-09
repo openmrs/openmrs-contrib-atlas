@@ -8,6 +8,7 @@ export const TABS = {
   private: "private",
   changes: "changes",
   pending: "pending",
+  claims: "claims",
   reminders: "reminders",
   unsubscribed: "unsubscribed",
   types: "types",
@@ -38,6 +39,17 @@ export const COLUMNS = {
   private: ["id", "owner", "editors", "contact_name", "contact_email"],
   changes: ["timestamp", "user", "marker_id", "action", "fields"],
   pending: ["marker_id", "from", "to", "created_at", "expires_at"],
+  claims: [
+    "id",
+    "marker_id",
+    "username",
+    "message",
+    "created_at",
+    "status",
+    "decided_by",
+    "decided_at",
+    "reason",
+  ],
   reminders: ["marker_id", "stage", "confirmed_at", "username", "sent_at", "result"],
   unsubscribed: ["username", "unsubscribed_at"],
   types: ["name", "colour", "sort"],
@@ -65,7 +77,13 @@ export const TEXT_COLUMNS = new Set<string>([
   "username",
   "sent_at",
   "unsubscribed_at",
+  "decided_by",
+  "decided_at",
 ]);
+
+/** A claim's life (specs/marker-claims). */
+export const CLAIM_STATUSES = ["pending", "approved", "declined", "withdrawn"] as const;
+export type ClaimStatus = (typeof CLAIM_STATUSES)[number];
 
 /** The version value allowed in addition to the versions tab. */
 export const OTHER_VERSION = "Other";

@@ -11,7 +11,13 @@ export function sheetsClient(): sheets_v4.Sheets {
 }
 
 const READ_TABS = [TABS.markers, TABS.types, TABS.distributions, TABS.versions] as const;
-const EDIT_TABS = [TABS.private, TABS.pending, TABS.reminders, TABS.unsubscribed] as const;
+const EDIT_TABS = [
+  TABS.private,
+  TABS.pending,
+  TABS.claims,
+  TABS.reminders,
+  TABS.unsubscribed,
+] as const;
 
 /** A1 column letters from a 0-based index. */
 function columnLetter(index: number): string {
@@ -50,8 +56,17 @@ export function googleSheetStore(
     },
 
     async readEdits(): Promise<EditValues> {
-      const [markers, types, distributions, versions, priv, pending, reminders, unsubscribed] =
-        await batchRead([...READ_TABS, ...EDIT_TABS]);
+      const [
+        markers,
+        types,
+        distributions,
+        versions,
+        priv,
+        pending,
+        claims,
+        reminders,
+        unsubscribed,
+      ] = await batchRead([...READ_TABS, ...EDIT_TABS]);
       return {
         markers: markers!,
         types: types!,
@@ -59,6 +74,7 @@ export function googleSheetStore(
         versions: versions!,
         private: priv!,
         pending: pending!,
+        claims: claims!,
         reminders: reminders!,
         unsubscribed: unsubscribed!,
       };

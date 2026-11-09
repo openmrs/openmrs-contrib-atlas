@@ -7,14 +7,12 @@ Work not yet proposed as an OpenSpec change. When an item is picked up, it becom
 ## Before the announcement
 
 Agreed 2026-11-07, in this order: `simplify-confirming` (done 2026-11-08), then the list view (done 2026-11-08),
-then share cards and the website badge (done 2026-11-08), then orphan claims.
+then share cards and the website badge (done 2026-11-08), then orphan claims (`add-orphan-claims`).
 
 ## Phase 3 · Grow (from the design spec)
 
 - **Contact relay form (C7, Should).** Opt-in per marker: visitors write through a form relayed to
   the site contact, whose address is never shown. Off by default, including for migrated markers.
-- **Claim an orphaned marker (C9, Should).** A request to admins for approval. 85 markers have no
-  owner or editors, and 69 of the 175 people named on active markers have no OpenMRS ID.
 - **Nightly world images (X2, Should).** 1080p and 4K, light and dark, at stable URLs for slides.
 - **Posts to OpenMRS Talk (X4, Could).** New sites posted automatically.
 

@@ -22,6 +22,8 @@ A world map of OpenMRS implementations, at [atlas.openmrs.org](https://atlas.ope
   card drawn when publishing. The Share dialog offers the link, the social networks, the card and
   an "On the OpenMRS Atlas" badge (`/badges/on-the-atlas-light.svg` and `-dark.svg`) for
   implementations' own websites.
+- **Claims.** A signed-in person can claim a marker that has no owner. An admin approves or
+  declines each claim in the Atlas, and the claimant is told by email.
 
 The requirements and design live in [`openspec/`](openspec/). Each piece of work is an OpenSpec
 change: proposed, applied, then archived into `openspec/specs/`. Background and rationale are in the

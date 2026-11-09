@@ -27,7 +27,7 @@ export function initAnalytics(gaId = config.gaId): void {
 }
 
 export type AtlasEvent =
-  "search" | "filter_change" | "marker_open" | "list_open" | "download" | "share";
+  "search" | "filter_change" | "marker_open" | "list_open" | "download" | "share" | "claim";
 
 export function track(event: AtlasEvent, params: Record<string, string | number> = {}): void {
   window.gtag?.("event", event, params);

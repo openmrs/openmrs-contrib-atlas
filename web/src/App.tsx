@@ -7,6 +7,7 @@ import { FilterPanel } from "./components/FilterPanel.tsx";
 import { DownloadIcon, FilterIcon, ListIcon, PersonIcon } from "./components/Icons.tsx";
 import { Legend } from "./components/Legend.tsx";
 import { MarkerActions } from "./components/MarkerActions.tsx";
+import { ClaimPanel } from "./components/ClaimPanel.tsx";
 import { MarkerDetails } from "./components/MarkerDetails.tsx";
 import { SearchBox } from "./components/SearchBox.tsx";
 import { ShareDialog } from "./components/ShareDialog.tsx";
@@ -479,6 +480,25 @@ export function App({ signInError }: { signInError?: string }) {
                   if (!result.marker) setSelectedId(undefined);
                 }}
               />
+            )}
+            {me && (
+              <ClaimPanel
+                key={`claim-${selected.id}`}
+                markerId={selected.id}
+                claimable={me.claimable?.includes(selected.id) ?? false}
+                mine={me.claims?.find((c) => c.marker_id === selected.id)}
+                review={me.review?.filter((c) => c.marker_id === selected.id) ?? []}
+                onChanged={() => void refresh()}
+                onApproved={(result) => applyResult(selected.id, result)}
+              />
+            )}
+            {session.status === "anonymous" && signInEnabled && (
+              <p className="hint claim-hint">
+                Is this your site?{" "}
+                <button type="button" className="link" onClick={() => startSignIn()}>
+                  Sign in to update or claim it.
+                </button>
+              </p>
             )}
           </MarkerDetails>
         )}

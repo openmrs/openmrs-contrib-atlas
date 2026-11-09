@@ -34,6 +34,20 @@ export interface Offer {
   expires_at: string;
 }
 
+/** One of the person's own claims, waiting for an admin (specs/marker-claims). */
+export interface MyClaim {
+  id: string;
+  marker_id: string;
+  name: string;
+  created_at: string;
+}
+
+/** A pending claim as admins see it, with the claimant's message. */
+export interface ClaimToReview extends MyClaim {
+  username: string;
+  message: string;
+}
+
 export interface Me {
   username: string;
   admin: boolean;
@@ -43,7 +57,27 @@ export interface Me {
   reminders?: boolean;
   markers: MyMarker[];
   offers: Offer[];
+  /** Markers with no owner that this person may claim. */
+  claimable?: string[];
+  claims?: MyClaim[];
+  /** Admins only: every pending claim. */
+  review?: ClaimToReview[];
 }
+
+const claimPath = (markerId: string, claimId?: string) =>
+  `${markerPath(markerId)}/claims${claimId ? `/${encodeURIComponent(claimId)}` : ""}`;
+
+export const claimMarker = (markerId: string, message: string) =>
+  api<{ claim: { id: string } }>(claimPath(markerId), "POST", { message });
+
+export const withdrawClaim = (markerId: string, claimId: string) =>
+  api<{ ok: true }>(claimPath(markerId, claimId), "DELETE");
+
+export const approveClaim = (markerId: string, claimId: string) =>
+  api<MarkerResult>(`${claimPath(markerId, claimId)}/approve`, "POST");
+
+export const declineClaim = (markerId: string, claimId: string, reason: string) =>
+  api<{ ok: true }>(`${claimPath(markerId, claimId)}/decline`, "POST", { reason });
 
 export interface AccountSummary {
   username: string;

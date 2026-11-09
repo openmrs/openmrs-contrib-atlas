@@ -651,6 +651,53 @@ a.button {
   gap: 6px;
   margin: 8px 0;
 }
+/* Claims (specs/marker-claims) */
+.details .claim {
+  margin: 12px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.details .claim label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.details .claim textarea {
+  width: 100%;
+  font: inherit;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  resize: vertical;
+}
+.claim-review h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+.claim-review ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.claim-review li + li {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.claim-review li p {
+  margin: 0 0 4px;
+}
+.claim-message {
+  margin: 0 0 8px;
+  padding: 6px 10px;
+  border-left: 3px solid var(--line);
+  background: var(--surface-alt);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.details .claim-hint {
+  margin-top: 12px;
+}
 .share-backdrop {
   position: fixed;
   inset: 0;

@@ -51,6 +51,7 @@ function sheetOf(
     markers: [[...COLUMNS.markers], ...markers],
     private: [[...COLUMNS.private], ...priv],
     pending: [[...COLUMNS.pending]],
+    claims: [[...COLUMNS.claims]],
     reminders: [[...COLUMNS.reminders]],
     unsubscribed: [[...COLUMNS.unsubscribed]],
     types: [[...COLUMNS.types], ...SEED_LOOKUPS.types],

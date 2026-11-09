@@ -118,6 +118,17 @@ describe("The feed holds public data only", () => {
         ["2026-11-03T10:00:00.000Z", "a", A, "edit", [{ field: "editors", from: "", to: "b" }]],
         ["2026-11-03T11:00:00.000Z", "a", A, "edit", ["contact_email"]],
         ["2026-11-03T12:00:00.000Z", "a", A, "transfer", [{ field: "owner", from: "a", to: "b" }]],
+        // Claims and their decisions are private (specs/marker-claims).
+        ["2026-11-03T12:01:00.000Z", "b", A, "claim", [{ claim: "c1" }]],
+        ["2026-11-03T12:02:00.000Z", "b", A, "claim-withdraw", [{ claim: "c1" }]],
+        ["2026-11-03T12:03:00.000Z", "r", A, "claim-decline", [{ claim: "c2" }]],
+        [
+          "2026-11-03T12:04:00.000Z",
+          "r",
+          A,
+          "claim-approve",
+          [{ claim: "c3" }, { field: "owner", from: "", to: "b" }],
+        ],
       ),
       SITE,
     );

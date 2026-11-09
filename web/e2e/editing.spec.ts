@@ -237,7 +237,7 @@ test.describe("Sign in with OpenMRS Keycloak", () => {
     await expect(page.getByRole("button", { name: "Edit" })).toBeVisible();
     await page.getByRole("button", { name: "jdoe" }).click();
     await page.getByRole("button", { name: "Sign out" }).click();
-    await expect(page.getByRole("button", { name: "Sign in" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
     await expect(page).toHaveURL(new RegExp(`marker=${ids.kampala}`));
     await expect(page.getByRole("button", { name: "Edit" })).toHaveCount(0);
   });

@@ -7,12 +7,14 @@ import {
   MarkerEditor,
   parseChangeBody,
   type EditStore,
+  type ClaimDecision,
   type MarkerResult,
 } from "./edits.ts";
 import { AccountsUnavailable, type Accounts } from "./accounts.ts";
 import { accountsUnavailable } from "./edits.ts";
 import type { PersonVerifier } from "./keycloak.ts";
 import { MAX_LOGO_BYTES, logoName, processLogo, type LogoStore } from "./logos.ts";
+import { sendClaimDecisions, sendClaimNotice } from "./claims-mail.ts";
 import { sendNotice, type NoticeConfig } from "./notices.ts";
 import type { WriteQueue } from "./queue.ts";
 
@@ -121,6 +123,12 @@ export function createApi(deps: ApiDeps) {
     }
   }
 
+  /** Claimants hear the decision by email, after the write and without holding up the response. */
+  function tellClaimants(decisions: ClaimDecision[] | undefined) {
+    if (!deps.notices || !decisions?.length) return;
+    void sendClaimDecisions(deps.notices, deps.accounts, decisions);
+  }
+
   async function usernameFrom(c: { req: { json: () => Promise<unknown> } }): Promise<string> {
     const body = (await jsonBody(c)) as { username?: unknown } | null;
     if (typeof body?.username !== "string") {
@@ -196,7 +204,11 @@ export function createApi(deps: ApiDeps) {
 
   api.patch("/markers/:id", small, async (c) => {
     const body = parseChangeBody(await jsonBody(c));
-    return c.json(await write(() => editor.change(c.get("person"), c.req.param("id"), body)));
+    const { decisions, ...result } = await write(() =>
+      editor.change(c.get("person"), c.req.param("id"), body),
+    );
+    tellClaimants(decisions);
+    return c.json(result);
   });
 
   api.post("/markers/:id/confirm", async (c) =>
@@ -246,6 +258,48 @@ export function createApi(deps: ApiDeps) {
 
   api.post("/markers/:id/transfer/decline", async (c) => {
     await deps.queue.run(() => editor.decline(c.get("person"), c.req.param("id")));
+    return c.json({ ok: true });
+  });
+
+  // Claims on markers with no owner (specs/marker-claims).
+  api.post("/markers/:id/claims", small, async (c) => {
+    const body = (await jsonBody(c)) as { message?: unknown } | null;
+    const person = c.get("person");
+    const { claim, name } = await deps.queue.run(() =>
+      editor.claim(person, c.req.param("id"), body?.message),
+    );
+    if (deps.notices) {
+      void sendClaimNotice(deps.notices, {
+        marker_id: claim.marker_id,
+        name,
+        username: claim.username,
+        message: claim.message,
+      });
+    }
+    return c.json({ claim: { id: claim.id, marker_id: claim.marker_id } }, 201);
+  });
+
+  api.delete("/markers/:id/claims/:claimId", async (c) => {
+    await deps.queue.run(() =>
+      editor.withdrawClaim(c.get("person"), c.req.param("id"), c.req.param("claimId")),
+    );
+    return c.json({ ok: true });
+  });
+
+  api.post("/markers/:id/claims/:claimId/approve", async (c) => {
+    const { decisions, ...result } = await write(() =>
+      editor.approveClaim(c.get("person"), c.req.param("id"), c.req.param("claimId")),
+    );
+    tellClaimants(decisions);
+    return c.json(result);
+  });
+
+  api.post("/markers/:id/claims/:claimId/decline", small, async (c) => {
+    const body = (await jsonBody(c)) as { reason?: unknown } | null;
+    const decision = await deps.queue.run(() =>
+      editor.declineClaim(c.get("person"), c.req.param("id"), c.req.param("claimId"), body?.reason),
+    );
+    tellClaimants([decision]);
     return c.json({ ok: true });
   });
 

@@ -5,7 +5,7 @@
  * the rest are withheld and logged by kind and marker. With no API key, email is off.
  */
 
-export type EmailKind = "reminder" | "notice";
+export type EmailKind = "reminder" | "notice" | "claim-notice" | "claim-decision";
 
 export interface Email {
   to: string;

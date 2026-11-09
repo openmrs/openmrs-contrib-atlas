@@ -32,6 +32,12 @@ import { AccountsUnavailable, type Accounts } from "./accounts.ts";
 
 /** How long a transfer offer stays open. See specs/marker-ownership. */
 const OFFER_DAYS = 30;
+/** Claim limits. See specs/marker-claims. */
+export const MAX_CLAIM_MESSAGE = 1000;
+export const MAX_CLAIM_REASON = 500;
+export const MAX_PENDING_CLAIMS = 10;
+export const ANOTHER_APPROVED = "Another claim for this site was approved.";
+export const NOW_OWNED = "This site now has an owner.";
 const MS_PER_DAY = 86_400_000;
 
 type Tab = keyof typeof TABS;
@@ -40,6 +46,7 @@ export interface EditValues {
   markers: Cell[][];
   private: Cell[][];
   pending: Cell[][];
+  claims: Cell[][];
   reminders: Cell[][];
   unsubscribed: Cell[][];
   types: Cell[][];
@@ -91,6 +98,25 @@ interface PrivateRow extends RawRow {
   editors: string[];
 }
 
+export interface Claim {
+  row: number;
+  id: string;
+  marker_id: string;
+  username: string;
+  message: string;
+  created_at: string;
+  status: string;
+}
+
+/** A decision the claimant must be told about, by email after the write. */
+export interface ClaimDecision {
+  marker_id: string;
+  name: string;
+  username: string;
+  approved: boolean;
+  reason: string;
+}
+
 interface Offer {
   row: number;
   marker_id: string;
@@ -105,6 +131,7 @@ class Tabs {
   readonly markers: RawRow[];
   readonly privates: PrivateRow[];
   readonly offers: Offer[];
+  readonly claims: Claim[];
   readonly unsubscribed: { row: number; username: string }[];
   readonly lookups: Lookups;
   readonly values: EditValues;
@@ -116,6 +143,7 @@ class Tabs {
       markers: (values.markers[0] ?? []).map(text),
       private: (values.private[0] ?? []).map(text),
       pending: (values.pending[0] ?? []).map(text),
+      claims: (values.claims[0] ?? []).map(text),
     } as unknown as Record<Tab, string[]>;
     this.markers = toRawRows(values.markers, COLUMNS.markers);
     this.privates = toRawRows(values.private, COLUMNS.private).map((raw) => ({
@@ -130,6 +158,15 @@ class Tabs {
       to: text(cells.to),
       expires_at: text(cells.expires_at),
     }));
+    this.claims = toRawRows(values.claims, COLUMNS.claims).map(({ row, cells }) => ({
+      row,
+      id: text(cells.id),
+      marker_id: text(cells.marker_id),
+      username: normaliseUsername(text(cells.username)),
+      message: text(cells.message),
+      created_at: text(cells.created_at),
+      status: text(cells.status),
+    }));
     this.unsubscribed = toRawRows(values.unsubscribed, COLUMNS.unsubscribed).map(
       ({ row, cells }) => ({ row, username: normaliseUsername(text(cells.username)) }),
     );
@@ -141,6 +178,15 @@ class Tabs {
   }
   privateOf(id: string) {
     return this.privates.find((p) => text(p.cells.id) === id);
+  }
+  /** Pending claims, leaving out those on deleted markers. */
+  pendingClaims(markerId?: string) {
+    return this.claims.filter(
+      (c) =>
+        c.status === "pending" &&
+        (markerId === undefined || c.marker_id === markerId) &&
+        text(this.marker(c.marker_id)?.cells.status) !== "deleted",
+    );
   }
 }
 
@@ -414,6 +460,29 @@ export class MarkerEditor {
       reminders: !tabs.unsubscribed.some((u) => u.username === person.username),
       markers,
       offers,
+      claimable: this.claimable(tabs, person),
+      claims: tabs
+        .pendingClaims()
+        .filter((c) => c.username === person.username)
+        .map((c) => ({
+          id: c.id,
+          marker_id: c.marker_id,
+          name: text(tabs.marker(c.marker_id)?.cells.name),
+          created_at: c.created_at,
+        })),
+      // Every pending claim, with its message, for admins only (specs/marker-claims).
+      ...(person.admin
+        ? {
+            review: tabs.pendingClaims().map((c) => ({
+              id: c.id,
+              marker_id: c.marker_id,
+              name: text(tabs.marker(c.marker_id)?.cells.name),
+              username: c.username,
+              message: c.message,
+              created_at: c.created_at,
+            })),
+          }
+        : {}),
     };
   }
 
@@ -487,7 +556,11 @@ export class MarkerEditor {
     return { id, ...this.result(tabs, cells, true) };
   }
 
-  async change(person: Person, id: string, body: ChangeBody): Promise<MarkerResult> {
+  async change(
+    person: Person,
+    id: string,
+    body: ChangeBody,
+  ): Promise<MarkerResult & { decisions?: ClaimDecision[] }> {
     const tabs = await this.tabs();
     const { marker, priv, role } = this.find(tabs, person, id, "edit");
     if (body.contact && !can(role, "contact")) throw forbidden();
@@ -567,7 +640,15 @@ export class MarkerEditor {
     await this.writeMarker(tabs, marker, rowChanges);
     if (Object.keys(privateChanges).length > 0) await this.writePrivate(tabs, id, privateChanges);
     await this.log(person, id, "edit", log);
-    return this.result(tabs, merged, true);
+    // An owner set by an admin answers any pending claims (specs/marker-claims).
+    const decisions =
+      ownerChanged && privateChanges.owner
+        ? await this.declineAll(tabs, person, id, tabs.pendingClaims(id), NOW_OWNED)
+        : [];
+    return {
+      ...this.result(tabs, merged, true),
+      ...(decisions.length > 0 ? { decisions } : {}),
+    };
   }
 
   async confirm(person: Person, id: string): Promise<MarkerResult> {
@@ -835,6 +916,190 @@ export class MarkerEditor {
       status: text(marker.cells.status),
       confirmed_at: toIsoDate(marker.cells.confirmed_at) ?? "",
     };
+  }
+
+  /** Markers this person may claim now: public, no owner, and no claim of theirs waiting. */
+  private claimable(tabs: Tabs, person: Person): string[] {
+    const mine = new Set(
+      tabs
+        .pendingClaims()
+        .filter((c) => c.username === person.username)
+        .map((c) => c.marker_id),
+    );
+    return tabs.markers
+      .filter((m) => {
+        const id = text(m.cells.id);
+        const status = text(m.cells.status);
+        return (
+          id !== "" &&
+          (status === "active" || status === "closed") &&
+          !tabs.privateOf(id)?.owner &&
+          !mine.has(id)
+        );
+      })
+      .map((m) => text(m.cells.id));
+  }
+
+  /** Asks for ownership of a marker with no owner (specs/marker-claims). */
+  async claim(person: Person, id: string, message: unknown) {
+    const tabs = await this.tabs();
+    const marker = tabs.marker(id);
+    const status = text(marker?.cells.status);
+    if (!marker || (status !== "active" && status !== "closed")) throw notFound();
+    if (tabs.privateOf(id)?.owner) {
+      throw new ApiError(409, { error: "This site already has an owner." });
+    }
+    const text_ = typeof message === "string" ? message.trim() : "";
+    if (!text_) {
+      throw new ApiError(422, {
+        error: "Please say how you are connected to this site.",
+        errors: [{ field: "message", reason: "Please say how you are connected to this site." }],
+      });
+    }
+    if (text_.length > MAX_CLAIM_MESSAGE) {
+      throw new ApiError(422, {
+        error: `Please keep the message to ${MAX_CLAIM_MESSAGE.toLocaleString("en")} characters.`,
+        errors: [{ field: "message", reason: `At most ${MAX_CLAIM_MESSAGE} characters.` }],
+      });
+    }
+    const mine = tabs.pendingClaims().filter((c) => c.username === person.username);
+    if (mine.some((c) => c.marker_id === id)) {
+      throw new ApiError(409, { error: "Your claim for this site is already waiting." });
+    }
+    if (mine.length >= MAX_PENDING_CLAIMS) {
+      throw new ApiError(429, {
+        error: `You have ${MAX_PENDING_CLAIMS} claims waiting. Please wait for an admin to answer them.`,
+      });
+    }
+    const claim = {
+      id: randomUUID(),
+      marker_id: id,
+      username: person.username,
+      message: text_,
+      created_at: this.stamp(),
+      status: "pending",
+    };
+    await this.store.appendRow(
+      "claims",
+      tabs.header.claims.map((column) => (claim as Record<string, Cell>)[column] ?? ""),
+    );
+    // The message stays in the claims tab; the change log names only the claim.
+    await this.log(person, id, "claim", [{ claim: claim.id }]);
+    return { claim, name: text(marker.cells.name) };
+  }
+
+  private pendingClaim(tabs: Tabs, id: string, claimId: string) {
+    const claim = tabs.claims.find((c) => c.id === claimId && c.marker_id === id);
+    if (!claim) throw new ApiError(404, { error: "That claim was not found." });
+    if (claim.status !== "pending") {
+      throw new ApiError(410, { error: "That claim is no longer open." });
+    }
+    return claim;
+  }
+
+  private async decide(tabs: Tabs, claim: Claim, status: string, by: string, reason: string) {
+    const header = tabs.header.claims;
+    const values: Record<string, Cell> = {
+      status,
+      decided_by: by,
+      decided_at: this.stamp(),
+      reason,
+    };
+    await this.store.updateCells(
+      Object.entries(values).map(([field, value]) => ({
+        tab: "claims" as const,
+        row: claim.row,
+        column: header.indexOf(field),
+        value,
+      })),
+    );
+  }
+
+  private async declineAll(
+    tabs: Tabs,
+    person: Person,
+    id: string,
+    claims: Claim[],
+    reason: string,
+  ): Promise<ClaimDecision[]> {
+    const name = text(tabs.marker(id)?.cells.name);
+    for (const claim of claims) {
+      await this.decide(tabs, claim, "declined", person.username, reason);
+      await this.log(person, id, "claim-decline", [{ claim: claim.id }]);
+    }
+    return claims.map((c) => ({
+      marker_id: id,
+      name,
+      username: c.username,
+      approved: false,
+      reason,
+    }));
+  }
+
+  async withdrawClaim(person: Person, id: string, claimId: string) {
+    const tabs = await this.tabs();
+    const claim = this.pendingClaim(tabs, id, claimId);
+    if (claim.username !== person.username) throw forbidden();
+    await this.decide(tabs, claim, "withdrawn", person.username, "");
+    await this.log(person, id, "claim-withdraw", [{ claim: claim.id }]);
+  }
+
+  /** Makes the claimant the owner and answers every other claim on the marker. */
+  async approveClaim(
+    person: Person,
+    id: string,
+    claimId: string,
+  ): Promise<MarkerResult & { decisions: ClaimDecision[] }> {
+    if (!person.admin) throw forbidden();
+    const tabs = await this.tabs();
+    const marker = tabs.marker(id);
+    if (!marker) throw notFound();
+    const claim = this.pendingClaim(tabs, id, claimId);
+    const priv = tabs.privateOf(id);
+    if (priv?.owner) throw new ApiError(409, { error: "This site already has an owner." });
+    const editors = (priv?.editors ?? []).filter((e) => normaliseUsername(e) !== claim.username);
+    await this.writePrivate(tabs, id, { owner: claim.username, editors: editors.join(",") });
+    await this.clearOffers(tabs, id);
+    const result = await this.restartClock(tabs, marker);
+    await this.decide(tabs, claim, "approved", person.username, "");
+    await this.log(person, id, "claim-approve", [
+      { claim: claim.id },
+      { field: "owner", from: "", to: claim.username },
+    ]);
+    const others = tabs.pendingClaims(id).filter((c) => c.id !== claim.id);
+    const declined = await this.declineAll(tabs, person, id, others, ANOTHER_APPROVED);
+    const name = text(marker.cells.name);
+    return {
+      ...result,
+      decisions: [
+        { marker_id: id, name, username: claim.username, approved: true, reason: "" },
+        ...declined,
+      ],
+    };
+  }
+
+  async declineClaim(
+    person: Person,
+    id: string,
+    claimId: string,
+    reason: unknown,
+  ): Promise<ClaimDecision> {
+    if (!person.admin) throw forbidden();
+    if (reason !== undefined && typeof reason !== "string") {
+      throw new ApiError(400, { error: "That request is not valid." });
+    }
+    const why = (reason ?? "").trim();
+    if (why.length > MAX_CLAIM_REASON) {
+      throw new ApiError(422, {
+        error: `Please keep the reason to ${MAX_CLAIM_REASON} characters.`,
+        errors: [{ field: "reason", reason: `At most ${MAX_CLAIM_REASON} characters.` }],
+      });
+    }
+    const tabs = await this.tabs();
+    if (!tabs.marker(id)) throw notFound();
+    const claim = this.pendingClaim(tabs, id, claimId);
+    const [decision] = await this.declineAll(tabs, person, id, [claim], why);
+    return decision!;
   }
 
   async decline(person: Person, id: string) {

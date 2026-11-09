@@ -28,30 +28,41 @@ Anything else gets `401`.
 All of these are under `/api`, need a Keycloak access token as `Authorization: Bearer <token>`,
 and are never cached. Firebase Hosting forwards `/api/**` from the site to this service.
 
-| Method and path                          | Who may call          | What it does                                                                |
-| ---------------------------------------- | --------------------- | --------------------------------------------------------------------------- |
-| `GET /api/me`                            | anyone signed in      | Their markers, offers, email and reminder switch.                           |
-| `PUT /api/me/reminders`                  | anyone signed in      | `{"on": true}` or `false`: their reminders.                                 |
-| `POST /api/me/confirm-recent`            | anyone signed in      | Confirms their markers confirmed under 12 months ago (sent once per visit). |
-| `GET /api/accounts?q=`                   | anyone signed in      | Up to 10 accounts: username and name only.                                  |
-| `GET /api/accounts/:username`            | anyone signed in      | One account's username and name, or `404`.                                  |
-| `GET /api/markers/:id`                   | editor, owner, admin  | The form's values. Private fields not to editors.                           |
-| `POST /api/markers`                      | anyone signed in      | Adds a marker; they become its owner.                                       |
-| `PATCH /api/markers/:id`                 | editor, owner, admin  | Saves the form. `409` if the marker has changed.                            |
-| `POST /api/markers/:id/confirm`          | editor, owner, admin  | "Still current", and "Update" in My markers.                                |
-| `POST /api/markers/:id/close`            | owner, admin          | Closes a site; it stays on the map.                                         |
-| `POST /api/markers/:id/reopen`           | owner, admin          | Reopens a closed site; restarts the clock.                                  |
-| `DELETE /api/markers/:id`                | owner, admin          | Sets `status` to `deleted`; the row stays.                                  |
-| `POST /api/markers/:id/editors`          | owner, admin          | Adds an editor by OpenMRS ID.                                               |
-| `DELETE /api/markers/:id/editors/:name`  | owner, admin          | Removes an editor.                                                          |
-| `POST /api/markers/:id/transfer`         | owner, admin          | Offers ownership.                                                           |
-| `DELETE /api/markers/:id/transfer`       | owner, admin          | Cancels the offer.                                                          |
-| `POST /api/markers/:id/transfer/accept`  | the offer's recipient | Accepts; the old owner becomes an editor.                                   |
-| `POST /api/markers/:id/transfer/decline` | the offer's recipient | Declines.                                                                   |
-| `POST /api/logos`                        | anyone signed in      | Stores a logo, returns its URL.                                             |
+| Method and path                               | Who may call          | What it does                                                                |
+| --------------------------------------------- | --------------------- | --------------------------------------------------------------------------- |
+| `GET /api/me`                                 | anyone signed in      | Their markers, offers, claims, email and reminder switch.                   |
+| `PUT /api/me/reminders`                       | anyone signed in      | `{"on": true}` or `false`: their reminders.                                 |
+| `POST /api/me/confirm-recent`                 | anyone signed in      | Confirms their markers confirmed under 12 months ago (sent once per visit). |
+| `GET /api/accounts?q=`                        | anyone signed in      | Up to 10 accounts: username and name only.                                  |
+| `GET /api/accounts/:username`                 | anyone signed in      | One account's username and name, or `404`.                                  |
+| `GET /api/markers/:id`                        | editor, owner, admin  | The form's values. Private fields not to editors.                           |
+| `POST /api/markers`                           | anyone signed in      | Adds a marker; they become its owner.                                       |
+| `PATCH /api/markers/:id`                      | editor, owner, admin  | Saves the form. `409` if the marker has changed.                            |
+| `POST /api/markers/:id/confirm`               | editor, owner, admin  | "Still current", and "Update" in My markers.                                |
+| `POST /api/markers/:id/close`                 | owner, admin          | Closes a site; it stays on the map.                                         |
+| `POST /api/markers/:id/reopen`                | owner, admin          | Reopens a closed site; restarts the clock.                                  |
+| `DELETE /api/markers/:id`                     | owner, admin          | Sets `status` to `deleted`; the row stays.                                  |
+| `POST /api/markers/:id/editors`               | owner, admin          | Adds an editor by OpenMRS ID.                                               |
+| `DELETE /api/markers/:id/editors/:name`       | owner, admin          | Removes an editor.                                                          |
+| `POST /api/markers/:id/transfer`              | owner, admin          | Offers ownership.                                                           |
+| `DELETE /api/markers/:id/transfer`            | owner, admin          | Cancels the offer.                                                          |
+| `POST /api/markers/:id/transfer/accept`       | the offer's recipient | Accepts; the old owner becomes an editor.                                   |
+| `POST /api/markers/:id/transfer/decline`      | the offer's recipient | Declines.                                                                   |
+| `POST /api/markers/:id/claims`                | anyone signed in      | `{"message"}`: claims a marker with no owner.                               |
+| `DELETE /api/markers/:id/claims/:claim`       | the claimant          | Withdraws the claim.                                                        |
+| `POST /api/markers/:id/claims/:claim/approve` | admin                 | Makes the claimant the owner; declines other claims.                        |
+| `POST /api/markers/:id/claims/:claim/decline` | admin                 | `{"reason"}` (optional): declines the claim.                                |
+| `POST /api/logos`                             | anyone signed in      | Stores a logo, returns its URL.                                             |
 
 Account searches need 3 characters and are limited to 30 a minute per person. Adding an editor,
 offering a transfer and an admin setting an owner check that the OpenMRS ID exists and is enabled.
+
+Claims (specs/marker-claims) are rows in the sheet's private `claims` tab, kept with their
+decision. `GET /api/me` lists the markers a person may claim (`claimable`), their own pending
+`claims` and, for admins, every pending claim with its message (`review`). Each claim emails
+`NOTICE_EMAIL`; each decision emails the claimant, whose address is looked up in Keycloak during
+the admin's request and never stored or logged. An admin setting an owner in the form declines
+that marker's pending claims. A new environment's sheet needs `npm run setup:sheet` to add the tab.
 
 ### Emailed-link endpoints
 
@@ -137,7 +148,7 @@ left alone.
 | `LINK_SIGNING_KEY`               | Secret `atlas-link-signing-key`. Without it, no reminders.           |
 | `EMAIL_FROM`                     | Default `OpenMRS Atlas <atlas-noreply@openmrs.org>`.                 |
 | `EMAIL_ALLOWLIST`                | Commas or spaces. Set: only these get email. Unset or `*`: everyone. |
-| `NOTICE_EMAIL`                   | Gets a notice for each marker added. Unset: no notices.              |
+| `NOTICE_EMAIL`                   | Gets a notice for each marker added or claimed. Unset: no notices.   |
 
 ## Keycloak
 
