@@ -4,7 +4,7 @@
 
 - [x] 1.1 Add `claims` to `TABS` and `COLUMNS` (`id`, `marker_id`, `username`, `message`, `created_at`, `status`, `decided_by`, `decided_at`, `reason`), with `id`, `marker_id`, `username` and the dates as text columns
 - [x] 1.2 Read `claims` with the edit tabs in `sheets.ts` (`EDIT_TABS`, `EditValues`), parse it in `Tabs`, and add it to the test fakes. Check that `setup:sheet` creates it and that the snapshot and feed never read it
-- [ ] 1.3 (manual) Run `npm run setup:sheet -- <staging sheet id>` to add the `claims` tab before pushing the code
+- [x] 1.3 (manual) Run `npm run setup:sheet -- <staging sheet id>` to add the `claims` tab before pushing the code
 
 ## 2. Service: claim rules
 
@@ -51,7 +51,7 @@
 
 ## 6. Staging
 
-- [ ] 6.1 Push and watch CI deploy to staging
+- [x] 6.1 Push and watch CI deploy to staging
 - [ ] 6.2 (manual) On staging, with a test account and an admin account on the allowlist: claim an orphan, check the notice email, decline it with a reason and check the email, claim again, approve, and check the test account now owns the marker and gets the approval email
 
 ## Workflow follow-up
