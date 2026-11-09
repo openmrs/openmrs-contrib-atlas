@@ -208,11 +208,15 @@ When a marker was opened from My markers, pressing Backspace or Delete SHALL ret
 - **THEN** nothing happens
 
 ### Requirement: Usage analytics
-When a Google Analytics measurement ID is configured, the site SHALL record page views and the events search, filter change, marker opened, list opened and download. When none is configured, no analytics requests SHALL be made.
+When a Google Analytics measurement ID is configured, the site SHALL record page views and the events search, filter change, marker opened, list opened, download and share. The share event SHALL record which method was used. When none is configured, no analytics requests SHALL be made.
 
 #### Scenario: Staging without analytics
 - **WHEN** the site is built without a measurement ID
 - **THEN** no requests are sent to Google Analytics
+
+#### Scenario: Sharing on LinkedIn
+- **WHEN** analytics is configured and a visitor presses LinkedIn in the Share dialog
+- **THEN** a share event is recorded with the method "linkedin"
 
 ### Requirement: Closed sites on the map
 A marker with status `closed` SHALL be drawn as a grey pin whatever the colour-by choice. It SHALL otherwise behave like any other marker: it shows its site count when greater than 1, fades by freshness, counts towards the total of a cluster it falls into, and can be selected and found by search. It SHALL NOT be more prominent than other markers, and SHALL be drawn beneath them where they overlap.

@@ -86,7 +86,7 @@
   - `openspec/backlog.md`: mark the share item done
   - `web` README or comments wherever the badge addresses are documented for other sites
 - [x] 6.3 All checks pass (`format:check`, `typecheck`, `lint`, unit tests, e2e, build) and `openspec validate --strict`
-- [ ] 6.4 (manual) On staging:
+- [x] 6.4 (manual) On staging:
   - share a marker to LinkedIn, Facebook, X and WhatsApp
   - try "More options…" on a phone
   - paste the badge snippet into a test page (light and dark)
