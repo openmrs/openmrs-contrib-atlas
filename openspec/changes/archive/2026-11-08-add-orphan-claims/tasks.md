@@ -52,7 +52,7 @@
 ## 6. Staging
 
 - [x] 6.1 Push and watch CI deploy to staging
-- [ ] 6.2 (manual) On staging, with a test account and an admin account on the allowlist: claim an orphan, check the notice email, decline it with a reason and check the email, claim again, approve, and check the test account now owns the marker and gets the approval email
+- [x] 6.2 (manual) On staging, with a test account and an admin account on the allowlist: claim an orphan, check the notice email, decline it with a reason and check the email, claim again, approve, and check the test account now owns the marker and gets the approval email
 
 ## Workflow follow-up
 

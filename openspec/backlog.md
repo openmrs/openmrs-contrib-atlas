@@ -7,7 +7,7 @@ Work not yet proposed as an OpenSpec change. When an item is picked up, it becom
 ## Before the announcement
 
 Agreed 2026-11-07, in this order: `simplify-confirming` (done 2026-11-08), then the list view (done 2026-11-08),
-then share cards and the website badge (done 2026-11-08), then orphan claims (`add-orphan-claims`).
+then share cards and the website badge (done 2026-11-08), then orphan claims (done 2026-11-08).
 
 ## Phase 3 · Grow (from the design spec)
 

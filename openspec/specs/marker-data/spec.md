@@ -6,7 +6,7 @@ Defines how Atlas markers and their lookup lists are stored in the Atlas Google 
 ## Requirements
 
 ### Requirement: Sheet structure
-The Atlas sheet SHALL contain the tabs `markers`, `private`, `changes`, `pending`, `reminders`, `unsubscribed`, `types`, `distributions`, `versions` and `problems`. Each marker is one row in `markers`; its private fields are one row in `private` with the same `id`.
+The Atlas sheet SHALL contain the tabs `markers`, `private`, `changes`, `pending`, `claims`, `reminders`, `unsubscribed`, `types`, `distributions`, `versions` and `problems`. Each marker is one row in `markers`; its private fields are one row in `private` with the same `id`.
 
 #### Scenario: Marker columns
 - **WHEN** the `markers` tab is read
@@ -23,6 +23,10 @@ The Atlas sheet SHALL contain the tabs `markers`, `private`, `changes`, `pending
 #### Scenario: Pending columns
 - **WHEN** the `pending` tab is read
 - **THEN** its header row contains `marker_id`, `from`, `to`, `created_at` and `expires_at`
+
+#### Scenario: Claim columns
+- **WHEN** the `claims` tab is read
+- **THEN** its header row contains `id`, `marker_id`, `username`, `message`, `created_at`, `status`, `decided_by`, `decided_at` and `reason`, where `status` is `pending`, `approved`, `declined` or `withdrawn`
 
 #### Scenario: Reminder columns
 - **WHEN** the `reminders` tab is read
@@ -145,8 +149,12 @@ A person's direct edit to the `private` tab SHALL append to `changes` the time, 
 - **THEN** `changes` gains a row naming the admin, the marker id and `owner`, and no publish runs
 
 ### Requirement: Reminder tabs stay private
-The `reminders` and `unsubscribed` tabs SHALL never be published. Neither tab SHALL hold email addresses. Admins MAY delete a row from `unsubscribed` to start reminders to that person again.
+The `reminders`, `unsubscribed` and `claims` tabs SHALL never be published. None of them SHALL hold email addresses. Admins MAY delete a row from `unsubscribed` to start reminders to that person again.
 
 #### Scenario: Resubscribe
 - **WHEN** an admin deletes a person's row from `unsubscribed`
 - **THEN** that person gets reminders again when their markers are next due
+
+#### Scenario: Claims tab
+- **WHEN** the snapshot is published while the `claims` tab has rows
+- **THEN** nothing from the `claims` tab is in `atlas.json` or the feed
