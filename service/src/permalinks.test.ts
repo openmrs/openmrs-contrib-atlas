@@ -152,3 +152,63 @@ describe("Permalinks read only published data", () => {
     expect(sheetReads).toBe(0);
   });
 });
+
+describe("New markers preview straight away", () => {
+  const CARD = { hash: "abc", file: `cards/${ID}-abc.png` };
+
+  it("Scenario: 404 cached briefly", async () => {
+    const res = await setup([]).get(`/${ID}`);
+    expect(res.status).toBe(404);
+    expect(res.headers.get("Cache-Control")).toBe("public, max-age=60, s-maxage=60");
+    const card = await setup([]).get(`/${ID}/card.png`);
+    expect(card.headers.get("Cache-Control")).toBe("public, max-age=60, s-maxage=60");
+  });
+
+  it("Scenario: Shared as soon as it is added", async () => {
+    const { cards, get, tick } = setup([], false);
+    expect((await get(`/${ID}`)).status).toBe(404);
+    // Published a moment later, with its card.
+    cards.snapshot = { ...cards.snapshot!, markers: [KAMPALA] };
+    cards.manifest = { markers: { [ID]: CARD } };
+    tick(2_000);
+    expect((await get(`/${ID}`)).status).toBe(404);
+    expect(cards.reads).toBe(1);
+    tick(3_001);
+    const res = await get(`/${ID}`);
+    expect(res.status).toBe(200);
+    expect(meta(await res.text(), "og:image")).toBe(
+      `https://storage.example.org/bucket/${CARD.file}`,
+    );
+    expect(cards.reads).toBe(2);
+  });
+
+  it("looks again for a card drawn after the marker was read", async () => {
+    const { cards, get, tick } = setup([KAMPALA], false);
+    expect(meta(await (await get(`/${ID}`)).text(), "og:image")).toContain("world.png");
+    cards.manifest = { markers: { [ID]: CARD } };
+    tick(5_001);
+    expect((await get(`/${ID}/card.png`)).headers.get("Location")).toContain(CARD.file);
+  });
+
+  it("Scenario: Many requests for unknown ids", async () => {
+    const { cards, get, tick } = setup();
+    await get(`/${ID}`);
+    expect(cards.reads).toBe(1);
+    tick(6_000);
+    const responses = await Promise.all(
+      Array.from({ length: 100 }, (_, i) => get(`/unknown-${i}`)),
+    );
+    expect(responses.every((r) => r.status === 404)).toBe(true);
+    expect(cards.reads).toBe(2);
+  });
+
+  it("found pages are still cached for 5 minutes, without extra reads", async () => {
+    const { cards, get, tick } = setup();
+    for (let i = 0; i < 3; i++) {
+      tick(10_000);
+      const res = await get(`/${ID}`);
+      expect(res.headers.get("Cache-Control")).toBe("public, max-age=300, s-maxage=300");
+    }
+    expect(cards.reads).toBe(1);
+  });
+});

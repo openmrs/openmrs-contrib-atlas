@@ -57,6 +57,25 @@ describe("Still current", () => {
     expect(api).toHaveBeenCalledWith("/markers/m1/confirm", "POST");
   });
 
+  it("offers to share after Still current, not after closing", async () => {
+    const onResult = vi.fn();
+    render(
+      <MarkerActions
+        markerId="m1"
+        canManage
+        closed={false}
+        confirmedAt={monthsAgo(48)}
+        onEdit={() => {}}
+        onResult={onResult}
+      />,
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Still current" }));
+    expect(onResult).toHaveBeenLastCalledWith(RESULT, true);
+    await userEvent.click(screen.getByRole("button", { name: "More actions" }));
+    await userEvent.click(screen.getByRole("menuitem", { name: "Close site" }));
+    expect(onResult).toHaveBeenLastCalledWith(RESULT, false);
+  });
+
   it("Scenario: Never confirmed", () => {
     actions(undefined);
     expect(screen.getByRole("button", { name: "Still current" })).toBeTruthy();
@@ -103,7 +122,8 @@ describe("My markers: Update", () => {
     mine(me([marker("a", monthsAgo(20))]), { onResult });
     await userEvent.click(screen.getByRole("button", { name: "Mark Site a still current" }));
     expect(api).toHaveBeenCalledWith("/markers/a/confirm", "POST");
-    expect(onResult).toHaveBeenCalledWith("a", RESULT);
+    // `true`: the notice offers to share (specs/marker-sharing).
+    expect(onResult).toHaveBeenCalledWith("a", RESULT, true);
   });
 
   it("Scenario: Recent marker, and closed or hidden ones", () => {

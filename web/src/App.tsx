@@ -9,6 +9,7 @@ import { Legend } from "./components/Legend.tsx";
 import { MarkerActions } from "./components/MarkerActions.tsx";
 import { MarkerDetails } from "./components/MarkerDetails.tsx";
 import { SearchBox } from "./components/SearchBox.tsx";
+import { ShareDialog } from "./components/ShareDialog.tsx";
 import { SignInPanel } from "./components/SignInPanel.tsx";
 import { SiteList } from "./components/SiteList.tsx";
 import { StatsBar } from "./components/StatsBar.tsx";
@@ -18,6 +19,7 @@ import { savedNotice, type MarkerResult } from "./lib/api.ts";
 import { legendEntries, palette } from "./lib/colours.ts";
 import { applyFilters, hasFilters } from "./lib/filters.ts";
 import { inView, sortMarkers, type Bounds, type ListSort } from "./lib/list.ts";
+import type { ShareSource } from "./lib/share.ts";
 import { computeStats } from "./lib/stats.ts";
 import type { AtlasSnapshot, ColourBy, Filters, MapView, PublicMarker } from "./lib/types.ts";
 import { formatUrlState, parseUrlState, type SignedInPanel } from "./lib/urlState.ts";
@@ -36,6 +38,9 @@ type Panel = "filters" | "download" | "sign-in" | "list" | SignedInPanel;
 
 /** Lists a marker can be opened from, which "<" and Backspace return to. */
 type ListPanel = "mine" | "list";
+
+/** A message at the top of the map; `share` offers to share that marker (specs/marker-sharing). */
+type Notice = { text: string; share?: string };
 
 type Load = { state: "loading" } | { state: "error" } | { state: "ready"; snapshot: AtlasSnapshot };
 
@@ -58,7 +63,14 @@ export function App({ signInError }: { signInError?: string }) {
   const [selectedId, setSelectedId] = useState<string | undefined>(initial.marker);
   const [view, setView] = useState<MapView | undefined>(initial.view);
   const [openPanel, setPanel] = useState<Panel | undefined>(initial.panel);
-  const [notice, setNotice] = useState<string | undefined>(signInError);
+  const [notice, setNoticeState] = useState<Notice | undefined>(
+    signInError ? { text: signInError } : undefined,
+  );
+  const setNotice = useCallback(
+    (text: string | undefined) => setNoticeState(text ? { text } : undefined),
+    [],
+  );
+  const [shareFor, setShareFor] = useState<{ id: string; source: ShareSource }>();
   // The marker opened from My markers or the list, which can go back there; and the entry to
   // return to.
   const [cameFrom, setCameFrom] = useState<{ panel: ListPanel; id: string }>();
@@ -69,7 +81,7 @@ export function App({ signInError }: { signInError?: string }) {
   const [saved, setSaved] = useState<ReadonlyMap<string, PublicMarker | null>>(new Map());
   const onSessionEnded = useCallback(
     () => setNotice("Your session has ended. Sign in again to make changes."),
-    [],
+    [setNotice],
   );
   const { session, refresh } = useSession(onSessionEnded);
   const me = session.status === "signed-in" ? session.me : undefined;
@@ -135,6 +147,8 @@ export function App({ signInError }: { signInError?: string }) {
     [panel, markers, bounds, sort],
   );
   const selected = allMarkers.find((m) => m.id === selectedId);
+  const shareMarker = shareFor && allMarkers.find((m) => m.id === shareFor.id);
+  const closeShare = useCallback(() => setShareFor(undefined), []);
   const order = useMemo(
     () => ({
       types: snapshot?.types.map((t) => t.name) ?? [],
@@ -178,12 +192,14 @@ export function App({ signInError }: { signInError?: string }) {
       const marker = snapshot.markers.find((m) => m.id === initial.marker);
       if (marker) {
         if (!initial.view) void revealMarker(map, marker.longitude, marker.latitude, marker.id);
+        // From the reminder page's "Share it".
+        if (initial.share) setShareFor({ id: marker.id, source: "email" });
       } else {
         setSelectedId(undefined);
         setNotice("That site was not found on the Atlas. It may have been removed.");
       }
     },
-    [initial, snapshot],
+    [initial, snapshot, setNotice],
   );
 
   const startSignIn = (panelAfter?: SignedInPanel) => {
@@ -206,11 +222,16 @@ export function App({ signInError }: { signInError?: string }) {
     );
   };
 
-  /** Shows a saved change on this person's map straight away. */
+  /**
+   * Shows a saved change on this person's map straight away. With `prompt` (after adding or
+   * confirming), the notice offers to share the marker once it is published and public.
+   */
   const applyResult = useCallback(
-    (id: string, result: MarkerResult) => {
+    (id: string, result: MarkerResult, prompt = false) => {
       setSaved((current) => new Map(current).set(id, result.marker));
-      setNotice(savedNotice(result.published));
+      const shareable =
+        prompt && result.published && result.marker !== null && result.marker.status !== "closed";
+      setNoticeState({ text: savedNotice(result.published), share: shareable ? id : undefined });
       void refresh();
     },
     [refresh],
@@ -389,7 +410,19 @@ export function App({ signInError }: { signInError?: string }) {
         )}
         {(notice || (session.status === "anonymous" && session.error)) && (
           <div className="notice" role="status">
-            {notice ?? (session.status === "anonymous" ? session.error : undefined)}
+            {notice?.text ?? (session.status === "anonymous" ? session.error : undefined)}
+            {notice?.share && (
+              <button
+                type="button"
+                className="secondary share-prompt"
+                onClick={() => {
+                  setShareFor({ id: notice.share!, source: "prompt" });
+                  setNoticeState(undefined);
+                }}
+              >
+                Share
+              </button>
+            )}
             <button
               type="button"
               className="icon-button"
@@ -431,6 +464,7 @@ export function App({ signInError }: { signInError?: string }) {
             onClose={() => setSelectedId(undefined)}
             onBack={canGoBack ? goBack : undefined}
             backLabel={cameFrom?.panel === "list" ? "Back to the list" : "Back to My markers"}
+            onShare={() => setShareFor({ id: selected.id, source: "details" })}
           >
             {roleOnSelected && (
               <MarkerActions
@@ -440,8 +474,8 @@ export function App({ signInError }: { signInError?: string }) {
                 closed={selected.status === "closed"}
                 confirmedAt={selected.confirmed_at}
                 onEdit={() => setPanel("edit")}
-                onResult={(result) => {
-                  applyResult(selected.id, result);
+                onResult={(result, prompt) => {
+                  applyResult(selected.id, result, prompt);
                   if (!result.marker) setSelectedId(undefined);
                 }}
               />
@@ -476,7 +510,8 @@ export function App({ signInError }: { signInError?: string }) {
               sessionEnded={!me}
               map={map}
               onSaved={(result, id) => {
-                applyResult(id, result);
+                // Adding, not editing, offers to share.
+                applyResult(id, result, panel === "add");
                 setPanel(undefined);
                 setSelectedId(result.marker ? id : undefined);
                 if (result.marker && mapRef.current) {
@@ -499,6 +534,14 @@ export function App({ signInError }: { signInError?: string }) {
             />
           )}
         </Suspense>
+        {shareMarker && shareFor && (
+          <ShareDialog
+            key={shareMarker.id}
+            marker={shareMarker}
+            source={shareFor.source}
+            onClose={closeShare}
+          />
+        )}
       </main>
     </div>
   );

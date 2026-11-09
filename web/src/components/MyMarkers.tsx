@@ -7,7 +7,8 @@ import { useEscape } from "./useEscape.ts";
 interface Props {
   me: Me;
   onOpen: (id: string) => void;
-  onResult: (id: string, result: MarkerResult) => void;
+  /** `prompt`: offer to share afterwards, as after "Update" (specs/marker-sharing). */
+  onResult: (id: string, result: MarkerResult, prompt?: boolean) => void;
   onChanged: () => void;
   onAdd: () => void;
   onSignOut: () => void;
@@ -74,7 +75,7 @@ export function MyMarkers({
     setError(undefined);
     setUpdating(id);
     try {
-      onResult(id, await api<MarkerResult>(`${markerPath(id)}/confirm`, "POST"));
+      onResult(id, await api<MarkerResult>(`${markerPath(id)}/confirm`, "POST"), true);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "That didn't work. Please try again.");
     } finally {

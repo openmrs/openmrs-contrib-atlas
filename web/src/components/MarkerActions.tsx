@@ -10,7 +10,8 @@ interface Props {
   /** When it was last confirmed: "Still current" is offered only once that is 12 months ago. */
   confirmedAt: string | undefined;
   onEdit: () => void;
-  onResult: (result: MarkerResult) => void;
+  /** `prompt`: offer to share afterwards, as after "Still current" (specs/marker-sharing). */
+  onResult: (result: MarkerResult, prompt?: boolean) => void;
 }
 
 /**
@@ -64,12 +65,12 @@ export function MarkerActions({
     }
   }
 
-  async function act(path: string, method: string) {
+  async function act(path: string, method: string, prompt = false) {
     setMenuOpen(false);
     setBusy(true);
     setError(undefined);
     try {
-      onResult(await api<MarkerResult>(path, method));
+      onResult(await api<MarkerResult>(path, method), prompt);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "That didn't work. Please try again.");
     } finally {
@@ -89,7 +90,7 @@ export function MarkerActions({
             type="button"
             className="secondary"
             disabled={busy}
-            onClick={() => void act(`${markerPath(markerId)}/confirm`, "POST")}
+            onClick={() => void act(`${markerPath(markerId)}/confirm`, "POST", true)}
           >
             Still current
           </button>

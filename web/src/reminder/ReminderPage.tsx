@@ -132,6 +132,12 @@ function Body({ phase, onAct }: { phase: Phase; onAct: (view: View) => void }) {
         </p>
         <p>
           <a href={mapLink(marker?.id)}>See it on the map</a>
+          {marker && (
+            <>
+              {" · "}
+              <a href={`${mapLink(marker.id)}&share=1`}>Share it</a>
+            </>
+          )}
         </p>
       </>
     );

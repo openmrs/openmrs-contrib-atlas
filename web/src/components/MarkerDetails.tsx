@@ -3,6 +3,7 @@ import { countryName } from "../lib/countries.ts";
 import { lastConfirmed } from "../lib/freshness.ts";
 import { linkify } from "../lib/linkify.ts";
 import type { PublicMarker } from "../lib/types.ts";
+import { ShareIcon } from "./Icons.tsx";
 import { useEscape } from "./useEscape.ts";
 
 const monthYear = new Intl.DateTimeFormat("en", {
@@ -28,6 +29,8 @@ interface Props {
   onBack?: () => void;
   /** Names where "<" goes, such as "Back to My markers". */
   backLabel?: string;
+  /** Opens the Share dialog; offered to everyone (specs/marker-sharing). */
+  onShare?: () => void;
   /** Controls for those allowed to change this marker. */
   children?: React.ReactNode;
 }
@@ -38,6 +41,7 @@ export function MarkerDetails({
   onClose,
   onBack,
   backLabel = "Back to My markers",
+  onShare,
   children,
 }: Props) {
   const heading = useRef<HTMLHeadingElement>(null);
@@ -118,6 +122,12 @@ export function MarkerDetails({
             ),
           )}
         </p>
+      )}
+      {onShare && (
+        <button type="button" className="secondary share-button" onClick={onShare}>
+          <ShareIcon />
+          Share
+        </button>
       )}
       {children}
     </aside>

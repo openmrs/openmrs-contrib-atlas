@@ -94,7 +94,24 @@ so previews of a fresh share show the new card. The nightly publish (Cloud Sched
 missing or out-of-date card and deletes card files the manifest no longer names. Every other
 publish draws at most 10. A failure drawing cards is logged (`cards-failed`, `card-failed`) and
 never stops the publish. The `/marker` pages read `atlas.json` and the manifest, kept in memory for
-a minute, and never the sheet.
+a minute, and never the sheet. When a marker or its card is missing from what's in memory, they
+read both again (at most every 5 seconds, shared by concurrent requests), so a marker shared the
+moment it is added previews correctly: LinkedIn and Facebook keep the first answer for days. Pages
+are cached for 5 minutes, and 404s for 1 minute.
+
+### Website badges
+
+The "On the OpenMRS Atlas" badges that the Share dialog offers are static files served by the
+site, at `/badges/on-the-atlas-light.svg` and `/badges/on-the-atlas-dark.svg` (200 × 44). Other
+websites link to them, so their addresses must never change. They are drawn by
+`src/cards/badge.ts` with the card font, so the text is outlines and the files load nothing else.
+After changing the design, the font or the logo, regenerate and commit them:
+
+```sh
+npm run badges -w service
+```
+
+A test fails if the committed files don't match the generator.
 
 A publish is refused if it would publish fewer than 80% of the markers in the current
 `atlas.json`. The reason is then written to the first row of `problems`, and the public files are

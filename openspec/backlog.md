@@ -7,14 +7,10 @@ Work not yet proposed as an OpenSpec change. When an item is picked up, it becom
 ## Before the announcement
 
 Agreed 2026-11-07, in this order: `simplify-confirming` (done 2026-11-08), then the list view (done 2026-11-08),
-then share cards and the website badge, then orphan claims.
+then share cards and the website badge (done 2026-11-08), then orphan claims.
 
 ## Phase 3 · Grow (from the design spec)
 
-- **Share dialog and a website badge (Adoption), `add-share-dialog`.** A Share button on every
-  marker and an optional prompt after adding or confirming one: copy link, social networks,
-  download the card, and an "On the OpenMRS Atlas" badge snippet. Permalinks and cards come
-  first, in `add-marker-permalinks`.
 - **Contact relay form (C7, Should).** Opt-in per marker: visitors write through a form relayed to
   the site contact, whose address is never shown. Off by default, including for migrated markers.
 - **Claim an orphaned marker (C9, Should).** A request to admins for approval. 85 markers have no

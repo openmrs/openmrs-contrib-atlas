@@ -70,6 +70,10 @@ test.describe('Emailed "still current" link', () => {
       "href",
       `/?marker=${ids.kampala}`,
     );
+    await expect(page.getByRole("link", { name: "Share it" })).toHaveAttribute(
+      "href",
+      `/?marker=${ids.kampala}&share=1`,
+    );
     expect(state.requests.map((r) => r.path)).toEqual([
       "/api/reminder/view",
       "/api/reminder/confirm",

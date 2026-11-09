@@ -157,7 +157,7 @@ but a test still covers odd ids.
 `applyResult(id, result, {prompt})` sets `share` when all of these are true:
 - `prompt` is set;
 - `result.published` is true;
-- `result.marker` exists and its `status` is `active`.
+- `result.marker` exists (the marker is public) and it isn't closed.
 
 Three callers pass `prompt`:
 - adding: `onSaved` when there was no `markerId`;

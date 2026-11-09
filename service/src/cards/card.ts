@@ -47,7 +47,7 @@ export function cardHash(marker: PublicMarker): string {
 }
 
 let logo: string | undefined;
-const logoHref = () =>
+export const logoHref = () =>
   (logo ??= `data:image/png;base64,${readFileSync(
     resolve(import.meta.dirname, "../../assets/openmrs-cross.png"),
   ).toString("base64")}`);

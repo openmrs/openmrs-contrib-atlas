@@ -5,8 +5,12 @@ import { WORLD, type CardManifest, type CardStore } from "./cards/refresh.ts";
 
 /** Pages and the CDN in front of them may keep these for 5 minutes (specs/marker-permalinks). */
 const PAGE_CACHE = "public, max-age=300, s-maxage=300";
+/** A 404 for at most a minute, so a marker published just afterwards isn't hidden for long. */
+const MISSING_CACHE = "public, max-age=60, s-maxage=60";
 /** How long the published snapshot and card manifest are kept in memory between reads. */
 const MEMORY_MS = 60_000;
+/** A marker or card missing from memory is looked up again, at most this often. */
+const RETRY_MS = 5_000;
 
 interface Published {
   markers: Map<string, PublicMarker>;
@@ -59,8 +63,7 @@ export function createPermalinks(deps: { cards: CardStore; siteUrl: string; now?
   const site = deps.siteUrl.replace(/\/$/, "");
   let cached: { at: number; value: Promise<Published> } | undefined;
 
-  const published = (): Promise<Published> => {
-    if (cached && now() - cached.at < MEMORY_MS) return cached.value;
+  const read = (): Promise<Published> => {
     const value = Promise.all([deps.cards.readSnapshot(), deps.cards.readManifest()]).then(
       ([snapshot, manifest]) => ({
         markers: new Map((snapshot?.markers ?? []).map((m) => [m.id, m])),
@@ -69,26 +72,45 @@ export function createPermalinks(deps: { cards: CardStore; siteUrl: string; now?
     );
     cached = { at: now(), value };
     // A failed read isn't kept, so the next request tries again.
-    value.catch(() => (cached = undefined));
+    value.catch(() => {
+      if (cached?.value === value) cached = undefined;
+    });
     return value;
+  };
+
+  const published = (): Promise<Published> =>
+    cached && now() - cached.at < MEMORY_MS ? cached.value : read();
+
+  /**
+   * What's published, read again if the marker or its card is missing from memory: a marker
+   * shared the moment it is added must preview correctly, as networks keep the first answer for
+   * days. At most one read every 5 seconds; requests meanwhile share it.
+   */
+  const lookUp = async (id: string): Promise<Published> => {
+    const current = await published();
+    if (current.markers.has(id) && current.cards[id]) return current;
+    return cached && now() - cached.at < RETRY_MS ? cached.value : read();
   };
 
   const mapLink = (id: string) => `${site}/?marker=${encodeURIComponent(id)}`;
 
   app.get("/:id/card.png", async (c) => {
-    const { markers, cards } = await published();
     const id = c.req.param("id");
+    const { markers, cards } = await lookUp(id);
     const card = markers.has(id) ? cards[id] : undefined;
-    if (!card) return c.text("No card for that site.", 404);
+    if (!card) {
+      c.header("Cache-Control", MISSING_CACHE);
+      return c.text("No card for that site.", 404);
+    }
     c.header("Cache-Control", PAGE_CACHE);
     return c.redirect(deps.cards.publicUrl(card.file), 302);
   });
 
   app.get("/:id", async (c) => {
-    const { markers, cards } = await published();
     const id = c.req.param("id");
+    const { markers, cards } = await lookUp(id);
     const marker = markers.get(id);
-    c.header("Cache-Control", PAGE_CACHE);
+    c.header("Cache-Control", marker ? PAGE_CACHE : MISSING_CACHE);
     if (!marker) {
       return c.html(
         page({

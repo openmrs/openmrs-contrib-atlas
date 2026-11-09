@@ -18,6 +18,10 @@ A world map of OpenMRS implementations, at [atlas.openmrs.org](https://atlas.ope
   the snapshot.
 - **Sign-in** uses OpenMRS Keycloak. People add and edit markers on the site, and the service
   writes those changes to the sheet.
+- **Sharing.** Every marker has a permalink, `/marker/<id>`, with link preview tags and a social
+  card drawn when publishing. The Share dialog offers the link, the social networks, the card and
+  an "On the OpenMRS Atlas" badge (`/badges/on-the-atlas-light.svg` and `-dark.svg`) for
+  implementations' own websites.
 
 The requirements and design live in [`openspec/`](openspec/). Each piece of work is an OpenSpec
 change: proposed, applied, then archived into `openspec/specs/`. Background and rationale are in the

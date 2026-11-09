@@ -1013,3 +1013,84 @@ test.describe("Admin", () => {
       });
   });
 });
+
+test.describe("Prompt to share after adding or confirming", () => {
+  const notice = (page: Page) => page.locator(".notice");
+
+  test("Scenario: After adding a marker", async ({ page }) => {
+    await stubApi(page);
+    await signedIn(page);
+    await page.route("**/marker/*/card.png", (route) => route.fulfill({ status: 404 }));
+    await page.goto("/?panel=add");
+    await page.getByLabel("Name (required)").fill("New Site");
+    await page.getByLabel("Latitude").fill("10");
+    await page.getByLabel("Longitude").fill("20");
+    await page.getByLabel("Type (required)").selectOption("Clinical");
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(notice(page)).toContainText("within 10 minutes");
+    await notice(page).getByRole("button", { name: "Share" }).click();
+    await expect(page.getByRole("dialog", { name: "Share New Site" })).toBeVisible();
+    await expect(notice(page)).toHaveCount(0);
+  });
+
+  test("Scenario: Not published yet", async ({ page }) => {
+    await stubApi(page);
+    await signedIn(page);
+    await page.route("**/api/markers", async (route) => {
+      if (route.request().method() !== "POST") return route.fallback();
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id: "new-id",
+          version: NOW,
+          status: "active",
+          marker: { id: "new-id", name: "New Site", latitude: 10, longitude: 20, type: "Clinical" },
+          published: false,
+        }),
+      });
+    });
+    await page.goto("/?panel=add");
+    await page.getByLabel("Name (required)").fill("New Site");
+    await page.getByLabel("Latitude").fill("10");
+    await page.getByLabel("Longitude").fill("20");
+    await page.getByLabel("Type (required)").selectOption("Clinical");
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(notice(page)).toContainText("after the next publish");
+    await expect(notice(page).getByRole("button", { name: "Share" })).toHaveCount(0);
+  });
+
+  test("Scenario: Ordinary edit", async ({ page }) => {
+    await stubApi(page);
+    await signedIn(page);
+    await page.goto(openKampala);
+    await page.getByRole("button", { name: "Edit" }).click();
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(notice(page)).toContainText("Saved");
+    await expect(notice(page).getByRole("button", { name: "Share" })).toHaveCount(0);
+  });
+
+  test("after Still current", async ({ page }) => {
+    await stubApi(page);
+    await kampalaWith(page, { confirmed_at: "2022-01-01T00:00:00.000Z" });
+    await signedIn(page);
+    await page.goto(openKampala);
+    await page.getByRole("button", { name: "Still current" }).click();
+    await notice(page).getByRole("button", { name: "Share" }).click();
+    await expect(page.getByRole("dialog", { name: /^Share / })).toBeVisible();
+  });
+
+  test('Scenario: After "Update" in My markers', async ({ page }) => {
+    await stubApi(page);
+    await signedIn(page);
+    await page.goto("/?panel=mine");
+    await mapIdle(page);
+    await page.getByRole("button", { name: "Mark Kampala Rollout still current" }).click();
+    await notice(page).getByRole("button", { name: "Share" }).click();
+    await expect(page.getByRole("dialog", { name: /^Share / })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "My markers" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "My markers" })).toBeVisible();
+  });
+});

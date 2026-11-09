@@ -12,6 +12,7 @@ import { NO_FILTERS, type ColourBy, type Filters, type MapView } from "./types.t
  *   panel=list            the list of markers in view, open to anyone
  *   panel=mine|add|edit   a signed-in panel; edit applies to the marker above
  *   sort=country|sites|confirmed   the list's sort (name is the default and is omitted)
+ *   share=1               opens the Share dialog for the marker once; never written back
  */
 export type SignedInPanel = "mine" | "add" | "edit";
 const SIGNED_IN_PANELS: SignedInPanel[] = ["mine", "add", "edit"];
@@ -24,6 +25,8 @@ export interface UrlState {
   panel?: UrlPanel;
   /** Kept only while the list is open. */
   sort?: ListSort;
+  /** Open the Share dialog for `marker` (from the reminder page). Read, never written. */
+  share?: boolean;
   view?: MapView;
   colourBy: ColourBy;
   filters: Filters;
@@ -37,6 +40,7 @@ export function parseUrlState(search: string): UrlState {
 
   const marker = params.get("marker");
   if (marker) state.marker = marker;
+  if (marker && params.get("share") === "1") state.share = true;
 
   const panel = params.get("panel") as UrlPanel | null;
   if (panel && PANELS.includes(panel)) state.panel = panel;
