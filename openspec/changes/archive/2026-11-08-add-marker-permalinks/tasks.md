@@ -32,4 +32,4 @@
 
 - [x] 5.1 `service/README.md`: the public routes, card files and manifest, and the card limits; `infra/README.md`: the rewrite; remove the cards part from `openspec/backlog.md`'s share item, leaving the dialog and badge
 - [x] 5.2 All checks pass (`format:check`, `typecheck`, `lint`, unit tests, e2e, build), the Docker image builds and renders a card, and `openspec validate --strict`
-- [ ] 5.3 (manual) On staging, run the nightly publish once (Cloud Scheduler "Force run"), check that cards appear in the bucket and how long it took, then paste a permalink into LinkedIn's Post Inspector, the Facebook Sharing Debugger and a WhatsApp chat
+- [x] 5.3 (manual) On staging, run the nightly publish once (Cloud Scheduler "Force run"), check that cards appear in the bucket and how long it took, then paste a permalink into LinkedIn's Post Inspector, the Facebook Sharing Debugger and a WhatsApp chat
