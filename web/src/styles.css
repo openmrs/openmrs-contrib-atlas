@@ -1,3 +1,6 @@
+/* The "OpenMRS Atlas" title: IBM Plex Sans (SIL Open Font License), served with the site. */
+@import "@fontsource/ibm-plex-sans/latin-400.css";
+
 :root {
   --ink: #1f2933;
   --ink-quiet: #5f6b7a;
@@ -53,7 +56,15 @@ textarea {
   z-index: 3;
 }
 .topbar h1 {
+  font-family:
+    "IBM Plex Sans",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
   font-size: 18px;
+  font-weight: 400;
   margin: 0;
   white-space: nowrap;
 }
