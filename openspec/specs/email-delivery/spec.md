@@ -12,6 +12,13 @@ All Atlas email SHALL be sent through Mandrill from one no-reply address on a do
 - **WHEN** a person reads any Atlas email
 - **THEN** it says not to reply, and links to OpenMRS Talk (https://talk.openmrs.org/) and OpenMRS on Slack (https://openmrs.slack.com/) for help with the Atlas
 
+### Requirement: A way around links in email
+Email to site owners, editors and claimants (reminders and claim decisions) SHALL end with a postscript saying that people who want to avoid clicking on links in email can go to the OpenMRS Atlas in their browser at the site's address and sign in with their OpenMRS ID. The address SHALL be plain text, never a link, though email clients may make it one. Notices to the notice address SHALL NOT include it.
+
+#### Scenario: Avoiding links in email
+- **WHEN** a person reads a reminder or a claim decision from production
+- **THEN** it ends with "P.S. If you want to avoid clicking on links in email, you can go to the OpenMRS Atlas in your browser at atlas.openmrs.org and sign in with your OpenMRS ID.", with `atlas.openmrs.org` as plain text
+
 ### Requirement: Staging delivers only to an allowlist
 When an allowlist is configured, email SHALL be delivered only to addresses on it. Email to any other address SHALL NOT be sent, and SHALL be logged with its kind and marker, but without the address or the body. This applies in every environment. Staging with no allowlist configured SHALL deliver to no one. Production with no allowlist configured SHALL deliver to everyone, so production can start with an allowlist and have it removed once its first reminders have been reviewed.
 

@@ -384,6 +384,24 @@ describe("Reminder content", () => {
     expect(email.html).not.toContain("<img");
   });
 
+  it("Scenario: Avoiding links in email", () => {
+    const email = renderReminder({
+      username: "jdoe",
+      name: "Jane Doe",
+      markers: due,
+      siteUrl: SITE,
+      confirmLink: () => `${SITE}/reminder#c`,
+      unsubscribeLink: `${SITE}/reminder#u`,
+    });
+    const host = new URL(SITE).host;
+    const ps = `P.S. If you want to avoid clicking on links in email, you can go to the OpenMRS Atlas in your browser at ${host} and sign in with your OpenMRS ID.`;
+    expect(email.text.trimEnd().endsWith(ps)).toBe(true);
+    expect(email.html).toContain(`<p>${ps}</p>\n</body>`);
+    // The address is plain text, never a link.
+    expect(email.html).not.toContain(`href="${SITE}"`);
+    expect(email.html).not.toContain(`href="${SITE}/"`);
+  });
+
   it("puts working signed links in the email", async () => {
     const { mailer } = await run(sheetOf([{ n: 1, confirmed: monthsAgo(13), owner: "jdoe" }]));
     const tokens = [...mailer.sent[0]!.text.matchAll(/\/reminder#([\w.-]+)/g)].map((m) => m[1]);

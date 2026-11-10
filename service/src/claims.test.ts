@@ -393,6 +393,25 @@ describe("Declining a claim", () => {
     expect(email.text).toContain(`Reason: ${reason}`);
   });
 
+  it("Scenario: Avoiding links in email", () => {
+    for (const approved of [true, false]) {
+      const email = renderClaimDecision(
+        { marker_id: ID, name: "Clinic", username: "b", approved, reason: "" },
+        "https://atlas.example.org",
+      );
+      const ps =
+        "P.S. If you want to avoid clicking on links in email, you can go to the OpenMRS Atlas in your browser at atlas.example.org and sign in with your OpenMRS ID.";
+      expect(email.text.trimEnd().endsWith(ps)).toBe(true);
+      expect(email.html).toContain(`<p>${ps}</p>\n</body>`);
+    }
+    // Admin notices don't need it.
+    const notice = renderClaimNotice(
+      { marker_id: ID, name: "Clinic", username: "b", message: "hi" },
+      { siteUrl: "https://atlas.example.org", sheetUrl: "https://sheet" },
+    );
+    expect(notice.text).not.toContain("P.S.");
+  });
+
   it("without a reason, and refuses a long one", async () => {
     orphan();
     const { body } = await claim("bjones");

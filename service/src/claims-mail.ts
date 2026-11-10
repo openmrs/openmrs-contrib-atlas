@@ -1,6 +1,6 @@
 import type { Accounts } from "./accounts.ts";
 import type { ClaimDecision } from "./edits.ts";
-import { NO_REPLY_HTML, NO_REPLY_TEXT } from "./help.ts";
+import { NO_REPLY_HTML, NO_REPLY_TEXT, signInInsteadHtml, signInInsteadText } from "./help.ts";
 import type { NoticeConfig } from "./notices.ts";
 
 /**
@@ -17,11 +17,12 @@ const markerUrl = (siteUrl: string, id: string) =>
 
 const link = (href: string, label: string) => `<a href="${escape(href)}">${escape(label)}</a>`;
 
-const page = (paragraphs: string[]) =>
+const page = (paragraphs: string[], postscript?: string) =>
   [
     '<!doctype html><html><body style="font-family: sans-serif; line-height: 1.5">',
     ...paragraphs.map((p) => `<p>${p}</p>`),
     `<p>${NO_REPLY_HTML}</p>`,
+    ...(postscript ? [`<p>${postscript}</p>`] : []),
     "</body></html>",
   ].join("\n");
 
@@ -97,12 +98,17 @@ export function renderClaimDecision(decision: ClaimDecision, siteUrl: string) {
         "",
         NO_REPLY_TEXT,
         "",
+        signInInsteadText(siteUrl),
+        "",
       ].join("\n"),
-      html: page([
-        `Your claim for <strong>${escape(name)}</strong> on the OpenMRS Atlas was approved. You are now its owner.`,
-        "You can update it, add editors and keep it current from My markers.",
-        link(url, "See it on the map"),
-      ]),
+      html: page(
+        [
+          `Your claim for <strong>${escape(name)}</strong> on the OpenMRS Atlas was approved. You are now its owner.`,
+          "You can update it, add editors and keep it current from My markers.",
+          link(url, "See it on the map"),
+        ],
+        signInInsteadHtml(siteUrl),
+      ),
     };
   }
   const reason = decision.reason.trim();
@@ -116,12 +122,17 @@ export function renderClaimDecision(decision: ClaimDecision, siteUrl: string) {
       "",
       NO_REPLY_TEXT,
       "",
+      signInInsteadText(siteUrl),
+      "",
     ].join("\n"),
-    html: page([
-      `Your claim for <strong>${escape(name)}</strong> on the OpenMRS Atlas was declined.`,
-      ...(reason ? [`Reason: ${quoted(reason)}`] : []),
-      link(url, "See it on the map"),
-    ]),
+    html: page(
+      [
+        `Your claim for <strong>${escape(name)}</strong> on the OpenMRS Atlas was declined.`,
+        ...(reason ? [`Reason: ${quoted(reason)}`] : []),
+        link(url, "See it on the map"),
+      ],
+      signInInsteadHtml(siteUrl),
+    ),
   };
 }
 

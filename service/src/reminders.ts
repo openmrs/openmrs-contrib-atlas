@@ -14,7 +14,7 @@ import {
 import { AccountsUnavailable, type Accounts } from "./accounts.ts";
 import type { EditStore } from "./edits.ts";
 import type { LinkSigner } from "./links.ts";
-import { NO_REPLY_HTML, NO_REPLY_TEXT } from "./help.ts";
+import { NO_REPLY_HTML, NO_REPLY_TEXT, signInInsteadHtml, signInInsteadText } from "./help.ts";
 import type { Mailer } from "./mailer.ts";
 
 /**
@@ -207,6 +207,8 @@ export function renderReminder(input: ReminderEmailInput) {
     "",
     `To stop these reminders: ${input.unsubscribeLink}`,
     "",
+    signInInsteadText(site),
+    "",
   ].join("\n");
 
   const p = (s: string) => `<p>${s}</p>`;
@@ -225,6 +227,7 @@ export function renderReminder(input: ReminderEmailInput) {
     p(escape(fade)),
     p(NO_REPLY_HTML),
     p(`${a(input.unsubscribeLink, "Unsubscribe")} from these reminders.`),
+    p(signInInsteadHtml(site)),
     "</body></html>",
   ].join("\n");
 
