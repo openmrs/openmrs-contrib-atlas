@@ -19,6 +19,7 @@ import { track } from "./lib/analytics.ts";
 import { savedNotice, type MarkerResult } from "./lib/api.ts";
 import { legendEntries, palette } from "./lib/colours.ts";
 import { applyFilters, hasFilters } from "./lib/filters.ts";
+import { listsOf } from "./lib/groups.ts";
 import { inView, sortMarkers, type Bounds, type ListSort } from "./lib/list.ts";
 import type { ShareSource } from "./lib/share.ts";
 import { computeStats } from "./lib/stats.ts";
@@ -123,7 +124,11 @@ export function App({ signInError }: { signInError?: string }) {
     for (const [id, marker] of saved) if (marker && !known.has(id)) updated.push(marker);
     return updated;
   }, [snapshot, saved]);
-  const markers = useMemo(() => applyFilters(allMarkers, filters, now), [allMarkers, filters, now]);
+  const lists = useMemo(() => listsOf(snapshot), [snapshot]);
+  const markers = useMemo(
+    () => applyFilters(allMarkers, filters, now, lists),
+    [allMarkers, filters, now, lists],
+  );
   const colours = useMemo(
     () => (snapshot ? palette(snapshot, colourBy) : new Map<string, string>()),
     [snapshot, colourBy],
@@ -438,6 +443,7 @@ export function App({ signInError }: { signInError?: string }) {
           <FilterPanel
             markers={allMarkers}
             order={order}
+            lists={lists}
             filters={filters}
             onChange={changeFilters}
             onClose={() => setPanel(undefined)}

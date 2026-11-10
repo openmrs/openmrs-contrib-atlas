@@ -76,7 +76,7 @@ function lookupRows(data: Awaited<ReturnType<typeof readAtlas2>>) {
   }
   const distributions = data.distributions.map((d): Cell[] => {
     const seed = SEED_LOOKUPS.distributions.find((s) => s[0] === d.name);
-    return [d.name, seed?.[1] ?? "", !!d.is_standard];
+    return [d.name, seed?.[1] ?? ""];
   });
   for (const seed of SEED_LOOKUPS.distributions) {
     if (!distributions.some((d) => d[0] === seed[0])) distributions.push(seed);

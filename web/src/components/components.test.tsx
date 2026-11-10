@@ -3,7 +3,9 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import fixture from "../../e2e/static/atlas.json";
 import { legendEntries, palette } from "../lib/colours.ts";
-import type { AtlasSnapshot, PublicMarker } from "../lib/types.ts";
+import { listsOf } from "../lib/groups.ts";
+import { NO_FILTERS, type AtlasSnapshot, type PublicMarker } from "../lib/types.ts";
+import { FilterPanel } from "./FilterPanel.tsx";
 import { Legend } from "./Legend.tsx";
 import { MarkerDetails } from "./MarkerDetails.tsx";
 import { SearchBox } from "./SearchBox.tsx";
@@ -51,6 +53,49 @@ describe("MarkerDetails", () => {
     expect(screen.getByText("50")).toBeTruthy();
     await userEvent.keyboard("{Escape}");
     expect(onClose).toHaveBeenCalled();
+  });
+});
+
+describe("Other values (specs/map-view)", () => {
+  const ampath = {
+    ...byName("Kampala Rollout"),
+    distribution: "AMPATH-Custom",
+    openmrs_version: "2.4.2",
+  };
+
+  it("Scenario: Other value in the details", () => {
+    render(<MarkerDetails marker={ampath} onClose={() => {}} />);
+    expect(screen.getByText("AMPATH-Custom")).toBeTruthy();
+    expect(screen.getByText("2.4.2")).toBeTruthy();
+  });
+
+  it("offers list values, then one Other, then Unknown, as filters", () => {
+    const markers = [
+      ampath,
+      { ...ampath, id: "o2", distribution: "iSantePlus" },
+      { ...ampath, id: "o3", distribution: "Bahmni" },
+      { ...ampath, id: "o4", distribution: undefined },
+    ];
+    render(
+      <FilterPanel
+        markers={markers}
+        order={{
+          types: snapshot.types.map((t) => t.name),
+          distributions: snapshot.distributions.map((d) => d.name),
+          versions: snapshot.versions.map((v) => v.version),
+        }}
+        lists={listsOf(snapshot)}
+        filters={NO_FILTERS}
+        onChange={() => {}}
+        onClose={() => {}}
+      />,
+    );
+    const group = screen.getByRole("group", { name: "Distribution" });
+    expect(
+      within(group)
+        .getAllByRole("checkbox")
+        .map((c) => c.closest("label")!.textContent),
+    ).toEqual(["Bahmni", "Other", "Unknown"]);
   });
 });
 

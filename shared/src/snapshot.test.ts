@@ -53,6 +53,26 @@ describe("buildSnapshot", () => {
     expect(problems.map((p) => p.markerId)).toEqual([ids(2)]);
   });
 
+  it("Scenario: Other value published", () => {
+    const { markers, problems } = validateMarkers(
+      markerValues(markerRow({ id: ids(1), distribution: "iSantePlus" })),
+      lookups,
+    );
+    expect(problems).toEqual([]);
+    expect(buildSnapshot(markers, lookups, now).markers[0]?.distribution).toBe("iSantePlus");
+  });
+
+  it("Scenario: List spelling published", () => {
+    const snapshot = snapshotOf(markerRow({ id: ids(1), distribution: "bahmni" }));
+    expect(snapshot.markers[0]?.distribution).toBe("Bahmni");
+  });
+
+  it("publishes each distribution's name and url only", () => {
+    const snapshot = snapshotOf(markerRow());
+    expect(snapshot.distributions[0]).toEqual({ name: "Bahmni", url: "https://www.bahmni.org" });
+    expect(JSON.stringify(snapshot)).not.toContain("is_standard");
+  });
+
   it("Scenario: Country derived from coordinates", () => {
     const snapshot = snapshotOf(markerRow({ latitude: -1.29, longitude: 36.82 }));
     expect(snapshot.markers[0]?.country).toBe("KE");

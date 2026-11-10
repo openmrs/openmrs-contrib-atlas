@@ -1,8 +1,8 @@
+import { canonical, spellings } from "./lookups.ts";
 import { text, toRawRows, type RawRow } from "./rows.ts";
 import {
   COLUMNS,
   MARKER_STATUSES,
-  OTHER_VERSION,
   type Cell,
   type Lookups,
   type Marker,
@@ -22,8 +22,9 @@ const DATE_FIELDS = ["created_at", "updated_at", "confirmed_at"] as const;
 export function validateMarkers(values: Cell[][], lookups: Lookups): ValidationResult {
   const rows = toRawRows(values, COLUMNS.markers);
   const types = new Set(lookups.types.map((t) => t.name));
-  const distributions = new Set(lookups.distributions.map((d) => d.name));
-  const versions = new Set([...lookups.versions.map((v) => v.version), OTHER_VERSION]);
+  // Any distribution or version is valid: one not on its list is an Other value (lookups.ts).
+  const distributions = spellings(lookups.distributions.map((d) => d.name));
+  const versions = spellings(lookups.versions.map((v) => v.version));
 
   const idCounts = new Map<string, number>();
   for (const { cells } of rows) {
@@ -48,8 +49,9 @@ export function validateMarkers(values: Cell[][], lookups: Lookups): ValidationR
 
 interface Allowed {
   types: Set<string>;
-  distributions: Set<string>;
-  versions: Set<string>;
+  /** Lower-cased entry → spelling on the list. */
+  distributions: Map<string, string>;
+  versions: Map<string, string>;
 }
 
 function checkRow({ cells }: RawRow, allowed: Allowed): { marker?: Marker; reasons: string[] } {
@@ -66,15 +68,8 @@ function checkRow({ cells }: RawRow, allowed: Allowed): { marker?: Marker; reaso
   const type = field("type");
   if (type && !allowed.types.has(type)) reasons.push(`unknown type: ${type}`);
 
-  const distribution = field("distribution");
-  if (distribution && !allowed.distributions.has(distribution)) {
-    reasons.push(`unknown distribution: ${distribution}`);
-  }
-
-  const version = field("openmrs_version");
-  if (version && !allowed.versions.has(version)) {
-    reasons.push(`unknown openmrs_version: ${version}`);
-  }
+  const distribution = canonical(field("distribution"), allowed.distributions);
+  const version = canonical(field("openmrs_version"), allowed.versions);
 
   let siteCount: number | undefined;
   const siteCountText = field("site_count");

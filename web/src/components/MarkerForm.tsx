@@ -1,6 +1,7 @@
 import { Marker as MapPin, type Map as MapLibreMap } from "maplibre-gl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { AtlasSnapshot, Role } from "@openmrs-atlas/shared";
+import { OTHER, OTHER_MAX_LENGTH } from "@openmrs-atlas/shared/lookups";
 import {
   ApiError,
   api,
@@ -196,6 +197,10 @@ export function MarkerForm({
   );
 
   const set = (field: string, value: string) => setValues((v) => ({ ...v, [field]: value }));
+  /** Distribution or version: true once "Other" is chosen, false once a list value is. */
+  const [otherChosen, setOtherChosen] = useState<Record<string, boolean>>({});
+  /** The field whose Other text input takes focus when it appears, after choosing "Other". */
+  const focusOther = useRef<string>(undefined);
 
   const close = useCallback(() => {
     if (dirty) setDiscarding((showing) => !showing);
@@ -410,6 +415,72 @@ export function MarkerForm({
     );
   }
 
+  /**
+   * A list plus "Other" with a free-text value (specs/marker-editing). The field's value is the
+   * list entry, the text, or `Other` when the text is blank.
+   */
+  function choiceField(field: "distribution" | "openmrs_version", options: string[]) {
+    const current = values[field] ?? "";
+    const isOther = otherChosen[field] ?? (current !== "" && !options.includes(current));
+    const text = isOther && current !== OTHER ? current : "";
+    const fieldErrors = errorFor(field);
+    const textId = `${field}-other`;
+    return (
+      <div className="choice-field">
+        <label>
+          {LABELS[field]}
+          <select
+            value={isOther ? OTHER : current}
+            aria-invalid={fieldErrors.length > 0}
+            onChange={(e) => {
+              const chosen = e.target.value;
+              if (chosen === OTHER) {
+                setOtherChosen((o) => ({ ...o, [field]: true }));
+                set(field, text || OTHER);
+                focusOther.current = field;
+              } else {
+                setOtherChosen((o) => ({ ...o, [field]: false }));
+                set(field, chosen);
+              }
+            }}
+          >
+            <option value="">Not set</option>
+            {options.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+            <option value={OTHER}>Other…</option>
+          </select>
+        </label>
+        {isOther && (
+          <label htmlFor={textId} className="other-value">
+            {field === "distribution" ? "Distribution name" : "Version"} (optional)
+            <input
+              id={textId}
+              ref={(el) => {
+                if (el && focusOther.current === field) {
+                  focusOther.current = undefined;
+                  el.focus();
+                }
+              }}
+              type="text"
+              value={text}
+              maxLength={OTHER_MAX_LENGTH[field]}
+              aria-invalid={fieldErrors.length > 0}
+              onChange={(e) => set(field, e.target.value.trim() === "" ? OTHER : e.target.value)}
+            />
+          </label>
+        )}
+        {fieldErrors.map((reason) => (
+          <span key={reason} className="error">
+            {reason}
+          </span>
+        ))}
+      </div>
+    );
+  }
+
   const title = markerId ? "Edit marker" : "Add a site";
 
   return (
@@ -537,11 +608,14 @@ export function MarkerForm({
               { required: true },
             )}
             {textField("organisation")}
-            {selectField(
+            {choiceField(
               "distribution",
               snapshot.distributions.map((d) => d.name),
             )}
-            {selectField("openmrs_version", [...snapshot.versions.map((v) => v.version), "Other"])}
+            {choiceField(
+              "openmrs_version",
+              snapshot.versions.map((v) => v.version),
+            )}
             {textField("site_count", { type: "number" })}
             {textField("url", { type: "url" })}
 

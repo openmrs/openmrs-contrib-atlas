@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { countryName } from "../lib/countries.ts";
 import { hasFilters } from "../lib/filters.ts";
+import { distributionGroup, OTHER, versionGroup, type Lists } from "../lib/groups.ts";
 import { NO_FILTERS, UNKNOWN, type Filters, type PublicMarker } from "../lib/types.ts";
 import { useEscape } from "./useEscape.ts";
 
@@ -8,6 +9,8 @@ interface Props {
   markers: PublicMarker[];
   /** Lookup order for each list, so options read in a sensible order. */
   order: { types: string[]; distributions: string[]; versions: string[] };
+  /** The distribution and version lists, which tell their values from Other values. */
+  lists: Lists;
   filters: Filters;
   onChange: (filters: Filters) => void;
   onClose: () => void;
@@ -25,7 +28,7 @@ function ordered(values: Set<string>, order: string[]): string[] {
   return [...known, ...rest, ...(values.has(UNKNOWN) ? [UNKNOWN] : [])];
 }
 
-export function FilterPanel({ markers, order, filters, onChange, onClose }: Props) {
+export function FilterPanel({ markers, order, lists, filters, onChange, onClose }: Props) {
   useEscape(onClose);
 
   const options = useMemo(() => {
@@ -37,17 +40,18 @@ export function FilterPanel({ markers, order, filters, onChange, onClose }: Prop
         present(markers, (m) => m.type),
         order.types,
       ),
+      // List values first, then one Other for every value not on the list, then Unknown.
       distributions: ordered(
-        present(markers, (m) => m.distribution),
-        order.distributions,
+        present(markers, (m) => distributionGroup(m, lists)),
+        [...order.distributions, OTHER],
       ),
       versions: ordered(
-        present(markers, (m) => m.openmrs_version),
-        [...order.versions, "Other"],
+        present(markers, (m) => versionGroup(m, lists)),
+        [...order.versions, OTHER],
       ),
       countries,
     };
-  }, [markers, order]);
+  }, [markers, order, lists]);
 
   function toggle(key: ListKey, value: string, on: boolean) {
     const current = filters[key];

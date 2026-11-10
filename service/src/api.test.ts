@@ -159,6 +159,50 @@ describe("Edit a marker", () => {
     expect(await res.text()).toContain("name must be 200 characters or fewer");
   });
 
+  // specs/marker-editing: Optional marker fields, Other values
+  it("Scenario: Saving an Other value", async () => {
+    expect((await edit("jdoe", { fields: { openmrs_version: "2.4.2" } })).status).toBe(200);
+    expect(sheet.marker("openmrs_version")).toBe("2.4.2");
+  });
+
+  it("Scenario: Other value typed like a list entry", async () => {
+    const res = await edit("jdoe", { fields: { distribution: "bahmni" } });
+    expect(res.status).toBe(200);
+    expect(sheet.marker("distribution")).toBe("Bahmni");
+    const { marker } = (await res.json()) as { marker: { distribution: string } };
+    expect(marker.distribution).toBe("Bahmni");
+  });
+
+  it("Scenario: Other left blank", async () => {
+    expect((await edit("jdoe", { fields: { openmrs_version: "Other" } })).status).toBe(200);
+    expect(sheet.marker("openmrs_version")).toBe("Other");
+  });
+
+  it("Scenario: Too long", async () => {
+    const res = await edit("jdoe", { fields: { distribution: "x".repeat(31) } });
+    expect(res.status).toBe(422);
+    const { errors } = (await res.json()) as { errors: { field: string; reason: string }[] };
+    expect(errors).toEqual([
+      { field: "distribution", reason: "distribution must be 30 characters or fewer" },
+    ]);
+    expect(sheet.marker("distribution")).not.toBe("x".repeat(31));
+  });
+
+  it("adds a marker with an Other value, spelling list values as the list does", async () => {
+    const fields = {
+      name: "New site",
+      latitude: 0.5,
+      longitude: 32.5,
+      type: "Clinical",
+      distribution: "reference application 3.x (o3)",
+      openmrs_version: "2.4.2-custom",
+    };
+    const res = await call("newbie", "POST", "/markers", { fields });
+    expect(res.status).toBe(201);
+    expect(sheet.marker("distribution", 2)).toBe("Reference Application 3.x (O3)");
+    expect(sheet.marker("openmrs_version", 2)).toBe("2.4.2-custom");
+  });
+
   it("applies limits only to values being changed", async () => {
     sheet.setMarker("notes", "x".repeat(3000));
     expect((await edit("jdoe", { fields: { name: "New" } })).status).toBe(200);

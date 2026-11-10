@@ -29,41 +29,32 @@
   ],
   "distributions": [
     {
-      "name": "OpenMRS 1.x",
-      "is_standard": true
+      "name": "OpenMRS 1.x"
     },
     {
-      "name": "Reference Application 2.x",
-      "is_standard": true
+      "name": "Reference Application 2.x"
     },
     {
       "name": "Bahmni",
-      "url": "https://www.bahmni.org",
-      "is_standard": true
+      "url": "https://www.bahmni.org"
     },
     {
-      "name": "KenyaEMR",
-      "is_standard": true
+      "name": "KenyaEMR"
     },
     {
-      "name": "Platform 1.x + Legacy UI",
-      "is_standard": true
+      "name": "Platform 1.x + Legacy UI"
     },
     {
-      "name": "Platform 1.x + Custom UI",
-      "is_standard": true
+      "name": "Platform 1.x + Custom UI"
     },
     {
-      "name": "AMPATH",
-      "is_standard": false
+      "name": "AMPATH"
     },
     {
-      "name": "OpenMRS 1.x MDRTB",
-      "is_standard": false
+      "name": "OpenMRS 1.x MDRTB"
     },
     {
-      "name": "Reference Application 3.x (O3)",
-      "is_standard": true
+      "name": "Reference Application 3.x (O3)"
     }
   ],
   "versions": [

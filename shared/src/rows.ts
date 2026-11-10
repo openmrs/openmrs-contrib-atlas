@@ -1,3 +1,4 @@
+import { OTHER } from "./lookups.ts";
 import type { Cell, Distribution, Lookups, MarkerType, PrivateRow, Version } from "./schema.ts";
 
 /** A data row keyed by header name, with its 1-based sheet row number. */
@@ -40,11 +41,6 @@ function optional(cell: Cell): string | undefined {
   return text(cell) || undefined;
 }
 
-function bool(cell: Cell): boolean {
-  if (typeof cell === "boolean") return cell;
-  return ["true", "yes", "1"].includes(text(cell).toLowerCase());
-}
-
 export function parseLookups(values: {
   types: Cell[][];
   distributions: Cell[][];
@@ -57,18 +53,18 @@ export function parseLookups(values: {
       sort: Number(cells.sort) || 0,
     }),
   );
-  const distributions: Distribution[] = toRawRows(values.distributions, [
-    "name",
-    "url",
-    "is_standard",
-  ]).map(({ cells }) => ({
-    name: text(cells.name),
-    url: optional(cells.url),
-    is_standard: bool(cells.is_standard),
-  }));
-  const versions: Version[] = toRawRows(values.versions, ["version", "release_date"]).map(
-    ({ cells }) => ({ version: text(cells.version), release_date: optional(cells.release_date) }),
-  );
+  // A leftover is_standard column is ignored. An entry named "Other" would collide with the
+  // Other group (lookups.ts), so it is dropped.
+  const notOther = (name: string) => name !== "" && name.toLowerCase() !== OTHER.toLowerCase();
+  const distributions: Distribution[] = toRawRows(values.distributions, ["name", "url"])
+    .map(({ cells }) => ({ name: text(cells.name), url: optional(cells.url) }))
+    .filter((d) => notOther(d.name));
+  const versions: Version[] = toRawRows(values.versions, ["version", "release_date"])
+    .map(({ cells }) => ({
+      version: text(cells.version),
+      release_date: optional(cells.release_date),
+    }))
+    .filter((v) => notOther(v.version));
   types.sort((a, b) => a.sort - b.sort);
   return { types, distributions, versions };
 }

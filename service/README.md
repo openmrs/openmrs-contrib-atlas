@@ -128,6 +128,26 @@ A publish is refused if it would publish fewer than 80% of the markers in the cu
 `atlas.json`. The reason is then written to the first row of `problems`, and the public files are
 left alone.
 
+## Types, distributions and versions
+
+The `types`, `distributions` and `versions` tabs are the lists the form offers (specs/marker-data).
+Admins edit them in the sheet. Each edit publishes within about a minute.
+
+- **Types are a fixed list.** A marker whose `type` isn't on `types` is a problem and stays off
+  the map until it's fixed.
+- **Distributions and versions are a list plus "Other".** A marker's `distribution` or
+  `openmrs_version` can be any text. A value that isn't on its list is an _Other_ value. It's
+  shown by name in the marker's details, and it's grouped under one "Other" in the legend and the
+  filters. In the form, "Other" gives a text field of up to 30 characters for a distribution and
+  12 for a version. `Other` on its own means Other with no detail.
+- **Case doesn't matter.** "bahmni", typed in the form or the sheet, is saved and published as
+  "Bahmni".
+- **Changing a list changes the grouping, not the markers.** Adding "iSantePlus" to
+  `distributions` takes every marker that already says iSantePlus out of Other. Deleting or
+  renaming an entry puts its markers into Other, with their value kept. A row named "Other" is
+  ignored.
+- `distributions` has only `name` and `url`. An old `is_standard` column is ignored.
+
 ## Configuration
 
 | Variable                         | Purpose                                                              |

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { colourOf, legendEntries, palette } from "./colours.ts";
 import { countryName } from "./countries.ts";
 import { applyFilters, hasFilters } from "./filters.ts";
+import { listsOf } from "./groups.ts";
 import { MIN_OPACITY, opacityFor } from "./freshness.ts";
 import { linkify } from "./linkify.ts";
 import { searchMarkers } from "./search.ts";
@@ -14,6 +15,7 @@ const snapshot = fixture as AtlasSnapshot;
 const markers = snapshot.markers;
 const now = new Date("2026-11-01T00:00:00Z");
 const byName = (name: string) => markers.find((m) => m.name === name)!;
+const lists = listsOf(snapshot);
 
 const monthsAgo = (months: number): PublicMarker => ({
   id: "x",
@@ -48,13 +50,18 @@ describe("opacityFor (Gradual fading by freshness)", () => {
 
 describe("applyFilters", () => {
   it("filters by type and by Unknown distribution", () => {
-    const clinical = applyFilters(markers, { ...NO_FILTERS, types: ["Clinical"] }, now);
+    const clinical = applyFilters(markers, { ...NO_FILTERS, types: ["Clinical"] }, now, lists);
     expect(clinical.map((m) => m.name)).toEqual([
       "Kampala Rollout",
       "Entebbe Road Health Centres",
       "Port-au-Prince O3 Pilot",
     ]);
-    const unknown = applyFilters(markers, { ...NO_FILTERS, distributions: ["Unknown"] }, now);
+    const unknown = applyFilters(
+      markers,
+      { ...NO_FILTERS, distributions: ["Unknown"] },
+      now,
+      lists,
+    );
     expect(unknown.map((m) => m.name)).toEqual([
       "Entebbe Road Health Centres",
       "Boston Training Server",
@@ -62,7 +69,7 @@ describe("applyFilters", () => {
   });
 
   it("Scenario: Hide old markers on request", () => {
-    const recent = applyFilters(markers, { ...NO_FILTERS, confirmedWithinYears: 2 }, now);
+    const recent = applyFilters(markers, { ...NO_FILTERS, confirmedWithinYears: 2 }, now, lists);
     expect(recent.map((m) => m.name)).not.toContain("Kathmandu Development Lab");
     expect(recent.map((m) => m.name)).not.toContain("Entebbe Road Health Centres");
     expect(recent).toHaveLength(5);
@@ -70,7 +77,9 @@ describe("applyFilters", () => {
 
   it("combines filters and reports when any are set", () => {
     const f = { ...NO_FILTERS, types: ["Research"], countries: ["KE"] };
-    expect(applyFilters(markers, f, now).map((m) => m.name)).toEqual(["Nairobi Teaching Hospital"]);
+    expect(applyFilters(markers, f, now, lists).map((m) => m.name)).toEqual([
+      "Nairobi Teaching Hospital",
+    ]);
     expect(hasFilters(f)).toBe(true);
     expect(hasFilters(NO_FILTERS)).toBe(false);
   });
@@ -102,8 +111,11 @@ describe("closed sites", () => {
 
   it("Scenario: Hide closed sites", () => {
     const filters = { ...NO_FILTERS, hideClosed: true };
-    expect(applyFilters(markers, NO_FILTERS, new Date()).map((m) => m.id)).toEqual(["a", "b"]);
-    expect(applyFilters(markers, filters, new Date()).map((m) => m.id)).toEqual(["a"]);
+    expect(applyFilters(markers, NO_FILTERS, new Date(), lists).map((m) => m.id)).toEqual([
+      "a",
+      "b",
+    ]);
+    expect(applyFilters(markers, filters, new Date(), lists).map((m) => m.id)).toEqual(["a"]);
     expect(hasFilters(filters)).toBe(true);
     const search = formatUrlState({ colourBy: "type", filters });
     expect(search).toBe("?closed=hide");
@@ -203,6 +215,42 @@ describe("colours", () => {
     const colours = palette(snapshot, "version");
     const legend = legendEntries(markers, "version", colours).map((e) => e.value);
     expect(legend).toEqual(["1.10", "2.2", "2.4", "3.8", "Other", "Unknown"]);
+  });
+});
+
+describe("Other values (specs/map-view)", () => {
+  const base = byName("Kampala Rollout");
+  const others = [
+    { ...base, id: "o1", distribution: "AMPATH-Custom", openmrs_version: "2.4.2" },
+    { ...base, id: "o2", distribution: "iSantePlus", openmrs_version: "Other" },
+    { ...base, id: "o3", distribution: "Bahmni", openmrs_version: "2.4" },
+  ] as PublicMarker[];
+
+  it("Scenario: Other values in the legend", () => {
+    const colours = palette(snapshot, "distribution");
+    const legend = legendEntries(others, "distribution", colours);
+    expect(legend.map((e) => e.value)).toEqual(["Bahmni", "Other"]);
+    expect(colourOf(others[0]!, "distribution", colours)).toBe(
+      colourOf(others[1]!, "distribution", colours),
+    );
+    expect(colourOf(others[0]!, "distribution", colours)).not.toBe(
+      colourOf(others[2]!, "distribution", colours),
+    );
+    const versions = palette(snapshot, "version");
+    expect(legendEntries(others, "version", versions).map((e) => e.value)).toEqual([
+      "2.4",
+      "Other",
+    ]);
+  });
+
+  it("Scenario: Filter by Other", () => {
+    const pick = (f: Partial<typeof NO_FILTERS>) =>
+      applyFilters(others, { ...NO_FILTERS, ...f }, now, lists).map((m) => m.id);
+    expect(pick({ distributions: ["Other"] })).toEqual(["o1", "o2"]);
+    expect(pick({ distributions: ["Bahmni"] })).toEqual(["o3"]);
+    expect(pick({ versions: ["Other"] })).toEqual(["o1", "o2"]);
+    // A value that is now an Other value matches nothing by name.
+    expect(pick({ distributions: ["iSantePlus"] })).toEqual([]);
   });
 });
 

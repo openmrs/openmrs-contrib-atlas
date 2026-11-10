@@ -1,4 +1,5 @@
-import { OTHER_VERSION, type Cell } from "./schema.ts";
+import { OTHER } from "./lookups.ts";
+import type { Cell } from "./schema.ts";
 
 /**
  * Pure mapping from Atlas 2.0 database rows to Atlas 3.0 sheet rows.
@@ -74,7 +75,7 @@ export function normaliseVersion(raw: string | null, versions: string[]): string
   const v = text(raw);
   if (!v || v.toLowerCase() === "unknown") return "";
   const match = /^v?(\d+\.\d+)/i.exec(v);
-  return match && versions.includes(match[1]!) ? match[1]! : OTHER_VERSION;
+  return match && versions.includes(match[1]!) ? match[1]! : OTHER;
 }
 
 /**
@@ -121,7 +122,7 @@ export function migrateAtlas2(
     const changed = legacyDate(m.date_changed);
     const created = legacyDate(m.date_created) || changed;
     const version = normaliseVersion(m.openmrs_version, versions);
-    if (version === OTHER_VERSION) {
+    if (version === OTHER) {
       const raw = text(m.openmrs_version);
       report.unmappedVersions[raw] = (report.unmappedVersions[raw] ?? 0) + 1;
     }

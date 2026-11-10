@@ -509,6 +509,16 @@ button.link {
   font-size: 13px;
   margin: 0;
 }
+/* A list plus "Other", whose free-text value sits just under it (specs/marker-editing). */
+.marker-form .choice-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.marker-form .choice-field .other-value {
+  padding-left: 12px;
+  border-left: 2px solid var(--line);
+}
 .place-search {
   display: flex;
   gap: 8px;
@@ -827,6 +837,10 @@ a.button {
 
 /* Phones: panels become bottom sheets, stats shrink. */
 @media (max-width: 600px) {
+  /* A narrower label column leaves a 30-character Other distribution one line (specs/map-view). */
+  .details dl div {
+    grid-template-columns: 96px 1fr;
+  }
   .topbar {
     gap: 6px;
     padding: 8px 12px;

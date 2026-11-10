@@ -7,7 +7,8 @@ import {
   type Atlas2Auth,
   type Atlas2Marker,
 } from "./migrate.ts";
-import { COLUMNS, OTHER_VERSION } from "./schema.ts";
+import { OTHER } from "./lookups.ts";
+import { COLUMNS } from "./schema.ts";
 import { SEED_LOOKUPS } from "./seed.ts";
 import { parseLookups } from "./rows.ts";
 import { validateMarkers } from "./validate.ts";
@@ -124,14 +125,14 @@ describe("Version normalisation", () => {
   });
 
   it("Scenario: Unrecognised version", () => {
-    expect(normaliseVersion("custom build", versions)).toBe(OTHER_VERSION);
+    expect(normaliseVersion("custom build", versions)).toBe(OTHER);
   });
 
   it("handles the forms found in 2.0 data", () => {
     expect(normaliseVersion("2.4-SNAPSHOT", versions)).toBe("2.4");
     expect(normaliseVersion("1.10.0  Build d8b5d0", versions)).toBe("1.10");
     expect(normaliseVersion("v2.1", versions)).toBe("2.1");
-    expect(normaliseVersion("2.11.0", versions)).toBe(OTHER_VERSION);
+    expect(normaliseVersion("2.11.0", versions)).toBe(OTHER);
     expect(normaliseVersion("", versions)).toBe("");
     expect(normaliseVersion("Unknown", versions)).toBe("");
   });

@@ -11,9 +11,9 @@ export const lookupValues: { types: Cell[][]; distributions: Cell[][]; versions:
   ],
   distributions: [
     [...COLUMNS.distributions],
-    ["Bahmni", "https://www.bahmni.org", true],
-    ["KenyaEMR", "", true],
-    ["AMPATH", "", false],
+    ["Bahmni", "https://www.bahmni.org"],
+    ["KenyaEMR", ""],
+    ["AMPATH", ""],
   ],
   versions: [[...COLUMNS.versions], ["1.10", ""], ["2.4", ""]],
 };

@@ -8,6 +8,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./freshness": "./src/freshness.ts",
+    "./lookups": "./src/lookups.ts",
     "./schema": "./src/schema.ts",
     "./seed": "./src/seed.ts"
   },

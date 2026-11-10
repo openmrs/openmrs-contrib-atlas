@@ -36,13 +36,44 @@ describe("parseLookups", () => {
   it("reads types sorted by sort order, distributions and versions", () => {
     const lookups = parseLookups(lookupValues);
     expect(lookups.types.map((t) => t.name)).toEqual(["Clinical", "Research", "Other"]);
-    expect(lookups.distributions[0]).toEqual({
-      name: "Bahmni",
-      url: "https://www.bahmni.org",
-      is_standard: true,
-    });
-    expect(lookups.distributions[2]?.is_standard).toBe(false);
+    expect(lookups.distributions[0]).toEqual({ name: "Bahmni", url: "https://www.bahmni.org" });
+    expect(lookups.distributions.map((d) => d.name)).toEqual(["Bahmni", "KenyaEMR", "AMPATH"]);
     expect(lookups.versions.map((v) => v.version)).toEqual(["1.10", "2.4"]);
+  });
+});
+
+describe("Lookup columns", () => {
+  it("Scenario: Leftover is_standard column", () => {
+    const lookups = parseLookups({
+      ...lookupValues,
+      distributions: [
+        ["name", "url", "is_standard"],
+        ["Bahmni", "", true],
+        ["AMPATH", "", false],
+      ],
+    });
+    expect(lookups.distributions).toEqual([
+      { name: "Bahmni", url: undefined },
+      { name: "AMPATH", url: undefined },
+    ]);
+  });
+
+  it("ignores a list entry named Other, which would collide with the Other group", () => {
+    const lookups = parseLookups({
+      ...lookupValues,
+      distributions: [
+        ["name", "url"],
+        ["Bahmni", ""],
+        ["other", ""],
+      ],
+      versions: [
+        ["version", "release_date"],
+        ["2.4", ""],
+        ["Other", ""],
+      ],
+    });
+    expect(lookups.distributions.map((d) => d.name)).toEqual(["Bahmni"]);
+    expect(lookups.versions.map((v) => v.version)).toEqual(["2.4"]);
   });
 });
 

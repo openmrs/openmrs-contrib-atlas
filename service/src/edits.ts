@@ -6,6 +6,7 @@ import {
   MARKER_STATUSES,
   TABS,
   can,
+  canonicalFields,
   checkLimits,
   checkMarkerRow,
   isPublished,
@@ -523,7 +524,7 @@ export class MarkerEditor {
     const tabs = await this.tabs();
     const id = randomUUID();
     const stamp = this.stamp();
-    const fields = cleanFields(body.fields ?? {});
+    const fields = canonicalFields(cleanFields(body.fields ?? {}), tabs.lookups);
     const contact = body.contact ?? {};
     const cells: Record<string, Cell> = {
       ...fields,
@@ -534,7 +535,7 @@ export class MarkerEditor {
       status: "active",
     };
     const errors = [
-      ...checkLimits({ ...fields, ...contact }),
+      ...checkLimits({ ...fields, ...contact }, tabs.lookups),
       ...checkMarkerRow(cells, tabs.lookups).errors,
     ];
     if (errors.length > 0) throw new ApiError(422, { error: "Please check the form.", errors });
@@ -581,7 +582,7 @@ export class MarkerEditor {
       });
     }
 
-    const fields = cleanFields(body.fields ?? {});
+    const fields = canonicalFields(cleanFields(body.fields ?? {}), tabs.lookups);
     const changed = Object.fromEntries(
       Object.entries(fields).filter(([f, value]) => text(value) !== text(marker.cells[f])),
     );
@@ -603,7 +604,7 @@ export class MarkerEditor {
     };
     const merged = { ...marker.cells, ...rowChanges };
     const errors = [
-      ...checkLimits({ ...changed, ...contact }),
+      ...checkLimits({ ...changed, ...contact }, tabs.lookups),
       ...checkMarkerRow(merged, tabs.lookups).errors,
     ];
     if (errors.length > 0) throw new ApiError(422, { error: "Please check the form.", errors });

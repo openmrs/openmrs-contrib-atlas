@@ -53,7 +53,7 @@ export const COLUMNS = {
   reminders: ["marker_id", "stage", "confirmed_at", "username", "sent_at", "result"],
   unsubscribed: ["username", "unsubscribed_at"],
   types: ["name", "colour", "sort"],
-  distributions: ["name", "url", "is_standard"],
+  distributions: ["name", "url"],
   versions: ["version", "release_date"],
   problems: ["marker_id", "row", "reasons"],
 } as const satisfies Record<keyof typeof TABS, readonly string[]>;
@@ -84,9 +84,6 @@ export const TEXT_COLUMNS = new Set<string>([
 /** A claim's life (specs/marker-claims). */
 export const CLAIM_STATUSES = ["pending", "approved", "declined", "withdrawn"] as const;
 export type ClaimStatus = (typeof CLAIM_STATUSES)[number];
-
-/** The version value allowed in addition to the versions tab. */
-export const OTHER_VERSION = "Other";
 
 export const MARKER_STATUSES = ["active", "hidden", "closed", "deleted"] as const;
 export type MarkerStatus = (typeof MARKER_STATUSES)[number];
@@ -132,7 +129,6 @@ export interface MarkerType {
 export interface Distribution {
   name: string;
   url?: string;
-  is_standard: boolean;
 }
 
 export interface Version {

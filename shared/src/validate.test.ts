@@ -74,25 +74,51 @@ describe("validateMarkers", () => {
     expect(validate(markerRow({ site_count: 50 })).markers[0]?.site_count).toBe(50);
   });
 
-  it("checks distribution, version (allowing Other), URLs and status", () => {
+  it("checks URLs and status", () => {
     const { problems } = validate(
-      markerRow({
-        distribution: "Nope",
-        openmrs_version: "9.9",
-        url: "ftp://example.org",
-        logo_url: "not a url",
-        status: "gone",
-      }),
+      markerRow({ url: "ftp://example.org", logo_url: "not a url", status: "gone" }),
     );
     expect(problems[0]?.reasons).toEqual([
-      "unknown distribution: Nope",
-      "unknown openmrs_version: 9.9",
       "url must be an http or https URL",
       "logo_url must be an http or https URL",
       "unknown status: gone",
     ]);
-    expect(validate(markerRow({ openmrs_version: "Other" })).problems).toEqual([]);
+  });
+
+  // Requirement: Field value rules (specs/marker-data), Other values
+  it("Scenario: Distribution not on the list", () => {
+    const { markers, problems } = validate(markerRow({ distribution: "OpenMRS 1.x MDRTB" }));
+    expect(problems).toEqual([]);
+    expect(markers[0]?.distribution).toBe("OpenMRS 1.x MDRTB");
+  });
+
+  it("Scenario: Version not on the list, and Other on its own", () => {
+    expect(validate(markerRow({ openmrs_version: "2.4.2" })).markers[0]?.openmrs_version).toBe(
+      "2.4.2",
+    );
+    expect(validate(markerRow({ openmrs_version: "Other" })).markers[0]?.openmrs_version).toBe(
+      "Other",
+    );
     expect(validate(markerRow({ openmrs_version: "1.10" })).problems).toEqual([]);
+  });
+
+  it("Scenario: Different case", () => {
+    const [marker] = validate(
+      markerRow({ distribution: "  bahmni ", openmrs_version: "2.4 " }),
+    ).markers;
+    expect(marker?.distribution).toBe("Bahmni");
+    expect(marker?.openmrs_version).toBe("2.4");
+  });
+
+  it("Scenario: Value added to the list later", () => {
+    const row = markerRow({ distribution: "iSantePlus" });
+    expect(validate(row).markers[0]?.distribution).toBe("iSantePlus");
+    const more = parseLookups({
+      ...lookupValues,
+      distributions: [...lookupValues.distributions, ["isanteplus", ""]],
+    });
+    // Now on the list, spelled as the list spells it, with no change to the row.
+    expect(validateMarkers(markerValues(row), more).markers[0]?.distribution).toBe("isanteplus");
   });
 
   // Requirement: Date fields
