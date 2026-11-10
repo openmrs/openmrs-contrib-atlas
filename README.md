@@ -4,8 +4,8 @@ A world map of OpenMRS implementations, at [atlas.openmrs.org](https://atlas.ope
 
 > **Status:** Atlas 3.0 is built on `main`; every push to `main` deploys to atlas-stg.openmrs.org,
 > and release tags (`3.0`, `3.1`) deploy to atlas.openmrs.org once approved. Atlas 2.0
-> (Express + MySQL) keeps serving atlas.openmrs.org until cutover; its code is kept, unmaintained,
-> on the `2.x` branch. See [`infra/README.md`](infra/README.md) for the environments.
+> (Express + MySQL) is retired; its code is kept, unmaintained, on the `2.x` branch. See
+> [`infra/README.md`](infra/README.md) for the environments.
 
 ## How it works
 
