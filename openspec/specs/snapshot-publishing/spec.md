@@ -56,7 +56,7 @@ Published files SHALL be served with caching of no more than 5 minutes, so visit
 - **THEN** the visitor sees the published data
 
 ### Requirement: Published snapshot contents
-A publish SHALL produce `atlas.json` containing the generation time, the `types`, `distributions` and `versions` lists, and every valid marker whose `status` is `active` or `closed`, with only public marker fields, including `status`, plus a derived `country` (ISO 3166-1 alpha-2).
+A publish SHALL produce `atlas.json` containing the generation time, the `types`, `distributions` and `versions` lists, and every valid marker whose `status` is `active` or `closed`, with only public marker fields, including `status`, plus a derived `country` (ISO 3166-1 alpha-2). Distributions SHALL have `name` and, when set, `url`. `distribution` and `openmrs_version` SHALL be published as the list entry they match ignoring case, else as in the sheet.
 
 #### Scenario: Hidden markers excluded
 - **WHEN** a marker's `status` is `hidden`
@@ -74,6 +74,14 @@ A publish SHALL produce `atlas.json` containing the generation time, the `types`
 - **WHEN** a marker row fails validation
 - **THEN** it is left out of the snapshot and listed in `problems`
 - **AND** all valid rows are still published
+
+#### Scenario: Other value published
+- **WHEN** a marker's `distribution` in the sheet is "AMPATH", which is not on the list
+- **THEN** it is published, with `distribution` "AMPATH", and is not listed in `problems`
+
+#### Scenario: List spelling published
+- **WHEN** a marker's `distribution` in the sheet is "bahmni" and the list has "Bahmni"
+- **THEN** it is published with `distribution` "Bahmni"
 
 #### Scenario: Country derived from coordinates
 - **WHEN** a marker is at latitude -1.29, longitude 36.82

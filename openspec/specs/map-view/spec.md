@@ -24,11 +24,15 @@ The map SHALL always display attribution for OpenStreetMap contributors and the 
 - **THEN** OpenStreetMap and OpenFreeMap attribution is visible
 
 ### Requirement: Colour by attribute
-Markers SHALL be coloured by type by default, and visitors SHALL be able to colour them by distribution or by OpenMRS version instead. A legend SHALL show the colour for each value present among markers that are not closed, with blank values shown as "Unknown", and SHALL show a "Closed" entry when any closed marker is on the map.
+Markers SHALL be coloured by type by default, or by distribution or OpenMRS version. A legend SHALL show the colour of each value present among markers that are not closed, with blank values as "Unknown", and a "Closed" entry when any closed marker is on the map. Every Other distribution or version (one not on its list, or `Other` itself) SHALL share one colour and one legend entry, "Other", after the list values and before "Unknown".
 
 #### Scenario: Switch to distribution
 - **WHEN** a visitor chooses "Colour by distribution"
 - **THEN** markers recolour by distribution and the legend lists the distributions present plus "Unknown" if any marker has none
+
+#### Scenario: Other values in the legend
+- **WHEN** markers have the distributions "AMPATH" and "OpenMRS 1.x MDRTB", neither on the list, and the map is coloured by distribution
+- **THEN** both share the "Other" colour, and the legend has one "Other" entry and lists neither name
 
 #### Scenario: Closed sites in the legend
 - **WHEN** a closed marker is the only one with distribution "Bahmni"
@@ -76,11 +80,15 @@ A marker SHALL be fully opaque until 2 years after its `confirmed_at`, then fade
 - **THEN** the pin is faded and the count is drawn at full opacity
 
 ### Requirement: Marker details
-Selecting a marker SHALL show its name, logo, organisation, type, distribution, OpenMRS version, site count, website link, notes and the month and year it was last confirmed, and SHALL say so if the site is closed. Fields that are blank SHALL be omitted. Notes SHALL be shown as plain text, with web addresses made into links.
+Selecting a marker SHALL show its name, logo, organisation, type, distribution, OpenMRS version, site count, website link, notes and the month and year it was last confirmed, and SHALL say so if the site is closed. Fields that are blank SHALL be omitted. Notes SHALL be shown as plain text, with web addresses made into links. An Other distribution or version SHALL be shown as its value.
 
 #### Scenario: Popup content
 - **WHEN** a visitor selects a marker with a name, website and notes but no logo
 - **THEN** the details show the name, a working website link and the notes, with no empty logo space
+
+#### Scenario: Other value in the details
+- **WHEN** a visitor selects a marker whose distribution is "AMPATH", which is not on the list
+- **THEN** the details show the distribution "AMPATH"
 
 #### Scenario: Markup in notes
 - **WHEN** a marker's notes contain `<script>` or HTML tags
@@ -98,11 +106,15 @@ Visitors SHALL be able to search markers by name, organisation or country name. 
 - **THEN** the results include markers whose country is Uganda
 
 ### Requirement: Filters
-Visitors SHALL be able to filter markers by type, distribution, OpenMRS version, country, and "confirmed within the last N years", and to hide closed sites. Closed sites SHALL be shown unless hidden. Filters SHALL apply to markers, clusters, legend and headline stats together, and SHALL be clearable in one action. The control that opens the filters SHALL sit inside the search box and SHALL show when any filter is on.
+Visitors SHALL be able to filter by type, distribution, OpenMRS version, country and "confirmed within the last N years", and to hide closed sites, which are otherwise shown. Filters SHALL apply to markers, clusters, legend and stats together, and clear in one action. Their control SHALL sit inside the search box and show when any filter is on. Distribution and version filters SHALL offer the list values present, then one "Other" matching every Other value, then "Unknown".
 
 #### Scenario: Hide old markers on request
 - **WHEN** a visitor selects "confirmed within the last 2 years"
 - **THEN** only markers confirmed in the last 2 years are shown, and the stats reflect only those markers
+
+#### Scenario: Filter by Other
+- **WHEN** a visitor filters by the distribution "Other"
+- **THEN** every marker whose distribution is an Other value is shown, and no other marker
 
 #### Scenario: Clear filters
 - **WHEN** a visitor chooses "Clear filters"

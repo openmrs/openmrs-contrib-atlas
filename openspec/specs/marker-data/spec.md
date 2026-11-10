@@ -18,7 +18,11 @@ The Atlas sheet SHALL contain the tabs `markers`, `private`, `changes`, `pending
 
 #### Scenario: Lookup columns
 - **WHEN** the lookup tabs are read
-- **THEN** `types` has `name`, `colour` and `sort`; `distributions` has `name`, `url` and `is_standard`; `versions` has `version` and `release_date`
+- **THEN** `types` has `name`, `colour` and `sort`; `distributions` has `name` and `url`; `versions` has `version` and `release_date`
+
+#### Scenario: Leftover is_standard column
+- **WHEN** the `distributions` tab still has an `is_standard` column
+- **THEN** the column is ignored, and every row on the tab is a distribution
 
 #### Scenario: Pending columns
 - **WHEN** the `pending` tab is read
@@ -48,11 +52,27 @@ A marker row SHALL be valid only if `id`, `name`, `latitude`, `longitude`, `type
 - **THEN** the row is invalid and the offending field is named in the reported reason
 
 ### Requirement: Field value rules
-Optional marker fields SHALL be validated when present: `type` matches a `types` name; `distribution` matches a `distributions` name; `openmrs_version` matches a `versions` entry or is `Other`; `site_count` is a whole number of 1 or more; `url` and `logo_url` are http or https URLs; `status` is `active`, `hidden`, `closed` or `deleted`.
+Optional marker fields SHALL be validated when present: `type` matches a `types` name; `site_count` is a whole number of 1 or more; `url` and `logo_url` are http or https URLs; `status` is `active`, `hidden`, `closed` or `deleted`. `distribution` and `openmrs_version` SHALL accept any text. A value matching a `distributions` or `versions` entry ignoring case SHALL be read as that entry, spelled as on the list. Any other value is an Other value; `Other` alone means one with no detail.
 
 #### Scenario: Unknown type
 - **WHEN** a marker's `type` is "Hospital" and `types` has no such name
 - **THEN** the row is invalid with the reason "unknown type: Hospital"
+
+#### Scenario: Distribution not on the list
+- **WHEN** a marker's `distribution` is "AMPATH" and `distributions` has no such name
+- **THEN** the row is valid, and its distribution is the Other value "AMPATH"
+
+#### Scenario: Version not on the list
+- **WHEN** a marker's `openmrs_version` is "2.4.2" and `versions` has no such entry
+- **THEN** the row is valid, and its version is the Other value "2.4.2"
+
+#### Scenario: Different case
+- **WHEN** a marker's `distribution` is "bahmni" and `distributions` has "Bahmni"
+- **THEN** its distribution is "Bahmni", which is on the list
+
+#### Scenario: Value added to the list later
+- **WHEN** a marker's `distribution` is "AMPATH", an Other value, and an admin then adds "AMPATH" to `distributions`
+- **THEN** the marker's distribution is on the list, with no change to the marker's row
 
 #### Scenario: Blank site count
 - **WHEN** a marker's `site_count` is blank

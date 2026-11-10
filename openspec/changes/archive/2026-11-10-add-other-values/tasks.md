@@ -33,8 +33,8 @@
 - [x] 5.1 Update the README sheet description and `service/README.md`: Other values, the case rule, how to retire a list entry, and that `is_standard` is gone
 - [x] 5.2 Run `npm run format:check`, `typecheck`, `lint`, `test`, the e2e tests and `openspec validate --strict`
 - [x] 5.3 (manual) Delete the `is_standard` column from `distributions` in the staging sheet, and later in production
-- [ ] 5.4 (manual) Check on staging: add a marker with an Other distribution and version, colour by each, filter by Other, and edit it again
-- [ ] 5.5 (manual) Release 3.2 once staging checks out, with this change, the email postscript and the title font in its release notes
+- [x] 5.4 (manual) Check on staging: add a marker with an Other distribution and version, colour by each, filter by Other, and edit it again
+- [x] 5.5 (manual) Release 3.2 once staging checks out, with this change, the email postscript and the title font in its release notes
 
 ## Workflow follow-up
 

@@ -29,11 +29,35 @@ Any signed-in person SHALL be able to add a marker by choosing a location and co
 - **THEN** the latitude and longitude labels each fit on one line and their fields line up, under a "Location (required)" heading
 
 ### Requirement: Optional marker fields
-The form SHALL offer organisation, website, logo, notes, distribution, OpenMRS version, site count, contact name and contact email, and SHALL explain that contact details are not published.
+The form SHALL offer organisation, website, logo, notes, distribution, OpenMRS version, site count, contact name and contact email, and SHALL explain that contact details are not published. Distribution and version SHALL each be a list value or "Other" with free text of at most 30 characters for a distribution or 12 for a version, which the service enforces. Text matching a list entry ignoring case SHALL be saved as that entry, and blank text as `Other`.
 
 #### Scenario: Pick lists
 - **WHEN** a person opens the form
-- **THEN** type, distribution and version are chosen from the current `types`, `distributions` and `versions` lists, with "Other" as a version
+- **THEN** type is chosen from the current `types` list, and distribution and version from the current `distributions` and `versions` lists, each followed by "Other"
+
+#### Scenario: Choosing Other
+- **WHEN** a person chooses "Other" as the distribution
+- **THEN** a text field appears for the distribution's name, limited to 30 characters
+
+#### Scenario: Saving an Other value
+- **WHEN** a person chooses "Other" as the version, types "2.4.2" and saves
+- **THEN** the marker's `openmrs_version` is "2.4.2"
+
+#### Scenario: Other value typed like a list entry
+- **WHEN** a person chooses "Other" as the distribution, types "bahmni" and saves
+- **THEN** the marker's `distribution` is "Bahmni", the entry on the list
+
+#### Scenario: Other left blank
+- **WHEN** a person chooses "Other" as the version, leaves the text blank and saves
+- **THEN** the marker's `openmrs_version` is "Other"
+
+#### Scenario: Editing a marker with an Other value
+- **WHEN** a person edits a marker whose distribution is "AMPATH", which is not on the list
+- **THEN** the form shows "Other" chosen, with "AMPATH" in the text field
+
+#### Scenario: Too long
+- **WHEN** a request saves a distribution of 31 characters that is not on the list
+- **THEN** nothing is written and the form says the distribution must be 30 characters or fewer
 
 ### Requirement: Edit a marker
 A person allowed to edit a marker SHALL be able to change its fields from the marker's details. Saving SHALL set `updated_at` and `confirmed_at` to the current time, and SHALL NOT change `created_at` or `id`.
