@@ -200,7 +200,7 @@ The add and edit forms SHALL be usable on a 360 pixel wide touch screen and by k
 - **THEN** the form asks whether to discard the changes and stays open unless they agree
 
 ### Requirement: Signing in keeps recent markers current
-When a signed-in session starts, by signing in or by opening the site while already signed in, the service SHALL set `confirmed_at` to the current time on each `active` marker the person owns or edits that was confirmed less than 12 months ago and more than one day ago, and log each as a confirmation by that person. Admin rights alone SHALL NOT make a marker eligible. A failure SHALL NOT stop the session starting.
+When a signed-in session starts (signing in, or opening the site already signed in), the service SHALL set `confirmed_at` to now on each `active` marker the person owns or edits that was confirmed less than 12 months and more than one day ago, and log each as their confirmation. Admin rights alone SHALL NOT make a marker eligible. A failure SHALL NOT stop the session. Written confirmations SHALL always be logged, with the same number of sheet reads however many markers there are.
 
 #### Scenario: Owner signs in
 - **WHEN** an owner whose marker was confirmed 5 months ago signs in
@@ -229,3 +229,55 @@ When a signed-in session starts, by signing in or by opening the site while alre
 #### Scenario: Service unavailable
 - **WHEN** the confirmation fails as a session starts
 - **THEN** the person is still signed in and My markers still works
+
+#### Scenario: Many markers
+- **WHEN** an owner of 40 eligible markers signs in
+- **THEN** all 40 are confirmed and logged, with the same number of sheet reads as for one marker
+
+#### Scenario: Check after writing fails
+- **WHEN** the check that rows didn't move fails after the confirmations were written
+- **THEN** the confirmations are still in the change log, and the failure is logged
+
+### Requirement: An added marker always has its owner
+Adding a marker SHALL write its private row (owner, editors and contact) before its public row. A failure between the two writes SHALL leave at most an unpublished private row, and never a published marker without an owner.
+
+#### Scenario: Second write fails
+- **WHEN** a person adds a marker and the write of its public row fails after its private row was written
+- **THEN** the add fails, nothing is published, and no marker without an owner can be claimed
+
+### Requirement: Logo addresses come from uploads
+A `logo_url` set through the Atlas SHALL be blank or an address in the public bucket's `logos/` folder. Any other address SHALL be refused, with the reason given for the logo field, and nothing SHALL be written. Values already in the sheet, and values admins type into the sheet, SHALL NOT be checked.
+
+#### Scenario: Address from an upload
+- **WHEN** a person saves a marker with the address the logo upload returned
+- **THEN** it is saved
+
+#### Scenario: Address elsewhere
+- **WHEN** a request sets `logo_url` to `https://tracker.example/pixel.png`
+- **THEN** nothing is written and the logo field says the logo must be uploaded to the Atlas
+
+### Requirement: Daily limits on adding and uploading
+A person who isn't an admin SHALL be able to add at most 5 markers and upload at most 20 logos per day (UTC). A request past a limit SHALL be refused with 429 and a message to try again tomorrow, and SHALL write nothing. Admins SHALL have no limit. The counts MAY reset when the service restarts.
+
+#### Scenario: Sixth add
+- **WHEN** a person who isn't an admin adds a sixth marker on the same day
+- **THEN** it is refused with a message to try again tomorrow, and nothing is written or emailed
+
+#### Scenario: Admin bulk add
+- **WHEN** an admin adds a sixth marker on the same day
+- **THEN** it is added
+
+### Requirement: Unused logos are removed
+The nightly publish SHALL delete each file in the bucket's `logos/` folder that no row of the `markers` tab uses, whatever its status, and that is more than one day old.
+
+#### Scenario: Abandoned upload
+- **WHEN** a logo was uploaded two days ago and its form was never saved
+- **THEN** the next nightly publish deletes it
+
+#### Scenario: Upload being edited
+- **WHEN** a logo was uploaded an hour ago and its form is still open
+- **THEN** the nightly publish keeps it
+
+#### Scenario: Deleted marker
+- **WHEN** a marker with a logo has status `deleted`
+- **THEN** its logo is kept, so an admin can restore the marker
