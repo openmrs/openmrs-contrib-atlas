@@ -23,18 +23,21 @@ export function gcsSnapshotStore(bucketName: string, apiEndpoint?: string): Snap
       }
     },
 
+    // The files don't refer to one another, so they go up together (specs/snapshot-publishing).
     async write(files: PublicFile[]) {
-      for (const file of files) {
-        await bucket.file(file.name).save(file.body, {
-          resumable: false,
-          // Google Cloud Storage serves it plain to clients that don't accept gzip.
-          gzip: true,
-          metadata: {
-            contentType: file.contentType,
-            cacheControl: file.name.startsWith("history/") ? "no-store" : PUBLIC_CACHE,
-          },
-        });
-      }
+      await Promise.all(
+        files.map((file) =>
+          bucket.file(file.name).save(file.body, {
+            resumable: false,
+            // Google Cloud Storage serves it plain to clients that don't accept gzip.
+            gzip: true,
+            metadata: {
+              contentType: file.contentType,
+              cacheControl: file.name.startsWith("history/") ? "no-store" : PUBLIC_CACHE,
+            },
+          }),
+        ),
+      );
     },
   };
 }

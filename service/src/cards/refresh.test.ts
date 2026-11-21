@@ -183,3 +183,54 @@ describe("Nightly publish completes the cards", () => {
     vi.restoreAllMocks();
   });
 });
+
+describe("World image", () => {
+  const counting = () => {
+    const cards = new FakeCards();
+    const calls = { world: 0, manifest: 0 };
+    const writeWorld = cards.writeWorld.bind(cards);
+    const writeManifest = cards.writeManifest.bind(cards);
+    cards.writeWorld = async (png) => (calls.world++, writeWorld(png));
+    cards.writeManifest = async (m) => (calls.manifest++, writeManifest(m));
+    return { cards, calls };
+  };
+
+  it("Scenario: Nothing it shows changed", async () => {
+    const { cards, calls } = counting();
+    await refreshCards(snapshot([marker(1)]), cards, all);
+    expect(calls).toEqual({ world: 1, manifest: 1 });
+    const result = await refreshCards(snapshot([marker(1, { notes: "new notes" })]), cards, all);
+    expect(result.world).toBe("unchanged");
+    expect(calls).toEqual({ world: 1, manifest: 1 });
+  });
+
+  it("Scenario: After a publish", async () => {
+    const { cards, calls } = counting();
+    await refreshCards(snapshot([marker(1)]), cards, all);
+    const result = await refreshCards(
+      snapshot([marker(1), marker(2, { country: "UG" })]),
+      cards,
+      all,
+    );
+    expect(result.world).toBe("drawn");
+    expect(calls.world).toBe(2);
+  });
+
+  it("Scenario: Not yet recorded", async () => {
+    const { cards, calls } = counting();
+    await refreshCards(snapshot([marker(1)]), cards, all);
+    delete cards.manifest!.world;
+    expect((await refreshCards(snapshot([marker(1)]), cards, all)).world).toBe("drawn");
+    expect(calls).toEqual({ world: 2, manifest: 2 });
+    expect(cards.manifest!.world).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it("Scenario: Nightly", async () => {
+    const { cards, calls } = counting();
+    await refreshCards(snapshot([marker(1)]), cards, all);
+    const result = await refreshCards(snapshot([marker(1)]), cards, { ...all, sweep: true });
+    expect(result.world).toBe("drawn");
+    expect(calls.world).toBe(2);
+    expect(calls.manifest).toBe(1);
+  });
+});

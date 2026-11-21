@@ -1,4 +1,6 @@
+import { createHash } from "node:crypto";
 import type { AtlasSnapshot } from "@openmrs-atlas/shared";
+import { timed } from "../timing.ts";
 import { cardHash, cardSvg, renderPng, worldSvg } from "./card.ts";
 
 export const MANIFEST = "cards/manifest.json";
@@ -8,6 +10,8 @@ const CARD_PREFIX = "cards/";
 /** Which card file belongs to each marker. Written after every card refresh. */
 export interface CardManifest {
   markers: Record<string, { hash: string; file: string }>;
+  /** A hash of what the world image shows. Missing until a publish first records it. */
+  world?: string;
 }
 
 /** Cards and the published snapshot in the public bucket (specs/social-cards). */
@@ -30,8 +34,13 @@ export interface CardOptions {
   siteUrl: string;
   /** How many marker cards to draw at most; the nightly publish passes Infinity. */
   limit: number;
-  /** Delete card files the manifest no longer names (the nightly publish only). */
+  /**
+   * The nightly publish: delete card files the manifest no longer names, and redraw the world
+   * image even if nothing it shows changed.
+   */
   sweep: boolean;
+  /** The manifest, if its read has already started: a publish reads it alongside the sheet. */
+  manifest?: Promise<CardManifest | undefined>;
 }
 
 export interface CardResult {
@@ -42,18 +51,21 @@ export interface CardResult {
   /** Markers no longer published whose cards left the manifest. */
   removed: number;
   deleted: number;
+  world: "drawn" | "unchanged";
 }
 
 /**
  * Brings cards in line with a published snapshot: redraws changed cards first, then draws
- * missing ones, up to the limit; redraws the world image; writes the manifest.
+ * missing ones, up to the limit; redraws the world image if it changed; writes the manifest if
+ * it changed.
  */
 export async function refreshCards(
   snapshot: AtlasSnapshot,
   store: CardStore,
   options: CardOptions,
 ): Promise<CardResult> {
-  const old = (await store.readManifest())?.markers ?? {};
+  const previous = await (options.manifest ?? store.readManifest());
+  const old = previous?.markers ?? {};
   const published = new Set(snapshot.markers.map((m) => m.id));
   const markers: CardManifest["markers"] = {};
   for (const [id, entry] of Object.entries(old)) if (published.has(id)) markers[id] = entry;
@@ -70,7 +82,10 @@ export async function refreshCards(
   for (const { marker, hash } of todo.slice(0, options.limit)) {
     const file = `${CARD_PREFIX}${marker.id}-${hash}.png`;
     try {
-      await store.writeCard(file, await renderPng(cardSvg(marker, options.siteUrl)));
+      await store.writeCard(
+        file,
+        await timed("draw.png", () => renderPng(cardSvg(marker, options.siteUrl))),
+      );
       markers[marker.id] = { hash, file };
       drawn++;
     } catch (err) {
@@ -81,8 +96,14 @@ export async function refreshCards(
     }
   }
 
-  await store.writeWorld(await renderPng(worldSvg(snapshot, options.siteUrl)));
-  await store.writeManifest({ markers });
+  // The world image is drawn only when it would look different, or nightly (specs/social-cards).
+  const svg = worldSvg(snapshot, options.siteUrl);
+  const world = createHash("sha256").update(svg).digest("hex");
+  const redraw = options.sweep || world !== previous?.world;
+  if (redraw) await store.writeWorld(await timed("draw.png", () => renderPng(svg)));
+  const manifest: CardManifest = { markers, world };
+  // A manifest with nothing new isn't written again.
+  if (removed > 0 || drawn > 0 || world !== previous?.world) await store.writeManifest(manifest);
 
   let deleted = 0;
   if (options.sweep) {
@@ -92,5 +113,12 @@ export async function refreshCards(
     deleted = stale.length;
   }
 
-  return { drawn, failed, pending: todo.length - drawn, removed, deleted };
+  return {
+    drawn,
+    failed,
+    pending: todo.length - drawn,
+    removed,
+    deleted,
+    world: redraw ? "drawn" : "unchanged",
+  };
 }

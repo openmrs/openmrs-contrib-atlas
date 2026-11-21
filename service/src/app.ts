@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { routePath } from "hono/route";
 import type { Accounts } from "./accounts.ts";
 import { createApi, type ApiDeps } from "./api.ts";
 import { identify, type AuthConfig, type IdTokenVerifier } from "./auth.ts";
@@ -12,6 +13,7 @@ import { WriteQueue } from "./queue.ts";
 import { createPermalinks } from "./permalinks.ts";
 import { createReminderLinks } from "./reminder-links.ts";
 import { runReminders } from "./reminders.ts";
+import { timed, timedStore, withTiming } from "./timing.ts";
 
 export interface AppDeps {
   sheet: SheetStore;
@@ -39,7 +41,8 @@ export interface AppDeps {
 /** Cards drawn by a publish that isn't the nightly one (specs/social-cards). */
 export const EDIT_CARD_LIMIT = 10;
 
-export function createApp(deps: AppDeps) {
+export function createApp(input: AppDeps) {
+  const deps = timedDeps(input);
   const app = new Hono();
   const queue = new WriteQueue();
   let remindersRunning = false;
@@ -55,15 +58,32 @@ export function createApp(deps: AppDeps) {
   // Every publish checks the logo sweep; only the scheduler's nightly run deletes.
   const logos = (sweep: boolean) => deps.editing?.logos && { store: deps.editing.logos, sweep };
 
+  // Each publish logs where its time went, in its own scope (specs/snapshot-publishing).
+  const timedPublish = (caller: string, run: () => ReturnType<typeof publish>) =>
+    timed("publish", () =>
+      withTiming(run, (timings, { result }) =>
+        console.log(
+          JSON.stringify({
+            event: "publish-timing",
+            caller,
+            result: result?.status ?? "failed",
+            ...timings,
+          }),
+        ),
+      ),
+    );
+
   const publishAfterEdit = async (caller: string) => {
     const result = await queue.shared(() =>
-      publish(deps.sheet, deps.snapshots, {
-        force: false,
-        now: now(),
-        siteUrl: deps.siteUrl,
-        cards: cards(false),
-        logos: logos(false),
-      }),
+      timedPublish(caller, () =>
+        publish(deps.sheet, deps.snapshots, {
+          force: false,
+          now: now(),
+          siteUrl: deps.siteUrl,
+          cards: cards(false),
+          logos: logos(false),
+        }),
+      ),
     );
     console.log(JSON.stringify({ event: "publish", caller, ...result }));
     return result.status === "published";
@@ -84,13 +104,15 @@ export function createApp(deps: AppDeps) {
     if (force && caller !== "apps-script") return c.json({ error: "forbidden" }, 403);
 
     const run = () =>
-      publish(deps.sheet, deps.snapshots, {
-        force,
-        now: now(),
-        siteUrl: deps.siteUrl,
-        cards: cards(caller === "scheduler"),
-        logos: logos(caller === "scheduler"),
-      });
+      timedPublish(caller, () =>
+        publish(deps.sheet, deps.snapshots, {
+          force,
+          now: now(),
+          siteUrl: deps.siteUrl,
+          cards: cards(caller === "scheduler"),
+          logos: logos(caller === "scheduler"),
+        }),
+      );
     const result = await (force ? queue.run(run) : queue.shared(run));
     console.log(JSON.stringify({ event: "publish", caller, force, ...result }));
     return c.json(result, result.status === "published" ? 200 : 409);
@@ -136,6 +158,21 @@ export function createApp(deps: AppDeps) {
     }
   });
 
+  // One line per API request: where its time went, by route pattern, never the path, which can
+  // hold a username (specs/marker-editing).
+  app.use("/api/*", (c, next) =>
+    withTiming(next, (timings) =>
+      console.log(
+        JSON.stringify({
+          event: "timing",
+          route: `${c.req.method} ${routePath(c, -1)}`,
+          status: c.res.status,
+          ...timings,
+        }),
+      ),
+    ),
+  );
+
   if (deps.editing) {
     // Emailed links work without signing in, so they are mounted before /api and its sign-in
     // check, with an editor that has no account access.
@@ -167,4 +204,21 @@ export function createApp(deps: AppDeps) {
   }
 
   return app;
+}
+
+/** The same dependencies, with each sheet, bucket and account call timed (service/README.md). */
+function timedDeps(deps: AppDeps): AppDeps {
+  const { editing } = deps;
+  return {
+    ...deps,
+    sheet: timedStore("sheet", deps.sheet),
+    snapshots: timedStore("bucket", deps.snapshots),
+    cards: deps.cards && timedStore("cards", deps.cards),
+    accounts: deps.accounts && timedStore("accounts", deps.accounts),
+    editing: editing && {
+      store: timedStore("sheet", editing.store),
+      logos: timedStore("logos", editing.logos),
+      verifyPerson: (token) => timed("auth.verify", () => editing.verifyPerson(token)),
+    },
+  };
 }

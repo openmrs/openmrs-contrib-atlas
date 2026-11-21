@@ -919,3 +919,85 @@ describe("Logo upload", () => {
 it("uses the group name configured for admins", () => {
   expect(ADMIN_GROUP).toBe("atlas-administrators");
 });
+
+describe("Edit timings are logged", () => {
+  const timingLines = (spy: { mock: { calls: unknown[][] } }, event: string) =>
+    spy.mock.calls
+      .map(([line]) => String(line))
+      .filter((line) => line.includes(`"event":"${event}"`))
+      .map((line) => JSON.parse(line) as Record<string, unknown> & { steps: object });
+
+  it("Scenario: Username in the path", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      await call("jdoe", "DELETE", `/markers/${ID}/editors/asmith`);
+      const [line] = timingLines(log, "timing");
+      expect(line).toMatchObject({
+        route: "DELETE /api/markers/:id/editors/:username",
+        status: 200,
+      });
+      expect(Object.keys(line!.steps)).toEqual(
+        expect.arrayContaining(["auth.verify", "sheet.readEdits", "sheet.updateCells", "publish"]),
+      );
+      const [publish] = timingLines(log, "publish-timing");
+      expect(publish).toMatchObject({ caller: "edit", result: "published" });
+      expect(Object.keys(publish!.steps)).toEqual(
+        expect.arrayContaining(["sheet.read", "bucket.write", "sheet.writeProblems"]),
+      );
+      const all = log.mock.calls.map(([l]) => String(l)).filter((l) => l.includes("timing"));
+      for (const l of all) expect(l).not.toMatch(/asmith|jdoe|example\.org/);
+    } finally {
+      log.mockRestore();
+    }
+  });
+
+  it("Scenario: Refused request", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      await call("asmith", "POST", `/markers/${ID}/editors`, { username: "bob" });
+      expect(timingLines(log, "timing")).toMatchObject([
+        { route: "POST /api/markers/:id/editors", status: 403 },
+      ]);
+    } finally {
+      log.mockRestore();
+    }
+  });
+});
+
+describe("An edit writes its cells in one call", () => {
+  it("adds an editor with one read and one write, then checks and logs together", async () => {
+    const events: string[] = [];
+    const slow =
+      <A extends unknown[], R>(name: string, f: (...a: A) => Promise<R>) =>
+      async (...a: A) => {
+        events.push(`${name}:start`);
+        await new Promise((r) => setTimeout(r, 5));
+        const out = await f(...a);
+        events.push(`${name}:end`);
+        return out;
+      };
+    sheet.readEdits = slow("readEdits", sheet.readEdits.bind(sheet));
+    sheet.updateCells = slow("updateCells", sheet.updateCells.bind(sheet));
+    sheet.readCell = slow("readCell", sheet.readCell.bind(sheet));
+    sheet.appendRow = slow("appendRow", sheet.appendRow.bind(sheet));
+
+    expect((await call("jdoe", "POST", `/markers/${ID}/editors`, { username: "bob" })).status).toBe(
+      200,
+    );
+    // The publish that follows makes none of these calls.
+    const edit = events;
+    expect(edit.filter((e) => e.endsWith(":start"))).toEqual([
+      "readEdits:start",
+      "updateCells:start",
+      expect.stringMatching(/^(readCell|appendRow):start$/),
+      expect.stringMatching(/^(readCell|appendRow):start$/),
+    ]);
+    // The check and the log both start before either ends.
+    expect(edit.slice(4, 6).every((e) => e.endsWith(":start"))).toBe(true);
+    expect(sheet.priv("editors")).toBe("asmith,bob");
+    expect(sheet.marker("confirmed_at")).toBe(NOW_ISO);
+    expect(sheet.lastChange().fields).toEqual([
+      { field: "editors", from: "asmith", to: "asmith,bob" },
+    ]);
+  });
+});

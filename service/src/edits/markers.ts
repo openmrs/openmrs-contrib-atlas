@@ -315,9 +315,10 @@ export class MarkerEditor extends EditorBase {
       }
     }
     if (ownerChanged) await this.clearOffers(tabs, id);
-    await this.writeMarker(tabs, marker, rowChanges);
-    if (Object.keys(privateChanges).length > 0) await this.writePrivate(tabs, id, privateChanges);
-    await this.log(person, id, "edit", log);
+    await this.save(tabs, marker, rowChanges, {
+      privateCells: privateChanges,
+      log: { person, action: "edit", fields: log },
+    });
     // An owner set by an admin answers any pending claims (specs/marker-claims).
     const decisions =
       ownerChanged && privateChanges.owner
@@ -335,9 +336,9 @@ export class MarkerEditor extends EditorBase {
     if (text(marker.cells.status) === "closed") {
       throw new ApiError(409, { error: "This site is closed. Reopen it instead." });
     }
-    const result = await this.restartClock(tabs, marker);
-    await this.log(person, id, "confirm", ["confirmed_at"]);
-    return result;
+    return this.restartClock(tabs, marker, {
+      log: { person, action: "confirm", fields: ["confirmed_at"] },
+    });
   }
 
   /**
@@ -410,8 +411,9 @@ export class MarkerEditor extends EditorBase {
       throw new ApiError(409, { error: "Only an active site can be closed." });
     }
     const changes = { status: "closed", updated_at: this.stamp() };
-    await this.writeMarker(tabs, marker, changes);
-    await this.log(person, id, "close", ["status"]);
+    await this.save(tabs, marker, changes, {
+      log: { person, action: "close", fields: ["status"] },
+    });
     return this.result(tabs, { ...marker.cells, ...changes }, true);
   }
 
@@ -423,8 +425,9 @@ export class MarkerEditor extends EditorBase {
     }
     const stamp = this.stamp();
     const changes = { status: "active", updated_at: stamp, confirmed_at: stamp };
-    await this.writeMarker(tabs, marker, changes);
-    await this.log(person, id, "reopen", ["status", "confirmed_at"]);
+    await this.save(tabs, marker, changes, {
+      log: { person, action: "reopen", fields: ["status", "confirmed_at"] },
+    });
     return this.result(tabs, { ...marker.cells, ...changes }, true);
   }
 
@@ -433,9 +436,10 @@ export class MarkerEditor extends EditorBase {
     const tabs = await this.tabs();
     const { marker } = this.find(tabs, person, id, "delete");
     const changes = { status: "deleted", updated_at: this.stamp() };
-    await this.writeMarker(tabs, marker, changes);
+    await this.save(tabs, marker, changes, {
+      log: { person, action: "delete", fields: ["status"] },
+    });
     await this.clearOffers(tabs, id);
-    await this.log(person, id, "delete", ["status"]);
     return { ...this.result(tabs, { ...marker.cells, ...changes }, true), marker: null };
   }
 
@@ -473,8 +477,13 @@ export class MarkerEditor extends EditorBase {
     if (confirmedAt !== sentFor) {
       return { ok: false, reason: "confirmed", confirmed_at: confirmedAt };
     }
-    const result = await this.restartClock(tabs, marker);
-    await this.log(`reminder-link:${normaliseUsername(username)}`, id, "confirm", ["confirmed_at"]);
+    const result = await this.restartClock(tabs, marker, {
+      log: {
+        person: `reminder-link:${normaliseUsername(username)}`,
+        action: "confirm",
+        fields: ["confirmed_at"],
+      },
+    });
     return { ok: true, result };
   }
 

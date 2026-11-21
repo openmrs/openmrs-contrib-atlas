@@ -23,4 +23,5 @@ COPY service/assets service/assets
 USER node
 ENV PORT=8080
 EXPOSE 8080
-CMD ["node", "service/src/server.ts"]
+# --trace-warnings: a warning in the logs says where it came from (openspec speed-up-edits).
+CMD ["node", "--trace-warnings", "service/src/server.ts"]

@@ -19,6 +19,7 @@ import {
   accountsUnavailable,
   forbidden,
   notFound,
+  type CellUpdate,
   type EditStore,
   type MarkerResult,
   type Offer,
@@ -133,19 +134,42 @@ export class EditorBase {
     ]);
   }
 
-  /** Writes only the given cells, then checks that the row still holds this marker. */
-  protected async writeMarker(tabs: Tabs, marker: RawRow, changes: Record<string, Cell>) {
-    const header = tabs.header.markers;
-    await this.store.updateCells(
-      Object.entries(changes).map(([field, value]) => ({
-        tab: "markers" as const,
-        row: marker.row,
-        column: header.indexOf(field),
-        value,
-      })),
-    );
+  /**
+   * Writes a marker's cells and its `private` cells in one call, then checks the row and adds the
+   * change-log entry together. A missing `private` row is appended first.
+   */
+  protected async save(
+    tabs: Tabs,
+    marker: RawRow,
+    markerCells: Record<string, Cell>,
+    options: { privateCells?: Record<string, Cell>; log?: LogEntry } = {},
+  ) {
     const id = text(marker.cells.id);
-    const found = await this.store.readCell("markers", marker.row, header.indexOf("id"));
+    const updates = cellUpdates("markers", tabs.header.markers, marker.row, markerCells);
+    const privateCells = options.privateCells ?? {};
+    if (Object.keys(privateCells).length > 0) {
+      const existing = tabs.privateOf(id);
+      if (existing) {
+        updates.push(...cellUpdates("private", tabs.header.private, existing.row, privateCells));
+      } else {
+        await this.writePrivate(tabs, id, privateCells);
+      }
+    }
+    if (updates.length > 0) await this.store.updateCells(updates);
+    const { log } = options;
+    await Promise.all([
+      this.checkRow(tabs, marker),
+      log && this.log(log.person, id, log.action, log.fields),
+    ]);
+  }
+
+  private async checkRow(tabs: Tabs, marker: RawRow) {
+    const id = text(marker.cells.id);
+    const found = await this.store.readCell(
+      "markers",
+      marker.row,
+      tabs.header.markers.indexOf("id"),
+    );
     if (text(found) !== id) {
       // A person moved rows in the sheet between the read and the write. Version history recovers.
       console.error(JSON.stringify({ event: "row-moved", marker: id, row: marker.row }));
@@ -156,14 +180,7 @@ export class EditorBase {
     const header = tabs.header.private;
     const existing = tabs.privateOf(id);
     if (existing) {
-      await this.store.updateCells(
-        Object.entries(changes).map(([field, value]) => ({
-          tab: "private" as const,
-          row: existing.row,
-          column: header.indexOf(field),
-          value,
-        })),
-      );
+      await this.store.updateCells(cellUpdates("private", header, existing.row, changes));
     } else {
       const cells: Record<string, Cell> = { id, ...changes };
       await this.store.appendRow(
@@ -183,11 +200,39 @@ export class EditorBase {
     };
   }
 
-  /** Restarts the freshness clock: this marker is evidently in use. */
-  protected async restartClock(tabs: Tabs, marker: RawRow): Promise<MarkerResult> {
+  /**
+   * Restarts the freshness clock: this marker is evidently in use. Any `private` cells and the
+   * change-log entry are saved with it (see `save`).
+   */
+  protected async restartClock(
+    tabs: Tabs,
+    marker: RawRow,
+    options: { privateCells?: Record<string, Cell>; log?: LogEntry } = {},
+  ): Promise<MarkerResult> {
     const stamp = this.stamp();
     const changes = { updated_at: stamp, confirmed_at: stamp };
-    await this.writeMarker(tabs, marker, changes);
+    await this.save(tabs, marker, changes, options);
     return this.result(tabs, { ...marker.cells, ...changes }, true);
   }
+}
+
+/** A change-log entry written alongside a save. */
+export interface LogEntry {
+  person: Person | string;
+  action: string;
+  fields: unknown[];
+}
+
+function cellUpdates(
+  tab: "markers" | "private",
+  header: readonly string[],
+  row: number,
+  changes: Record<string, Cell>,
+): CellUpdate[] {
+  return Object.entries(changes).map(([field, value]) => ({
+    tab,
+    row,
+    column: header.indexOf(field),
+    value,
+  }));
 }

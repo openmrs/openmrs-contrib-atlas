@@ -75,10 +75,12 @@ export async function planLogoSweep(
   store: Pick<LogoStore, "publicPrefix" | "listLogos">,
   markers: Cell[][],
   now: Date,
+  /** The logo folder, if already listed: a publish lists it while it reads the sheet. */
+  listed?: Awaited<ReturnType<LogoStore["listLogos"]>>,
 ): Promise<LogoSweepPlan> {
   const [header = [], ...rows] = markers;
   const column = header.findIndex((h) => String(h ?? "").trim() === "logo_url");
-  const all = await store.listLogos();
+  const all = listed ?? (await store.listLogos());
   if (column < 0) {
     return {
       holdBack: "The logo sweep held back: the markers tab has no logo_url column.",

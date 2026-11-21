@@ -69,7 +69,15 @@ export async function publish(
     };
   },
 ): Promise<PublishResult> {
-  const values = await sheet.read();
+  // Reads that don't depend on one another start together. The listing and the manifest are
+  // only used later, so a failure there is caught where they're used.
+  const later = <T>(promise: Promise<T>) => {
+    promise.catch(() => undefined);
+    return promise;
+  };
+  const listing = options.logos && later(options.logos.store.listLogos());
+  const manifest = options.cards && later(options.cards.store.readManifest());
+  const [values, current] = await Promise.all([sheet.read(), snapshots.currentCount()]);
   let problems: Problem[];
   let snapshot: ReturnType<typeof buildSnapshot>;
   let rss: string;
@@ -91,7 +99,7 @@ export async function publish(
   if (options.logos) {
     // Planning never holds up a publish; a failure just means no sweep this time.
     try {
-      sweep = await planLogoSweep(options.logos.store, values.markers, options.now);
+      sweep = await planLogoSweep(options.logos.store, values.markers, options.now, await listing);
     } catch (err) {
       console.error(JSON.stringify({ event: "logos-sweep-failed", error: String(err) }));
     }
@@ -103,11 +111,7 @@ export async function publish(
     console.warn(JSON.stringify({ event: "logos-sweep-held-back", unused, total }));
   }
 
-  const safety = checkPublishSafety(
-    await snapshots.currentCount(),
-    snapshot.markers.length,
-    options.force,
-  );
+  const safety = checkPublishSafety(current, snapshot.markers.length, options.force);
   if (!safety.ok) {
     await sheet.writeProblems([{ row: 0, reasons: [safety.reason] }, ...notes, ...problems]);
     return { status: "refused", reason: safety.reason, problems: problems.length };
@@ -115,7 +119,8 @@ export async function publish(
 
   const json = JSON.stringify(snapshot);
   const stamp = options.now.toISOString().replace(/[:.]/g, "-");
-  await snapshots.write([
+  // The public files and the problems tab don't depend on one another.
+  const files = snapshots.write([
     { name: "atlas.json", body: json, contentType: "application/json" },
     {
       name: "markers.geojson",
@@ -130,7 +135,7 @@ export async function publish(
     },
     { name: `history/atlas-${stamp}.json`, body: json, contentType: "application/json" },
   ]);
-  await sheet.writeProblems([...notes, ...problems]);
+  await Promise.all([files, sheet.writeProblems([...notes, ...problems])]);
   if (options.cards) {
     // Cards never hold up or undo a publish; what's missed is drawn next time.
     try {
@@ -138,6 +143,7 @@ export async function publish(
       const result = await refreshCards(snapshot, store, {
         ...cardOptions,
         siteUrl: options.siteUrl,
+        manifest,
       });
       console.log(JSON.stringify({ event: "cards", ...result }));
     } catch (err) {

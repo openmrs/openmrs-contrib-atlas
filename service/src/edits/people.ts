@@ -54,11 +54,14 @@ export class People extends EditorBase {
     before: string[],
     editors: string[],
   ) {
-    await this.writePrivate(tabs, id, { editors: editors.join(",") });
-    const result = await this.restartClock(tabs, marker);
-    await this.log(person, id, "edit", [
-      { field: "editors", from: before.join(","), to: editors.join(",") },
-    ]);
+    const result = await this.restartClock(tabs, marker, {
+      privateCells: { editors: editors.join(",") },
+      log: {
+        person,
+        action: "edit",
+        fields: [{ field: "editors", from: before.join(","), to: editors.join(",") }],
+      },
+    });
     return { ...result, editors };
   }
 
@@ -90,8 +93,9 @@ export class People extends EditorBase {
           )[column] ?? "",
       ),
     );
-    const result = await this.restartClock(tabs, marker);
-    await this.log(person, id, "transfer-offer", [{ field: "owner", from: priv.owner, to }]);
+    const result = await this.restartClock(tabs, marker, {
+      log: { person, action: "transfer-offer", fields: [{ field: "owner", from: priv.owner, to }] },
+    });
     return { ...result, offer_to: to };
   }
 
@@ -123,12 +127,15 @@ export class People extends EditorBase {
     );
     // The previous owner stays on as an editor until the new owner removes them.
     editors.push(offer.from);
-    await this.writePrivate(tabs, id, { owner: person.username, editors: editors.join(",") });
+    const result = await this.restartClock(tabs, marker, {
+      privateCells: { owner: person.username, editors: editors.join(",") },
+      log: {
+        person,
+        action: "transfer",
+        fields: [{ field: "owner", from: offer.from, to: person.username }],
+      },
+    });
     await this.clearOffers(tabs, id);
-    const result = await this.restartClock(tabs, marker);
-    await this.log(person, id, "transfer", [
-      { field: "owner", from: offer.from, to: person.username },
-    ]);
     return result;
   }
 

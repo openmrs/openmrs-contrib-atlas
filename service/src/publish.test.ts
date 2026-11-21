@@ -3,7 +3,14 @@ import { SEED_LOOKUPS } from "@openmrs-atlas/shared/seed";
 import { describe, expect, it } from "vitest";
 import { createApp } from "./app.ts";
 import type { IdTokenVerifier } from "./auth.ts";
-import type { PublicFile, SheetStore, SheetValues, SnapshotStore } from "./publish.ts";
+import {
+  publish,
+  type PublicFile,
+  type SheetStore,
+  type SheetValues,
+  type SnapshotStore,
+} from "./publish.ts";
+import { FakeCards } from "./testing.ts";
 
 const now = new Date("2026-11-01T12:00:00Z");
 
@@ -143,5 +150,34 @@ describe("Publish endpoint is protected", () => {
     const { call } = setup([markerRow(1)]);
     expect((await call(asScheduler)).status).toBe(200);
     expect((await call(asScheduler, "?force=true")).status).toBe(403);
+  });
+});
+
+describe("independent steps run together", () => {
+  const run = (sheet: FakeSheet, bucket: FakeBucket, cards: FakeCards) =>
+    publish(sheet, bucket, {
+      force: false,
+      now,
+      siteUrl: SITE,
+      cards: { store: cards, limit: 10, sweep: false },
+    });
+
+  it("a refused publish draws no cards", async () => {
+    const cards = new FakeCards();
+    const result = await run(new FakeSheet([markerRow(1)]), new FakeBucket(100), cards);
+    expect(result.status).toBe("refused");
+    expect(cards.files.size).toBe(0);
+    expect(cards.manifest).toBeUndefined();
+  });
+
+  it("a failed manifest read still publishes", async () => {
+    const cards = new FakeCards();
+    cards.readManifest = () => Promise.reject(new Error("bucket down"));
+    const bucket = new FakeBucket();
+    const sheet = new FakeSheet([markerRow(1)]);
+    const result = await run(sheet, bucket, cards);
+    expect(result.status).toBe("published");
+    expect(bucket.files.has("atlas.json")).toBe(true);
+    expect(sheet.problems).toEqual([]);
   });
 });

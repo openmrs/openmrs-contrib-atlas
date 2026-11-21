@@ -120,7 +120,9 @@ Social cards (specs/social-cards) are written after a successful publish:
 A card's name changes whenever what it shows changes (name, country, sites, status or position),
 so previews of a fresh share show the new card. The nightly publish (Cloud Scheduler) draws every
 missing or out-of-date card and deletes card files the manifest no longer names. Every other
-publish draws at most 10. A failure drawing cards is logged (`cards-failed`, `card-failed`) and
+publish draws at most 10. The world image is redrawn only when it would look different (the
+manifest's `world` field holds a hash of what it shows) and by every nightly publish, and the
+manifest is rewritten only when it changes. A failure drawing cards is logged (`cards-failed`, `card-failed`) and
 never stops the publish. The `/marker` pages read `atlas.json` and the manifest, kept in memory for
 a minute, and never the sheet. When a marker or its card is missing from what's in memory, they
 read both again (at most every 5 seconds, shared by concurrent requests), so a marker shared the
@@ -231,6 +233,36 @@ the same:
 
 ```sh
 docker build -f service/Dockerfile -t atlas-service .
+```
+
+## Timing logs
+
+Every request under `/api` logs one `timing` line, and every publish logs one `publish-timing`
+line. They show where the time went:
+
+```json
+{"event":"timing","route":"POST /api/markers/:id/editors","status":200,"total_ms":1840,
+ "steps":{"auth.verify":{"ms":12,"n":1},"sheet.readEdits":{"ms":310,"n":1},
+          "accounts.check":{"ms":220,"n":1},"sheet.updateCells":{"ms":280,"n":1}, "...": {},
+          "publish":{"ms":930,"n":1}}}
+{"event":"publish-timing","caller":"edit","result":"published","total_ms":925,"steps":{"...": {}}}
+```
+
+- `route` is the route pattern, never the path, so a username in the path isn't logged. The lines
+  hold only step names, times and counts: no emails, usernames or sheet data.
+- Each step's `ms` is the total for its `n` calls. Steps that run together (the snapshot uploads,
+  or the change-log entry and the row check) add up to more than `total_ms`.
+- Step names: `sheet.*` (Sheets calls), `bucket.*` (snapshot files), `cards.*` and `logos.*`
+  (the bucket's cards and logos), `accounts.*` (Keycloak lookups), `auth.verify` (checking the
+  sign-in token), `draw.png` (drawing a card) and `publish` (the whole publish after an edit,
+  detailed in its own `publish-timing` line).
+
+To find slow requests in Logs Explorer:
+
+```text
+resource.type="cloud_run_revision"
+jsonPayload.event="timing"
+jsonPayload.total_ms>2000
 ```
 
 ## Rolling back a bad publish

@@ -159,14 +159,16 @@ export class Claims extends EditorBase {
     const priv = tabs.privateOf(id);
     if (priv?.owner) throw new ApiError(409, { error: "This site already has an owner." });
     const editors = (priv?.editors ?? []).filter((e) => normaliseUsername(e) !== claim.username);
-    await this.writePrivate(tabs, id, { owner: claim.username, editors: editors.join(",") });
+    const result = await this.restartClock(tabs, marker, {
+      privateCells: { owner: claim.username, editors: editors.join(",") },
+      log: {
+        person,
+        action: "claim-approve",
+        fields: [{ claim: claim.id }, { field: "owner", from: "", to: claim.username }],
+      },
+    });
     await this.clearOffers(tabs, id);
-    const result = await this.restartClock(tabs, marker);
     await this.decide(tabs, claim, "approved", person.username, "");
-    await this.log(person, id, "claim-approve", [
-      { claim: claim.id },
-      { field: "owner", from: "", to: claim.username },
-    ]);
     const others = tabs.pendingClaims(id).filter((c) => c.id !== claim.id);
     const declined = await this.declineAll(tabs, person, id, others, ANOTHER_APPROVED);
     const name = text(marker.cells.name);
