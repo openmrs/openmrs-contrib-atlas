@@ -1,7 +1,7 @@
 import { COLUMNS, TABS, type AtlasSnapshot, type Cell, type Problem } from "@openmrs-atlas/shared";
 import { SEED_LOOKUPS } from "@openmrs-atlas/shared/seed";
 import type { CardManifest, CardStore } from "./cards/refresh.ts";
-import type { CellUpdate, EditStore, EditValues } from "./edits.ts";
+import type { CellUpdate, EditStore, EditValues } from "./edits/index.ts";
 import type { LogoStore, StoredLogo } from "./logos.ts";
 import type { PublicFile, SheetStore, SheetValues, SnapshotStore } from "./publish.ts";
 

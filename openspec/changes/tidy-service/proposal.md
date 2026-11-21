@@ -27,7 +27,7 @@ four changes from the review, done after the others so their diffs stay small.
   change how they call it.
 - **One `escapeHtml()`** in a new `service/src/html.ts`, used by all five files. It escapes `'`
   too, as the `permalinks.ts` copy does.
-- **One `publishAfter()` helper** in the service for the publish-after-write pattern, used at all
+- **One `publishSafely()` helper** in the service for the publish-after-write pattern, used at all
   three places.
 
 No behaviour changes: the same requests, responses, sheet writes, emails and logs.

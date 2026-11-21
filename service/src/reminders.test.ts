@@ -2,7 +2,7 @@ import { COLUMNS, addMonths, type Cell } from "@openmrs-atlas/shared";
 import { SEED_LOOKUPS } from "@openmrs-atlas/shared/seed";
 import { describe, expect, it } from "vitest";
 import { AccountsUnavailable, type Account, type Accounts } from "./accounts.ts";
-import type { EditValues } from "./edits.ts";
+import type { EditValues } from "./edits/index.ts";
 import { linkSigner } from "./links.ts";
 import type { Email, Mailer, SendResult } from "./mailer.ts";
 import { DAILY_LIMIT, renderReminder, runReminders, selectDue, stageFor } from "./reminders.ts";
@@ -376,7 +376,8 @@ describe("Reminder content", () => {
       expect(body).toContain(`${SITE}/?marker=${id(1)}`);
       expect(body).toContain("June 2024");
       expect(body).toContain("jdoe");
-      expect(body).toContain("don't reply");
+      // HTML escapes the apostrophe (&#39;); it renders the same.
+      expect(body.replaceAll("&#39;", "'")).toContain("don't reply");
       expect(body).toContain("https://talk.openmrs.org/");
       expect(body).toContain("https://openmrs.slack.com/");
       expect(body).toContain("fade");

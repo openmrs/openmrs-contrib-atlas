@@ -12,10 +12,11 @@ import {
   type PublicMarker,
 } from "@openmrs-atlas/shared";
 import { AccountsUnavailable, type Accounts } from "./accounts.ts";
-import type { EditStore } from "./edits.ts";
+import type { EditStore } from "./edits/index.ts";
 import type { LinkSigner } from "./links.ts";
 import { NO_REPLY_HTML, NO_REPLY_TEXT, signInInsteadHtml, signInInsteadText } from "./help.ts";
 import type { Mailer } from "./mailer.ts";
+import { escapeHtml } from "./html.ts";
 
 /**
  * Reminder emails. See specs/reminder-emails and design.md, "A daily job, idempotent through
@@ -146,9 +147,6 @@ export function selectDue(sheet: ReminderSheet, now: Date): Selection {
   return { people: ordered, skipped, sentToday: sentEmails.size };
 }
 
-const escape = (value: string) =>
-  value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-
 const monthYear = (iso: string) =>
   new Date(iso).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" });
 
@@ -212,19 +210,20 @@ export function renderReminder(input: ReminderEmailInput) {
   ].join("\n");
 
   const p = (s: string) => `<p>${s}</p>`;
-  const a = (href: string, label: string) => `<a href="${escape(href)}">${escape(label)}</a>`;
+  const a = (href: string, label: string) =>
+    `<a href="${escapeHtml(href)}">${escapeHtml(label)}</a>`;
   const html = [
     '<!doctype html><html><body style="font-family: sans-serif; line-height: 1.5">',
-    p(escape(greeting)),
-    p(escape(why)),
+    p(escapeHtml(greeting)),
+    p(escapeHtml(why)),
     ...entries.map(
       (e) =>
-        `<p><strong>${escape(e.name)}</strong><br>` +
-        (e.details ? `${escape(e.details)}<br>` : "") +
-        `${escape(e.confirmed)}<br>` +
+        `<p><strong>${escapeHtml(e.name)}</strong><br>` +
+        (e.details ? `${escapeHtml(e.details)}<br>` : "") +
+        `${escapeHtml(e.confirmed)}<br>` +
         `${a(e.confirm, "Still current")} · ${a(e.markerUrl, "Update details")} · ${a(e.markerUrl, "This site has closed")}</p>`,
     ),
-    p(escape(fade)),
+    p(escapeHtml(fade)),
     p(NO_REPLY_HTML),
     p(`${a(input.unsubscribeLink, "Unsubscribe")} from these reminders.`),
     p(signInInsteadHtml(site)),

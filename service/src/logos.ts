@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { Cell } from "@openmrs-atlas/shared";
 import sharp from "sharp";
-import { ApiError } from "./edits.ts";
+import { ApiError } from "./edits/index.ts";
 
 export const MAX_LOGO_BYTES = 2 * 1024 * 1024;
 const FORMATS = ["png", "jpeg", "webp"];

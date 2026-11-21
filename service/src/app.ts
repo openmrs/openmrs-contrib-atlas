@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import type { Accounts } from "./accounts.ts";
 import { createApi, type ApiDeps } from "./api.ts";
 import { identify, type AuthConfig, type IdTokenVerifier } from "./auth.ts";
-import { MarkerEditor } from "./edits.ts";
+import { MarkerEditor } from "./edits/index.ts";
 import type { LinkSigner } from "./links.ts";
 import type { Mailer } from "./mailer.ts";
 import type { NoticeConfig } from "./notices.ts";

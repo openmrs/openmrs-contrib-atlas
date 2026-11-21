@@ -52,10 +52,11 @@ values. Escaping `'` as well is safe everywhere, and it matters for single-quote
 that compare rendered HTML may need `&#39;` where a `'` appears. That is the one visible
 difference, and it doesn't change how the HTML renders.
 
-**4. `publishAfter(publish, write)`** lives in `service/src/publishing.ts` (new). It runs the write,
-then the publish if the write asks for one, logs a failed publish as `publish-failed` and carries
-on, and returns `{ ...result, published }`. `api.ts`'s `write()` and `confirm-recent`, and
-`reminder-links.ts`'s confirm, use it.
+**4. `publishSafely(publish)`** lives in `service/src/publishing.ts` (new). It runs the publish,
+logs a failure as `publish-failed`, and returns whether it published. That is the part the three
+places repeat; what each does around it differs. `api.ts`'s `write()` and `confirm-recent`, and
+`reminder-links.ts`'s confirm, use it. (Planned as a `publishAfter()` that also ran the write,
+but the writes differ too much for one wrapper to stay simple.)
 
 ## Risks / Trade-offs
 

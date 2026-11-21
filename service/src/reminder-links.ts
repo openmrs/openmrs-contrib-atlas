@@ -1,8 +1,9 @@
 import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
-import type { MarkerEditor } from "./edits.ts";
+import type { MarkerEditor } from "./edits/index.ts";
 import type { LinkSigner } from "./links.ts";
 import type { WriteQueue } from "./queue.ts";
+import { publishSafely } from "./publishing.ts";
 
 /**
  * The routes behind "Still current" and "Unsubscribe" links in reminder emails. Anyone with a
@@ -65,12 +66,7 @@ export function createReminderLinks(deps: ReminderLinkDeps) {
     if (!outcome.ok) {
       return c.json({ state: outcome.reason, confirmed_at: outcome.confirmed_at }, 409);
     }
-    try {
-      await deps.publish();
-    } catch (err) {
-      // The confirmation is safely in the sheet; the next publish picks it up.
-      console.error(JSON.stringify({ event: "publish-failed", message: (err as Error).message }));
-    }
+    await publishSafely(deps.publish);
     return c.json({ state: "done", confirmed_at: outcome.result.marker?.confirmed_at ?? "" });
   });
 

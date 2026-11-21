@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AccountsUnavailable, type Account, type Accounts } from "./accounts.ts";
 import { createApp, type AppDeps } from "./app.ts";
 import { renderClaimDecision, renderClaimNotice } from "./claims-mail.ts";
-import { ANOTHER_APPROVED, MAX_PENDING_CLAIMS, NOW_OWNED } from "./edits.ts";
+import { ANOTHER_APPROVED, MAX_PENDING_CLAIMS, NOW_OWNED } from "./edits/index.ts";
 import type { Email, Mailer } from "./mailer.ts";
 import { FakeBucket, FakeSheet, ID, NOW, NOW_ISO, OLD } from "./testing.ts";
 

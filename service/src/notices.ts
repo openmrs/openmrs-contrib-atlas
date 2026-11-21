@@ -1,6 +1,7 @@
 import type { PublicMarker } from "@openmrs-atlas/shared";
 import { NO_REPLY_HTML, NO_REPLY_TEXT } from "./help.ts";
 import type { Mailer } from "./mailer.ts";
+import { escapeHtml } from "./html.ts";
 
 /**
  * The notice sent to one optional address when a marker is added in the Atlas.
@@ -14,9 +15,6 @@ export interface NoticeConfig {
   siteUrl: string;
   sheetUrl: string;
 }
-
-const escape = (value: string) =>
-  value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 export function renderNotice(
   marker: PublicMarker,
@@ -42,11 +40,12 @@ export function renderNotice(
     NO_REPLY_TEXT,
     "",
   ].join("\n");
-  const a = (href: string, label: string) => `<a href="${escape(href)}">${escape(label)}</a>`;
+  const a = (href: string, label: string) =>
+    `<a href="${escapeHtml(href)}">${escapeHtml(label)}</a>`;
   const html = [
     '<!doctype html><html><body style="font-family: sans-serif; line-height: 1.5">',
-    `<p>${escape(addedBy)} added <strong>${escape(marker.name)}</strong> to the OpenMRS Atlas.</p>`,
-    `<p>${facts.map(([label, value]) => `${label}: ${escape(value)}`).join("<br>")}</p>`,
+    `<p>${escapeHtml(addedBy)} added <strong>${escapeHtml(marker.name)}</strong> to the OpenMRS Atlas.</p>`,
+    `<p>${facts.map(([label, value]) => `${label}: ${escapeHtml(value)}`).join("<br>")}</p>`,
     `<p>${a(markerUrl, "See it on the map")} · ${a(config.sheetUrl, "Open the sheet")}</p>`,
     `<p>${NO_REPLY_HTML}</p>`,
     "</body></html>",

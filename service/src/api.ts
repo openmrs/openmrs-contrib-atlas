@@ -9,14 +9,15 @@ import {
   type EditStore,
   type ClaimDecision,
   type MarkerResult,
-} from "./edits.ts";
+} from "./edits/index.ts";
 import { AccountsUnavailable, type Accounts } from "./accounts.ts";
-import { accountsUnavailable } from "./edits.ts";
+import { accountsUnavailable } from "./edits/index.ts";
 import type { PersonVerifier } from "./keycloak.ts";
 import { MAX_LOGO_BYTES, logoName, logoPrefix, processLogo, type LogoStore } from "./logos.ts";
 import { sendClaimDecisions, sendClaimNotice } from "./claims-mail.ts";
 import { sendNotice, type NoticeConfig } from "./notices.ts";
 import { ADDS_PER_DAY, DailyLimit, UPLOADS_PER_DAY } from "./limits.ts";
+import { publishSafely } from "./publishing.ts";
 import type { WriteQueue } from "./queue.ts";
 
 export interface ApiDeps {
@@ -114,15 +115,7 @@ export function createApi(deps: ApiDeps) {
   async function write<T extends MarkerResult>(task: () => Promise<T>) {
     const result = await deps.queue.run(task);
     const { publish, ...body } = result;
-    if (!publish) return { ...body, published: false };
-    let published = false;
-    try {
-      published = await deps.publish();
-    } catch (err) {
-      // The change is safely in the sheet; the next publish picks it up.
-      console.error(JSON.stringify({ event: "publish-failed", message: (err as Error).message }));
-    }
-    return { ...body, published };
+    return { ...body, published: publish ? await publishSafely(deps.publish) : false };
   }
 
   async function jsonBody(c: { req: { json: () => Promise<unknown> } }): Promise<unknown> {
@@ -157,15 +150,7 @@ export function createApi(deps: ApiDeps) {
     const { publish, confirmed } = await deps.queue.run(() =>
       editor.confirmRecent(c.get("person")),
     );
-    let published = false;
-    if (publish) {
-      try {
-        published = await deps.publish();
-      } catch (err) {
-        // The change is safely in the sheet; the next publish picks it up.
-        console.error(JSON.stringify({ event: "publish-failed", message: (err as Error).message }));
-      }
-    }
+    const published = publish ? await publishSafely(deps.publish) : false;
     return c.json({ confirmed, published });
   });
 

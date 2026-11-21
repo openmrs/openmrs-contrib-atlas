@@ -2,6 +2,7 @@ import type { PublicMarker } from "@openmrs-atlas/shared";
 import { Hono } from "hono";
 import { CARD_HEIGHT, CARD_WIDTH, countryName } from "./cards/card.ts";
 import { WORLD, type CardManifest, type CardStore } from "./cards/refresh.ts";
+import { escapeHtml } from "./html.ts";
 
 /** Pages and the CDN in front of them may keep these for 5 minutes (specs/marker-permalinks). */
 const PAGE_CACHE = "public, max-age=300, s-maxage=300";
@@ -17,11 +18,6 @@ interface Published {
   cards: CardManifest["markers"];
 }
 
-const escape = (s: string) =>
-  s.replace(
-    /[&<>"']/g,
-    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!,
-  );
 /** A string safe to put inside an inline script. */
 const scriptString = (s: string) => JSON.stringify(s).replace(/</g, "\\u003c");
 
@@ -42,7 +38,7 @@ function page(opts: { title: string; head: string; body: string; target: string 
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${escape(opts.title)}</title>
+<title>${escapeHtml(opts.title)}</title>
 ${opts.head}
 </head>
 <body>
@@ -116,7 +112,7 @@ export function createPermalinks(deps: { cards: CardStore; siteUrl: string; now?
         page({
           title: "Site not found · OpenMRS Atlas",
           head: `<meta name="robots" content="noindex">`,
-          body: `<p>That site is not on the OpenMRS Atlas. <a href="${escape(site)}/">Open the map</a>.</p>`,
+          body: `<p>That site is not on the OpenMRS Atlas. <a href="${escapeHtml(site)}/">Open the map</a>.</p>`,
           target: mapLink(id),
         }),
         404,
@@ -146,10 +142,12 @@ export function createPermalinks(deps: { cards: CardStore; siteUrl: string; now?
       page({
         title: `${marker.name} · OpenMRS Atlas`,
         head: [
-          `<link rel="canonical" href="${escape(permalink)}">`,
-          ...tags.map(([attr, key, value]) => `<meta ${attr}="${key}" content="${escape(value)}">`),
+          `<link rel="canonical" href="${escapeHtml(permalink)}">`,
+          ...tags.map(
+            ([attr, key, value]) => `<meta ${attr}="${key}" content="${escapeHtml(value)}">`,
+          ),
         ].join("\n"),
-        body: `<p><a href="${escape(mapLink(id))}">Open ${escape(marker.name)} on the OpenMRS Atlas</a></p>`,
+        body: `<p><a href="${escapeHtml(mapLink(id))}">Open ${escapeHtml(marker.name)} on the OpenMRS Atlas</a></p>`,
         target: mapLink(id),
       }),
     );

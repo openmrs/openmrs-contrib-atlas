@@ -1,7 +1,8 @@
 import type { Accounts } from "./accounts.ts";
-import type { ClaimDecision } from "./edits.ts";
+import type { ClaimDecision } from "./edits/index.ts";
 import { NO_REPLY_HTML, NO_REPLY_TEXT, signInInsteadHtml, signInInsteadText } from "./help.ts";
 import type { NoticeConfig } from "./notices.ts";
+import { escapeHtml } from "./html.ts";
 
 /**
  * Claim email (specs/marker-claims): the notice to admins when someone claims a marker, and
@@ -9,13 +10,11 @@ import type { NoticeConfig } from "./notices.ts";
  * no address is ever logged.
  */
 
-const escape = (value: string) =>
-  value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-
 const markerUrl = (siteUrl: string, id: string) =>
   `${siteUrl.replace(/\/+$/, "")}/?marker=${encodeURIComponent(id)}`;
 
-const link = (href: string, label: string) => `<a href="${escape(href)}">${escape(label)}</a>`;
+const link = (href: string, label: string) =>
+  `<a href="${escapeHtml(href)}">${escapeHtml(label)}</a>`;
 
 const page = (paragraphs: string[], postscript?: string) =>
   [
@@ -27,7 +26,7 @@ const page = (paragraphs: string[], postscript?: string) =>
   ].join("\n");
 
 /** Message text as HTML: escaped, with its line breaks kept. */
-const quoted = (message: string) => escape(message).replace(/\r?\n/g, "<br>");
+const quoted = (message: string) => escapeHtml(message).replace(/\r?\n/g, "<br>");
 
 export interface NewClaim {
   marker_id: string;
@@ -55,7 +54,7 @@ export function renderClaimNotice(
     "",
   ].join("\n");
   const html = page([
-    `${escape(claim.username)} has asked to become the owner of <strong>${escape(claim.name)}</strong> on the OpenMRS Atlas.`,
+    `${escapeHtml(claim.username)} has asked to become the owner of <strong>${escapeHtml(claim.name)}</strong> on the OpenMRS Atlas.`,
     `How they are connected to the site:<br><em>${quoted(claim.message)}</em>`,
     `${link(url, "Approve or decline it on the map")} · ${link(config.sheetUrl, "Open the sheet")}`,
   ]);
@@ -103,7 +102,7 @@ export function renderClaimDecision(decision: ClaimDecision, siteUrl: string) {
       ].join("\n"),
       html: page(
         [
-          `Your claim for <strong>${escape(name)}</strong> on the OpenMRS Atlas was approved. You are now its owner.`,
+          `Your claim for <strong>${escapeHtml(name)}</strong> on the OpenMRS Atlas was approved. You are now its owner.`,
           "You can update it, add editors and keep it current from My markers.",
           link(url, "See it on the map"),
         ],
@@ -127,7 +126,7 @@ export function renderClaimDecision(decision: ClaimDecision, siteUrl: string) {
     ].join("\n"),
     html: page(
       [
-        `Your claim for <strong>${escape(name)}</strong> on the OpenMRS Atlas was declined.`,
+        `Your claim for <strong>${escapeHtml(name)}</strong> on the OpenMRS Atlas was declined.`,
         ...(reason ? [`Reason: ${quoted(reason)}`] : []),
         link(url, "See it on the map"),
       ],

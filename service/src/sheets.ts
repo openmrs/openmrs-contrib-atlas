@@ -1,6 +1,6 @@
 import { auth, sheets as sheetsApi, type sheets_v4 } from "@googleapis/sheets";
 import { TABS, type Cell, type Problem } from "@openmrs-atlas/shared";
-import type { CellUpdate, EditStore, EditValues } from "./edits.ts";
+import type { CellUpdate, EditStore, EditValues } from "./edits/index.ts";
 import type { SheetStore, SheetValues } from "./publish.ts";
 
 export function sheetsClient(): sheets_v4.Sheets {
