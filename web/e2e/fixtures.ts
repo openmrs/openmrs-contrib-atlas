@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { test as base, expect, type Page } from "@playwright/test";
@@ -5,9 +6,68 @@ import { test as base, expect, type Page } from "@playwright/test";
 export const STATIC_DIR = resolve(import.meta.dirname, "static");
 export const NOW = new Date("2026-11-01T00:00:00Z");
 
-/** Serves /e2e/* from e2e/static and fixes the clock, for every test. */
-export const test = base.extend({
-  page: async ({ page }, use) => {
+/**
+ * The security headers staging sends with its pages (firebase.json, specs/deployment), with
+ * staging's Keycloak swapped for the e2e build's, so every test runs under the real policy.
+ */
+type HeaderBlock = { source: string; headers: { key: string; value: string }[] };
+const firebase = JSON.parse(
+  readFileSync(resolve(import.meta.dirname, "../../firebase.json"), "utf8"),
+) as { hosting: { target: string; headers: HeaderBlock[] }[] };
+const staging = firebase.hosting.find((t) => t.target === "staging")!;
+const blockFor = (source: string) =>
+  Object.fromEntries(
+    (staging.headers.find((b) => b.source === source)?.headers ?? []).map((h) => [
+      h.key,
+      h.value.replaceAll("https://id-stg.openmrs.org", "https://id.e2e.invalid"),
+    ]),
+  );
+const PAGE_HEADERS = { ...blockFor("**"), ...blockFor("{/,/index.html}") };
+const REMINDER_HEADERS = { ...blockFor("**"), ...blockFor("/reminder{,.html}") };
+const isPage = (path: string) => path === "/" || path === "/index.html";
+const isReminder = (path: string) => path === "/reminder" || path === "/reminder.html";
+
+/**
+ * Serves /e2e/* from e2e/static, fixes the clock, and applies the site's security headers, for
+ * every test. A test fails if the Content-Security-Policy blocks anything, unless it sets
+ * `allowCspViolations` to check the policy itself.
+ */
+export const test = base.extend<{ allowCspViolations: boolean; cspViolations: string[] }>({
+  allowCspViolations: [false, { option: true }],
+  cspViolations: [
+    // Playwright requires an object pattern here, even for a fixture that depends on nothing.
+    // eslint-disable-next-line no-empty-pattern
+    async ({}, use) => {
+      await use([]);
+    },
+    { scope: "test" },
+  ],
+  page: async ({ page, allowCspViolations, cspViolations }, use) => {
+    await page.exposeFunction("__reportCsp", (violation: string) => {
+      cspViolations.push(violation);
+    });
+    await page.addInitScript(() => {
+      document.addEventListener("securitypolicyviolation", (e) => {
+        const report = (window as unknown as { __reportCsp?: (v: string) => void }).__reportCsp;
+        report?.(`${e.violatedDirective} blocked ${e.blockedURI || "inline"}`);
+      });
+    });
+    await page.route(
+      (url) =>
+        url.origin === "http://localhost:4173" &&
+        (isPage(url.pathname) || isReminder(url.pathname)),
+      async (route) => {
+        const response = await route.fetch();
+        const path = new URL(route.request().url()).pathname;
+        await route.fulfill({
+          response,
+          headers: {
+            ...response.headers(),
+            ...(isReminder(path) ? REMINDER_HEADERS : PAGE_HEADERS),
+          },
+        });
+      },
+    );
     await page.clock.setFixedTime(NOW);
     await page.route("**/e2e/**", async (route) => {
       const path = decodeURIComponent(
@@ -20,6 +80,8 @@ export const test = base.extend({
       }
     });
     await use(page);
+    if (!allowCspViolations)
+      expect(cspViolations, "Content-Security-Policy violations").toEqual([]);
   },
 });
 

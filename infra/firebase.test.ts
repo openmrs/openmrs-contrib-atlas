@@ -21,8 +21,14 @@ const ENVIRONMENTS = {
     service: "atlas-service-stg",
     bucket: "openmrs-atlas-stg",
     project: "atlas-stg-513316",
+    keycloak: "https://id-stg.openmrs.org",
   },
-  production: { service: "atlas-service", bucket: "openmrs-atlas", project: "openmrs-atlas" },
+  production: {
+    service: "atlas-service",
+    bucket: "openmrs-atlas",
+    project: "openmrs-atlas",
+    keycloak: "https://id.openmrs.org",
+  },
 };
 
 function target(name: string): Target {
@@ -31,13 +37,22 @@ function target(name: string): Target {
   return found;
 }
 
-/** The target with its environment's service and bucket replaced by placeholders. */
+/** The target with its environment's service, bucket and Keycloak replaced by placeholders. */
 function normalised(name: keyof typeof ENVIRONMENTS): unknown {
-  const { service, bucket } = ENVIRONMENTS[name];
+  const { service, bucket, keycloak } = ENVIRONMENTS[name];
   const json = JSON.stringify({ ...target(name), target: "TARGET" })
     .replaceAll(`"serviceId":"${service}"`, `"serviceId":"SERVICE"`)
-    .replaceAll(`storage.googleapis.com/${bucket}/`, "storage.googleapis.com/BUCKET/");
+    .replaceAll(`storage.googleapis.com/${bucket}/`, "storage.googleapis.com/BUCKET/")
+    .replaceAll(keycloak, "KEYCLOAK");
   return JSON.parse(json);
+}
+
+type Header = { key: string; value: string };
+/** The headers a target sends for a source pattern. */
+function headers(name: string, source: string): Record<string, string> {
+  const blocks = target(name).headers as { source: string; headers: Header[] }[];
+  const block = blocks.find((b) => b.source === source);
+  return Object.fromEntries((block?.headers ?? []).map((h) => [h.key, h.value]));
 }
 
 describe("Firebase hosting targets", () => {
@@ -45,7 +60,30 @@ describe("Firebase hosting targets", () => {
     expect(firebase.hosting.map((t) => t.target).sort()).toEqual(["production", "staging"]);
   });
 
-  it("differ only in the Cloud Run service and the bucket", () => {
+  it.each(Object.entries(ENVIRONMENTS))(
+    "%s sends the security headers (specs/deployment)",
+    (name, env) => {
+      for (const page of ["{/,/index.html}", "/reminder{,.html}"]) {
+        const csp = headers(name, page)["Content-Security-Policy"] ?? "";
+        expect(csp).toContain("default-src 'self'");
+        expect(csp).toContain("frame-ancestors 'self'");
+        expect(csp).toContain("object-src 'none'");
+        expect(csp).toContain(`frame-src ${env.keycloak}`);
+        expect(csp).not.toContain("unsafe-inline");
+        expect(csp).not.toContain("unsafe-eval");
+      }
+      expect(headers(name, "{/,/index.html}")["Referrer-Policy"]).toBe(
+        "strict-origin-when-cross-origin",
+      );
+      expect(headers(name, "/reminder{,.html}")["Referrer-Policy"]).toBe("no-referrer");
+      expect(headers(name, "**")).toMatchObject({
+        "X-Content-Type-Options": "nosniff",
+        "Permissions-Policy": expect.stringContaining("geolocation=()"),
+      });
+    },
+  );
+
+  it("differ only in the Cloud Run service, the bucket and Keycloak", () => {
     expect(normalised("production")).toEqual(normalised("staging"));
   });
 

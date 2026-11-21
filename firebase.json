@@ -71,6 +71,36 @@
             {
               "key": "Referrer-Policy",
               "value": "no-referrer"
+            },
+            {
+              "key": "Content-Security-Policy",
+              "value": "default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self'; img-src 'self' data: https://storage.googleapis.com https://*.google-analytics.com https://*.googletagmanager.com; font-src 'self'; connect-src 'self' https://storage.googleapis.com https://tiles.openfreemap.org https://nominatim.openstreetmap.org https://id-stg.openmrs.org https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; worker-src 'self'; frame-src https://id-stg.openmrs.org; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
+            }
+          ]
+        },
+        {
+          "source": "{/,/index.html}",
+          "headers": [
+            {
+              "key": "Content-Security-Policy",
+              "value": "default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self'; img-src 'self' data: https://storage.googleapis.com https://*.google-analytics.com https://*.googletagmanager.com; font-src 'self'; connect-src 'self' https://storage.googleapis.com https://tiles.openfreemap.org https://nominatim.openstreetmap.org https://id-stg.openmrs.org https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; worker-src 'self'; frame-src https://id-stg.openmrs.org; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
+            },
+            {
+              "key": "Referrer-Policy",
+              "value": "strict-origin-when-cross-origin"
+            }
+          ]
+        },
+        {
+          "source": "**",
+          "headers": [
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "Permissions-Policy",
+              "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
             }
           ]
         }
@@ -147,6 +177,36 @@
             {
               "key": "Referrer-Policy",
               "value": "no-referrer"
+            },
+            {
+              "key": "Content-Security-Policy",
+              "value": "default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self'; img-src 'self' data: https://storage.googleapis.com https://*.google-analytics.com https://*.googletagmanager.com; font-src 'self'; connect-src 'self' https://storage.googleapis.com https://tiles.openfreemap.org https://nominatim.openstreetmap.org https://id.openmrs.org https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; worker-src 'self'; frame-src https://id.openmrs.org; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
+            }
+          ]
+        },
+        {
+          "source": "{/,/index.html}",
+          "headers": [
+            {
+              "key": "Content-Security-Policy",
+              "value": "default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self'; img-src 'self' data: https://storage.googleapis.com https://*.google-analytics.com https://*.googletagmanager.com; font-src 'self'; connect-src 'self' https://storage.googleapis.com https://tiles.openfreemap.org https://nominatim.openstreetmap.org https://id.openmrs.org https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; worker-src 'self'; frame-src https://id.openmrs.org; frame-ancestors 'self'; object-src 'none'; base-uri 'self'; form-action 'self'"
+            },
+            {
+              "key": "Referrer-Policy",
+              "value": "strict-origin-when-cross-origin"
+            }
+          ]
+        },
+        {
+          "source": "**",
+          "headers": [
+            {
+              "key": "X-Content-Type-Options",
+              "value": "nosniff"
+            },
+            {
+              "key": "Permissions-Policy",
+              "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
             }
           ]
         }

@@ -25,4 +25,4 @@
 ## 5. Check and ship
 
 - [x] 5.1 Run `npm run format:check`, `typecheck`, `lint`, `test`, the e2e tests and `openspec validate --strict`
-- [ ] 5.2 (manual) On staging, add a marker and decline a claim, and check that both emails arrive
+- [x] 5.2 (manual) On staging, add a marker and decline a claim, and check that both emails arrive

@@ -38,8 +38,27 @@ environment on a tag, which GitHub grants only after the release checks and appr
 
 `firebase.json` lists one hosting target per environment, because its rewrites and redirects
 can't read variables. Each sends `/api/**` and the `/marker/**` permalink pages to its Cloud Run
-service. They must differ only in the service and bucket names;
-[`firebase.test.ts`](firebase.test.ts) fails CI if they drift apart.
+service. They must differ only in the service and bucket names, and the Keycloak host in the
+security headers. [`firebase.test.ts`](firebase.test.ts) fails CI if they drift apart.
+
+### Security headers
+
+Both targets send security headers (specs/deployment):
+
+- **The site's two pages** (`{/,/index.html}` and `/reminder{,.html}`) get an enforced
+  Content-Security-Policy. It allows only what the site uses: itself, the bucket
+  (`storage.googleapis.com`), OpenFreeMap, Nominatim, the environment's Keycloak and Google
+  Analytics.
+- **Everything** (`**`) gets `X-Content-Type-Options: nosniff` and a `Permissions-Policy` that
+  turns off unused device features.
+- **`Referrer-Policy`** is `strict-origin-when-cross-origin` on the map page and `no-referrer` on the
+  reminder page.
+- **Not on `/marker/**`:** the policy isn't applied to the permalink pages, whose redirect is an
+  inline script.
+
+**When the site starts using a new origin**, add it to the right directive in both targets: for
+example, a new API to `connect-src`, or new images to `img-src`. The e2e tests run under the
+staging target's policy and fail on any violation, naming the directive that blocked it.
 
 ## GitHub environments
 

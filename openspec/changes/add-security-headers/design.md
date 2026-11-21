@@ -45,10 +45,10 @@ automatically, and easy to extend when the site starts using a new origin.
 default-src 'self';
 script-src 'self' https://www.googletagmanager.com;
 style-src 'self';
-img-src 'self' data: blob: https://storage.googleapis.com https://*.google-analytics.com https://*.googletagmanager.com;
+img-src 'self' data: https://storage.googleapis.com https://*.google-analytics.com https://*.googletagmanager.com;
 font-src 'self';
 connect-src 'self' https://storage.googleapis.com https://tiles.openfreemap.org https://nominatim.openstreetmap.org https://id.openmrs.org https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com;
-worker-src 'self' blob:;
+worker-src 'self';
 frame-src https://id.openmrs.org;
 frame-ancestors 'self';
 object-src 'none';
@@ -59,17 +59,25 @@ form-action 'self'
 - `style-src 'self'` with no `'unsafe-inline'`: the e2e run will show whether any library injects
   a `<style>` element. If one does, the fix is `'unsafe-inline'` for styles only, which can't run
   script.
-- `worker-src` keeps `blob:` as a fallback for MapLibre's worker setup. Drop it if the e2e run
-  shows it isn't needed.
+- No `blob:` anywhere. The e2e run showed MapLibre's worker and the image exports work without
+  it in `worker-src` and `img-src`.
 - Signing in and out are top-level redirects to Keycloak, which `form-action` doesn't govern.
 - `frame-ancestors 'self'` instead of `'none'`, because silent sign-in frames the site in itself.
 
-**2. One `"source": "**"` header block per target**, in addition to the caching blocks. Firebase
-merges every matching block, and the reminder page's `no-referrer` stays more specific.
+**2. The policy goes on the site's HTML pages; the harmless headers go on `**`.** Each target
+has three new header entries:
+- `{/,/index.html}` (the map page) gets the CSP and `Referrer-Policy: strict-origin-when-cross-origin`.
+- The existing `/reminder{,.html}` block also gets the CSP, and keeps its `no-referrer`.
+- `**` gets `X-Content-Type-Options` and `Permissions-Policy`.
+
+The CSP isn't on `**` because the service's `/marker/<id>` pages, which Hosting proxies,
+redirect with an inline `<script>` that `script-src 'self'` would block. Firebase's header
+patterns are RE2, which can't express "everything but `/marker`". Static files (badges, cards and
+favicons) run no script, so they don't need the policy.
 
 **3. The drift test also swaps each Keycloak host for a placeholder**, so the two targets must
-otherwise match exactly. A new test checks that both targets send the CSP and the other three
-headers on `**`.
+otherwise match exactly. A new test checks that both targets send the CSP on both pages, each
+page's `Referrer-Policy`, and the two headers on `**`.
 
 **4. e2e under the real policy.** `fixtures.ts` reads the staging target's `**` headers from
 `firebase.json`, and adds them to every HTML response through `page.route`. It also listens for
