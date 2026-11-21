@@ -73,6 +73,8 @@ export interface EditStore {
   updateCells(updates: CellUpdate[]): Promise<void>;
   clearRow(tab: Tab, row: number): Promise<void>;
   readCell(tab: Tab, row: number, column: number): Promise<Cell>;
+  /** One column of a tab, header row first, in a single read. */
+  readColumn(tab: Tab, column: number): Promise<Cell[]>;
 }
 
 export class ApiError extends Error {
@@ -545,11 +547,13 @@ export class MarkerEditor {
     if (!isUsername(owner)) throw invalidUsername("owner");
     if (owner !== person.username) await this.requireAccounts([owner], "owner");
     await this.requireAccounts(editors, "editors");
+    // The private row (owner) first: if the second write fails, what's left is an unpublished
+    // private row, never a published marker with no owner that anyone could claim.
+    await this.writePrivate(tabs, id, { owner, editors: editors.join(","), ...contact });
     await this.store.appendRow(
       "markers",
       tabs.header.markers.map((column) => cells[column] ?? ""),
     );
-    await this.writePrivate(tabs, id, { owner, editors: editors.join(","), ...contact });
     await this.log(person, id, "add", [
       ...Object.keys(fields),
       { field: "owner", from: "", to: owner },
@@ -695,14 +699,7 @@ export class MarkerEditor {
         })),
       ),
     );
-    const idColumn = header.indexOf("id");
-    for (const marker of due) {
-      const id = text(marker.cells.id);
-      if (text(await this.store.readCell("markers", marker.row, idColumn)) !== id) {
-        // A person moved rows in the sheet between the read and the write. Version history recovers.
-        console.error(JSON.stringify({ event: "row-moved", marker: id, row: marker.row }));
-      }
-    }
+    // Logged right after writing, so a failure below can't leave confirmations unrecorded.
     const confirmed = due.map((marker) => text(marker.cells.id));
     await this.store.appendRows(
       "changes",
@@ -714,6 +711,21 @@ export class MarkerEditor {
         JSON.stringify(["confirmed_at"]),
       ]),
     );
+    // Check no one moved rows in the sheet between the read and the write, with one read
+    // however many markers there are. Version history recovers a moved row; this only reports it.
+    try {
+      const ids = await this.store.readColumn("markers", header.indexOf("id"));
+      for (const marker of due) {
+        const id = text(marker.cells.id);
+        if (text(ids[marker.row - 1]) !== id) {
+          console.error(JSON.stringify({ event: "row-moved", marker: id, row: marker.row }));
+        }
+      }
+    } catch (err) {
+      console.error(
+        JSON.stringify({ event: "confirm-check-failed", message: (err as Error).message }),
+      );
+    }
     return { confirmed, publish: true };
   }
 

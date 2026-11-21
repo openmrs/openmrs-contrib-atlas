@@ -131,6 +131,17 @@ export function googleSheetStore(
       return data.values?.[0]?.[0] as Cell;
     },
 
+    async readColumn(tab, column) {
+      const letter = columnLetter(column);
+      const { data } = await client.spreadsheets.values.get({
+        spreadsheetId,
+        range: `${TABS[tab]}!${letter}:${letter}`,
+        valueRenderOption: "UNFORMATTED_VALUE",
+        majorDimension: "COLUMNS",
+      });
+      return (data.values?.[0] ?? []) as Cell[];
+    },
+
     async writeProblems(problems: Problem[]) {
       await client.spreadsheets.values.clear({ spreadsheetId, range: `${TABS.problems}!A2:C` });
       if (problems.length === 0) return;

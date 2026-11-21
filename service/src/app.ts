@@ -42,6 +42,7 @@ export const EDIT_CARD_LIMIT = 10;
 export function createApp(deps: AppDeps) {
   const app = new Hono();
   const queue = new WriteQueue();
+  let remindersRunning = false;
   const now = () => deps.now?.() ?? new Date();
 
   // The nightly run draws every card and clears old files; other publishes draw a few at most.
@@ -107,11 +108,27 @@ export function createApp(deps: AppDeps) {
     const { store } = deps.editing;
     const { accounts } = deps;
     const { mailer, signer } = deps.reminders;
-    const result = await queue.run(() =>
-      runReminders({ store, accounts, mailer, signer, siteUrl: deps.siteUrl, now }),
-    );
-    console.log(JSON.stringify({ event: "reminders", caller, ...result }));
-    return c.json(result);
+    // One run at a time: the job holds the write queue only for sheet work, so a second run
+    // started meanwhile could otherwise send the same reminders (specs/reminder-emails).
+    if (remindersRunning) {
+      return c.json({ error: "The reminder job is already running." }, 409);
+    }
+    remindersRunning = true;
+    try {
+      const result = await runReminders({
+        store,
+        accounts,
+        mailer,
+        signer,
+        queue,
+        siteUrl: deps.siteUrl,
+        now,
+      });
+      console.log(JSON.stringify({ event: "reminders", caller, ...result }));
+      return c.json(result);
+    } finally {
+      remindersRunning = false;
+    }
   });
 
   if (deps.editing) {

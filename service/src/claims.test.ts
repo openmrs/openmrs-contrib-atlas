@@ -33,8 +33,10 @@ class SpyAccounts implements Accounts {
 class SpyMailer implements Mailer {
   sent: Email[] = [];
   failing = false;
+  gate?: Promise<void>;
   async send(email: Email) {
     this.sent.push(email);
+    if (this.gate) await this.gate;
     if (this.failing) throw new Error("mandrill exploded");
     return { status: "sent" as const };
   }
@@ -91,6 +93,25 @@ const call = (
   );
 
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+/** A send that waits until the test opens the gate, to show who waits on email. */
+function gated() {
+  let open!: () => void;
+  const gate = new Promise<void>((resolve) => (open = resolve));
+  return { gate, open };
+}
+
+/** Resolves once `promise` has settled, or reports that it hasn't after a few event-loop turns. */
+async function settledYet(promise: Promise<unknown>): Promise<boolean> {
+  let done = false;
+  void promise.then(
+    () => (done = true),
+    () => (done = true),
+  );
+  for (let i = 0; i < 5; i++) await new Promise((resolve) => setTimeout(resolve, 0));
+  return done;
+}
+
 const MESSAGE = "I lead the EMR team at this clinic";
 
 /** The sample marker, with no owner. Its editor is asmith. */
@@ -249,6 +270,39 @@ describe("Admins are told about claims", () => {
     await settle();
     expect(claimCell("status")).toBe("pending");
     expect(error).toHaveBeenCalledWith(expect.stringContaining("claim-notice-failed"));
+  });
+});
+
+describe("Email is sent before the response (specs/email-delivery)", () => {
+  it("the claim response waits for the notice", async () => {
+    orphan();
+    const { gate, open } = gated();
+    mailer.gate = gate;
+    const pending = claim("asmith");
+    expect(await settledYet(pending)).toBe(false);
+    expect(mailer.sent).toHaveLength(1);
+    open();
+    expect((await pending).res.status).toBe(201);
+  });
+
+  it("Scenario: Mandrill slow", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    orphan();
+    const { body } = await claim("bjones");
+    const { gate, open } = gated();
+    mailer.gate = gate;
+    mailer.failing = true;
+    const pending = call(
+      "admin:root",
+      "POST",
+      `/markers/${ID}/claims/${body.claim!.id}/decline`,
+      {},
+    );
+    expect(await settledYet(pending)).toBe(false);
+    open();
+    expect((await pending).status).toBe(200);
+    expect(claimCell("status")).toBe("declined");
+    expect(error).toHaveBeenCalledWith(expect.stringContaining("claim-decision-failed"));
   });
 });
 

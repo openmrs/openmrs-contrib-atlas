@@ -69,7 +69,13 @@ export class FakeSheet implements SheetStore, EditStore {
   async writeProblems(problems: Problem[]) {
     this.problems = problems;
   }
+  /** A tab whose next append fails, as a Sheets error would. */
+  failAppendTo?: Tab;
   async appendRow(tab: Tab, cells: Cell[]) {
+    if (this.failAppendTo === tab) {
+      this.failAppendTo = undefined;
+      throw new Error("sheets quota exceeded");
+    }
     this.tabs[tab]!.push(cells);
   }
   async appendRows(tab: Tab, rows: Cell[][]) {
@@ -83,6 +89,14 @@ export class FakeSheet implements SheetStore, EditStore {
   }
   async readCell(tab: Tab, row: number, column: number) {
     return this.tabs[tab]![row - 1]![column];
+  }
+  /** Calls to readColumn, so tests can count reads. */
+  columnReads = 0;
+  failColumnReads = false;
+  async readColumn(tab: Tab, column: number) {
+    this.columnReads++;
+    if (this.failColumnReads) throw new Error("sheets quota exceeded");
+    return this.tabs[tab]!.map((row) => row[column]);
   }
 
   marker(field: string, row = 1): Cell {

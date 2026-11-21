@@ -1,6 +1,6 @@
-import { ADMIN_GROUP, text } from "@openmrs-atlas/shared";
+import { ADMIN_GROUP, COLUMNS, text } from "@openmrs-atlas/shared";
 import sharp from "sharp";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "./app.ts";
 import { FakeBucket, FakeSheet, ID, NOW, NOW_ISO, OLD, SECRET_EMAIL } from "./testing.ts";
 
@@ -79,6 +79,28 @@ describe("Requests are checked by the service", () => {
 
 describe("Add a marker", () => {
   const fields = { name: "New site", latitude: 0.5, longitude: 32.5, type: "Clinical" };
+
+  // specs/marker-editing: An added marker always has its owner
+  it("Scenario: Second write fails", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const markersBefore = sheet.tabs.markers!.length;
+    const published = bucket.files.size;
+    sheet.failAppendTo = "markers";
+    const res = await call("newbie", "POST", "/markers", { fields });
+    expect(res.status).toBe(500);
+    // The private row was written first; no marker row exists, so nothing can be claimed.
+    expect(sheet.tabs.markers).toHaveLength(markersBefore);
+    expect(sheet.priv("owner", 2)).toBe("newbie");
+    expect(bucket.files.size).toBe(published);
+    const me = (await (await call("asmith", "GET", "/me")).json()) as { claimable: string[] };
+    expect(me.claimable).toEqual([]);
+
+    // And when the owner's row is the write that fails, no marker is left behind either.
+    sheet.failAppendTo = "private";
+    expect((await call("newbie", "POST", "/markers", { fields })).status).toBe(500);
+    expect(sheet.tabs.markers).toHaveLength(markersBefore);
+    error.mockRestore();
+  });
 
   it("Scenario: Only required fields", async () => {
     const res = await call("newbie", "POST", "/markers", { fields });
@@ -316,6 +338,48 @@ describe("Signing in keeps recent markers current", () => {
       expect((await signIn("jdoe")).confirmed).toEqual([]);
       expect(sheet.marker("confirmed_at")).toBe(ago(90));
     }
+  });
+
+  it("Scenario: Many markers", async () => {
+    sheet.setMarker("confirmed_at", ago(150));
+    const template = sheet.tabs.markers![1]!;
+    const idAt = COLUMNS.markers.indexOf("id");
+    const ids = [ID];
+    for (let i = 2; i <= 40; i++) {
+      const id = `9f1c2a6e-0d1b-4c3e-9a51-${String(i).padStart(12, "0")}`;
+      ids.push(id);
+      const row = [...template];
+      row[idAt] = id;
+      sheet.tabs.markers!.push(row);
+      sheet.tabs.private!.push([id, "jdoe", "", "", ""]);
+    }
+    const { confirmed } = await signIn("jdoe");
+    expect(confirmed).toEqual(ids);
+    expect(sheet.columnReads).toBe(1);
+    const logged = sheet.tabs.changes!.filter((r) => r[3] === "confirm-on-sign-in");
+    expect(logged.map((r) => r[2])).toEqual(ids);
+  });
+
+  it("Scenario: Check after writing fails", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    sheet.setMarker("confirmed_at", ago(150));
+    sheet.failColumnReads = true;
+    expect((await signIn("jdoe")).confirmed).toEqual([ID]);
+    expect(sheet.marker("confirmed_at")).toBe(NOW_ISO);
+    expect(sheet.lastChange()).toMatchObject({ marker_id: ID, action: "confirm-on-sign-in" });
+    expect(error).toHaveBeenCalledWith(expect.stringContaining("confirm-check-failed"));
+    error.mockRestore();
+  });
+
+  it("reports a row moved between the read and the write", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    sheet.setMarker("confirmed_at", ago(150));
+    const realRead = sheet.readColumn.bind(sheet);
+    sheet.readColumn = async (tab, column) =>
+      (await realRead(tab, column)).map((v, i) => (i === 1 ? "someone-else" : v));
+    expect((await signIn("jdoe")).confirmed).toEqual([ID]);
+    expect(error).toHaveBeenCalledWith(expect.stringContaining("row-moved"));
+    error.mockRestore();
   });
 
   it("confirms nothing for someone with no markers", async () => {

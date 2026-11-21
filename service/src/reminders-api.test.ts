@@ -42,8 +42,10 @@ class SpyAccounts implements Accounts {
 class SpyMailer implements Mailer {
   sent: Email[] = [];
   result: SendResult | "throw" = { status: "sent" };
+  gate?: Promise<void>;
   async send(email: Email) {
     this.sent.push(email);
+    if (this.gate) await this.gate;
     if (this.result === "throw") throw new Error("mandrill exploded");
     return this.result;
   }
@@ -413,6 +415,38 @@ describe("Unsubscribe", () => {
   });
 });
 
+describe("The daily job doesn't hold up edits (specs/reminder-emails)", () => {
+  it("Scenario: Edit during the job, and Scenario: Overlapping runs", async () => {
+    const { gate, open } = gated();
+    mailer.gate = gate;
+    const run = call("scheduler-oidc", "POST", "/reminders");
+    expect(await settledYet(run)).toBe(false);
+    expect(mailer.sent).toHaveLength(1);
+
+    // An owner's edit goes through while the job waits on Mandrill.
+    const edit = call("person:jdoe", "PATCH", `/api/markers/${ID}`, {
+      version: OLD,
+      fields: { name: "Renamed while sending" },
+    });
+    expect(await settledYet(edit)).toBe(true);
+    expect((await edit).status).toBe(200);
+    expect(sheet.marker("name")).toBe("Renamed while sending");
+
+    // A second run is refused and sends nothing.
+    const second = await call("scheduler-oidc", "POST", "/reminders");
+    expect(second.status).toBe(409);
+    expect(mailer.sent).toHaveLength(1);
+
+    open();
+    expect(await (await run).json()).toMatchObject({ sent: 2 });
+    expect(mailer.sent).toHaveLength(2);
+    // Once finished, the job can run again (and finds nothing new to send).
+    mailer.gate = undefined;
+    expect((await call("scheduler-oidc", "POST", "/reminders")).status).toBe(200);
+    expect(mailer.sent).toHaveLength(2);
+  });
+});
+
 describe("The daily job is protected", () => {
   it("Scenario: Anonymous request", async () => {
     expect((await call(undefined, "POST", "/reminders")).status).toBe(401);
@@ -441,6 +475,24 @@ describe("The daily job is protected", () => {
   });
 });
 
+/** A send that waits until the test opens the gate, to show who waits on email. */
+function gated() {
+  let open!: () => void;
+  const gate = new Promise<void>((resolve) => (open = resolve));
+  return { gate, open };
+}
+
+/** Resolves once `promise` has settled, or reports that it hasn't after a few event-loop turns. */
+async function settledYet(promise: Promise<unknown>): Promise<boolean> {
+  let done = false;
+  void promise.then(
+    () => (done = true),
+    () => (done = true),
+  );
+  for (let i = 0; i < 5; i++) await new Promise((resolve) => setTimeout(resolve, 0));
+  return done;
+}
+
 describe("Notice when a marker is added", () => {
   const fields = { name: "Eldoret Clinic", latitude: 0.5, longitude: 35.27, type: "Clinical" };
   const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
@@ -457,6 +509,16 @@ describe("Notice when a marker is added", () => {
     expect(notice.text).toContain("https://atlas.example.org/?marker=");
     expect(notice.text).toContain("https://docs.google.com/spreadsheets/d/x/edit");
     expect(notice.text).toContain("OpenMRS on Slack (https://openmrs.slack.com/)");
+  });
+
+  it("Scenario: Notice for a new marker (sent before the response)", async () => {
+    const { gate, open } = gated();
+    mailer.gate = gate;
+    const pending = call("person:newbie", "POST", "/api/markers", { fields });
+    expect(await settledYet(pending)).toBe(false);
+    expect(mailer.sent).toHaveLength(1);
+    open();
+    expect((await pending).status).toBe(201);
   });
 
   it("Scenario: No notice address", async () => {

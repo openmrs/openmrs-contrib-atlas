@@ -123,10 +123,13 @@ export function createApi(deps: ApiDeps) {
     }
   }
 
-  /** Claimants hear the decision by email, after the write and without holding up the response. */
-  function tellClaimants(decisions: ClaimDecision[] | undefined) {
+  /**
+   * Claimants hear the decision by email. Sent before the response, because Cloud Run throttles
+   * the CPU once a response has gone (specs/email-delivery). Failures are logged, never thrown.
+   */
+  async function tellClaimants(decisions: ClaimDecision[] | undefined) {
     if (!deps.notices || !decisions?.length) return;
-    void sendClaimDecisions(deps.notices, deps.accounts, decisions);
+    await sendClaimDecisions(deps.notices, deps.accounts, decisions);
   }
 
   async function usernameFrom(c: { req: { json: () => Promise<unknown> } }): Promise<string> {
@@ -196,8 +199,9 @@ export function createApi(deps: ApiDeps) {
     const body = parseChangeBody(await jsonBody(c));
     const result = await write(() => editor.add(c.get("person"), body));
     if (deps.notices && result.marker) {
-      // Not awaited: the person who added the marker never waits on Mandrill.
-      void sendNotice(deps.notices, result.marker, c.get("person").username);
+      // Sent before the response, so an idle service can't leave it unsent (specs/email-delivery).
+      // The mailer's timeout bounds the wait, and a failure is logged, never thrown.
+      await sendNotice(deps.notices, result.marker, c.get("person").username);
     }
     return c.json(result, 201);
   });
@@ -207,7 +211,7 @@ export function createApi(deps: ApiDeps) {
     const { decisions, ...result } = await write(() =>
       editor.change(c.get("person"), c.req.param("id"), body),
     );
-    tellClaimants(decisions);
+    await tellClaimants(decisions);
     return c.json(result);
   });
 
@@ -269,7 +273,7 @@ export function createApi(deps: ApiDeps) {
       editor.claim(person, c.req.param("id"), body?.message),
     );
     if (deps.notices) {
-      void sendClaimNotice(deps.notices, {
+      await sendClaimNotice(deps.notices, {
         marker_id: claim.marker_id,
         name,
         username: claim.username,
@@ -290,7 +294,7 @@ export function createApi(deps: ApiDeps) {
     const { decisions, ...result } = await write(() =>
       editor.approveClaim(c.get("person"), c.req.param("id"), c.req.param("claimId")),
     );
-    tellClaimants(decisions);
+    await tellClaimants(decisions);
     return c.json(result);
   });
 
@@ -299,7 +303,7 @@ export function createApi(deps: ApiDeps) {
     const decision = await deps.queue.run(() =>
       editor.declineClaim(c.get("person"), c.req.param("id"), c.req.param("claimId"), body?.reason),
     );
-    tellClaimants([decision]);
+    await tellClaimants([decision]);
     return c.json({ ok: true });
   });
 

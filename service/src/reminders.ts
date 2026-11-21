@@ -236,6 +236,11 @@ export function renderReminder(input: ReminderEmailInput) {
 
 export interface ReminderJobDeps {
   store: Pick<EditStore, "readEdits" | "appendRows">;
+  /**
+   * The write queue, held only to read the sheet and to record results, never during account
+   * lookups or sends (specs/reminder-emails). Without it, sheet work runs directly.
+   */
+  queue?: { run<T>(task: () => Promise<T>): Promise<T> };
   accounts: Accounts;
   mailer: Mailer;
   signer: LinkSigner;
@@ -255,10 +260,11 @@ export interface ReminderRun {
 /** Rows are written in batches to stay within Sheets write quotas. */
 const FLUSH_EVERY = 10;
 
-/** One daily run. Must run inside the write queue. */
+/** One daily run. Callers must not start a second run while one is in progress. */
 export async function runReminders(deps: ReminderJobDeps): Promise<ReminderRun> {
+  const inQueue = <T>(task: () => Promise<T>) => (deps.queue ? deps.queue.run(task) : task());
   const now = deps.now();
-  const sheet = await deps.store.readEdits();
+  const sheet = await inQueue(() => deps.store.readEdits());
   const { people, skipped, sentToday } = selectDue(sheet, now);
   const site = deps.siteUrl.replace(/\/+$/, "");
   const run: ReminderRun = {
@@ -273,11 +279,9 @@ export async function runReminders(deps: ReminderJobDeps): Promise<ReminderRun> 
 
   const flush = async () => {
     if (pending.length === 0) return;
-    await deps.store.appendRows(
-      "reminders",
-      pending.map((r) => COLUMNS.reminders.map((c) => r[c])),
-    );
+    const rows = pending.map((r) => COLUMNS.reminders.map((c) => r[c]));
     pending = [];
+    await inQueue(() => deps.store.appendRows("reminders", rows));
   };
   const record = (person: (typeof people)[number], result: string) => {
     const stamp = deps.now().toISOString();
