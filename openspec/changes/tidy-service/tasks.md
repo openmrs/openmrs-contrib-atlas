@@ -15,4 +15,4 @@
 
 - [x] 3.1 Run the service tests before and after; they pass with only import changes (and `&#39;` where a test's HTML holds a `'`)
 - [x] 3.2 Run `npm run format:check`, `typecheck`, `lint`, `test`, the e2e tests and `openspec validate --strict`
-- [ ] 3.3 (manual) On staging, edit a marker, add an editor, and claim and decline a claim; check nothing has changed
+- [x] 3.3 (manual) On staging, edit a marker, add an editor, and claim and decline a claim; check nothing has changed

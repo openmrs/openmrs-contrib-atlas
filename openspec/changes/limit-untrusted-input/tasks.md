@@ -26,4 +26,4 @@
 
 - [x] 5.1 Update `service/README.md`: the limits, the logo rule and the sweep
 - [x] 5.2 Run `npm run format:check`, `typecheck`, `lint`, `test`, the e2e tests and `openspec validate --strict`
-- [ ] 5.3 (manual) On staging: upload and save a logo, check that sign-in still works, and check the sweep in the nightly publish's log
+- [x] 5.3 (manual) On staging: upload and save a logo, check that sign-in still works, and check the sweep in the nightly publish's log

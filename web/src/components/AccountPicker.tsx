@@ -15,8 +15,9 @@ const DEBOUNCE_MS = 300;
 
 /**
  * An OpenMRS ID field that suggests accounts by username or name once 3 characters are typed.
- * Suggestions show usernames and names only. Typing an exact ID still works: the service
- * checks it either way. See specs/account-lookup.
+ * Suggestions show usernames and names only, with an exact username match first. A field that
+ * opens already filled suggests nothing until the person edits it. Typing an exact ID still
+ * works: the service checks it either way. See specs/account-lookup.
  */
 export function AccountPicker({ label, value, onChange, onSubmit, disabled }: Props) {
   // Suggestions and problems belong to the query they answered, so a stale answer never shows.
@@ -26,6 +27,9 @@ export function AccountPicker({ label, value, onChange, onSubmit, disabled }: Pr
   });
   const [active, setActive] = useState(0);
   const [dismissed, setDismissed] = useState(false);
+  // Only the person's own typing searches: a value the form starts with (an existing owner)
+  // or sets itself never opens suggestions.
+  const [touched, setTouched] = useState(false);
   const listId = useId();
   const latest = useRef("");
   const q = value.trim();
@@ -35,12 +39,16 @@ export function AccountPicker({ label, value, onChange, onSubmit, disabled }: Pr
 
   useEffect(() => {
     latest.current = q;
-    if (q.length < MIN_SEARCH) return;
+    if (!touched || q.length < MIN_SEARCH) return;
     const timer = setTimeout(() => {
       searchAccounts(q)
         .then((found) => {
           if (latest.current !== q) return;
-          setAnswer({ q, results: found.filter((a) => a.username !== q.toLowerCase()) });
+          // The account whose username is exactly what was typed comes first.
+          const typed = q.toLowerCase();
+          const exact = found.filter((a) => a.username.toLowerCase() === typed);
+          const others = found.filter((a) => a.username.toLowerCase() !== typed);
+          setAnswer({ q, results: [...exact, ...others] });
           setActive(0);
         })
         .catch((err: unknown) => {
@@ -57,7 +65,7 @@ export function AccountPicker({ label, value, onChange, onSubmit, disabled }: Pr
         });
     }, DEBOUNCE_MS);
     return () => clearTimeout(timer);
-  }, [q]);
+  }, [q, touched]);
 
   const open = results.length > 0 && !dismissed;
 
@@ -101,6 +109,7 @@ export function AccountPicker({ label, value, onChange, onSubmit, disabled }: Pr
           disabled={disabled}
           onChange={(e) => {
             setDismissed(false);
+            setTouched(true);
             onChange(e.target.value);
           }}
           onKeyDown={onKeyDown}
