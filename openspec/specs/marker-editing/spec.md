@@ -257,7 +257,7 @@ A `logo_url` set through the Atlas SHALL be blank or an address in the public bu
 - **THEN** nothing is written and the logo field says the logo must be uploaded to the Atlas
 
 ### Requirement: Daily limits on adding and uploading
-A person who isn't an admin SHALL be able to add at most 5 markers and upload at most 20 logos per day (UTC). A request past a limit SHALL be refused with 429 and a message to try again tomorrow, and SHALL write nothing. Admins SHALL have no limit. The counts MAY reset when the service restarts.
+A person who isn't an admin SHALL be able to add at most 5 markers and upload at most 20 logos per day (UTC). This SHALL hold when requests are sent at the same time. A request past a limit SHALL be refused with 429 and a message to try again tomorrow, and SHALL write nothing. A request that fails SHALL NOT count. Admins SHALL have no limit. The counts MAY reset when the service restarts.
 
 #### Scenario: Sixth add
 - **WHEN** a person who isn't an admin adds a sixth marker on the same day
@@ -267,8 +267,16 @@ A person who isn't an admin SHALL be able to add at most 5 markers and upload at
 - **WHEN** an admin adds a sixth marker on the same day
 - **THEN** it is added
 
+#### Scenario: Burst of adds
+- **WHEN** a person who isn't an admin sends 50 add requests at the same moment
+- **THEN** 5 markers are added, and the other 45 requests are refused with 429
+
+#### Scenario: Failed add
+- **WHEN** a person's add is refused because the name is missing, and they fix it and add five markers that day
+- **THEN** all five are added
+
 ### Requirement: Unused logos are removed
-The nightly publish SHALL delete each file in the bucket's `logos/` folder that no row of the `markers` tab uses, whatever its status, and that is more than one day old.
+The nightly publish SHALL delete each file in the bucket's `logos/` folder that no row of the `markers` tab uses, whatever its status, and that is more than one day old. It SHALL delete nothing when that would be more than 20 files, or more than 5 files and more than half of the folder, or when the tab has no `logo_url` column. Then it SHALL record why in `problems`, and every publish SHALL keep that note there while the cause remains. The sweep SHALL try again the next night.
 
 #### Scenario: Abandoned upload
 - **WHEN** a logo was uploaded two days ago and its form was never saved
@@ -281,3 +289,19 @@ The nightly publish SHALL delete each file in the bucket's `logos/` folder that 
 #### Scenario: Deleted marker
 - **WHEN** a marker with a logo has status `deleted`
 - **THEN** its logo is kept, so an admin can restore the marker
+
+#### Scenario: Column cleared by mistake
+- **WHEN** someone clears the `logo_url` column of 39 markers with logos, and the nightly publish runs
+- **THEN** no logo is deleted, the publish otherwise goes ahead, and `problems` says the sweep held back 39 logos
+
+#### Scenario: Column renamed
+- **WHEN** the `logo_url` header is renamed and the nightly publish runs
+- **THEN** the publish is refused, no logo is deleted, and `problems` says the markers tab is missing the `logo_url` column
+
+#### Scenario: Edit while held back
+- **WHEN** the sweep is held back and someone edits a marker the next morning
+- **THEN** the publish after the edit deletes nothing, and the note stays in `problems`
+
+#### Scenario: Sheet fixed
+- **WHEN** the column is restored from version history the next day
+- **THEN** the next publish removes the note, and that night's sweep deletes only the logos no row uses
