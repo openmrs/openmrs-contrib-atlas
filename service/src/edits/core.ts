@@ -137,20 +137,20 @@ export class Tabs {
       pending: (values.pending[0] ?? []).map(text),
       claims: (values.claims[0] ?? []).map(text),
     } as unknown as Record<Tab, string[]>;
-    this.markers = toRawRows(values.markers, COLUMNS.markers);
-    this.privates = toRawRows(values.private, COLUMNS.private).map((raw) => ({
+    this.markers = toRawRows(values.markers, COLUMNS.markers, "markers");
+    this.privates = toRawRows(values.private, COLUMNS.private, "private").map((raw) => ({
       ...raw,
       owner: text(raw.cells.owner),
       editors: splitEditors(raw.cells.editors),
     }));
-    this.offers = toRawRows(values.pending, COLUMNS.pending).map(({ row, cells }) => ({
+    this.offers = toRawRows(values.pending, COLUMNS.pending, "pending").map(({ row, cells }) => ({
       row,
       marker_id: text(cells.marker_id),
       from: text(cells.from),
       to: text(cells.to),
       expires_at: text(cells.expires_at),
     }));
-    this.claims = toRawRows(values.claims, COLUMNS.claims).map(({ row, cells }) => ({
+    this.claims = toRawRows(values.claims, COLUMNS.claims, "claims").map(({ row, cells }) => ({
       row,
       id: text(cells.id),
       marker_id: text(cells.marker_id),
@@ -159,7 +159,7 @@ export class Tabs {
       created_at: text(cells.created_at),
       status: text(cells.status),
     }));
-    this.unsubscribed = toRawRows(values.unsubscribed, COLUMNS.unsubscribed).map(
+    this.unsubscribed = toRawRows(values.unsubscribed, COLUMNS.unsubscribed, "unsubscribed").map(
       ({ row, cells }) => ({ row, username: normaliseUsername(text(cells.username)) }),
     );
     this.lookups = parseLookups(values);

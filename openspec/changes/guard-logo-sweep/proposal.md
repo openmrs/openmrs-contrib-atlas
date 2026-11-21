@@ -24,8 +24,11 @@ check.
   more than half of the logos in the folder (when that is more than 5). Instead it records the reason in `problems`, so
   admins see it in the sheet, and logs it. It tries again each night, and runs once the sheet is
   fixed. Normal nights, with a few abandoned uploads, are unaffected.
-- **No `logo_url` column, no sweep.** If the `markers` tab has no `logo_url` header, the sweep
-  deletes nothing, and records why in `problems`.
+- **A missing column refuses the publish.** Today, a missing header on any tab the publish reads
+  makes the publish fail with a bare HTTP 500, and nothing in `problems`. Found while testing on
+  staging. Instead, the publish is refused, as the safety check refuses one, and `problems` names
+  the tab and the columns. So a missing `logo_url` header stops the publish before the sweep. The
+  sweep also checks for the column itself, in case it is ever called another way.
 - **Deleted logos can be restored for 30 days.** `setup.sh` sets the bucket's soft delete
   retention to 30 days. The infra README explains how to list and restore deleted logos.
 
@@ -48,6 +51,8 @@ None.
 - `marker-editing`: the unused logo sweep has a ceiling, and it stops if the `logo_url` column is
   missing.
 - `deployment`: the public bucket keeps deleted files for 30 days.
+- `snapshot-publishing`: a missing column header refuses the publish, with the reason in
+  `problems`.
 
 ## Impact
 
@@ -55,6 +60,8 @@ None.
   back.
 - `service/src/publish.ts`: the sweep's decision is made before `problems` is written, so its
   reason appears there.
+- `shared/src/rows.ts`, `shared/src/validate.ts`, `shared/src/feed.ts`: a missing-columns error
+  that names the tab.
 - `infra/setup.sh`: soft delete retention on the bucket. Applying it to both live buckets means
   rerunning setup (manual).
 - `infra/README.md` and `service/README.md`: the ceiling, and how to restore a logo.

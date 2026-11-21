@@ -98,6 +98,7 @@ describe("planLogoSweep", () => {
 describe("The nightly publish sweeps logos", () => {
   let sheet: FakeSheet;
   let logos: FakeLogos;
+  let bucket: FakeBucket;
   let app: ReturnType<typeof createApp>;
   const auth = { publishSecret: "s", schedulerEmail: "sched@x.iam", audience: "aud" };
 
@@ -105,10 +106,11 @@ describe("The nightly publish sweeps logos", () => {
     sheet = new FakeSheet();
     logos = new FakeLogos();
     logos.add("logos/abandoned.webp", hoursAgo(48));
+    bucket = new FakeBucket();
     app = createApp({
       siteUrl: "https://atlas.example.org",
       sheet,
-      snapshots: new FakeBucket(),
+      snapshots: bucket,
       auth,
       verify: async (token) => (token === "oidc" ? auth.schedulerEmail : undefined),
       now: () => NOW,
@@ -120,8 +122,30 @@ describe("The nightly publish sweeps logos", () => {
     });
   });
 
-  const publish = (token: string) =>
-    app.request("/publish", { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+  const publish = (token: string, query = "") =>
+    app.request(`/publish${query}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+  it("Scenario: Column renamed", async () => {
+    const header = sheet.tabs.markers![0]!;
+    header[header.indexOf("logo_url")] = "logo";
+    for (const [token, query] of [
+      ["oidc", ""],
+      ["s", "?force=true"],
+    ] as const) {
+      const res = await publish(token, query);
+      expect(res.status).toBe(409);
+      expect(await res.json()).toMatchObject({ status: "refused" });
+      expect(sheet.problems).toHaveLength(1);
+      expect(sheet.problems[0]!.reasons[0]).toContain(
+        "The markers tab is missing columns: logo_url",
+      );
+    }
+    expect(bucket.writes).toBe(0);
+    expect(logos.files.has("logos/abandoned.webp")).toBe(true);
+  });
 
   it("only the scheduler's run sweeps", async () => {
     expect((await publish("s")).status).toBe(200);

@@ -38,8 +38,17 @@ handful of files isn't worth stopping for, and soft delete keeps them. Staging h
 rules. A sort that moved half the column would trip at least one rule. These are `SWEEP_MAX` and `SWEEP_SMALL`
 in `logos.ts`, next to the grace period.
 
-**Missing column means stop.** Today a missing header gives an empty set of logos in use, and so
-deletes everything. A missing `logo_url` header is a sheet mistake, so the sweep holds back.
+**Missing column means stop.** Today the sweep would read a missing header as no logos in use,
+and so delete everything. In practice the publish never gets that far: validation needs every
+`markers` header, and throws a plain `Error("missing columns: …")` from `toRawRows`. `publish()`
+doesn't catch it, so the request fails with 500 and `problems` is left as it was (found on
+staging). The fix is a `MissingColumnsError` that names the tab. Every `toRawRows` caller passes
+its tab's name. `publish()` catches the error while reading and building the snapshot and feed,
+writes one row-0 problem ("The markers tab is missing columns: logo_url. Restore the header, for
+example from version history, then publish again."), and returns `refused`. The Apps Script
+already shows "Publish refused: see the problems tab." for 409. Forcing doesn't get past it,
+because there is nothing valid to publish. The sweep keeps its own column check, in case it is
+ever called another way.
 
 **Decide before `problems` is written, on every publish.** The sweep is split in two:
 `planLogoSweep(store, markers, now)` returns `{ remove: string[] }`, or `{ holdBack, unused, total }`.

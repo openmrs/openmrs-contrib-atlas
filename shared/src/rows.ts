@@ -7,17 +7,30 @@ export interface RawRow {
   cells: Record<string, Cell>;
 }
 
+/** A tab lacks headers that are needed to read it. Its message names the tab and the columns. */
+export class MissingColumnsError extends Error {
+  readonly tab: string;
+  readonly columns: string[];
+  constructor(tab: string, columns: string[]) {
+    super(`The ${tab} tab is missing columns: ${columns.join(", ")}`);
+    this.name = "MissingColumnsError";
+    this.tab = tab;
+    this.columns = columns;
+  }
+}
+
 /**
- * Turns a tab's values (header row first) into rows keyed by header name.
+ * Turns a tab's values (header row first) into rows keyed by header name. `tab` names the tab in
+ * the error when a required header is missing.
  * Columns are found by header, so column order in the sheet does not matter.
  * Fully blank rows are skipped.
  */
-export function toRawRows(values: Cell[][], required: readonly string[]): RawRow[] {
+export function toRawRows(values: Cell[][], required: readonly string[], tab: string): RawRow[] {
   const [header = [], ...data] = values;
   const names = header.map((h) => text(h));
   const missing = required.filter((col) => !names.includes(col));
   if (missing.length > 0) {
-    throw new Error(`missing columns: ${missing.join(", ")}`);
+    throw new MissingColumnsError(tab, missing);
   }
   const rows: RawRow[] = [];
   data.forEach((cells, i) => {
@@ -46,7 +59,7 @@ export function parseLookups(values: {
   distributions: Cell[][];
   versions: Cell[][];
 }): Lookups {
-  const types: MarkerType[] = toRawRows(values.types, ["name", "colour", "sort"]).map(
+  const types: MarkerType[] = toRawRows(values.types, ["name", "colour", "sort"], "types").map(
     ({ cells }) => ({
       name: text(cells.name),
       colour: text(cells.colour),
@@ -56,10 +69,14 @@ export function parseLookups(values: {
   // A leftover is_standard column is ignored. An entry named "Other" would collide with the
   // Other group (lookups.ts), so it is dropped.
   const notOther = (name: string) => name !== "" && name.toLowerCase() !== OTHER.toLowerCase();
-  const distributions: Distribution[] = toRawRows(values.distributions, ["name", "url"])
+  const distributions: Distribution[] = toRawRows(
+    values.distributions,
+    ["name", "url"],
+    "distributions",
+  )
     .map(({ cells }) => ({ name: text(cells.name), url: optional(cells.url) }))
     .filter((d) => notOther(d.name));
-  const versions: Version[] = toRawRows(values.versions, ["version", "release_date"])
+  const versions: Version[] = toRawRows(values.versions, ["version", "release_date"], "versions")
     .map(({ cells }) => ({
       version: text(cells.version),
       release_date: optional(cells.release_date),
@@ -70,16 +87,18 @@ export function parseLookups(values: {
 }
 
 export function parsePrivateRows(values: Cell[][]): PrivateRow[] {
-  return toRawRows(values, ["id", "owner", "editors", "contact_name", "contact_email"]).map(
-    ({ cells }) => ({
-      id: text(cells.id),
-      owner: optional(cells.owner),
-      editors: text(cells.editors)
-        .split(",")
-        .map((e) => e.trim())
-        .filter(Boolean),
-      contact_name: optional(cells.contact_name),
-      contact_email: optional(cells.contact_email),
-    }),
-  );
+  return toRawRows(
+    values,
+    ["id", "owner", "editors", "contact_name", "contact_email"],
+    "private",
+  ).map(({ cells }) => ({
+    id: text(cells.id),
+    owner: optional(cells.owner),
+    editors: text(cells.editors)
+      .split(",")
+      .map((e) => e.trim())
+      .filter(Boolean),
+    contact_name: optional(cells.contact_name),
+    contact_email: optional(cells.contact_email),
+  }));
 }

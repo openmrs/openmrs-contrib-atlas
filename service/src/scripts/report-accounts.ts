@@ -45,7 +45,7 @@ async function main() {
   const people = new Map<string, number>();
   let orphans = 0;
   const activeIds = new Set(active.map((m) => m.id));
-  for (const { cells } of toRawRows(sheet.private, COLUMNS.private)) {
+  for (const { cells } of toRawRows(sheet.private, COLUMNS.private, "private")) {
     if (!activeIds.has(text(cells.id))) continue;
     const names = [text(cells.owner), ...text(cells.editors).split(",")]
       .map(normaliseUsername)
@@ -54,7 +54,8 @@ async function main() {
     for (const name of new Set(names)) people.set(name, (people.get(name) ?? 0) + 1);
   }
   orphans += active.filter(
-    (m) => !toRawRows(sheet.private, COLUMNS.private).some((r) => text(r.cells.id) === m.id),
+    (m) =>
+      !toRawRows(sheet.private, COLUMNS.private, "private").some((r) => text(r.cells.id) === m.id),
   ).length;
 
   const accounts = keycloakAccounts({

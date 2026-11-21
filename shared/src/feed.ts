@@ -74,6 +74,7 @@ function events(changes: Cell[][]): FeedEvent[] {
   const rows = toRawRows(
     [changes[0]!, ...changes.slice(1).slice(-FEED_SOURCE_ROWS)],
     COLUMNS.changes,
+    "changes",
   );
   const out: FeedEvent[] = [];
   for (const { cells } of rows) {

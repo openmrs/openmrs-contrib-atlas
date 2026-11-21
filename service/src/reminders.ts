@@ -78,21 +78,21 @@ export function selectDue(sheet: ReminderSheet, now: Date): Selection {
   // Only valid markers: an invalid one isn't on the map, so its links would lead nowhere.
   const { markers } = validateMarkers(sheet.markers, lookups);
   const people = new Map<string, string[]>();
-  for (const { cells } of toRawRows(sheet.private, COLUMNS.private)) {
+  for (const { cells } of toRawRows(sheet.private, COLUMNS.private, "private")) {
     const names = [text(cells.owner), ...text(cells.editors).split(",")]
       .map(normaliseUsername)
       .filter(Boolean);
     people.set(text(cells.id), [...new Set(names)]);
   }
   const unsubscribed = new Set(
-    toRawRows(sheet.unsubscribed, COLUMNS.unsubscribed).map((r) =>
+    toRawRows(sheet.unsubscribed, COLUMNS.unsubscribed, "unsubscribed").map((r) =>
       normaliseUsername(text(r.cells.username)),
     ),
   );
   const recorded = new Set<string>();
   const today = now.toISOString().slice(0, 10);
   const sentEmails = new Set<string>();
-  for (const { cells } of toRawRows(sheet.reminders, COLUMNS.reminders)) {
+  for (const { cells } of toRawRows(sheet.reminders, COLUMNS.reminders, "reminders")) {
     const confirmedAt = toIsoDate(cells.confirmed_at) ?? text(cells.confirmed_at);
     const username = normaliseUsername(text(cells.username));
     recorded.add(key(text(cells.marker_id), Number(cells.stage), confirmedAt, username));

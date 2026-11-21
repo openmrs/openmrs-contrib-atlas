@@ -17,3 +17,10 @@
 
 - [x] 3.1 In `service/README.md`, describe the sweep's ceiling and what the `problems` note means.
 - [x] 3.2 Run the typecheck, lint, format check and unit tests, and `openspec validate guard-logo-sweep --strict`.
+
+## 4. Missing columns (found on staging)
+
+- [x] 4.1 In `shared/src/rows.ts`, add `MissingColumnsError` naming the tab and the columns. Pass the tab name from every `toRawRows` caller.
+- [x] 4.2 In `service/src/publish.ts`, catch it while reading, validating and building the files. Write the reason to `problems` and return `refused`, with or without force.
+- [x] 4.3 Tests: a publish with no `logo_url` header is refused (409), nothing is written or deleted, and `problems` names the tab and column; the same through a forced publish; and the shared error names the tab.
+- [x] 4.4 Fix the "Column renamed" test to go through a whole publish, and run all checks again.

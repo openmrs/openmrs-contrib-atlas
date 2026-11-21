@@ -1,6 +1,7 @@
 import {
   buildSnapshot,
   checkPublishSafety,
+  MissingColumnsError,
   parseLookups,
   toCsv,
   toGeoJson,
@@ -69,9 +70,22 @@ export async function publish(
   },
 ): Promise<PublishResult> {
   const values = await sheet.read();
-  const lookups = parseLookups(values);
-  const { markers, problems } = validateMarkers(values.markers, lookups);
-  const snapshot = buildSnapshot(markers, lookups, options.now);
+  let problems: Problem[];
+  let snapshot: ReturnType<typeof buildSnapshot>;
+  let rss: string;
+  try {
+    const lookups = parseLookups(values);
+    const validated = validateMarkers(values.markers, lookups);
+    problems = validated.problems;
+    snapshot = buildSnapshot(validated.markers, lookups, options.now);
+    rss = toRss(snapshot, values.changes, options.siteUrl);
+  } catch (err) {
+    // A missing header is a sheet mistake: refuse, even when forced, and say why in `problems`.
+    if (!(err instanceof MissingColumnsError)) throw err;
+    const reason = `${err.message}. Restore the header, for example from version history, then publish again.`;
+    await sheet.writeProblems([{ row: 0, reasons: [reason] }]);
+    return { status: "refused", reason, problems: 0 };
+  }
 
   let sweep: LogoSweepPlan | undefined;
   if (options.logos) {
@@ -111,7 +125,7 @@ export async function publish(
     { name: "markers.csv", body: toCsv(snapshot), contentType: "text/csv; charset=utf-8" },
     {
       name: "rss.xml",
-      body: toRss(snapshot, values.changes, options.siteUrl),
+      body: rss,
       contentType: "application/rss+xml; charset=utf-8",
     },
     { name: `history/atlas-${stamp}.json`, body: json, contentType: "application/json" },

@@ -20,7 +20,7 @@ const DATE_FIELDS = ["created_at", "updated_at", "confirmed_at"] as const;
 
 /** Validates the markers tab against the lookups. See openspec specs/marker-data. */
 export function validateMarkers(values: Cell[][], lookups: Lookups): ValidationResult {
-  const rows = toRawRows(values, COLUMNS.markers);
+  const rows = toRawRows(values, COLUMNS.markers, "markers");
   const types = new Set(lookups.types.map((t) => t.name));
   // Any distribution or version is valid: one not on its list is an Other value (lookups.ts).
   const distributions = spellings(lookups.distributions.map((d) => d.name));

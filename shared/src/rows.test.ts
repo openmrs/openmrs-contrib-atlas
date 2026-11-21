@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { lookupValues, markerRow, markerValues } from "./fixtures.ts";
-import { parseLookups, parsePrivateRows, toRawRows } from "./rows.ts";
+import { MissingColumnsError, parseLookups, parsePrivateRows, toRawRows } from "./rows.ts";
 import { COLUMNS } from "./schema.ts";
 
 describe("toRawRows", () => {
   it("keys cells by header and numbers rows from the sheet", () => {
-    const rows = toRawRows(markerValues(markerRow()), COLUMNS.markers);
+    const rows = toRawRows(markerValues(markerRow()), COLUMNS.markers, "markers");
     expect(rows).toHaveLength(1);
     expect(rows[0]?.row).toBe(2);
     expect(rows[0]?.cells.name).toBe("Example Hospital");
@@ -18,17 +18,21 @@ describe("toRawRows", () => {
         ["A", "1"],
       ],
       ["id", "name"],
+      "markers",
     );
     expect(rows[0]?.cells).toEqual({ name: "A", id: "1" });
   });
 
   it("skips fully blank rows but keeps sheet row numbers", () => {
-    const rows = toRawRows([["id"], [""], [null], ["x"]], ["id"]);
+    const rows = toRawRows([["id"], [""], [null], ["x"]], ["id"], "markers");
     expect(rows.map((r) => r.row)).toEqual([4]);
   });
 
   it("rejects a tab with missing columns", () => {
-    expect(() => toRawRows([["id"]], ["id", "name"])).toThrow("missing columns: name");
+    expect(() => toRawRows([["id"]], ["id", "name"], "markers")).toThrow(
+      "The markers tab is missing columns: name",
+    );
+    expect(() => toRawRows([["id"]], ["id", "name"], "markers")).toThrow(MissingColumnsError);
   });
 });
 

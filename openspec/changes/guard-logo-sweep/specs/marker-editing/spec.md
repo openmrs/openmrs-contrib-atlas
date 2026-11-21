@@ -21,7 +21,7 @@ The nightly publish SHALL delete each file in the bucket's `logos/` folder that 
 
 #### Scenario: Column renamed
 - **WHEN** the `logo_url` header is renamed and the nightly publish runs
-- **THEN** no logo is deleted, and `problems` says the sweep found no `logo_url` column
+- **THEN** the publish is refused, no logo is deleted, and `problems` says the markers tab is missing the `logo_url` column
 
 #### Scenario: Edit while held back
 - **WHEN** the sweep is held back and someone edits a marker the next morning
