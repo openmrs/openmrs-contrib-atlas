@@ -16,4 +16,4 @@
 - [x] 3.1 `infra/README.md`: the headers, and where to add an origin when the site needs a new one
 - [x] 3.2 Run `npm run format:check`, `typecheck`, `lint`, `test`, the e2e tests and `openspec validate --strict`
 - [x] 3.3 (manual) On staging, with the browser console open: sign in and out, search for a place, pan and zoom the map, download data and an image, and open the Share dialog. Check that nothing is blocked
-- [ ] 3.4 (manual) After the release, the same on production, plus that Google Analytics records a page view
+- [x] 3.4 (manual) After the release, the same on production, plus that Google Analytics records a page view
