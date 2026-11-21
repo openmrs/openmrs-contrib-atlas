@@ -58,27 +58,51 @@ export function logoName(): string {
 /** How long an unused upload is kept: long enough for a form still open to be saved. */
 export const UNUSED_LOGO_GRACE_MS = 86_400_000;
 
+/** The sweep deletes nothing when it would delete more than this many logos at once. */
+export const SWEEP_MAX = 20;
+/** Nor when it would delete more than half the folder, once that is more than this many. */
+export const SWEEP_SMALL = 5;
+
+export type LogoSweepPlan =
+  { remove: string[] } | { holdBack: string; unused: number; total: number };
+
 /**
- * Deletes logos no marker row uses, whatever its status, once they are more than a day old
- * (specs/marker-editing). `markers` is the tab's values, header row first.
+ * Decides which logos the nightly sweep deletes: those no marker row uses, whatever its status,
+ * once they are more than a day old (specs/marker-editing). `markers` is the tab's values, header
+ * row first. Holds back, deleting nothing, when the answer looks like a sheet mistake.
  */
-export async function sweepLogos(
-  store: Pick<LogoStore, "publicPrefix" | "listLogos" | "removeLogos">,
+export async function planLogoSweep(
+  store: Pick<LogoStore, "publicPrefix" | "listLogos">,
   markers: Cell[][],
   now: Date,
-): Promise<{ deleted: number }> {
+): Promise<LogoSweepPlan> {
   const [header = [], ...rows] = markers;
   const column = header.findIndex((h) => String(h ?? "").trim() === "logo_url");
-  const used = new Set<string>();
-  if (column >= 0) {
-    for (const row of rows) {
-      const url = String(row[column] ?? "").trim();
-      if (url.startsWith(store.publicPrefix)) used.add(url.slice(store.publicPrefix.length));
-    }
+  const all = await store.listLogos();
+  if (column < 0) {
+    return {
+      holdBack: "The logo sweep held back: the markers tab has no logo_url column.",
+      unused: 0,
+      total: all.length,
+    };
   }
-  const unused = (await store.listLogos()).filter(
+  const used = new Set<string>();
+  for (const row of rows) {
+    const url = String(row[column] ?? "").trim();
+    if (url.startsWith(store.publicPrefix)) used.add(url.slice(store.publicPrefix.length));
+  }
+  const unused = all.filter(
     (logo) => !used.has(logo.name) && now.getTime() - logo.created.getTime() > UNUSED_LOGO_GRACE_MS,
   );
-  if (unused.length > 0) await store.removeLogos(unused.map((logo) => logo.name));
-  return { deleted: unused.length };
+  const n = unused.length;
+  if (n > SWEEP_MAX || (n > SWEEP_SMALL && n > all.length / 2)) {
+    return {
+      holdBack:
+        `The logo sweep held back: it would delete ${n} of ${all.length} logos. ` +
+        "Check the logo_url column.",
+      unused: n,
+      total: all.length,
+    };
+  }
+  return { remove: unused.map((logo) => logo.name) };
 }

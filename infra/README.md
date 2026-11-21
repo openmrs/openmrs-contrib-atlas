@@ -17,18 +17,18 @@ Its per-environment settings are in [`staging.env`](staging.env) and
 Names that differ are shown as staging / production. Everything else is named the same in both
 projects.
 
-| Resource                       | Name                                                                                |
-| ------------------------------ | ----------------------------------------------------------------------------------- |
-| Public bucket                  | `gs://openmrs-atlas-stg` / `gs://openmrs-atlas` (CORS, 90-day `history/` rule)      |
-| Publish service (Cloud Run)    | `atlas-service-stg` / `atlas-service`, runs as `atlas-service@…`                    |
-| Shared secret (Secret Manager) | `atlas-publish-secret`                                                              |
-| Other secrets                  | `atlas-keycloak-service-secret`, `atlas-mandrill-api-key`, `atlas-link-signing-key` |
-| Nightly publish                | Cloud Scheduler job `atlas-nightly-publish`, 03:00 UTC                              |
-| Daily reminders                | Cloud Scheduler job `atlas-daily-reminders`, 14:00 UTC                              |
-| Service images                 | Artifact Registry repository `atlas`                                                |
-| CI deploys                     | `atlas-deploy@…` through Workload Identity Federation                               |
-| Map site                       | Firebase Hosting site `atlas-stg-513316` / `openmrs-atlas`                          |
-| Keycloak                       | `id-stg.openmrs.org` / `id.openmrs.org`, realm `openmrs`                            |
+| Resource                       | Name                                                                                               |
+| ------------------------------ | -------------------------------------------------------------------------------------------------- |
+| Public bucket                  | `gs://openmrs-atlas-stg` / `gs://openmrs-atlas` (CORS, 90-day `history/` rule, 30-day soft delete) |
+| Publish service (Cloud Run)    | `atlas-service-stg` / `atlas-service`, runs as `atlas-service@…`                                   |
+| Shared secret (Secret Manager) | `atlas-publish-secret`                                                                             |
+| Other secrets                  | `atlas-keycloak-service-secret`, `atlas-mandrill-api-key`, `atlas-link-signing-key`                |
+| Nightly publish                | Cloud Scheduler job `atlas-nightly-publish`, 03:00 UTC                                             |
+| Daily reminders                | Cloud Scheduler job `atlas-daily-reminders`, 14:00 UTC                                             |
+| Service images                 | Artifact Registry repository `atlas`                                                               |
+| CI deploys                     | `atlas-deploy@…` through Workload Identity Federation                                              |
+| Map site                       | Firebase Hosting site `atlas-stg-513316` / `openmrs-atlas`                                         |
+| Keycloak                       | `id-stg.openmrs.org` / `id.openmrs.org`, realm `openmrs`                                           |
 
 The service accounts are `atlas-service` (reads and writes the sheet, writes the bucket, reads
 the secrets), `atlas-scheduler` (signs the scheduled requests) and `atlas-deploy` (GitHub
@@ -59,6 +59,25 @@ Both targets send security headers (specs/deployment):
 **When the site starts using a new origin**, add it to the right directive in both targets: for
 example, a new API to `connect-src`, or new images to `img-src`. The e2e tests run under the
 staging target's policy and fail on any violation, naming the directive that blocked it.
+
+### Restoring a deleted file
+
+Each bucket keeps deleted and overwritten files for 30 days (soft delete, set by `setup.sh`). The
+nightly logo sweep deletes logos no marker uses, so a logo lost to a sheet mistake can be brought
+back. List what was deleted under `logos/`, with each file's generation and deletion time:
+
+```sh
+gcloud storage ls --soft-deleted --long "gs://<bucket>/logos/**"
+```
+
+Restore one under its old name, using the generation from the listing:
+
+```sh
+gcloud storage restore "gs://<bucket>/logos/<name>.webp#<generation>"
+```
+
+The marker shows it again as soon as its `logo_url` points to it. Snapshots and social cards can be
+restored the same way, though the next publish rewrites them anyway.
 
 ## GitHub environments
 

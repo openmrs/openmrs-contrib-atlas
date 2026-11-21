@@ -55,14 +55,41 @@ const upload = async (who: string) => {
 };
 
 describe("DailyLimit", () => {
-  it("counts per person and resets on a new UTC day", () => {
+  const late = new Date("2026-11-02T23:59:00Z");
+  const next = new Date("2026-11-03T00:00:00Z");
+
+  it("takes up to the limit per person, and resets on a new UTC day", () => {
     const limit = new DailyLimit(2);
-    const late = new Date("2026-11-02T23:59:00Z");
-    limit.record("a", late);
-    limit.record("a", late);
-    expect(limit.reached("a", late)).toBe(true);
-    expect(limit.reached("b", late)).toBe(false);
-    expect(limit.reached("a", new Date("2026-11-03T00:00:00Z"))).toBe(false);
+    expect(limit.take("a", late)).toBe(true);
+    expect(limit.take("a", late)).toBe(true);
+    expect(limit.take("a", late)).toBe(false);
+    expect(limit.take("b", late)).toBe(true);
+    expect(limit.take("a", next)).toBe(true);
+  });
+
+  it("gives a use back, never below zero", () => {
+    const limit = new DailyLimit(1);
+    expect(limit.take("a", late)).toBe(true);
+    limit.giveBack("a", late);
+    limit.giveBack("a", late);
+    expect(limit.take("a", late)).toBe(true);
+    expect(limit.take("a", late)).toBe(false);
+  });
+
+  it("ignores a give-back from an earlier day", () => {
+    const limit = new DailyLimit(1);
+    limit.take("a", late);
+    expect(limit.take("a", next)).toBe(true);
+    limit.giveBack("a", late);
+    expect(limit.take("a", next)).toBe(false);
+  });
+
+  it("keeps only today's counts", () => {
+    const limit = new DailyLimit(5);
+    for (const name of ["a", "b", "c"]) limit.take(name, late);
+    expect(limit.people).toBe(3);
+    limit.take("d", next);
+    expect(limit.people).toBe(1);
   });
 });
 
@@ -97,5 +124,44 @@ describe("Daily limits on adding and uploading", () => {
     expect((await upload("newbie")).status).toBe(429);
     expect(logos.files.size).toBe(stored);
     expect((await upload("admin:root")).status).toBe(201);
+  });
+
+  it("Scenario: Burst of adds", async () => {
+    const results = await Promise.all(Array.from({ length: 50 }, () => add("newbie")));
+    const statuses = results.map((r) => r.status);
+    expect(statuses.filter((s) => s === 201)).toHaveLength(ADDS_PER_DAY);
+    expect(statuses.filter((s) => s === 429)).toHaveLength(50 - ADDS_PER_DAY);
+  });
+
+  it("holds the upload limit for a burst", async () => {
+    const results = await Promise.all(Array.from({ length: 25 }, () => upload("newbie")));
+    const statuses = results.map((r) => r.status);
+    expect(statuses.filter((s) => s === 201)).toHaveLength(UPLOADS_PER_DAY);
+    expect(statuses.filter((s) => s === 429)).toHaveLength(25 - UPLOADS_PER_DAY);
+    expect(logos.files.size).toBe(UPLOADS_PER_DAY);
+  });
+
+  it("Scenario: Failed add", async () => {
+    expect((await add("newbie", { fields: { ...fields, name: "" } })).status).toBe(422);
+    for (let i = 0; i < ADDS_PER_DAY; i++) expect((await add("newbie")).status).toBe(201);
+  });
+
+  it("doesn't count a failed upload", async () => {
+    const form = new FormData();
+    form.set("logo", new File([new Uint8Array([1, 2, 3])], "logo.png"));
+    for (let i = 0; i < UPLOADS_PER_DAY + 2; i++) {
+      const res = await app.request("/api/logos", {
+        method: "POST",
+        headers: { Authorization: "Bearer newbie" },
+        body: form,
+      });
+      expect(res.status).toBe(422);
+    }
+    expect((await upload("newbie")).status).toBe(201);
+  });
+
+  it("doesn't limit an admin burst", async () => {
+    const results = await Promise.all(Array.from({ length: 8 }, () => add("admin:root")));
+    expect(results.every((r) => r.status === 201)).toBe(true);
   });
 });

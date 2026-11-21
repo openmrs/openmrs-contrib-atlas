@@ -52,6 +52,9 @@ export function createApp(deps: AppDeps) {
       ? { store: deps.cards, limit: Infinity, sweep: true }
       : { store: deps.cards, limit: EDIT_CARD_LIMIT, sweep: false });
 
+  // Every publish checks the logo sweep; only the scheduler's nightly run deletes.
+  const logos = (sweep: boolean) => deps.editing?.logos && { store: deps.editing.logos, sweep };
+
   const publishAfterEdit = async (caller: string) => {
     const result = await queue.shared(() =>
       publish(deps.sheet, deps.snapshots, {
@@ -59,6 +62,7 @@ export function createApp(deps: AppDeps) {
         now: now(),
         siteUrl: deps.siteUrl,
         cards: cards(false),
+        logos: logos(false),
       }),
     );
     console.log(JSON.stringify({ event: "publish", caller, ...result }));
@@ -85,7 +89,7 @@ export function createApp(deps: AppDeps) {
         now: now(),
         siteUrl: deps.siteUrl,
         cards: cards(caller === "scheduler"),
-        logos: caller === "scheduler" ? deps.editing?.logos : undefined,
+        logos: logos(caller === "scheduler"),
       });
     const result = await (force ? queue.run(run) : queue.shared(run));
     console.log(JSON.stringify({ event: "publish", caller, force, ...result }));

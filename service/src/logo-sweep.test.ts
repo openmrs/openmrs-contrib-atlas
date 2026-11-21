@@ -1,7 +1,7 @@
 import { COLUMNS, type Cell } from "@openmrs-atlas/shared";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "./app.ts";
-import { sweepLogos } from "./logos.ts";
+import { planLogoSweep, SWEEP_MAX } from "./logos.ts";
 import { FakeBucket, FakeLogos, FakeSheet, ID, NOW } from "./testing.ts";
 
 /** specs/marker-editing: Unused logos are removed. */
@@ -22,7 +22,7 @@ function markersWith(...rows: { logo: string; status?: string }[]): Cell[][] {
   ];
 }
 
-describe("sweepLogos", () => {
+describe("planLogoSweep", () => {
   let logos: FakeLogos;
   beforeEach(() => {
     logos = new FakeLogos();
@@ -38,21 +38,60 @@ describe("sweepLogos", () => {
       { logo: url("logos/deleted-marker.webp"), status: "deleted" },
       { logo: "https://partner.example/logo.png" },
     );
-    expect(await sweepLogos(logos, markers, NOW)).toEqual({ deleted: 1 });
-    expect([...logos.files.keys()].sort()).toEqual([
-      "logos/active.webp",
-      "logos/being-edited.webp",
-      "logos/deleted-marker.webp",
-    ]);
+    expect(await planLogoSweep(logos, markers, NOW)).toEqual({ remove: ["logos/abandoned.webp"] });
   });
 
-  it("deletes nothing when every old logo is used", async () => {
+  it("removes nothing when every old logo is used", async () => {
     const markers = markersWith(
       { logo: url("logos/abandoned.webp") },
       { logo: url("logos/active.webp") },
       { logo: url("logos/deleted-marker.webp") },
     );
-    expect(await sweepLogos(logos, markers, NOW)).toEqual({ deleted: 0 });
+    expect(await planLogoSweep(logos, markers, NOW)).toEqual({ remove: [] });
+  });
+
+  it("Scenario: Column cleared by mistake", async () => {
+    const big = new FakeLogos();
+    for (let i = 0; i < 39; i++) big.add(`logos/${i}.webp`, hoursAgo(500));
+    const markers = markersWith(...Array.from({ length: 39 }, () => ({ logo: "" })));
+    const plan = await planLogoSweep(big, markers, NOW);
+    expect(plan).toMatchObject({ unused: 39, total: 39 });
+    expect("holdBack" in plan && plan.holdBack).toContain("39 of 39 logos");
+  });
+
+  it("Scenario: Column renamed", async () => {
+    const markers = markersWith({ logo: url("logos/active.webp") });
+    markers[0]![COLUMNS.markers.indexOf("logo_url")] = "logo";
+    const plan = await planLogoSweep(logos, markers, NOW);
+    expect("holdBack" in plan && plan.holdBack).toContain("no logo_url column");
+  });
+
+  it(`removes exactly ${SWEEP_MAX} unused logos, but not one more`, async () => {
+    const many = new FakeLogos();
+    for (let i = 0; i < 100; i++) many.add(`logos/${i}.webp`, hoursAgo(500));
+    const usedFrom = (n: number) =>
+      markersWith(
+        ...Array.from({ length: 100 - n }, (_, i) => ({ logo: url(`logos/${n + i}.webp`) })),
+      );
+    const plan = await planLogoSweep(many, usedFrom(SWEEP_MAX), NOW);
+    expect("remove" in plan && plan.remove).toHaveLength(SWEEP_MAX);
+    expect(await planLogoSweep(many, usedFrom(SWEEP_MAX + 1), NOW)).toHaveProperty("holdBack");
+  });
+
+  it("holds back past half of a small folder, but not for a few files", async () => {
+    const small = new FakeLogos();
+    for (let i = 0; i < 10; i++) small.add(`logos/${i}.webp`, hoursAgo(500));
+    const usedFrom = (n: number) =>
+      markersWith(
+        ...Array.from({ length: 10 - n }, (_, i) => ({ logo: url(`logos/${n + i}.webp`) })),
+      );
+    // 5 of 10 is half, not more; 6 of 10 is more than half.
+    expect(await planLogoSweep(small, usedFrom(5), NOW)).toHaveProperty("remove");
+    expect(await planLogoSweep(small, usedFrom(6), NOW)).toHaveProperty("holdBack");
+    // A lone abandoned upload is always swept, even when it's the whole folder.
+    const one = new FakeLogos();
+    one.add("logos/only.webp", hoursAgo(48));
+    expect(await planLogoSweep(one, markersWith(), NOW)).toEqual({ remove: ["logos/only.webp"] });
   });
 });
 
@@ -107,5 +146,59 @@ describe("The nightly publish sweeps logos", () => {
     expect((await publish("oidc")).status).toBe(200);
     expect(error).toHaveBeenCalledWith(expect.stringContaining("logos-sweep-failed"));
     error.mockRestore();
+  });
+
+  describe("when the sweep holds back", () => {
+    const old = Array.from({ length: SWEEP_MAX + 5 }, (_, i) => `logos/old-${i}.webp`);
+    beforeEach(() => {
+      for (const name of old) logos.add(name, hoursAgo(500));
+    });
+    const held = () =>
+      sheet.problems.filter((p) => p.reasons.some((r) => r.includes("logo sweep")));
+
+    it("Scenario: Column cleared by mistake", async () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      expect((await publish("oidc")).status).toBe(200);
+      expect(logos.files.size).toBe(old.length + 1);
+      expect(held()).toHaveLength(1);
+      expect(held()[0]!.reasons[0]).toContain(
+        `would delete ${old.length + 1} of ${old.length + 1}`,
+      );
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining("logos-sweep-held-back"));
+      warn.mockRestore();
+    });
+
+    it("Scenario: Edit while held back", async () => {
+      const res = await app.request(`/api/markers/${ID}`, {
+        method: "PATCH",
+        headers: { Authorization: "Bearer jdoe", "Content-Type": "application/json" },
+        body: JSON.stringify({ version: "2022-01-01T00:00:00.000Z", fields: { name: "X" } }),
+      });
+      expect(res.status).toBe(200);
+      expect(logos.files.size).toBe(old.length + 1);
+      expect(held()).toHaveLength(1);
+    });
+
+    it("Scenario: Sheet fixed", async () => {
+      vi.spyOn(console, "warn").mockImplementation(() => {});
+      await publish("oidc");
+      expect(held()).toHaveLength(1);
+      // The column is restored: rows use the logos again, and the next publish clears the note.
+      const rows = sheet.tabs.markers!;
+      const [header, first] = [rows[0]!, rows[1]!];
+      const at = (col: string) => header.indexOf(col);
+      old.forEach((name, i) => {
+        const row = [...first];
+        row[at("id")] = `restored-${i}`;
+        row[at("logo_url")] = `${logos.publicPrefix}${name}`;
+        rows.push(row);
+      });
+      expect((await publish("s")).status).toBe(200);
+      expect(held()).toHaveLength(0);
+      expect((await publish("oidc")).status).toBe(200);
+      expect(logos.files.has("logos/abandoned.webp")).toBe(false);
+      expect(logos.files.size).toBe(old.length);
+      vi.restoreAllMocks();
+    });
   });
 });

@@ -49,6 +49,19 @@ export function createApi(deps: ApiDeps) {
   // Adds and logo uploads a day for people who aren't admins (specs/marker-editing).
   const adds = new DailyLimit(ADDS_PER_DAY);
   const uploads = new DailyLimit(UPLOADS_PER_DAY);
+  /** Runs the work for a use already taken, and gives the use back if the work fails. */
+  async function givingBack<T>(
+    limit: DailyLimit,
+    person: Person,
+    work: () => Promise<T>,
+  ): Promise<T> {
+    try {
+      return await work();
+    } catch (err) {
+      if (!person.admin) limit.giveBack(person.username, deps.now());
+      throw err;
+    }
+  }
   const tooMany = (what: string) =>
     new ApiError(429, {
       error: `You've reached today's limit for ${what}. Please try again tomorrow.`,
@@ -192,12 +205,13 @@ export function createApi(deps: ApiDeps) {
 
   api.post("/markers", small, async (c) => {
     const person = c.get("person");
-    if (!person.admin && adds.reached(person.username, deps.now())) {
+    if (!person.admin && !adds.take(person.username, deps.now())) {
       throw tooMany(`adding sites (${ADDS_PER_DAY} a day)`);
     }
-    const body = parseChangeBody(await jsonBody(c));
-    const result = await write(() => editor.add(person, body));
-    if (!person.admin) adds.record(person.username, deps.now());
+    const result = await givingBack(adds, person, async () => {
+      const body = parseChangeBody(await jsonBody(c));
+      return write(() => editor.add(person, body));
+    });
     if (deps.notices && result.marker) {
       // Sent before the response, so an idle service can't leave it unsent (specs/email-delivery).
       // The mailer's timeout bounds the wait, and a failure is logged, never thrown.
@@ -316,15 +330,16 @@ export function createApi(deps: ApiDeps) {
     }),
     async (c) => {
       const person = c.get("person");
-      if (!person.admin && uploads.reached(person.username, deps.now())) {
+      if (!person.admin && !uploads.take(person.username, deps.now())) {
         throw tooMany(`logo uploads (${UPLOADS_PER_DAY} a day)`);
       }
-      const form = await c.req.formData().catch(() => undefined);
-      const file = form?.get("logo");
-      if (!(file instanceof File)) throw new ApiError(400, { error: "No logo was sent." });
-      const logo = await processLogo(Buffer.from(await file.arrayBuffer()));
-      const url = await deps.logos.saveLogo(logoName(), logo);
-      if (!person.admin) uploads.record(person.username, deps.now());
+      const url = await givingBack(uploads, person, async () => {
+        const form = await c.req.formData().catch(() => undefined);
+        const file = form?.get("logo");
+        if (!(file instanceof File)) throw new ApiError(400, { error: "No logo was sent." });
+        const logo = await processLogo(Buffer.from(await file.arrayBuffer()));
+        return deps.logos.saveLogo(logoName(), logo);
+      });
       return c.json({ url }, 201);
     },
   );

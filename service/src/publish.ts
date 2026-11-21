@@ -9,7 +9,7 @@ import {
   type Cell,
   type Problem,
 } from "@openmrs-atlas/shared";
-import { sweepLogos, type LogoStore } from "./logos.ts";
+import { planLogoSweep, type LogoStore, type LogoSweepPlan } from "./logos.ts";
 import { refreshCards, type CardOptions, type CardStore } from "./cards/refresh.ts";
 
 /** The tabs a publish reads, as the Sheets API returns them (header row first). */
@@ -58,8 +58,14 @@ export async function publish(
     siteUrl: string;
     /** Social cards to bring up to date after a successful publish (specs/social-cards). */
     cards?: { store: CardStore } & Omit<CardOptions, "siteUrl">;
-    /** The nightly publish also deletes unused logos (specs/marker-editing). */
-    logos?: Pick<LogoStore, "publicPrefix" | "listLogos" | "removeLogos">;
+    /**
+     * Unused logos (specs/marker-editing). Every publish plans the sweep, so a hold-back stays in
+     * `problems` while its cause remains; only the nightly one (`sweep`) deletes.
+     */
+    logos?: {
+      store: Pick<LogoStore, "publicPrefix" | "listLogos" | "removeLogos">;
+      sweep: boolean;
+    };
   },
 ): Promise<PublishResult> {
   const values = await sheet.read();
@@ -67,13 +73,29 @@ export async function publish(
   const { markers, problems } = validateMarkers(values.markers, lookups);
   const snapshot = buildSnapshot(markers, lookups, options.now);
 
+  let sweep: LogoSweepPlan | undefined;
+  if (options.logos) {
+    // Planning never holds up a publish; a failure just means no sweep this time.
+    try {
+      sweep = await planLogoSweep(options.logos.store, values.markers, options.now);
+    } catch (err) {
+      console.error(JSON.stringify({ event: "logos-sweep-failed", error: String(err) }));
+    }
+  }
+  const notes: Problem[] =
+    sweep && "holdBack" in sweep ? [{ row: 0, reasons: [sweep.holdBack] }] : [];
+  if (sweep && "holdBack" in sweep && options.logos?.sweep) {
+    const { unused, total } = sweep;
+    console.warn(JSON.stringify({ event: "logos-sweep-held-back", unused, total }));
+  }
+
   const safety = checkPublishSafety(
     await snapshots.currentCount(),
     snapshot.markers.length,
     options.force,
   );
   if (!safety.ok) {
-    await sheet.writeProblems([{ row: 0, reasons: [safety.reason] }, ...problems]);
+    await sheet.writeProblems([{ row: 0, reasons: [safety.reason] }, ...notes, ...problems]);
     return { status: "refused", reason: safety.reason, problems: problems.length };
   }
 
@@ -94,7 +116,7 @@ export async function publish(
     },
     { name: `history/atlas-${stamp}.json`, body: json, contentType: "application/json" },
   ]);
-  await sheet.writeProblems(problems);
+  await sheet.writeProblems([...notes, ...problems]);
   if (options.cards) {
     // Cards never hold up or undo a publish; what's missed is drawn next time.
     try {
@@ -108,11 +130,11 @@ export async function publish(
       console.error(JSON.stringify({ event: "cards-failed", error: String(err) }));
     }
   }
-  if (options.logos) {
+  if (options.logos?.sweep && sweep && "remove" in sweep) {
     // Like cards, the sweep never holds up or undoes a publish; it runs again tomorrow.
     try {
-      const result = await sweepLogos(options.logos, values.markers, options.now);
-      console.log(JSON.stringify({ event: "logos-swept", ...result }));
+      if (sweep.remove.length > 0) await options.logos.store.removeLogos(sweep.remove);
+      console.log(JSON.stringify({ event: "logos-swept", deleted: sweep.remove.length }));
     } catch (err) {
       console.error(JSON.stringify({ event: "logos-sweep-failed", error: String(err) }));
     }

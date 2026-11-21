@@ -77,8 +77,10 @@ EOF
 cat >"$tmp/lifecycle.json" <<EOF
 {"rule": [{"action": {"type": "Delete"}, "condition": {"age": 90, "matchesPrefix": ["history/"]}}]}
 EOF
+# Deleted and overwritten files are kept for 30 days, so a logo deleted by mistake can be
+# restored (specs/deployment; infra/README.md).
 gcloud storage buckets update "gs://${BUCKET}" --cors-file="$tmp/cors.json" \
-  --lifecycle-file="$tmp/lifecycle.json"
+  --lifecycle-file="$tmp/lifecycle.json" --soft-delete-duration=30d
 # Public read. Fails if an organization policy blocks public access; see README.
 gcloud storage buckets add-iam-policy-binding "gs://${BUCKET}" \
   --member=allUsers --role=roles/storage.objectViewer >/dev/null

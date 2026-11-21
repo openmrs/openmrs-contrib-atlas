@@ -60,12 +60,18 @@ offering a transfer and an admin setting an owner check that the OpenMRS ID exis
 Untrusted input (specs/marker-editing, specs/user-sign-in):
 
 - **Daily limits.** People who aren't admins can add 5 markers and upload 20 logos a day (UTC).
-  Past a limit they get 429 and "try again tomorrow". Counts are kept in memory, so a restart
-  resets them.
+  Past a limit they get 429 and "try again tomorrow". A use is counted when the request arrives,
+  so requests sent at once can't get past the limit, and is given back if the request fails.
+  Counts are kept in memory for the current UTC day only, so a restart resets them.
 - **Logo addresses.** Through the API, `logo_url` must be blank or in the bucket's `logos/`
   folder, where uploads go. Admins can still type any address in the sheet.
 - **Logo sweep.** The nightly publish deletes files in `logos/` that no `markers` row uses, of
-  any status, once they are more than a day old (log event `logos-swept`).
+  any status, once they are more than a day old (log event `logos-swept`). It deletes nothing if
+  that would be more than 20 files, or more than half the folder (when over 5 files), or if the
+  tab has no `logo_url` column. Those look like a sheet mistake, such as a cleared column. Every
+  publish then puts a "logo sweep held back" note in `problems` until the sheet is fixed, and the
+  nightly run logs `logos-sweep-held-back`. If the files really are unused, delete them by hand.
+  A deleted logo can be restored for 30 days (infra README, "Restoring a deleted file").
 - **Access tokens only.** A token must have `typ: Bearer`, so a Keycloak ID token is refused.
 
 Claims (specs/marker-claims) are rows in the sheet's private `claims` tab, kept with their

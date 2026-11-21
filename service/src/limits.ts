@@ -1,30 +1,49 @@
 /**
  * Per-person limits that reset each UTC day (specs/marker-editing). Kept in memory: the service
  * runs as one instance, and a restart resetting the counts is accepted.
+ *
+ * A use is taken when a request arrives, with no await between the check and the count, so
+ * requests sent at the same time can't all get in. A request that fails gives its use back.
  */
 export class DailyLimit {
-  private counts = new Map<string, { day: string; count: number }>();
+  private day = "";
+  private counts = new Map<string, number>();
   readonly limit: number;
 
   constructor(limit: number) {
     this.limit = limit;
   }
 
-  private today(username: string, now: Date) {
+  /** Today's counts; earlier days are dropped in one go when the UTC day changes. */
+  private today(now: Date): Map<string, number> {
     const day = now.toISOString().slice(0, 10);
-    const entry = this.counts.get(username);
-    return entry && entry.day === day ? entry : { day, count: 0 };
+    if (day !== this.day) {
+      this.day = day;
+      this.counts = new Map();
+    }
+    return this.counts;
   }
 
-  /** Whether this person has used up today's allowance. */
-  reached(username: string, now: Date): boolean {
-    return this.today(username, now).count >= this.limit;
+  /** Counts one use if this person has any left today. False when the limit is reached. */
+  take(username: string, now: Date): boolean {
+    const counts = this.today(now);
+    const used = counts.get(username) ?? 0;
+    if (used >= this.limit) return false;
+    counts.set(username, used + 1);
+    return true;
   }
 
-  /** Counts one use, after it has succeeded. */
-  record(username: string, now: Date): void {
-    const entry = this.today(username, now);
-    this.counts.set(username, { day: entry.day, count: entry.count + 1 });
+  /** Returns a use taken today by a request that failed. A use from an earlier day is already gone. */
+  giveBack(username: string, now: Date): void {
+    if (now.toISOString().slice(0, 10) !== this.day) return;
+    const used = this.counts.get(username) ?? 0;
+    if (used <= 1) this.counts.delete(username);
+    else this.counts.set(username, used - 1);
+  }
+
+  /** How many people have counts today (for tests). */
+  get people(): number {
+    return this.counts.size;
   }
 }
 
