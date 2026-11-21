@@ -16,7 +16,7 @@ import type { PersonVerifier } from "./keycloak.ts";
 import { MAX_LOGO_BYTES, logoName, logoPrefix, processLogo, type LogoStore } from "./logos.ts";
 import { sendClaimDecisions, sendClaimNotice } from "./claims-mail.ts";
 import { sendNotice, type NoticeConfig } from "./notices.ts";
-import { ADDS_PER_DAY, DailyLimit, UPLOADS_PER_DAY } from "./limits.ts";
+import { ADDS_PER_DAY, DailyLimit, MinuteLimit, UPLOADS_PER_DAY } from "./limits.ts";
 import { publishSafely } from "./publishing.ts";
 import type { WriteQueue } from "./queue.ts";
 
@@ -45,7 +45,8 @@ export function createApi(deps: ApiDeps) {
   const editor = new MarkerEditor(deps.store, deps.now, deps.accounts, {
     logoPrefix: logoPrefix(deps.logos),
   });
-  const searches = new Map<string, number[]>();
+  // Account searches a minute per person (specs/account-lookup).
+  const searches = new MinuteLimit(SEARCHES_PER_MINUTE);
   // Adds and logo uploads a day for people who aren't admins (specs/marker-editing).
   const adds = new DailyLimit(ADDS_PER_DAY);
   const uploads = new DailyLimit(UPLOADS_PER_DAY);
@@ -66,19 +67,6 @@ export function createApi(deps: ApiDeps) {
     new ApiError(429, {
       error: `You've reached today's limit for ${what}. Please try again tomorrow.`,
     });
-
-  /** 30 account searches a minute per person, kept in memory on the single instance. */
-  function allowSearch(username: string): boolean {
-    const now = deps.now().getTime();
-    const recent = (searches.get(username) ?? []).filter((t) => now - t < 60_000);
-    if (recent.length >= SEARCHES_PER_MINUTE) {
-      searches.set(username, recent);
-      return false;
-    }
-    recent.push(now);
-    searches.set(username, recent);
-    return true;
-  }
 
   function requireAccounts(): Accounts {
     if (!deps.accounts) {
@@ -183,7 +171,7 @@ export function createApi(deps: ApiDeps) {
       throw new ApiError(400, { error: `Type at least ${MIN_SEARCH} characters to search.` });
     }
     if (q.length > 100) throw new ApiError(400, { error: "That search is too long." });
-    if (!allowSearch(c.get("person").username)) {
+    if (!searches.take(c.get("person").username, deps.now())) {
       throw new ApiError(429, { error: "Too many searches. Please wait a minute and try again." });
     }
     return c.json({ accounts: await fromKeycloak(() => accounts.search(q)) });
@@ -191,7 +179,7 @@ export function createApi(deps: ApiDeps) {
 
   api.get("/accounts/:username", async (c) => {
     const accounts = requireAccounts();
-    if (!allowSearch(c.get("person").username)) {
+    if (!searches.take(c.get("person").username, deps.now())) {
       throw new ApiError(429, { error: "Too many searches. Please wait a minute and try again." });
     }
     const account = await fromKeycloak(() => accounts.lookup(c.req.param("username")));

@@ -1,7 +1,7 @@
 import sharp from "sharp";
 import { beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "./app.ts";
-import { ADDS_PER_DAY, DailyLimit, UPLOADS_PER_DAY } from "./limits.ts";
+import { ADDS_PER_DAY, DailyLimit, MinuteLimit, UPLOADS_PER_DAY } from "./limits.ts";
 import { FakeBucket, FakeLogos, FakeSheet, NOW } from "./testing.ts";
 
 /** specs/marker-editing: Daily limits on adding and uploading. */
@@ -89,6 +89,42 @@ describe("DailyLimit", () => {
     for (const name of ["a", "b", "c"]) limit.take(name, late);
     expect(limit.people).toBe(3);
     limit.take("d", next);
+    expect(limit.people).toBe(1);
+  });
+});
+
+describe("MinuteLimit", () => {
+  const at = (s: number) => new Date(NOW.getTime() + s * 1000);
+
+  it("allows 30 a minute and refuses the 31st", () => {
+    const limit = new MinuteLimit(30);
+    for (let i = 0; i < 30; i++) expect(limit.take("a", at(i))).toBe(true);
+    expect(limit.take("a", at(30))).toBe(false);
+    expect(limit.take("b", at(30))).toBe(true);
+  });
+
+  it("allows again once the window passes, and a refusal doesn't extend the wait", () => {
+    const limit = new MinuteLimit(2);
+    expect(limit.take("a", at(0))).toBe(true);
+    expect(limit.take("a", at(1))).toBe(true);
+    expect(limit.take("a", at(30))).toBe(false);
+    expect(limit.take("a", at(59))).toBe(false);
+    // Exactly a minute after the first: that one has left the window.
+    expect(limit.take("a", at(60))).toBe(true);
+    expect(limit.take("a", at(60.5))).toBe(false);
+    expect(limit.take("a", at(61))).toBe(true);
+  });
+
+  it("drops people who stopped, at the next sweep", () => {
+    const limit = new MinuteLimit(30);
+    for (const name of ["a", "b", "c"]) limit.take(name, at(0));
+    expect(limit.people).toBe(3);
+    limit.take("a", at(30));
+    expect(limit.people).toBe(3);
+    // A minute after the last sweep: b and c have been idle a minute, a hasn't.
+    limit.take("d", at(60));
+    expect(limit.people).toBe(2);
+    limit.take("d", at(120));
     expect(limit.people).toBe(1);
   });
 });

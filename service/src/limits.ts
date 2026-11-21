@@ -47,5 +47,46 @@ export class DailyLimit {
   }
 }
 
+/**
+ * Per-person limits over a sliding window, such as account searches a minute (specs/account-lookup).
+ * Kept in memory, like DailyLimit. People who stop are dropped by a sweep that runs, at most once
+ * a window, when a request arrives, so the map holds only people active in the last window or two.
+ */
+export class MinuteLimit {
+  private times = new Map<string, number[]>();
+  private sweptAt = 0;
+  readonly limit: number;
+  readonly windowMs: number;
+
+  constructor(limit: number, windowMs = 60_000) {
+    this.limit = limit;
+    this.windowMs = windowMs;
+  }
+
+  /** Counts one use if this person has any left in the window. A refusal isn't counted. */
+  take(username: string, now: Date): boolean {
+    const t = now.getTime();
+    if (t - this.sweptAt >= this.windowMs) {
+      for (const [name, times] of this.times) {
+        if (t - times[times.length - 1]! >= this.windowMs) this.times.delete(name);
+      }
+      this.sweptAt = t;
+    }
+    const recent = (this.times.get(username) ?? []).filter((x) => t - x < this.windowMs);
+    if (recent.length >= this.limit) {
+      this.times.set(username, recent);
+      return false;
+    }
+    recent.push(t);
+    this.times.set(username, recent);
+    return true;
+  }
+
+  /** How many people are being tracked (for tests). */
+  get people(): number {
+    return this.times.size;
+  }
+}
+
 export const ADDS_PER_DAY = 5;
 export const UPLOADS_PER_DAY = 20;
