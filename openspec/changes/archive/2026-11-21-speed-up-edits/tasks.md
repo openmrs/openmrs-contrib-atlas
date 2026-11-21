@@ -19,13 +19,14 @@
 - [x] 4.1 In `service/src/edits/editor-base.ts`, add `save()`. It writes marker and `private` cells in one `updateCells`, appending the `private` row first if it's missing. It then runs the row check and the change-log append together. `restartClock` builds on it.
 - [x] 4.2 Move `People.saveEditors`, `People.accept`, `Claims.approve`, `Markers.update` and `Markers.confirm` to `save()`. Tests with a counting fake store: an editor change makes one read and one `updateCells` call, then runs the check and the log together. The sheet ends up the same as before for each of these actions. The existing edit tests pass.
 
-## 5. Listener warning
-
-- [ ] 5.1 Reproduce the `MaxListenersExceededWarning` locally against fake-gcs-server (`node --trace-warnings`) with parallel uploads, and record the source in the design's Open Questions.
-- [ ] 5.2 Fix it at the source, for example with one shared `Storage` client or capped concurrency. Verify that a local publish with the parallel uploads logs no warning.
-
 ## 6. Docs and checks
 
 - [x] 6.1 In `service/README.md`, describe the `timing` and `publish-timing` log lines and their step names. Note that parallel steps add up to more than the total, and that no private data is logged. Add a Logs Explorer query to find slow requests.
 - [x] 6.2 Run the typecheck, lint, format check, unit tests, the e2e suite (`cd web && npx playwright test`) and `openspec validate speed-up-edits --strict`.
-- [ ] 6.3 (manual) After deploying to staging, add and remove an editor and save a marker. Compare the times in the `timing` lines with today's 2.4 to 5.4 seconds.
+- [x] 6.3 (manual) After deploying to staging, add and remove an editor and save a marker. Compare the times in the `timing` lines with today's 2.4 to 5.4 seconds.
+
+## Workflow follow-up
+
+- Deferred: find and fix the `MaxListenersExceededWarning`. It didn't reproduce locally (see the
+  design's Open Questions). The service now starts with `--trace-warnings`, so the next time it
+  appears in the logs it will have a stack trace.
