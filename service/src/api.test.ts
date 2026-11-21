@@ -31,6 +31,9 @@ beforeEach(() => {
           ? undefined
           : { username: token.replace("admin:", ""), admin: token.startsWith("admin:") },
       logos: {
+        publicPrefix: "https://bucket.example/",
+        listLogos: async () => [],
+        removeLogos: async () => {},
         async saveLogo(name, body) {
           saved.set(name, body);
           return `https://bucket.example/${name}`;
@@ -223,6 +226,52 @@ describe("Edit a marker", () => {
     expect(res.status).toBe(201);
     expect(sheet.marker("distribution", 2)).toBe("Reference Application 3.x (O3)");
     expect(sheet.marker("openmrs_version", 2)).toBe("2.4.2-custom");
+  });
+
+  // specs/marker-editing: Logo addresses come from uploads
+  it("Scenario: Address from an upload", async () => {
+    const url = "https://bucket.example/logos/abc.webp";
+    expect((await edit("jdoe", { fields: { logo_url: url } })).status).toBe(200);
+    expect(sheet.marker("logo_url")).toBe(url);
+    expect((await edit("jdoe", { version: NOW_ISO, fields: { logo_url: "" } })).status).toBe(200);
+  });
+
+  it("Scenario: Address elsewhere", async () => {
+    for (const url of [
+      "https://tracker.example/pixel.png",
+      "http://bucket.example/logos/abc.webp",
+      "https://bucket.example/cards/abc.png",
+    ]) {
+      const res = await edit("jdoe", { fields: { logo_url: url } });
+      expect(res.status).toBe(422);
+      const { errors } = (await res.json()) as { errors: { field: string; reason: string }[] };
+      expect(errors).toEqual([
+        { field: "logo_url", reason: "logo_url must be a logo uploaded to the Atlas" },
+      ]);
+      expect(sheet.marker("logo_url")).toBe("");
+    }
+    const add = await call("newbie", "POST", "/markers", {
+      fields: {
+        name: "N",
+        latitude: 1,
+        longitude: 2,
+        type: "Clinical",
+        logo_url: "https://x.example/a.png",
+      },
+    });
+    expect(add.status).toBe(422);
+  });
+
+  it("keeps a logo address an admin typed into the sheet when other fields change", async () => {
+    sheet.setMarker("logo_url", "https://partner.example/logo.png");
+    expect(
+      (
+        await edit("jdoe", {
+          fields: { name: "Renamed", logo_url: "https://partner.example/logo.png" },
+        })
+      ).status,
+    ).toBe(200);
+    expect(sheet.marker("logo_url")).toBe("https://partner.example/logo.png");
   });
 
   it("applies limits only to values being changed", async () => {
@@ -825,6 +874,9 @@ describe("Logo upload", () => {
         store: sheet,
         verifyPerson: async () => ({ username: "jdoe", admin: false }),
         logos: {
+          publicPrefix: "https://bucket.example/",
+          listLogos: async () => [],
+          removeLogos: async () => {},
           async saveLogo(file, body) {
             saved.set(file, body);
             return `https://bucket.example/${file}`;

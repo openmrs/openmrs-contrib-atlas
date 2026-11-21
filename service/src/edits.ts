@@ -277,12 +277,30 @@ export class MarkerEditor {
   private store: EditStore;
   private now: () => Date;
   private accounts: Accounts | undefined;
+  private logoPrefix: string | undefined;
 
-  /** Without `accounts`, OpenMRS IDs are accepted unchecked (specs/account-lookup). */
-  constructor(store: EditStore, now: () => Date, accounts?: Accounts) {
+  /**
+   * Without `accounts`, OpenMRS IDs are accepted unchecked (specs/account-lookup). With
+   * `logoPrefix`, a `logo_url` set through the Atlas must start with it (specs/marker-editing).
+   */
+  constructor(
+    store: EditStore,
+    now: () => Date,
+    accounts?: Accounts,
+    options: { logoPrefix?: string } = {},
+  ) {
     this.store = store;
     this.now = now;
     this.accounts = accounts;
+    this.logoPrefix = options.logoPrefix;
+  }
+
+  /** A logo set through the Atlas must be an upload, so visitors' browsers load only the bucket. */
+  private checkLogo(changed: Record<string, Cell>): FieldError[] {
+    if (!this.logoPrefix || !("logo_url" in changed)) return [];
+    const url = text(changed.logo_url);
+    if (!url || url.startsWith(this.logoPrefix)) return [];
+    return [{ field: "logo_url", reason: "logo_url must be a logo uploaded to the Atlas" }];
   }
 
   /** Refuses OpenMRS IDs that don't exist or are disabled, before anything is written. */
@@ -538,6 +556,7 @@ export class MarkerEditor {
     };
     const errors = [
       ...checkLimits({ ...fields, ...contact }, tabs.lookups),
+      ...this.checkLogo(fields),
       ...checkMarkerRow(cells, tabs.lookups).errors,
     ];
     if (errors.length > 0) throw new ApiError(422, { error: "Please check the form.", errors });
@@ -609,6 +628,7 @@ export class MarkerEditor {
     const merged = { ...marker.cells, ...rowChanges };
     const errors = [
       ...checkLimits({ ...changed, ...contact }, tabs.lookups),
+      ...this.checkLogo(changed),
       ...checkMarkerRow(merged, tabs.lookups).errors,
     ];
     if (errors.length > 0) throw new ApiError(422, { error: "Please check the form.", errors });

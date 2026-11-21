@@ -13,7 +13,7 @@ function sign(
   claims: Record<string, unknown>,
   options: { key?: typeof privateKey; iss?: string; exp?: string } = {},
 ) {
-  return new SignJWT({ azp: "atlas", preferred_username: "JDoe", ...claims })
+  return new SignJWT({ typ: "Bearer", azp: "atlas", preferred_username: "JDoe", ...claims })
     .setProtectedHeader({ alg: "RS256", kid: "k1" })
     .setIssuer(options.iss ?? issuer)
     .setExpirationTime(options.exp ?? "5m")
@@ -32,6 +32,12 @@ describe("Requests are checked by the service", () => {
 
   it("Scenario: Token from another client", async () => {
     expect(await verify(await sign({ azp: "other-app" }))).toBeUndefined();
+  });
+
+  it("Scenario: ID token", async () => {
+    // Keycloak marks ID tokens `typ: ID`; only access tokens (`typ: Bearer`) are accepted.
+    expect(await verify(await sign({ typ: "ID" }))).toBeUndefined();
+    expect(await verify(await sign({ typ: undefined }))).toBeUndefined();
   });
 
   it("rejects wrong signatures, issuers, expired tokens and garbage", async () => {

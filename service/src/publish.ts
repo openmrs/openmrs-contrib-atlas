@@ -9,6 +9,7 @@ import {
   type Cell,
   type Problem,
 } from "@openmrs-atlas/shared";
+import { sweepLogos, type LogoStore } from "./logos.ts";
 import { refreshCards, type CardOptions, type CardStore } from "./cards/refresh.ts";
 
 /** The tabs a publish reads, as the Sheets API returns them (header row first). */
@@ -57,6 +58,8 @@ export async function publish(
     siteUrl: string;
     /** Social cards to bring up to date after a successful publish (specs/social-cards). */
     cards?: { store: CardStore } & Omit<CardOptions, "siteUrl">;
+    /** The nightly publish also deletes unused logos (specs/marker-editing). */
+    logos?: Pick<LogoStore, "publicPrefix" | "listLogos" | "removeLogos">;
   },
 ): Promise<PublishResult> {
   const values = await sheet.read();
@@ -103,6 +106,15 @@ export async function publish(
       console.log(JSON.stringify({ event: "cards", ...result }));
     } catch (err) {
       console.error(JSON.stringify({ event: "cards-failed", error: String(err) }));
+    }
+  }
+  if (options.logos) {
+    // Like cards, the sweep never holds up or undoes a publish; it runs again tomorrow.
+    try {
+      const result = await sweepLogos(options.logos, values.markers, options.now);
+      console.log(JSON.stringify({ event: "logos-swept", ...result }));
+    } catch (err) {
+      console.error(JSON.stringify({ event: "logos-sweep-failed", error: String(err) }));
     }
   }
   return { status: "published", markers: snapshot.markers.length, problems: problems.length };

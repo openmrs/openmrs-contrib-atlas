@@ -61,7 +61,12 @@ function build(overrides: Partial<AppDeps> = {}) {
         token === "bad"
           ? undefined
           : { username: token.replace("admin:", ""), admin: token.startsWith("admin:") },
-      logos: { saveLogo: async (name) => name },
+      logos: {
+        publicPrefix: "https://bucket.example/",
+        listLogos: async () => [],
+        removeLogos: async () => {},
+        saveLogo: async (name) => name,
+      },
     },
     accounts,
     notices: {

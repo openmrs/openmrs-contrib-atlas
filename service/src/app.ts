@@ -85,6 +85,7 @@ export function createApp(deps: AppDeps) {
         now: now(),
         siteUrl: deps.siteUrl,
         cards: cards(caller === "scheduler"),
+        logos: caller === "scheduler" ? deps.editing?.logos : undefined,
       });
     const result = await (force ? queue.run(run) : queue.shared(run));
     console.log(JSON.stringify({ event: "publish", caller, force, ...result }));

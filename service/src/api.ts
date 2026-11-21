@@ -13,9 +13,10 @@ import {
 import { AccountsUnavailable, type Accounts } from "./accounts.ts";
 import { accountsUnavailable } from "./edits.ts";
 import type { PersonVerifier } from "./keycloak.ts";
-import { MAX_LOGO_BYTES, logoName, processLogo, type LogoStore } from "./logos.ts";
+import { MAX_LOGO_BYTES, logoName, logoPrefix, processLogo, type LogoStore } from "./logos.ts";
 import { sendClaimDecisions, sendClaimNotice } from "./claims-mail.ts";
 import { sendNotice, type NoticeConfig } from "./notices.ts";
+import { ADDS_PER_DAY, DailyLimit, UPLOADS_PER_DAY } from "./limits.ts";
 import type { WriteQueue } from "./queue.ts";
 
 export interface ApiDeps {
@@ -40,8 +41,17 @@ export const SEARCHES_PER_MINUTE = 30;
 
 export function createApi(deps: ApiDeps) {
   const api = new Hono<Env>();
-  const editor = new MarkerEditor(deps.store, deps.now, deps.accounts);
+  const editor = new MarkerEditor(deps.store, deps.now, deps.accounts, {
+    logoPrefix: logoPrefix(deps.logos),
+  });
   const searches = new Map<string, number[]>();
+  // Adds and logo uploads a day for people who aren't admins (specs/marker-editing).
+  const adds = new DailyLimit(ADDS_PER_DAY);
+  const uploads = new DailyLimit(UPLOADS_PER_DAY);
+  const tooMany = (what: string) =>
+    new ApiError(429, {
+      error: `You've reached today's limit for ${what}. Please try again tomorrow.`,
+    });
 
   /** 30 account searches a minute per person, kept in memory on the single instance. */
   function allowSearch(username: string): boolean {
@@ -196,8 +206,13 @@ export function createApi(deps: ApiDeps) {
   );
 
   api.post("/markers", small, async (c) => {
+    const person = c.get("person");
+    if (!person.admin && adds.reached(person.username, deps.now())) {
+      throw tooMany(`adding sites (${ADDS_PER_DAY} a day)`);
+    }
     const body = parseChangeBody(await jsonBody(c));
-    const result = await write(() => editor.add(c.get("person"), body));
+    const result = await write(() => editor.add(person, body));
+    if (!person.admin) adds.record(person.username, deps.now());
     if (deps.notices && result.marker) {
       // Sent before the response, so an idle service can't leave it unsent (specs/email-delivery).
       // The mailer's timeout bounds the wait, and a failure is logged, never thrown.
@@ -315,11 +330,17 @@ export function createApi(deps: ApiDeps) {
       onError: (c) => c.json({ error: "Logos can be up to 2 MB." }, 422),
     }),
     async (c) => {
+      const person = c.get("person");
+      if (!person.admin && uploads.reached(person.username, deps.now())) {
+        throw tooMany(`logo uploads (${UPLOADS_PER_DAY} a day)`);
+      }
       const form = await c.req.formData().catch(() => undefined);
       const file = form?.get("logo");
       if (!(file instanceof File)) throw new ApiError(400, { error: "No logo was sent." });
       const logo = await processLogo(Buffer.from(await file.arrayBuffer()));
-      return c.json({ url: await deps.logos.saveLogo(logoName(), logo) }, 201);
+      const url = await deps.logos.saveLogo(logoName(), logo);
+      if (!person.admin) uploads.record(person.username, deps.now());
+      return c.json({ url }, 201);
     },
   );
 

@@ -1,7 +1,7 @@
 import { Storage } from "@google-cloud/storage";
 import type { AtlasSnapshot } from "@openmrs-atlas/shared";
 import { MANIFEST, WORLD, type CardManifest, type CardStore } from "./cards/refresh.ts";
-import type { LogoStore } from "./logos.ts";
+import { LOGO_FOLDER, type LogoStore } from "./logos.ts";
 import type { PublicFile, SnapshotStore } from "./publish.ts";
 
 /** Public snapshot files: cached at most 5 minutes (specs/snapshot-publishing). */
@@ -44,14 +44,26 @@ export function gcsLogoStore(bucketName: string, apiEndpoint?: string): LogoStor
   const storage = new Storage(apiEndpoint ? { apiEndpoint, projectId: "local" } : {});
   const bucket = storage.bucket(bucketName);
   const base = apiEndpoint ?? "https://storage.googleapis.com";
+  const publicPrefix = `${base}/${bucketName}/`;
 
   return {
+    publicPrefix,
     async saveLogo(name, body) {
       await bucket.file(name).save(body, {
         resumable: false,
         metadata: { contentType: "image/webp", cacheControl: "public, max-age=31536000" },
       });
-      return `${base}/${bucketName}/${name}`;
+      return `${publicPrefix}${name}`;
+    },
+    async listLogos() {
+      const [files] = await bucket.getFiles({ prefix: LOGO_FOLDER });
+      return files.map((f) => ({
+        name: f.name,
+        created: new Date(String(f.metadata.timeCreated ?? 0)),
+      }));
+    },
+    async removeLogos(names) {
+      for (const name of names) await bucket.file(name).delete({ ignoreNotFound: true });
     },
   };
 }

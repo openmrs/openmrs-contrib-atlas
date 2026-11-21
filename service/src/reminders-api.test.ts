@@ -76,7 +76,12 @@ function build(overrides: Partial<AppDeps> = {}) {
               email: `${token.split(":")[1]}@own-token.example`,
             }
           : undefined,
-      logos: { saveLogo: async (name) => name },
+      logos: {
+        publicPrefix: "https://bucket.example/",
+        listLogos: async () => [],
+        removeLogos: async () => {},
+        saveLogo: async (name) => name,
+      },
     },
     accounts,
     reminders: { mailer, signer },

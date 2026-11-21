@@ -57,6 +57,17 @@ and are never cached. Firebase Hosting forwards `/api/**` from the site to this 
 Account searches need 3 characters and are limited to 30 a minute per person. Adding an editor,
 offering a transfer and an admin setting an owner check that the OpenMRS ID exists and is enabled.
 
+Untrusted input (specs/marker-editing, specs/user-sign-in):
+
+- **Daily limits.** People who aren't admins can add 5 markers and upload 20 logos a day (UTC).
+  Past a limit they get 429 and "try again tomorrow". Counts are kept in memory, so a restart
+  resets them.
+- **Logo addresses.** Through the API, `logo_url` must be blank or in the bucket's `logos/`
+  folder, where uploads go. Admins can still type any address in the sheet.
+- **Logo sweep.** The nightly publish deletes files in `logos/` that no `markers` row uses, of
+  any status, once they are more than a day old (log event `logos-swept`).
+- **Access tokens only.** A token must have `typ: Bearer`, so a Keycloak ID token is refused.
+
 Claims (specs/marker-claims) are rows in the sheet's private `claims` tab, kept with their
 decision. `GET /api/me` lists the markers a person may claim (`claimable`), their own pending
 `claims` and, for admins, every pending claim with its message (`review`). Each claim emails

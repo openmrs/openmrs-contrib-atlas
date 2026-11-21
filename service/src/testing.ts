@@ -2,6 +2,7 @@ import { COLUMNS, TABS, type AtlasSnapshot, type Cell, type Problem } from "@ope
 import { SEED_LOOKUPS } from "@openmrs-atlas/shared/seed";
 import type { CardManifest, CardStore } from "./cards/refresh.ts";
 import type { CellUpdate, EditStore, EditValues } from "./edits.ts";
+import type { LogoStore, StoredLogo } from "./logos.ts";
 import type { PublicFile, SheetStore, SheetValues, SnapshotStore } from "./publish.ts";
 
 /** In-memory stand-ins for the sheet and bucket, shared by the service tests. */
@@ -160,5 +161,30 @@ export class FakeCards implements CardStore {
   }
   publicUrl(name: string) {
     return `https://storage.example.org/bucket/${name}`;
+  }
+}
+
+/** Logos in a public bucket, in memory. Files can be added with any creation time. */
+export class FakeLogos implements LogoStore {
+  publicPrefix = "https://bucket.example/";
+  files = new Map<string, { body: Buffer; created: Date }>();
+  failing = false;
+  private now: () => Date;
+  constructor(now: () => Date = () => NOW) {
+    this.now = now;
+  }
+  async saveLogo(name: string, body: Buffer) {
+    this.files.set(name, { body, created: this.now() });
+    return `${this.publicPrefix}${name}`;
+  }
+  add(name: string, created: Date) {
+    this.files.set(name, { body: Buffer.alloc(0), created });
+  }
+  async listLogos(): Promise<StoredLogo[]> {
+    if (this.failing) throw new Error("storage down");
+    return [...this.files].map(([name, f]) => ({ name, created: f.created }));
+  }
+  async removeLogos(names: string[]) {
+    for (const name of names) this.files.delete(name);
   }
 }
