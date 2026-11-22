@@ -488,6 +488,13 @@ button.link {
   border-radius: var(--radius);
   background: var(--surface);
 }
+/* Locked while the form loads or saves. */
+.marker-form input:disabled:not([type="file"]),
+.marker-form select:disabled,
+.marker-form textarea:disabled {
+  background: var(--surface-alt);
+  color: var(--ink-quiet);
+}
 .marker-form [aria-invalid="true"] {
   border-color: #b42318;
 }
@@ -596,6 +603,18 @@ button.link {
   justify-content: space-between;
   gap: 8px;
   padding: 2px 0;
+}
+/* The marker form's fields, in one fieldset so they lock together while loading or saving. */
+.marker-form fieldset.form-body {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  gap: 10px;
+}
+
+/* An editor being added: shown before the service answers. */
+.editor-list li.pending {
+  color: var(--ink-quiet);
 }
 
 /* The list of markers in view */

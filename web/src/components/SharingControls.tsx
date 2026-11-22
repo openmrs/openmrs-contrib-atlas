@@ -26,35 +26,49 @@ export function SharingControls({
   const [recipient, setRecipient] = useState("");
   const [error, setError] = useState<string>();
   const [busy, setBusy] = useState(false);
+  // The editor change in flight, shown in the list before the service answers.
+  const [pending, setPending] = useState<{ kind: "add" | "remove"; name: string }>();
 
-  async function run(task: () => Promise<void>) {
+  async function run(task: () => Promise<void>, onFailure?: () => void) {
     setBusy(true);
     setError(undefined);
     try {
       await task();
     } catch (err) {
+      onFailure?.();
       setError(
         err instanceof ApiError
           ? (err.errors[0]?.reason ?? err.message)
           : "That didn't work. Please try again.",
       );
     } finally {
+      setPending(undefined);
       setBusy(false);
     }
   }
 
-  const addEditor = () =>
-    run(async () => {
-      const result = await api<MarkerResult>(`${markerPath(markerId)}/editors`, "POST", {
-        username: editor,
-      });
-      onEditors(result.editors ?? editors);
-      onResult(result);
-      setEditor("");
-    });
+  const addEditor = () => {
+    const typed = editor;
+    // Shown the way the service stores it.
+    const name = typed.trim().toLowerCase();
+    setPending({ kind: "add", name });
+    setEditor("");
+    return run(
+      async () => {
+        const result = await api<MarkerResult>(`${markerPath(markerId)}/editors`, "POST", {
+          username: typed,
+        });
+        onEditors(result.editors ?? editors);
+        onResult(result);
+      },
+      // Back in the box, to correct.
+      () => setEditor(typed),
+    );
+  };
 
-  const removeEditor = (name: string) =>
-    run(async () => {
+  const removeEditor = (name: string) => {
+    setPending({ kind: "remove", name });
+    return run(async () => {
       const result = await api<MarkerResult>(
         `${markerPath(markerId)}/editors/${encodeURIComponent(name)}`,
         "DELETE",
@@ -62,6 +76,10 @@ export function SharingControls({
       onEditors(result.editors ?? editors);
       onResult(result);
     });
+  };
+
+  const adding = pending?.kind === "add" && !editors.includes(pending.name) ? pending.name : "";
+  const shown = editors.filter((name) => !(pending?.kind === "remove" && pending.name === name));
 
   const offer = () =>
     run(async () => {
@@ -85,9 +103,9 @@ export function SharingControls({
       <p className="hint">
         Editors can change and confirm this marker. These changes apply straight away.
       </p>
-      {editors.length > 0 && (
+      {(shown.length > 0 || adding) && (
         <ul className="editor-list">
-          {editors.map((name) => (
+          {shown.map((name) => (
             <li key={name}>
               {name}
               <button
@@ -101,6 +119,12 @@ export function SharingControls({
               </button>
             </li>
           ))}
+          {adding && (
+            <li className="pending">
+              {adding}
+              <span>Adding…</span>
+            </li>
+          )}
         </ul>
       )}
       <AccountPicker
@@ -118,7 +142,7 @@ export function SharingControls({
         disabled={busy || !editor.trim()}
         onClick={() => void addEditor()}
       >
-        Add editor
+        {pending?.kind === "add" ? "Adding…" : "Add editor"}
       </button>
 
       {hasOwner && (

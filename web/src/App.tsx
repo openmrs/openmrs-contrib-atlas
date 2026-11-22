@@ -531,6 +531,7 @@ export function App({ signInError }: { signInError?: string }) {
             <MarkerForm
               key={panel === "edit" ? selectedId : "add"}
               markerId={panel === "edit" ? selectedId : undefined}
+              preview={panel === "edit" ? selected : undefined}
               snapshot={snapshot}
               admin={me ? me.admin : Boolean(endedAdmin)}
               sessionEnded={!me}

@@ -20,6 +20,20 @@ interface State {
   recentConfirmed: string[];
   confirmRecentCalls: number;
   meReads: number;
+  /** While set, marker reads and every write wait for it before answering. */
+  hold?: Promise<void>;
+  /** The name the service holds, if the map shows an older one. */
+  sheetName?: string;
+}
+
+/** Holds the stubbed service's answers until the test releases them. */
+function gate(state: State) {
+  let release!: () => void;
+  state.hold = new Promise((r) => (release = r));
+  return () => {
+    state.hold = undefined;
+    release();
+  };
 }
 
 const kampala = {
@@ -78,6 +92,7 @@ async function stubApi(page: Page, overrides: Partial<State> = {}): Promise<Stat
         body: JSON.stringify({ confirmed: state.recentConfirmed, published: true }),
       });
     }
+    if (state.hold && (method !== "GET" || path.startsWith("/markers/"))) await state.hold;
     if (method !== "GET") state.requests.push({ method, path, body });
     const json = (status: number, data: unknown) =>
       route.fulfill({ status, contentType: "application/json", body: JSON.stringify(data) });
@@ -130,7 +145,7 @@ async function stubApi(page: Page, overrides: Partial<State> = {}): Promise<Stat
           version: state.version,
           status: "active",
           fields: {
-            name: "Kampala Rollout",
+            name: state.sheetName ?? "Kampala Rollout",
             latitude: 0.3476,
             longitude: 32.5825,
             type: "Clinical",
@@ -161,7 +176,8 @@ async function stubApi(page: Page, overrides: Partial<State> = {}): Promise<Stat
       return saved({ marker: { ...kampala, status: "closed" }, status: "closed" });
     }
     if (path.endsWith("/reopen")) return saved({ marker: kampala });
-    const named = (body as { username?: string } | undefined)?.username;
+    // Stored trimmed and lower-case, as the service does.
+    const named = (body as { username?: string } | undefined)?.username?.trim().toLowerCase();
     if (named && !ACCOUNTS.some((a) => a.username === named)) {
       return json(422, {
         error: "Please check the OpenMRS ID.",
@@ -169,7 +185,7 @@ async function stubApi(page: Page, overrides: Partial<State> = {}): Promise<Stat
       });
     }
     if (path.endsWith("/editors") && method === "POST") {
-      state.editors = [...state.editors, (body as { username: string }).username];
+      state.editors = [...state.editors, named!];
       return saved({ marker: kampala, editors: state.editors });
     }
     if (path.includes("/editors/") && method === "DELETE") {
@@ -1092,5 +1108,164 @@ test.describe("Prompt to share after adding or confirming", () => {
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByRole("heading", { name: "My markers" })).toBeVisible();
+  });
+});
+
+test.describe("Changes show while they're saved", () => {
+  test("Scenario: Adding", async ({ page }) => {
+    const state = await stubApi(page);
+    await signedIn(page);
+    await page.goto(openKampala);
+    await page.getByRole("button", { name: "Edit" }).click();
+    const sharing = page.getByRole("region", { name: "Sharing" });
+    await expect(sharing.getByRole("button", { name: "Remove asmith" })).toBeVisible();
+    const release = gate(state);
+    await page.getByLabel("Add an editor by OpenMRS ID").fill("Bob");
+    await page.getByRole("button", { name: "Add editor" }).click();
+    await expect(sharing.getByRole("listitem").filter({ hasText: "bob" })).toContainText("Adding…");
+    await expect(page.getByRole("button", { name: "Adding…" })).toBeDisabled();
+    release();
+    await expect(sharing.getByRole("button", { name: "Remove bob" })).toBeVisible();
+    await expect(sharing.getByText("Adding…")).toHaveCount(0);
+  });
+
+  test("Scenario: Removing", async ({ page }) => {
+    const state = await stubApi(page);
+    await signedIn(page);
+    await page.goto(openKampala);
+    await page.getByRole("button", { name: "Edit" }).click();
+    await expect(page.getByRole("button", { name: "Remove asmith" })).toBeVisible();
+    const release = gate(state);
+    await page.getByRole("button", { name: "Remove asmith" }).click();
+    await expect(page.getByRole("button", { name: "Remove asmith" })).toHaveCount(0);
+    release();
+    await expect.poll(() => state.editors).toEqual([]);
+    await expect(page.getByRole("button", { name: "Remove asmith" })).toHaveCount(0);
+  });
+
+  test("Scenario: Unknown OpenMRS ID", async ({ page }) => {
+    const state = await stubApi(page);
+    await signedIn(page);
+    await page.goto(openKampala);
+    await page.getByRole("button", { name: "Edit" }).click();
+    const box = page.getByLabel("Add an editor by OpenMRS ID");
+    await expect(box).toBeEnabled();
+    const release = gate(state);
+    await box.fill("asmiht");
+    await page.getByRole("button", { name: "Add editor" }).click();
+    await expect(page.getByText("Adding…").first()).toBeVisible();
+    release();
+    await expect(page.getByRole("alert")).toContainText("asmiht");
+    await expect(page.getByText("Adding…")).toHaveCount(0);
+    await expect(box).toHaveValue("asmiht");
+  });
+
+  test("Scenario: Removal fails", async ({ page }) => {
+    await stubApi(page);
+    await signedIn(page);
+    await page.goto(openKampala);
+    await page.getByRole("button", { name: "Edit" }).click();
+    await page.route("**/api/markers/*/editors/*", (route) =>
+      route.fulfill({ status: 503, contentType: "application/json", body: "{}" }),
+    );
+    await page.getByRole("button", { name: "Remove asmith" }).click();
+    await expect(page.getByRole("alert")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Remove asmith" })).toBeVisible();
+  });
+
+  test("Scenario: Save in progress", async ({ page }) => {
+    const state = await stubApi(page);
+    await signedIn(page);
+    await page.goto(openKampala);
+    await page.getByRole("button", { name: "Edit" }).click();
+    const form = page.getByRole("complementary", { name: "Edit marker" });
+    await page.getByLabel("Name (required)").fill("Renamed Rollout");
+    const release = gate(state);
+    await form.getByRole("button", { name: "Save" }).click();
+    await expect(form.getByRole("button", { name: "Saving…" })).toBeDisabled();
+    await expect(form.getByRole("status")).toContainText("Saving your changes");
+    await expect(page.getByLabel("Name (required)")).toBeDisabled();
+    await expect(form.getByRole("button", { name: "Cancel" })).toBeDisabled();
+    release();
+    await expect(form).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: "Renamed Rollout" })).toBeVisible();
+  });
+
+  test("Scenario: Save refused", async ({ page }) => {
+    const state = await stubApi(page);
+    state.nextPatch = {
+      status: 422,
+      body: {
+        error: "Please check the form.",
+        errors: [{ field: "url", reason: "url must be an http or https URL" }],
+      },
+    };
+    await signedIn(page);
+    await page.goto(openKampala);
+    await page.getByRole("button", { name: "Edit" }).click();
+    await page.getByLabel("Website").fill("https://typed.example");
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByText("Website must be an http or https URL")).toBeVisible();
+    await expect(page.getByLabel("Website")).toBeEnabled();
+    await expect(page.getByLabel("Website")).toHaveValue("https://typed.example");
+    await expect(page.getByLabel("Website")).toHaveAttribute("aria-invalid", "true");
+  });
+
+  test("Scenario: Opening", async ({ page }) => {
+    const state = await stubApi(page);
+    await signedIn(page);
+    await page.goto(openKampala);
+    await expect(page.getByRole("button", { name: "Edit" })).toBeVisible();
+    const release = gate(state);
+    await page.getByRole("button", { name: "Edit" }).click();
+    const form = page.getByRole("complementary", { name: "Edit marker" });
+    await expect(page.getByLabel("Name (required)")).toHaveValue("Kampala Rollout");
+    await expect(page.getByLabel("Name (required)")).toBeDisabled();
+    await expect(form.getByRole("status")).toContainText("Loading the rest");
+    await expect(form.getByRole("button", { name: "Save" })).toBeDisabled();
+    await expect(page.getByLabel("Contact name")).toHaveCount(0);
+    release();
+    await expect(page.getByLabel("Name (required)")).toBeEnabled();
+    await expect(page.getByLabel("Contact name")).toBeVisible();
+    await expect(form.getByText("Loading the rest")).toHaveCount(0);
+  });
+
+  test("Scenario: The map is behind", async ({ page }) => {
+    const state = await stubApi(page, { sheetName: "Kampala Rollout (renamed)" });
+    await signedIn(page);
+    await page.goto(openKampala);
+    await expect(page.getByRole("button", { name: "Edit" })).toBeVisible();
+    const release = gate(state);
+    await page.getByRole("button", { name: "Edit" }).click();
+    await expect(page.getByLabel("Name (required)")).toHaveValue("Kampala Rollout");
+    release();
+    await expect(page.getByLabel("Name (required)")).toHaveValue("Kampala Rollout (renamed)");
+    await expect(page.getByLabel("Name (required)")).toBeEnabled();
+  });
+
+  test("Scenario: Marker not on the map", async ({ page }) => {
+    const hiddenMe = {
+      username: "asmith",
+      admin: false,
+      markers: [
+        {
+          id: "hidden-id",
+          name: "Hidden Clinic",
+          role: "owner",
+          status: "hidden",
+          confirmed_at: "",
+        },
+      ],
+      offers: [],
+    };
+    const state = await stubApi(page, { me: hiddenMe });
+    await signedIn(page, "asmith");
+    await page.goto("/?panel=mine");
+    const release = gate(state);
+    await page.getByRole("button", { name: "Hidden Clinic" }).click();
+    const form = page.getByRole("complementary", { name: "Edit marker" });
+    await expect(form.getByRole("status")).toHaveText("Loading…");
+    await expect(page.getByLabel("Name (required)")).toHaveCount(0);
+    release();
   });
 });

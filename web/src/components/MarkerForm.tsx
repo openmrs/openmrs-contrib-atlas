@@ -1,6 +1,6 @@
 import { Marker as MapPin, type Map as MapLibreMap } from "maplibre-gl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { AtlasSnapshot, Role } from "@openmrs-atlas/shared";
+import type { AtlasSnapshot, PublicMarker, Role } from "@openmrs-atlas/shared";
 import { OTHER, OTHER_MAX_LENGTH } from "@openmrs-atlas/shared/lookups";
 import {
   ApiError,
@@ -80,6 +80,16 @@ function takeDraft(key: string): Draft | undefined {
   }
 }
 
+/** True if a draft for this form is waiting, without taking it. */
+function hasDraft(key: string): boolean {
+  try {
+    const stored = sessionStorage.getItem(DRAFT_KEY);
+    return Boolean(stored && (JSON.parse(stored) as Draft).key === key);
+  } catch {
+    return false;
+  }
+}
+
 function saveDraft(draft: Draft) {
   try {
     sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
@@ -99,6 +109,29 @@ async function loadForm(id: string): Promise<Loaded> {
   }
 }
 
+/** The fields the form sends, in order. */
+const FIELDS = [
+  "name",
+  "organisation",
+  "latitude",
+  "longitude",
+  "type",
+  "distribution",
+  "openmrs_version",
+  "site_count",
+  "url",
+  "logo_url",
+  "notes",
+] as const;
+
+/** What the map already knows: shown, locked, while the rest of the form loads. */
+function previewValues(marker: PublicMarker): Values {
+  const values: Values = { ...EMPTY, status: marker.status };
+  const known = marker as unknown as Record<string, unknown>;
+  for (const field of FIELDS) values[field] = String(known[field] ?? "");
+  return values;
+}
+
 function toValues(form: FormData_): Values {
   const values: Values = { ...EMPTY, status: form.status };
   for (const [field, value] of Object.entries(form.fields)) values[field] = String(value ?? "");
@@ -110,6 +143,8 @@ function toValues(form: FormData_): Values {
 interface Props {
   /** Undefined when adding a new marker. */
   markerId?: string;
+  /** The marker as shown on the map, if it is: the form opens with it while the rest loads. */
+  preview?: PublicMarker;
   snapshot: AtlasSnapshot;
   admin: boolean;
   map: MapLibreMap | null;
@@ -124,6 +159,7 @@ interface Props {
 
 export function MarkerForm({
   markerId,
+  preview,
   snapshot,
   admin,
   map,
@@ -134,10 +170,14 @@ export function MarkerForm({
   sessionEnded,
 }: Props) {
   const draftKey = markerId ?? "add";
-  const [values, setValues] = useState<Values>(() =>
-    markerId ? EMPTY : (takeDraft("add")?.values ?? EMPTY),
+  // A waiting draft is shown once loaded, never after the map's values (specs/marker-editing).
+  const [opening] = useState(() =>
+    markerId && preview && !hasDraft(markerId) ? previewValues(preview) : undefined,
   );
-  const [initial, setInitial] = useState<Values>(EMPTY);
+  const [values, setValues] = useState<Values>(() =>
+    markerId ? (opening ?? EMPTY) : (takeDraft("add")?.values ?? EMPTY),
+  );
+  const [initial, setInitial] = useState<Values>(opening ?? EMPTY);
   const [form, setForm] = useState<FormData_>();
   const [loading, setLoading] = useState(Boolean(markerId));
   const [loadError, setLoadError] = useState<string>();
@@ -153,6 +193,10 @@ export function MarkerForm({
   const canContact = !markerId || role === "owner" || role === "admin";
   // A marker that didn't load has no form to fill in, so no location to set.
   const ready = !markerId || Boolean(form);
+  // Showing the map's details while the rest loads.
+  const previewing = Boolean(opening) && loading && !form;
+  // Nothing can be changed while the form loads or saves.
+  const locked = saving || previewing;
 
   const applyLoaded = useCallback(
     (loaded: Loaded) => {
@@ -203,9 +247,11 @@ export function MarkerForm({
   const focusOther = useRef<string>(undefined);
 
   const close = useCallback(() => {
+    // A save in progress finishes before the form can close.
+    if (saving) return;
     if (dirty) setDiscarding((showing) => !showing);
     else onClose();
-  }, [dirty, onClose]);
+  }, [dirty, onClose, saving]);
   useEscape(close);
 
   // The question floats at the top of the panel wherever it is scrolled; focus goes to it so
@@ -229,17 +275,18 @@ export function MarkerForm({
   }, []);
 
   useEffect(() => {
-    if (!map || !ready) return;
+    if (!map || !ready || locked) return;
     const onClick = (e: { lngLat: { lat: number; lng: number } }) =>
       place(e.lngLat.lat, e.lngLat.lng);
     map.on("click", onClick);
     return () => {
       map.off("click", onClick);
     };
-  }, [map, ready, place]);
+  }, [map, ready, locked, place]);
 
   useEffect(() => {
-    if (!map || !located) {
+    // No pin without a form: a preview whose marker then fails to load has none.
+    if (!map || !located || !(ready || previewing)) {
       pin.current?.remove();
       pin.current = null;
       return;
@@ -257,7 +304,11 @@ export function MarkerForm({
     } else {
       pin.current.setLngLat([longitude, latitude]);
     }
-  }, [map, located, latitude, longitude, place]);
+  }, [map, located, ready, previewing, latitude, longitude, place]);
+
+  useEffect(() => {
+    pin.current?.setDraggable(!locked);
+  }, [locked, located]);
 
   useEffect(
     () => () => {
@@ -307,21 +358,7 @@ export function MarkerForm({
     setErrors([]);
     setMessage(undefined);
     setConflict(false);
-    const fields = Object.fromEntries(
-      [
-        "name",
-        "organisation",
-        "latitude",
-        "longitude",
-        "type",
-        "distribution",
-        "openmrs_version",
-        "site_count",
-        "url",
-        "logo_url",
-        "notes",
-      ].map((f) => [f, values[f] ?? ""]),
-    );
+    const fields = Object.fromEntries(FIELDS.map((f) => [f, values[f] ?? ""]));
     const contact = canContact
       ? { contact_name: values.contact_name, contact_email: values.contact_email }
       : undefined;
@@ -536,153 +573,160 @@ export function MarkerForm({
         </div>
       )}
 
-      {loading && <p role="status">Loading…</p>}
+      {loading && !previewing && <p role="status">Loading…</p>}
+      {previewing && (
+        <p role="status" className="hint">
+          Loading the rest of this marker…
+        </p>
+      )}
       {loadError && (
         <p className="error" role="alert">
           {loadError}
         </p>
       )}
 
-      {!loading && !loadError && ready && (
+      {((!loading && ready) || previewing) && !loadError && (
         <>
           {form && form.problems.length > 0 && (
             <p className="error">Needs fixing: {form.problems.join("; ")}</p>
           )}
-          <form onSubmit={(e) => void save(e)} noValidate={false}>
-            {textField("name", { required: true })}
+          <form onSubmit={(e) => void save(e)} noValidate={false} aria-busy={locked}>
+            <fieldset className="form-body" disabled={locked}>
+              {textField("name", { required: true })}
 
-            <fieldset>
-              <legend>Location (required)</legend>
-              <p className="hint">
-                Search for a place or click the map, then drag the pin to adjust it.
-              </p>
-              <div className="place-search">
-                <label>
-                  Find a place
-                  <input
-                    type="search"
-                    value={placeQuery}
-                    onChange={(e) => setPlaceQuery(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        if (placeQuery.trim()) void findPlace();
-                      }
-                    }}
-                  />
-                </label>
-                <button
-                  type="button"
-                  className="secondary"
-                  disabled={!placeQuery.trim()}
-                  onClick={() => void findPlace()}
-                >
-                  Search
-                </button>
-              </div>
-              {placeError && <p className="error">{placeError}</p>}
-              {places && (
-                <>
-                  {places.length === 0 && <p className="hint">No places found.</p>}
-                  <ul className="place-results">
-                    {places.map((p) => (
-                      <li key={`${p.latitude},${p.longitude},${p.name}`}>
-                        <button type="button" className="link" onClick={() => choosePlace(p)}>
-                          {p.name}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                  <p className="hint">Place search by OpenStreetMap Nominatim.</p>
-                </>
-              )}
-              <div className="coordinates">
-                {textField("latitude", { required: true, inRequiredGroup: true })}
-                {textField("longitude", { required: true, inRequiredGroup: true })}
-              </div>
-            </fieldset>
-
-            {selectField(
-              "type",
-              snapshot.types.map((t) => t.name),
-              { required: true },
-            )}
-            {textField("organisation")}
-            {choiceField(
-              "distribution",
-              snapshot.distributions.map((d) => d.name),
-            )}
-            {choiceField(
-              "openmrs_version",
-              snapshot.versions.map((v) => v.version),
-            )}
-            {textField("site_count", { type: "number" })}
-            {textField("url", { type: "url" })}
-
-            <label>
-              Logo (PNG, JPEG or WebP, up to 2 MB)
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) void uploadLogo(file);
-                }}
-              />
-            </label>
-            {values.logo_url && (
-              <div className="logo-preview">
-                <img className="logo" src={values.logo_url} alt="Logo preview" />
-                <button type="button" className="link" onClick={() => set("logo_url", "")}>
-                  Remove logo
-                </button>
-              </div>
-            )}
-            {logoError && (
-              <p className="error" role="alert">
-                {logoError}
-              </p>
-            )}
-
-            <label>
-              {LABELS.notes}
-              <textarea
-                rows={4}
-                value={values.notes}
-                onChange={(e) => set("notes", e.target.value)}
-              />
-              {errorFor("notes").map((reason) => (
-                <span key={reason} className="error">
-                  {reason}
-                </span>
-              ))}
-            </label>
-
-            {canContact && (
               <fieldset>
-                <legend>Contact</legend>
-                <p className="hint">Contact details are private and are never published.</p>
-                {textField("contact_name")}
-                {textField("contact_email", { type: "email" })}
+                <legend>Location (required)</legend>
+                <p className="hint">
+                  Search for a place or click the map, then drag the pin to adjust it.
+                </p>
+                <div className="place-search">
+                  <label>
+                    Find a place
+                    <input
+                      type="search"
+                      value={placeQuery}
+                      onChange={(e) => setPlaceQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          if (placeQuery.trim()) void findPlace();
+                        }
+                      }}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    className="secondary"
+                    disabled={!placeQuery.trim()}
+                    onClick={() => void findPlace()}
+                  >
+                    Search
+                  </button>
+                </div>
+                {placeError && <p className="error">{placeError}</p>}
+                {places && (
+                  <>
+                    {places.length === 0 && <p className="hint">No places found.</p>}
+                    <ul className="place-results">
+                      {places.map((p) => (
+                        <li key={`${p.latitude},${p.longitude},${p.name}`}>
+                          <button type="button" className="link" onClick={() => choosePlace(p)}>
+                            {p.name}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                    <p className="hint">Place search by OpenStreetMap Nominatim.</p>
+                  </>
+                )}
+                <div className="coordinates">
+                  {textField("latitude", { required: true, inRequiredGroup: true })}
+                  {textField("longitude", { required: true, inRequiredGroup: true })}
+                </div>
               </fieldset>
-            )}
 
-            {admin && (
-              <fieldset>
-                <legend>Admin</legend>
-                <AccountPicker
-                  label={LABELS.owner!}
-                  value={values.owner ?? ""}
-                  onChange={(username) => set("owner", username)}
+              {selectField(
+                "type",
+                snapshot.types.map((t) => t.name),
+                { required: true },
+              )}
+              {textField("organisation")}
+              {choiceField(
+                "distribution",
+                snapshot.distributions.map((d) => d.name),
+              )}
+              {choiceField(
+                "openmrs_version",
+                snapshot.versions.map((v) => v.version),
+              )}
+              {textField("site_count", { type: "number" })}
+              {textField("url", { type: "url" })}
+
+              <label>
+                Logo (PNG, JPEG or WebP, up to 2 MB)
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) void uploadLogo(file);
+                  }}
                 />
-                {errorFor("owner").map((reason) => (
+              </label>
+              {values.logo_url && (
+                <div className="logo-preview">
+                  <img className="logo" src={values.logo_url} alt="Logo preview" />
+                  <button type="button" className="link" onClick={() => set("logo_url", "")}>
+                    Remove logo
+                  </button>
+                </div>
+              )}
+              {logoError && (
+                <p className="error" role="alert">
+                  {logoError}
+                </p>
+              )}
+
+              <label>
+                {LABELS.notes}
+                <textarea
+                  rows={4}
+                  value={values.notes}
+                  onChange={(e) => set("notes", e.target.value)}
+                />
+                {errorFor("notes").map((reason) => (
                   <span key={reason} className="error">
                     {reason}
                   </span>
                 ))}
-                {markerId && selectField("status", STATUSES, { required: true })}
-              </fieldset>
-            )}
+              </label>
+
+              {canContact && (
+                <fieldset>
+                  <legend>Contact</legend>
+                  <p className="hint">Contact details are private and are never published.</p>
+                  {textField("contact_name")}
+                  {textField("contact_email", { type: "email" })}
+                </fieldset>
+              )}
+
+              {admin && !previewing && (
+                <fieldset>
+                  <legend>Admin</legend>
+                  <AccountPicker
+                    label={LABELS.owner!}
+                    value={values.owner ?? ""}
+                    onChange={(username) => set("owner", username)}
+                  />
+                  {errorFor("owner").map((reason) => (
+                    <span key={reason} className="error">
+                      {reason}
+                    </span>
+                  ))}
+                  {markerId && selectField("status", STATUSES, { required: true })}
+                </fieldset>
+              )}
+            </fieldset>
 
             {errors
               .filter((e) => !(e.field in EMPTY))
@@ -702,13 +746,18 @@ export function MarkerForm({
               </p>
             )}
             <div className="button-row">
-              <button type="submit" className="primary" disabled={saving}>
+              <button type="submit" className="primary" disabled={locked}>
                 {saving ? "Saving…" : "Save"}
               </button>
-              <button type="button" className="secondary" onClick={close}>
+              <button type="button" className="secondary" disabled={saving} onClick={close}>
                 Cancel
               </button>
             </div>
+            {saving && (
+              <p role="status" className="hint">
+                Saving your changes and updating the map…
+              </p>
+            )}
           </form>
 
           {markerId && form?.editors && (
