@@ -178,6 +178,12 @@ async function stubApi(page: Page, overrides: Partial<State> = {}): Promise<Stat
     if (path.endsWith("/reopen")) return saved({ marker: kampala });
     // Stored trimmed and lower-case, as the service does.
     const named = (body as { username?: string } | undefined)?.username?.trim().toLowerCase();
+    if (path.endsWith("/editors") && method === "POST" && named === "jdoe") {
+      return json(422, {
+        error: "That person already owns this marker.",
+        errors: [{ field: "username", reason: "That person already owns this marker." }],
+      });
+    }
     if (named && !ACCOUNTS.some((a) => a.username === named)) {
       return json(422, {
         error: "Please check the OpenMRS ID.",
@@ -223,6 +229,17 @@ async function signedIn(page: Page, token = "jdoe") {
 }
 
 const openKampala = `/?marker=${ids.kampala}&map=6/0.3476/32.5825`;
+
+/**
+ * Types an OpenMRS ID and leaves the box, as a keyboard user would, so the suggestions close
+ * rather than cover the button below.
+ */
+async function typeId(page: Page, label: string, text: string, exact = false) {
+  const box = page.getByLabel(label, { exact });
+  await box.fill(text);
+  await box.blur();
+  await expect(page.getByRole("listbox", { name: "Matching OpenMRS IDs" })).toHaveCount(0);
+}
 
 test.describe("Sign in with OpenMRS Keycloak", () => {
   test("Scenario: Signing in from a shared view", async ({ page }) => {
@@ -791,7 +808,7 @@ test.describe("Manage editors and transfer", () => {
     const state = await stubApi(page);
     await signedIn(page);
     await page.goto(`/?panel=edit&marker=${ids.kampala}`);
-    await page.getByLabel("Add an editor by OpenMRS ID").fill("bob");
+    await typeId(page, "Add an editor by OpenMRS ID", "bob");
     await page.getByRole("button", { name: "Add editor" }).click();
     await expect(page.getByRole("button", { name: "Remove bob" })).toBeVisible();
     await page.getByRole("button", { name: "Remove asmith" }).click();
@@ -803,7 +820,7 @@ test.describe("Manage editors and transfer", () => {
     await stubApi(page);
     await signedIn(page);
     await page.goto(`/?panel=edit&marker=${ids.kampala}`);
-    await page.getByLabel("New owner's OpenMRS ID").fill("carol");
+    await typeId(page, "New owner's OpenMRS ID", "carol");
     await page.getByRole("button", { name: "Offer ownership" }).click();
     await expect(page.getByText("Waiting for carol to accept")).toBeVisible();
     await page.getByRole("button", { name: "Cancel offer" }).click();
@@ -1018,7 +1035,7 @@ test.describe("Admin", () => {
     await signedIn(page, "root");
     await page.goto(openKampala);
     await page.getByRole("button", { name: "Edit" }).click();
-    await page.getByLabel("Owner", { exact: true }).fill("carol");
+    await typeId(page, "Owner", "carol", true);
     await page.getByLabel("Status").selectOption("hidden");
     await page.getByRole("button", { name: "Save" }).click();
     await expect
@@ -1120,7 +1137,7 @@ test.describe("Changes show while they're saved", () => {
     const sharing = page.getByRole("region", { name: "Sharing" });
     await expect(sharing.getByRole("button", { name: "Remove asmith" })).toBeVisible();
     const release = gate(state);
-    await page.getByLabel("Add an editor by OpenMRS ID").fill("Bob");
+    await typeId(page, "Add an editor by OpenMRS ID", "Bob");
     await page.getByRole("button", { name: "Add editor" }).click();
     await expect(sharing.getByRole("listitem").filter({ hasText: "bob" })).toContainText("Adding…");
     await expect(page.getByRole("button", { name: "Adding…" })).toBeDisabled();
@@ -1158,6 +1175,46 @@ test.describe("Changes show while they're saved", () => {
     await expect(page.getByRole("alert")).toContainText("asmiht");
     await expect(page.getByText("Adding…")).toHaveCount(0);
     await expect(box).toHaveValue("asmiht");
+  });
+
+  test("Scenario: Owner added as editor, with the error under the box", async ({ page }) => {
+    await stubApi(page);
+    await signedIn(page);
+    await page.goto(openKampala);
+    await page.getByRole("button", { name: "Edit" }).click();
+    const box = page.getByLabel("Add an editor by OpenMRS ID");
+    await box.fill("jdoe");
+    await page.getByRole("button", { name: "Add editor" }).click();
+    const error = page.getByRole("alert").filter({ hasText: "already owns this marker" });
+    await expect(error).toBeVisible();
+    await expect(page.getByRole("button", { name: "Remove jdoe" })).toHaveCount(0);
+    // Between the box and its button, where it's in view.
+    const [boxAt, errorAt, buttonAt] = await Promise.all([
+      box.boundingBox(),
+      error.boundingBox(),
+      page.getByRole("button", { name: "Add editor" }).boundingBox(),
+    ]);
+    expect(errorAt!.y).toBeGreaterThan(boxAt!.y);
+    expect(errorAt!.y).toBeLessThan(buttonAt!.y);
+  });
+
+  test("a transfer error shows under the new owner's box", async ({ page }) => {
+    await stubApi(page);
+    await signedIn(page);
+    await page.goto(openKampala);
+    await page.getByRole("button", { name: "Edit" }).click();
+    const box = page.getByLabel("New owner's OpenMRS ID");
+    await box.fill("nobody");
+    await page.getByRole("button", { name: "Offer ownership" }).click();
+    const error = page.getByRole("alert").filter({ hasText: "nobody" });
+    await expect(error).toBeVisible();
+    const [boxAt, errorAt, buttonAt] = await Promise.all([
+      box.boundingBox(),
+      error.boundingBox(),
+      page.getByRole("button", { name: "Offer ownership" }).boundingBox(),
+    ]);
+    expect(errorAt!.y).toBeGreaterThan(boxAt!.y);
+    expect(errorAt!.y).toBeLessThan(buttonAt!.y);
   });
 
   test("Scenario: Removal fails", async ({ page }) => {

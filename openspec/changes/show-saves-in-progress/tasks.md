@@ -11,6 +11,12 @@
 - [x] 2.2 Add the `preview` prop. When it's given and no draft is waiting, start with the public fields, locked, with the "Loading the rest of this marker…" status. Hide contact, owner, status, problems and sharing until the response arrives, then take the service's values and unlock. Keep today's behaviour on a load error, an expired session, or with no preview.
 - [x] 2.3 In `web/src/App.tsx`, pass `preview={selected}` when opening the edit form for a marker on the map.
 
+## 2b. Errors beside their box
+
+- [x] 2b.1 In `SharingControls.tsx`, show editor errors between the editor box and the Add button, and transfer errors between the new owner's box and its button. E2E tests check that the error sits between the box and the button, for both.
+- [x] 2b.2 In `service/src/edits/people.ts`, refuse adding the owner as an editor with 422 "That person already owns this marker." Adding someone already listed still answers 200 unchanged. API tests cover both.
+- [x] 2b.3 Make the e2e tests that type a known ID leave the box before clicking, so the suggestions can't cover the button. Verify with repeated runs.
+
 ## 3. Tests and checks
 
 - [x] 3.1 Playwright tests in `web/e2e/editing.spec.ts`, with a fake-API gate that holds a response until the test releases it:

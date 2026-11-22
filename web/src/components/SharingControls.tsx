@@ -24,23 +24,30 @@ export function SharingControls({
 }: Props) {
   const [editor, setEditor] = useState("");
   const [recipient, setRecipient] = useState("");
-  const [error, setError] = useState<string>();
+  // Shown under the box it concerns, so it's in view next to what was typed.
+  const [error, setError] = useState<{ where: "editors" | "transfer"; text: string }>();
   const [busy, setBusy] = useState(false);
   // The editor change in flight, shown in the list before the service answers.
   const [pending, setPending] = useState<{ kind: "add" | "remove"; name: string }>();
 
-  async function run(task: () => Promise<void>, onFailure?: () => void) {
+  async function run(
+    where: "editors" | "transfer",
+    task: () => Promise<void>,
+    onFailure?: () => void,
+  ) {
     setBusy(true);
     setError(undefined);
     try {
       await task();
     } catch (err) {
       onFailure?.();
-      setError(
-        err instanceof ApiError
-          ? (err.errors[0]?.reason ?? err.message)
-          : "That didn't work. Please try again.",
-      );
+      setError({
+        where,
+        text:
+          err instanceof ApiError
+            ? (err.errors[0]?.reason ?? err.message)
+            : "That didn't work. Please try again.",
+      });
     } finally {
       setPending(undefined);
       setBusy(false);
@@ -54,6 +61,7 @@ export function SharingControls({
     setPending({ kind: "add", name });
     setEditor("");
     return run(
+      "editors",
       async () => {
         const result = await api<MarkerResult>(`${markerPath(markerId)}/editors`, "POST", {
           username: typed,
@@ -68,7 +76,7 @@ export function SharingControls({
 
   const removeEditor = (name: string) => {
     setPending({ kind: "remove", name });
-    return run(async () => {
+    return run("editors", async () => {
       const result = await api<MarkerResult>(
         `${markerPath(markerId)}/editors/${encodeURIComponent(name)}`,
         "DELETE",
@@ -78,11 +86,18 @@ export function SharingControls({
     });
   };
 
+  const errorFor = (where: "editors" | "transfer") =>
+    error?.where === where && (
+      <p className="error" role="alert">
+        {error.text}
+      </p>
+    );
+
   const adding = pending?.kind === "add" && !editors.includes(pending.name) ? pending.name : "";
   const shown = editors.filter((name) => !(pending?.kind === "remove" && pending.name === name));
 
   const offer = () =>
-    run(async () => {
+    run("transfer", async () => {
       const result = await api<MarkerResult>(`${markerPath(markerId)}/transfer`, "POST", {
         username: recipient,
       });
@@ -92,7 +107,7 @@ export function SharingControls({
     });
 
   const cancel = () =>
-    run(async () => {
+    run("transfer", async () => {
       await api(`${markerPath(markerId)}/transfer`, "DELETE");
       onOffer(undefined);
     });
@@ -136,6 +151,7 @@ export function SharingControls({
         }}
         disabled={busy}
       />
+      {errorFor("editors")}
       <button
         type="button"
         className="secondary"
@@ -154,6 +170,7 @@ export function SharingControls({
                 Waiting for {offerTo} to accept. Please let them know: they will find the offer in
                 My markers.
               </p>
+              {errorFor("transfer")}
               <button
                 type="button"
                 className="secondary"
@@ -174,6 +191,7 @@ export function SharingControls({
                 }}
                 disabled={busy}
               />
+              {errorFor("transfer")}
               <p className="hint">
                 They must accept within 30 days. You stay on as an editor afterwards.
               </p>
@@ -188,11 +206,6 @@ export function SharingControls({
             </>
           )}
         </>
-      )}
-      {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
       )}
     </section>
   );

@@ -38,9 +38,14 @@ wins are in what people see while they wait:
   knows (contact details, owner, editors), and unlocks. A marker that isn't on the map (for
   example, a hidden one opened from My markers) shows "Loading…" as now.
 
+- **Sharing errors show beside their box.** Editor errors appear between the editor box and the
+  Add button, and transfer errors between the new owner's box and its button, instead of at the
+  bottom of the section. Adding the marker's owner as an editor is refused with "That person
+  already owns this marker." Adding someone already listed still changes nothing, quietly.
+
 Out of scope:
 
-- Any service change. The service already returns everything these need.
+- Service changes, apart from one: adding the owner as an editor is now refused with a reason.
 - Closing the form before a save succeeds. A slightly slower save is better than a form that
   has to reopen.
 - Transfers, claims, close, reopen and delete. They keep their current busy states.
@@ -54,7 +59,8 @@ None.
 
 ### Modified Capabilities
 
-- `marker-ownership`: editor changes show in the list at once, and are undone on failure.
+- `marker-ownership`: editor changes show in the list at once, and are undone on failure. Errors
+  show beside their box, and adding the owner as an editor is refused.
 - `marker-editing`: a save shows its progress and locks the form; the edit form opens at once
   from the map's data.
 
@@ -68,5 +74,6 @@ None.
   - a status line while saving.
 - `web/src/App.tsx`: passes the marker as shown on the map to the form.
 - Styles for the pending editor entry and the status line.
+- `service/src/edits/people.ts`: adding the owner as an editor answers 422.
 - Playwright tests for each behaviour, with the service's answers delayed. No service, sheet or
   config changes.

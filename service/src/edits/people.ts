@@ -18,6 +18,12 @@ import {
 } from "./core.ts";
 import { EditorBase } from "./editor-base.ts";
 
+const alreadyOwner = (field: string) =>
+  new ApiError(422, {
+    error: "That person already owns this marker.",
+    errors: [{ field, reason: "That person already owns this marker." }],
+  });
+
 /** Editors and ownership transfers (specs/marker-ownership). */
 export class People extends EditorBase {
   async addEditor(person: Person, id: string, username: string) {
@@ -25,9 +31,10 @@ export class People extends EditorBase {
     const { marker, priv } = this.find(tabs, person, id, "manage-editors");
     const editor = normaliseUsername(username);
     if (!isUsername(editor)) throw invalidUsername("username");
+    if (editor === normaliseUsername(priv?.owner ?? "")) throw alreadyOwner("username");
     const current = priv?.editors ?? [];
-    const listed = current.some((e) => normaliseUsername(e) === editor);
-    if (listed || editor === normaliseUsername(priv?.owner ?? "")) {
+    // Already an editor: nothing to do, and nothing to report.
+    if (current.some((e) => normaliseUsername(e) === editor)) {
       return { ...this.result(tabs, marker.cells, false), editors: current };
     }
     await this.requireAccounts([editor], "username");
@@ -71,9 +78,7 @@ export class People extends EditorBase {
     const to = normaliseUsername(username);
     if (!isUsername(to)) throw invalidUsername("username");
     if (!priv?.owner) throw new ApiError(409, { error: "This marker has no owner to transfer." });
-    if (to === normaliseUsername(priv.owner)) {
-      throw new ApiError(422, { error: "That person already owns this marker." });
-    }
+    if (to === normaliseUsername(priv.owner)) throw alreadyOwner("username");
     await this.requireAccounts([to], "username");
     const now = this.now();
     const expires = new Date(now.getTime() + OFFER_DAYS * MS_PER_DAY).toISOString();

@@ -38,7 +38,7 @@ starts fresh.
 **Non-Goals:**
 - Closing the form before the save succeeds.
 - Several editor changes in flight at once.
-- Service changes.
+- Service changes, apart from refusing the owner as an editor.
 
 ## Decisions
 
@@ -128,6 +128,23 @@ form that can't be saved. On an expired session, it behaves as today.
 
 A waiting draft (from signing in again mid-edit) skips the preview, so the draft's values are
 never shown and then replaced. `takeDraft` is only read, not taken, for this check.
+
+### Errors beside their box, and the owner refused
+
+Staging showed that the one error line at the bottom of the Sharing section is often scrolled out
+of view. Each error now records where it came from (`editors` or `transfer`) and shows directly
+under that box, above its button.
+
+Adding the owner as an editor used to succeed silently, with no change. Now that failed adds show
+a reason, the service refuses it with 422, "That person already owns this marker.", the same
+message a transfer to the owner gets. Adding someone already listed still succeeds without
+change, since what was asked for is already true.
+
+### Tests type an ID, then leave the box
+
+The account suggestions open below the box after a short pause and can cover the button under
+it. Tests that type a known ID now leave the box before clicking, as a keyboard user would. That
+removes a timing-dependent failure that only showed under load.
 
 ## Risks / Trade-offs
 

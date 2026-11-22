@@ -601,9 +601,16 @@ describe("Manage editors", () => {
     expect((await call("asmith", "POST", `/markers/${ID}/confirm`)).status).toBe(403);
   });
 
-  it("Scenario: Owner listed as editor", async () => {
-    await add("jdoe");
-    await add("ASMITH");
+  it("Scenario: Owner added as editor", async () => {
+    const res = await add("JDoe");
+    expect(res.status).toBe(422);
+    expect(await res.json()).toMatchObject({ error: "That person already owns this marker." });
+    expect(sheet.priv("editors")).toBe("asmith");
+    expect(bucket.writes).toBe(0);
+  });
+
+  it("Scenario: Editor already listed", async () => {
+    expect((await add("ASMITH")).status).toBe(200);
     expect(sheet.priv("editors")).toBe("asmith");
     expect(sheet.marker("confirmed_at")).toBe(OLD);
     expect(bucket.writes).toBe(0);
