@@ -30,4 +30,4 @@
   - when the fake service returns a different name than the map, the form shows the service's name;
   - a hidden marker opened from My markers shows "Loading…".
 - [x] 3.2 Run the typecheck, lint, format check, unit tests, the e2e suite and `openspec validate show-saves-in-progress --strict`.
-- [ ] 3.3 (manual) On staging, add and remove an editor and edit a marker, and check that each feels immediate and that a mistyped OpenMRS ID is handled clearly.
+- [x] 3.3 (manual) On staging, add and remove an editor and edit a marker, and check that each feels immediate and that a mistyped OpenMRS ID is handled clearly.
