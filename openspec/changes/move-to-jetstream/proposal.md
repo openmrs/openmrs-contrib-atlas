@@ -20,7 +20,7 @@ This re-opens three settled architecture decisions in `openspec/config.yaml`: Fi
 
 ### Out of scope
 
-- The compose stacks in `openmrs-contrib-ansible-docker-compose` (`files/atlas-stg/`, `files/atlas/`), the Ansible runs in `openmrs-contrib-itsmresources`, TLS and the reverse proxy on `goba`, and backups with `openmrsinfra/cron-backup`. The maintainer sets these up; this change documents what the image needs.
+- The compose stacks in `openmrs-contrib-ansible-docker-compose` (`files/atlas-stg/`, `files/atlas/`), the Ansible runs in `openmrs-contrib-itsmresources`, TLS and the reverse proxy on `gode` (staging) and `goba` (production), and backups with `openmrsinfra/cron-backup`. The maintainer sets these up; this change documents what the image needs.
 - DNS changes for atlas-stg.openmrs.org and atlas.openmrs.org, which the maintainer makes.
 - Shutting down the Google Cloud projects. Cloud Run staging and production stay as a fallback until production has run on Jetstream 2 for a while; removing them is a later change.
 - Moving off Google Sheets, Keycloak or Mandrill. They are used exactly as now.

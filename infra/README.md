@@ -1,12 +1,13 @@
 # Environments
 
-Each environment runs as one Docker container on `goba`, an OpenMRS server on Jetstream 2, from an
-image on Docker Hub:
+Each environment runs as one Docker container on an OpenMRS server on Jetstream 2, from an image
+on Docker Hub. Staging runs on `gode`, with the staging versions of the other OpenMRS apps, and
+production on `goba`:
 
-| Environment | Site                                                   | Image                                           | Built from                            |
-| ----------- | ------------------------------------------------------ | ----------------------------------------------- | ------------------------------------- |
-| staging     | [atlas-stg.openmrs.org](https://atlas-stg.openmrs.org) | `openmrsinfra/atlas:staging`                    | every push to `main` that passes CI   |
-| production  | [atlas.openmrs.org](https://atlas.openmrs.org)         | `openmrsinfra/atlas:production` (and `:latest`) | release tags (`4.0`, `4.1`), approved |
+| Environment | Site                                                   | Host   | Image                                           | Built from                            |
+| ----------- | ------------------------------------------------------ | ------ | ----------------------------------------------- | ------------------------------------- |
+| staging     | [atlas-stg.openmrs.org](https://atlas-stg.openmrs.org) | `gode` | `openmrsinfra/atlas:staging`                    | every push to `main` that passes CI   |
+| production  | [atlas.openmrs.org](https://atlas.openmrs.org)         | `goba` | `openmrsinfra/atlas:production` (and `:latest`) | release tags (`4.0`, `4.1`), approved |
 
 The compose stacks that run them are in
 [openmrs-contrib-ansible-docker-compose](https://github.com/openmrs/openmrs-contrib-ansible-docker-compose),
@@ -203,17 +204,19 @@ only tags matching `[0-9]*.[0-9]*`, and waits for a required reviewer's approval
 ## Setting up an environment
 
 1. **A service account for the sheet.** In a Google Cloud project, create a service account (for
-   example `atlas-service@…`), enable the Sheets API, and create a JSON key for it. Share the
+   example `atlas-stg-sheets-access@atlas-stg-513316`), enable the Sheets API, and create a JSON key
+   for it. Share the
    sheet with the account as an Editor. If the organization blocks key creation
    (`iam.disableServiceAccountKeyCreation`), an organization policy admin has to allow it for that
    project.
 2. **Keycloak.** In the environment's realm, create the `atlas` and `atlas-service` clients as in
    [`service/README.md`](../service/README.md#keycloak), with the environment's site as the
    redirect and origin, and the `atlas-administrators` group.
-3. **The stack on `goba`**: the compose service above, with the settings in its `.env`.
+3. **The stack on its host** (`gode` for staging, `goba` for production): the compose service
+   above, with the settings in its `.env`.
 4. **The Apps Script** on the sheet, as in [`apps-script/README.md`](../apps-script/README.md),
    with `SERVICE_URL` set to the site and the stack's `PUBLISH_SECRET`.
-5. **DNS** for the site, pointing at `goba`, and a certificate on the host's proxy.
+5. **DNS** for the site, pointing at its host, and a certificate on the host's proxy.
 6. **Check:** `curl https://<site>/health`, publish from the sheet (Atlas › Publish), then
    `curl -sI https://<site>/data/atlas.json`.
 
@@ -225,9 +228,9 @@ is shared, so moving an environment means moving its files and its addresses. In
 
 1. **The image.** Staging: pushed by CI. Production: merge, tag `4.0` and approve it. Cloud Run
    keeps running the old release throughout.
-2. **The service account key.** Create a key for the environment's existing `atlas-service@`
-   account, which the sheet is already shared with (step 1 above).
-3. **The stack** on `goba`, with its settings. Copy the secrets from the project's Secret
+2. **The service account key**, for an account the sheet is shared with as an Editor (step 1
+   above).
+3. **The stack** on its host, with its settings. Copy the secrets from the project's Secret
    Manager: `atlas-publish-secret`, `atlas-keycloak-service-secret`, `atlas-mandrill-api-key`
    and `atlas-link-signing-key`. Reading them into the `.env` without printing them:
 
@@ -256,7 +259,7 @@ is shared, so moving an environment means moving its files and its addresses. In
    ```
 
 7. **The Apps Script's `SERVICE_URL`**: the site, instead of the Cloud Run address.
-8. **DNS**: point the site at `goba`. For production, lower the record's TTL a day ahead and
+8. **DNS**: point the site at its host. For production, lower the record's TTL a day ahead and
    switch at a quiet hour, since both Cloud Run and `goba` can take edits until it propagates.
 9. **Publish** from the sheet, and check the site. For production, once DNS has settled, run
    steps 4 and 6 again to catch logos uploaded to Cloud Run in the meantime.

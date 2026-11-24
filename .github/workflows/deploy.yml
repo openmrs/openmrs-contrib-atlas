@@ -1,7 +1,8 @@
 name: Deploy
 
 # Builds the Atlas image for one environment and pushes it to Docker Hub as openmrsinfra/atlas.
-# Called by ci.yml, never run on its own. The host (goba, on Jetstream 2) runs the image with its
+# Called by ci.yml, never run on its own. The host (gode for staging, goba for production, both on
+# Jetstream 2) runs the image with its
 # own settings and secrets, and picks up a new image when its tag changes; see infra/README.md.
 #
 #   staging     -> openmrsinfra/atlas:staging and :staging-<sha>

@@ -24,7 +24,7 @@ Some settings are decided when the image is built:
 
 `logo_url` cells hold absolute bucket addresses, such as `https://storage.googleapis.com/openmrs-atlas/logos/<id>.webp`. The upload check and the nightly sweep both compare them against the store's `publicPrefix`.
 
-On `goba`, OpenMRS stacks follow one pattern:
+On OpenMRS's Jetstream 2 servers (`gode` for staging apps, `goba` for production), stacks follow one pattern:
 
 - Images come from Docker Hub, with settings in a `.env` file next to `docker-compose.yml`.
 - A host reverse proxy terminates TLS and forwards to a mapped port.
@@ -157,17 +157,17 @@ It doesn't touch `changes`, `confirmed_at` or the queue: it's like an admin's ed
 
 **Staging (on the `jetstream` branch):**
 1. Push the branch. CI pushes `openmrsinfra/atlas:staging`.
-2. (manual) Create a key for `atlas-service@atlas-stg-513316`. Copy the staging secrets from Secret Manager into the `atlas-stg` `.env` on `goba`: the publish secret, the Keycloak service secret, the Mandrill key and the link key. Then set `SHEET_ID`, `SITE_URL`, `KEYCLOAK_*`, `EMAIL_ALLOWLIST` and `NOTICE_EMAIL`, and start the stack.
+2. (manual) Create a key for a service account the staging sheet is shared with (`atlas-stg-sheets-access@atlas-stg-513316`). Copy the staging secrets from Secret Manager into the `atlas-stg` `.env` on `gode`: the publish secret, the Keycloak service secret, the Mandrill key and the link key. Then set `SHEET_ID`, `SITE_URL`, `KEYCLOAK_*`, `EMAIL_ALLOWLIST` and `NOTICE_EMAIL`, and start the stack.
 3. (manual) Copy logos with `gcloud storage rsync gs://openmrs-atlas-stg/logos <volume>/logos` (history is optional).
 4. (manual) Pause the `atlas-nightly-publish` and `atlas-daily-reminders` jobs in the staging project.
 5. (manual) Run the address script on the staging sheet, from `https://storage.googleapis.com/openmrs-atlas-stg/logos/` to `https://atlas-stg.openmrs.org/data/logos/`: preview first, then apply.
 6. (manual) Set the staging Apps Script's `SERVICE_URL` to `https://atlas-stg.openmrs.org`.
-7. (manual) Point atlas-stg.openmrs.org at `goba`, and confirm TLS.
+7. (manual) Point atlas-stg.openmrs.org at `gode`, and confirm TLS.
 8. Publish from the sheet menu, then test on staging.
 
 **Production (after the merge):**
 1. Merge `jetstream` into `main`, then tag `4.0` and approve it. Cloud Run production keeps running `3.6` throughout.
-2. Repeat steps 2–7 for `openmrs-atlas` and atlas.openmrs.org, at a quiet hour, with a lowered TTL.
+2. Repeat steps 2–7 for `openmrs-atlas` and atlas.openmrs.org on `goba`, at a quiet hour, with a lowered TTL.
 3. After propagation, copy the logos and run the address script again to catch stragglers.
 
 **Rollback (either environment):**

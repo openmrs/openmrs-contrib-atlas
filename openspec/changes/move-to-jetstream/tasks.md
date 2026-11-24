@@ -28,7 +28,7 @@
 
 ## 4. Image
 
-- [ ] 4.1 Make `service/Dockerfile` a multi-stage build:
+- [x] 4.1 Make `service/Dockerfile` a multi-stage build:
   - a build stage runs `npm ci` and `npm run build -w web` with the `VITE_*` build arguments;
   - the runtime stage copies `web/dist`, sets `ATLAS_ENVIRONMENT` and the commit from build arguments, and creates `/atlas_data` owned by `node`, declared as a volume;
   - `.dockerignore` lets the web sources in.
@@ -44,7 +44,7 @@
   - drop the Google auth, Cloud Run and Firebase steps, and refuse any environment other than `staging` or `production`.
 
   Check it with `actionlint` if available, or by reading it, and confirm the tag logic against design Decision 7.
-- [ ] 5.2 In `.github/workflows/ci.yml`, add `jetstream` to the push branches. Let `deploy-staging` run for `refs/heads/jetstream` as well as `main`, with a comment that this is temporary. Verify that a push to `jetstream` publishes `openmrsinfra/atlas:staging` on Docker Hub.
+- [x] 5.2 In `.github/workflows/ci.yml`, add `jetstream` to the push branches. Let `deploy-staging` run for `refs/heads/jetstream` as well as `main`, with a comment that this is temporary. Verify that a push to `jetstream` publishes `openmrsinfra/atlas:staging` on Docker Hub.
 - [ ] 5.3 (manual) In GitHub Settings › Environments:
   - remove `GCP_*`, `SERVICE`, `HOSTING_TARGET` and `DATA_URL`;
   - keep `SITE_URL`, `KEYCLOAK_ISSUER`, `KEYCLOAK_CLIENT_ID` and `GA_ID`;
@@ -69,9 +69,9 @@
 ## 7. Checks and staging
 
 - [x] 7.1 Run the typecheck, lint, format check, unit tests, the e2e suite (`cd web && npx playwright test`) and `npm run build`. Check that `git grep -i "storage.googleapis\|firebase\|cloud run"` finds only history and archive mentions.
-- [ ] 7.2 (manual) Check that a key can be created for `atlas-service@atlas-stg-513316`, under the organization's key policy. Create it.
-- [ ] 7.3 (manual) Set up the `atlas-stg` compose stack on `goba` with the staging settings and secrets, and copy `gs://openmrs-atlas-stg/logos` into the volume.
-- [ ] 7.4 (manual) Pause the staging Cloud Scheduler jobs. Run the address script on the staging sheet: preview, then apply. Set the staging Apps Script's `SERVICE_URL`. Point atlas-stg.openmrs.org at `goba`.
+- [x] 7.2 (manual) Create a service account for the staging sheet (`atlas-stg-sheets-access@atlas-stg-513316`), share the sheet with it as an Editor, and create a key under the organization's key policy.
+- [ ] 7.3 (manual) Set up the `atlas-stg` compose stack on `gode` with the staging settings and secrets, and copy `gs://openmrs-atlas-stg/logos` into the volume.
+- [ ] 7.4 (manual) Pause the staging Cloud Scheduler jobs. Run the address script on the staging sheet: preview, then apply. Set the staging Apps Script's `SERVICE_URL`. Point atlas-stg.openmrs.org at `gode`.
 - [ ] 7.5 (manual) On staging:
   - load the map and the downloads;
   - sign in, then add a marker with a logo, edit it and add an editor;

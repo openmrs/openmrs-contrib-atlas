@@ -16,8 +16,8 @@ context: |
   - A Google Sheet is the source of truth. Visitors never read the sheet; they read a JSON
     snapshot the service publishes to its data folder, regenerated on every write and nightly.
   - One TypeScript service does all writes and publishing, runs the daily jobs, and serves the
-    front end and the published files. It runs as one Docker container per environment on goba
-    (OpenMRS infrastructure on Jetstream 2), from an openmrsinfra/atlas image on Docker Hub, with
+    front end and the published files. It runs as one Docker container per environment on
+    OpenMRS infrastructure on Jetstream 2 (staging on gode, production on goba), from an openmrsinfra/atlas image on Docker Hub, with
     its files in a backed-up volume. It reaches the sheet as a Google service account, with a key.
     The compose stacks and Ansible that run it live in OpenMRS's infrastructure repositories.
   - Sign-in is OpenMRS Keycloak (OIDC). Admins are the Keycloak group atlas-administrators.
