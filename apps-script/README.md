@@ -31,10 +31,10 @@ The code is plain JavaScript in [`src/Code.js`](src/Code.js), because Apps Scrip
    `src/appsscript.json`.
 4. Still in **Project Settings › Script Properties**, add:
 
-   | Property         | Value                                                                                                                      |
-   | ---------------- | -------------------------------------------------------------------------------------------------------------------------- |
-   | `SERVICE_URL`    | The publish service, e.g. `https://atlas-service-stg-….run.app`, or an ngrok/cloudflared URL for a service on your laptop. |
-   | `PUBLISH_SECRET` | The same value as the service's `PUBLISH_SECRET`.                                                                          |
+   | Property         | Value                                                                                                                                                        |
+   | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+   | `SERVICE_URL`    | The site, which serves `/publish`: `https://atlas-stg.openmrs.org` or `https://atlas.openmrs.org`, or an ngrok/cloudflared URL for a service on your laptop. |
+   | `PUBLISH_SECRET` | The same value as the service's `PUBLISH_SECRET`.                                                                                                            |
 
 5. Reload the sheet. Choose **Atlas › Install triggers** and approve the permissions.
 

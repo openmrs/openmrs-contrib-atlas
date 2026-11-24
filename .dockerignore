@@ -1,11 +1,11 @@
 **/node_modules
 **/dist
+**/test-results
+**/playwright-report
 .git
 .env
 .env.*
-web/*
-!web/package.json
+.data
 migration/fixtures
 openspec
 .claude
-test-results

@@ -36,9 +36,10 @@ function preloads(): Plugin {
       env = config.env as Record<string, string>;
     },
     transformIndexHtml(_html, ctx) {
-      const data = env.VITE_DATA_BASE_URL;
+      // Builds read the data from the service, on the site's own origin (src/config.ts).
+      const data = env.VITE_DATA_BASE_URL || "/data";
       const urls = [
-        ...(data ? [`${data}/${env.VITE_DATA_FILE || "atlas.json"}`] : []),
+        `${data}/${env.VITE_DATA_FILE || "atlas.json"}`,
         ...(env.VITE_MAP_STYLE_URL
           ? [env.VITE_MAP_STYLE_URL]
           : [DEFAULT_MAP_STYLE_URL, DEFAULT_COUNT_FONT_URL]),
@@ -71,8 +72,12 @@ export default defineConfig({
       },
     },
   },
-  // The service, run locally (see service/README.md), as Firebase Hosting forwards it in production.
-  server: { proxy: { "/api": "http://localhost:8080" } },
+  // The service, run locally (see service/README.md), which serves these paths in production.
+  server: {
+    proxy: Object.fromEntries(
+      ["/api", "/data", "/rss", "/marker"].map((path) => [path, "http://localhost:8080"]),
+    ),
+  },
   test: {
     environment: "jsdom",
     include: ["src/**/*.test.{ts,tsx}"],

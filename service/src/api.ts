@@ -128,8 +128,8 @@ export function createApi(deps: ApiDeps) {
   }
 
   /**
-   * Claimants hear the decision by email. Sent before the response, because Cloud Run throttles
-   * the CPU once a response has gone (specs/email-delivery). Failures are logged, never thrown.
+   * Claimants hear the decision by email, sent before the response (specs/email-delivery), so
+   * the admin's request finishes only once it has gone. Failures are logged, never thrown.
    */
   async function tellClaimants(decisions: ClaimDecision[] | undefined) {
     if (!deps.notices || !decisions?.length) return;

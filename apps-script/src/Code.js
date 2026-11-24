@@ -7,7 +7,7 @@
  * - Edits to the private tab are logged too, but don't publish: nothing public changed.
  * - The "Atlas" menu offers Publish now, Force publish and Install triggers.
  *
- * Script Properties: SERVICE_URL (the Cloud Run service) and PUBLISH_SECRET.
+ * Script Properties: SERVICE_URL (the Atlas site, which serves /publish) and PUBLISH_SECRET.
  * Edits made through the Sheets API (the service, the migration) do not fire onEdit.
  */
 

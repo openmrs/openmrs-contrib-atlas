@@ -5,18 +5,21 @@ schema: spec-driven
 # https://claude.ai/artifact/GKHHVKkbSRPtCpya5DZVfZ (requirement IDs such as M1, C4, O3 come from there).
 context: |
   Atlas 3.0 replaces Atlas 2.0 (the Express + MySQL app) at atlas.openmrs.org.
-  Work happens on the main branch, and every push to main deploys to atlas-stg.openmrs.org.
-  Production (atlas.openmrs.org, Google Cloud project openmrs-atlas) deploys only from approved
-  release tags of the form <major>.<minor>. Each environment has its own project.
+  Work happens on the main branch, and every push to main builds the openmrsinfra/atlas:staging
+  image that atlas-stg.openmrs.org runs. Production (atlas.openmrs.org, openmrsinfra/atlas:production)
+  is built only from approved release tags of the form <major>.<minor>.
   The 2.0 code remains on the 2.x branch (kept for the record, never built) and in git history; 3.0 shares no runtime code with it.
 
   Architecture decisions (settled; do not re-open in proposals without saying so):
-  - Static front end (TypeScript, Vite, React) on Firebase Hosting; MapLibre GL JS with
-    OpenFreeMap tiles. No Google Maps, no self-hosted tiles.
+  - Static front end (TypeScript, Vite, React); MapLibre GL JS with OpenFreeMap tiles. No Google
+    Maps, no self-hosted tiles.
   - A Google Sheet is the source of truth. Visitors never read the sheet; they read a JSON
-    snapshot in a public Cloud Storage bucket, regenerated on every write and nightly.
-  - One TypeScript service on Google Cloud Run does all writes and publishing. Everything
-    for an environment lives in that environment's own Google Cloud project.
+    snapshot the service publishes to its data folder, regenerated on every write and nightly.
+  - One TypeScript service does all writes and publishing, runs the daily jobs, and serves the
+    front end and the published files. It runs as one Docker container per environment on goba
+    (OpenMRS infrastructure on Jetstream 2), from an openmrsinfra/atlas image on Docker Hub, with
+    its files in a backed-up volume. It reaches the sheet as a Google service account, with a key.
+    The compose stacks and Ansible that run it live in OpenMRS's infrastructure repositories.
   - Sign-in is OpenMRS Keycloak (OIDC). Admins are the Keycloak group atlas-administrators.
     Editors are added by OpenMRS ID (username) only.
   - Email goes through Mandrill (Mailchimp Transactional). Staging only delivers to an allowlist.

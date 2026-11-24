@@ -10,6 +10,8 @@ dist/
 build/
 coverage/
 web/dev-data/live.json
+# The service's data folder when run locally (README.md).
+.data/
 test-results/
 playwright-report/
 

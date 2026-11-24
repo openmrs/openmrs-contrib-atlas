@@ -11,9 +11,10 @@ A world map of OpenMRS implementations, at [atlas.openmrs.org](https://atlas.ope
 
 - **Data lives in a Google Sheet.** One row per marker; private fields (owners, contact details)
   sit on a separate tab and are never published.
-- **Visitors never read the sheet.** A small Cloud Run service validates the sheet and publishes
-  snapshot files (`atlas.json`, GeoJSON, CSV) to a public Cloud Storage bucket, both whenever the
-  sheet is edited and nightly.
+- **Visitors never read the sheet.** A small service validates the sheet and publishes snapshot
+  files (`atlas.json`, GeoJSON, CSV), both whenever the sheet is edited and nightly. It runs as
+  one Docker container per environment on OpenMRS infrastructure, and also serves the map site
+  and the published files.
 - **The map is a static site** (React, Vite, MapLibre GL JS with OpenFreeMap tiles) that loads
   the snapshot.
 - **Sign-in** uses OpenMRS Keycloak. People add and edit markers on the site, and the service
@@ -35,7 +36,7 @@ change: proposed, applied, then archived into `openspec/specs/`. Background and 
 | -------------- | ------------------------------------------------------------------------- |
 | `shared/`      | Sheet schema, validation, snapshot builders. Pure TypeScript, no I/O.     |
 | `web/`         | The map site.                                                             |
-| `service/`     | Cloud Run service: validate and publish. Also `npm run setup:sheet`.      |
+| `service/`     | The service: validate, publish, serve. Also `npm run setup:sheet`.        |
 | `apps-script/` | Apps Script bound to the sheet: edit bookkeeping and publish triggers.    |
 | `migration/`   | One-off copy of Atlas 2.0 data into the sheet; `fixtures/` holds 2.0 SQL. |
 | `openspec/`    | Specs and change proposals.                                               |
@@ -65,12 +66,24 @@ Run `npx -w web playwright install chromium` once before the first `e2e` run.
 
 ### Local services
 
-`docker compose up -d` starts the local stack:
+`docker compose up -d` starts **mysql** on port 3306: an Atlas 2.0 database with the 2.0 schema
+and demo data (database `atlasdb`, user `atlas`, password `atlas`), the source for the migration.
 
-- **mysql** on port 3306: an Atlas 2.0 database with the 2.0 schema and demo data
-  (database `atlasdb`, user `atlas`, password `atlas`), the source for the migration.
-- **gcs** on port 4443: [fake-gcs-server](https://github.com/fsouza/fake-gcs-server) with a bucket
-  named `atlas-local`, standing in for Cloud Storage.
+### The service
+
+The service needs a [test sheet](#test-sheet). It writes published files, cards and logos to a
+local folder, `.data/` (git-ignored), and serves them as the deployed Atlas does:
+
+```sh
+SHEET_ID=<test sheet id> DATA_DIR=.data SITE_URL=http://localhost:5173 PUBLISH_SECRET=local \
+  SCHEDULED_JOBS=off node service/src/server.ts
+curl -X POST -H "Authorization: Bearer local" http://localhost:8080/publish
+npm run dev -w web       # forwards /api, /data, /rss and /marker to the service
+```
+
+`SCHEDULED_JOBS=off` keeps the nightly publish and the reminder job from starting on their own.
+See [`service/README.md`](service/README.md) for every setting, and
+[`infra/README.md`](infra/README.md) for building and running the Docker image.
 
 ## Test sheet
 
@@ -79,7 +92,7 @@ is no Sheets emulator, and the unit tests don't need one.
 
 1. **Create a development service account** in a personal Google Cloud project (free), and allow
    your account to act as it. Google no longer lets the gcloud CLI request the Sheets scope
-   directly, so local code reaches Sheets as this service account, just as the Cloud Run service
+   directly, so local code reaches Sheets as this service account, just as the deployed service
    does.
 
    ```sh

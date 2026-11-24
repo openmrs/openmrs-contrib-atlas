@@ -19,7 +19,7 @@ beforeEach(() => {
     siteUrl: "https://atlas.example.org",
     sheet,
     snapshots: new FakeBucket(),
-    auth: { publishSecret: "s", schedulerEmail: "", audience: "" },
+    auth: { publishSecret: "s" },
     now: () => now,
     editing: {
       store: sheet,

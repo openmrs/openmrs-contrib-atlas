@@ -1,17 +1,21 @@
 name: CI
 
 # Tests every pull request and push. After the tests pass:
-#   - a push to main (or "Run workflow" on main) deploys staging, atlas-stg.openmrs.org;
-#   - a release tag such as 3.0 (or "Run workflow" on an older tag, to roll back) deploys
-#     production, atlas.openmrs.org, once release-guard passes and a maintainer approves.
-# The deploy steps are in deploy.yml; the settings are in the GitHub Environments `staging` and
+#   - a push to main (or "Run workflow" on main) pushes openmrsinfra/atlas:staging, which
+#     atlas-stg.openmrs.org runs;
+#   - a release tag such as 4.0 (or "Run workflow" on an older tag, to roll back) pushes
+#     openmrsinfra/atlas:production and :latest, which atlas.openmrs.org runs, once
+#     release-guard passes and a maintainer approves.
+# The build is in deploy.yml; the settings are in the GitHub Environments `staging` and
 # `production`. See infra/README.md.
 
 on:
   pull_request:
     branches: [main]
   push:
-    branches: [main]
+    # TEMPORARY (openspec move-to-jetstream): jetstream builds the staging image until it is
+    # merged. Take it out of here and out of deploy-staging before merging.
+    branches: [main, jetstream]
     tags: ["*.*"]
   workflow_dispatch:
 
@@ -53,13 +57,13 @@ jobs:
 
   deploy-staging:
     needs: [check, e2e]
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
-    permissions:
-      contents: read
-      id-token: write
+    if: >-
+      github.event_name != 'pull_request' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/jetstream')
     uses: ./.github/workflows/deploy.yml
     with:
       environment: staging
+    secrets: inherit
 
   release-guard:
     # Only a tag named <major>.<minor> (3.0, 3.12) on a commit in main is a release. Runs before
@@ -86,12 +90,10 @@ jobs:
 
   deploy-production:
     needs: [check, e2e, release-guard]
-    permissions:
-      contents: read
-      id-token: write
     uses: ./.github/workflows/deploy.yml
     with:
       environment: production
+    secrets: inherit
 
   release:
     # Records the release on GitHub once production runs it. A redeploy (rollback) of a tag that

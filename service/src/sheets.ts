@@ -3,10 +3,46 @@ import { TABS, type Cell, type Problem } from "@openmrs-atlas/shared";
 import type { CellUpdate, EditStore, EditValues } from "./edits/index.ts";
 import type { SheetStore, SheetValues } from "./publish.ts";
 
-export function sheetsClient(): sheets_v4.Sheets {
+/** The parts of a service account's JSON key the Sheets client needs. */
+export interface ServiceAccountKey {
+  client_email: string;
+  private_key: string;
+  [field: string]: unknown;
+}
+
+/**
+ * A service account key from settings: the JSON key file's contents, as is or base64-encoded.
+ * Errors never include the value, which is a secret.
+ */
+export function parseServiceAccountKey(value: string): ServiceAccountKey {
+  const text = value.trim();
+  let key: unknown;
+  try {
+    key = JSON.parse(text.startsWith("{") ? text : Buffer.from(text, "base64").toString("utf8"));
+  } catch {
+    throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY is not a JSON key, or base64 of one");
+  }
+  const { client_email, private_key } = (key ?? {}) as Partial<ServiceAccountKey>;
+  if (typeof client_email !== "string" || typeof private_key !== "string") {
+    throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY has no client_email or private_key");
+  }
+  return key as ServiceAccountKey;
+}
+
+/**
+ * The Sheets API, as the service account whose key is in `GOOGLE_SERVICE_ACCOUNT_KEY`. Without
+ * one, Application Default Credentials: `gcloud auth application-default login` when run locally.
+ */
+export function sheetsClient(
+  keySetting: string | undefined = process.env.GOOGLE_SERVICE_ACCOUNT_KEY,
+): sheets_v4.Sheets {
+  const credentials = keySetting?.trim() ? parseServiceAccountKey(keySetting) : undefined;
   return sheetsApi({
     version: "v4",
-    auth: new auth.GoogleAuth({ scopes: ["https://www.googleapis.com/auth/spreadsheets"] }),
+    auth: new auth.GoogleAuth({
+      credentials,
+      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+    }),
   });
 }
 

@@ -9,7 +9,6 @@ import { FakeBucket, FakeSheet, ID, NOW, OLD, SECRET_EMAIL } from "./testing.ts"
 /** Specs: account-lookup, reminder-emails, entry-notices, and ID checks in marker-ownership. */
 
 const signer = linkSigner("k".repeat(43));
-const SCHEDULER = "scheduler@project.iam.gserviceaccount.com";
 const USERS: Record<string, Account> = {
   jdoe: { username: "jdoe", name: "Jane Doe", email: "jane@example.org", enabled: true },
   asmith: { username: "asmith", name: "Al Smith", email: "al@example.org", enabled: true },
@@ -63,8 +62,7 @@ function build(overrides: Partial<AppDeps> = {}) {
     siteUrl: "https://atlas.example.org",
     sheet,
     snapshots: bucket,
-    auth: { publishSecret: "publish-secret", schedulerEmail: SCHEDULER, audience: "aud" },
-    verify: async (token) => (token === "scheduler-oidc" ? SCHEDULER : undefined),
+    auth: { publishSecret: "publish-secret" },
     now: () => now,
     editing: {
       store: sheet,
@@ -424,7 +422,7 @@ describe("The daily job doesn't hold up edits (specs/reminder-emails)", () => {
   it("Scenario: Edit during the job, and Scenario: Overlapping runs", async () => {
     const { gate, open } = gated();
     mailer.gate = gate;
-    const run = call("scheduler-oidc", "POST", "/reminders");
+    const run = call("admin:boss", "POST", "/reminders");
     expect(await settledYet(run)).toBe(false);
     expect(mailer.sent).toHaveLength(1);
 
@@ -438,7 +436,7 @@ describe("The daily job doesn't hold up edits (specs/reminder-emails)", () => {
     expect(sheet.marker("name")).toBe("Renamed while sending");
 
     // A second run is refused and sends nothing.
-    const second = await call("scheduler-oidc", "POST", "/reminders");
+    const second = await call("admin:boss", "POST", "/reminders");
     expect(second.status).toBe(409);
     expect(mailer.sent).toHaveLength(1);
 
@@ -447,7 +445,7 @@ describe("The daily job doesn't hold up edits (specs/reminder-emails)", () => {
     expect(mailer.sent).toHaveLength(2);
     // Once finished, the job can run again (and finds nothing new to send).
     mailer.gate = undefined;
-    expect((await call("scheduler-oidc", "POST", "/reminders")).status).toBe(200);
+    expect((await call("admin:boss", "POST", "/reminders")).status).toBe(200);
     expect(mailer.sent).toHaveLength(2);
   });
 });
@@ -461,10 +459,8 @@ describe("The daily job is protected", () => {
     expect(accounts.calls).toEqual([]);
   });
 
-  it("runs for the scheduler and for signed-in admins", async () => {
-    const res = await call("scheduler-oidc", "POST", "/reminders");
-    expect(res.status).toBe(200);
-    expect(await res.json()).toMatchObject({ sent: 2 });
+  it("runs for the service's own daily job and for signed-in admins", async () => {
+    expect(await app.jobs.reminders()).toMatchObject({ status: "done", result: { sent: 2 } });
     expect(mailer.sent.map((e) => e.to).sort()).toEqual(["al@example.org", "jane@example.org"]);
     expect(JSON.stringify(sheet.tabs.reminders)).not.toContain("@");
     expect(JSON.stringify(sheet.tabs.reminders)).not.toContain(SECRET_EMAIL);
@@ -473,7 +469,8 @@ describe("The daily job is protected", () => {
 
   it("answers 503 when reminders aren't set up", async () => {
     const plain = build({ reminders: undefined });
-    expect((await call("scheduler-oidc", "POST", "/reminders", undefined, plain)).status).toBe(503);
+    expect((await call("admin:boss", "POST", "/reminders", undefined, plain)).status).toBe(503);
+    expect(await plain.jobs.reminders()).toEqual({ status: "off" });
     expect(
       (await call(undefined, "POST", "/api/reminder/view", { token: "x" }, plain)).status,
     ).toBe(401);

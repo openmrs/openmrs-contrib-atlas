@@ -53,7 +53,7 @@ function build(overrides: Partial<AppDeps> = {}) {
     siteUrl: "https://atlas.example.org",
     sheet,
     snapshots: bucket,
-    auth: { publishSecret: "s", schedulerEmail: "", audience: "" },
+    auth: { publishSecret: "s" },
     now: () => NOW,
     editing: {
       store: sheet,

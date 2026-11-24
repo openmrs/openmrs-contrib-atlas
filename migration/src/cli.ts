@@ -3,13 +3,17 @@
  * openspec specs/legacy-migration.
  *
  *   npm run migrate -- --dry-run
- *   npm run migrate -- --sheet <spreadsheet-id> --bucket <bucket> [--storage-endpoint <url>]
+ *   npm run migrate -- --sheet <spreadsheet-id> --data-dir <folder> --logo-base <address>
+ *
+ * Logos are written to <folder>/logos/, the Atlas's data folder or a copy of it, and their
+ * `logo_url` is <address>/<id>.webp, such as https://atlas.openmrs.org/data/logos/<id>.webp.
  *
  * MYSQL_URL (default mysql://atlas:atlas@localhost:3306/atlasdb) names the 2.0 database,
  * which is only ever read.
  */
+import { mkdir, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { parseArgs } from "node:util";
-import { Storage } from "@google-cloud/storage";
 import { auth, sheets as sheetsApi } from "@googleapis/sheets";
 import {
   COLUMNS,
@@ -30,22 +34,21 @@ const { values: args } = parseArgs({
   options: {
     "dry-run": { type: "boolean", default: false },
     sheet: { type: "string" },
-    bucket: { type: "string" },
-    "storage-endpoint": { type: "string" },
+    "data-dir": { type: "string" },
+    "logo-base": { type: "string" },
   },
 });
 const dryRun = args["dry-run"];
-if (!dryRun && (!args.sheet || !args.bucket)) {
-  console.error("usage: npm run migrate -- --dry-run | --sheet <id> --bucket <name>");
+if (!dryRun && (!args.sheet || !args["data-dir"] || !args["logo-base"])) {
+  console.error(
+    "usage: npm run migrate -- --dry-run | --sheet <id> --data-dir <folder> --logo-base <address>",
+  );
   process.exit(1);
 }
 
 const mysqlUrl = process.env.MYSQL_URL ?? "mysql://atlas:atlas@localhost:3306/atlasdb";
-const endpoint = args["storage-endpoint"];
-const publicBase = endpoint
-  ? `${endpoint.replace(/\/$/, "")}/${args.bucket}`
-  : `https://storage.googleapis.com/${args.bucket ?? "<bucket>"}`;
-const logoUrl = (id: string) => `${publicBase}/logos/${id}.webp`;
+const logoBase = (args["logo-base"] ?? "<logo-base>").replace(/\/$/, "");
+const logoUrl = (id: string) => `${logoBase}/${id}.webp`;
 
 async function readAtlas2() {
   const db = await mysql.createConnection({ uri: mysqlUrl, dateStrings: true });
@@ -125,16 +128,10 @@ async function main() {
 
   if (dryRun) return;
 
-  const storage = new Storage(endpoint ? { apiEndpoint: endpoint, projectId: "local" } : {});
-  const bucket = storage.bucket(args.bucket!);
-  for (const [id, logo] of logos) {
-    await bucket.file(`logos/${id}.webp`).save(logo, {
-      // A logo is a few KB: one request, not a resumable upload session.
-      resumable: false,
-      metadata: { contentType: "image/webp", cacheControl: "public, max-age=86400" },
-    });
-  }
-  console.log(`uploaded ${report.logos} logos to ${publicBase}/logos/`);
+  const folder = join(args["data-dir"]!, "logos");
+  await mkdir(folder, { recursive: true });
+  for (const [id, logo] of logos) await writeFile(join(folder, `${id}.webp`), logo);
+  console.log(`wrote ${report.logos} logos to ${folder}, served at ${logoBase}/`);
 
   const client = sheetsApi({
     version: "v4",

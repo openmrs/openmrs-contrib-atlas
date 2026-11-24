@@ -99,7 +99,7 @@ A small scheduler in the service:
 
 Each run goes through the existing write queue, so it never overlaps a save. `SCHEDULED_JOBS=off` turns both off, and the root README's local-development instructions set it.
 
-`auth.ts` drops the Google OIDC branch, along with `SCHEDULER_SA_EMAIL` and `SERVICE_URL`. `/publish` still accepts the Apps Script's secret, and an admin's token with `force`. `/reminders` still accepts an admin. If the container is down at 03:00, that night's run is missed. The next night's run corrects it, as the nightly requirement already allows.
+`auth.ts` drops the Google OIDC branch, along with `SCHEDULER_SA_EMAIL` and `SERVICE_URL`. `/publish` still accepts only the Apps Script's secret, with or without `force`. `/reminders` still accepts a signed-in admin. If the container is down at 03:00, that night's run is missed. The next night's run corrects it, as the nightly requirement already allows.
 
 *Alternative:* a cron container that posts to `/publish` with a token. That needs a new secret, or a way to tell the scheduler apart from the Apps Script, plus a second container, so it doesn't earn its place.
 
