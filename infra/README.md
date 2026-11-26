@@ -1,112 +1,211 @@
 # Environments
 
-Atlas runs in two Google Cloud projects, each set up the same way by [`setup.sh`](setup.sh):
+Each environment runs as one Docker container on an OpenMRS server on Jetstream 2, from an image
+on Docker Hub. Staging runs on `gode`, with the staging versions of the other OpenMRS apps, and
+production on `goba`:
 
-| Environment | Site                                                   | Project            | Deploys from                          |
-| ----------- | ------------------------------------------------------ | ------------------ | ------------------------------------- |
-| staging     | [atlas-stg.openmrs.org](https://atlas-stg.openmrs.org) | `atlas-stg-513316` | every push to `main` that passes CI   |
-| production  | [atlas.openmrs.org](https://atlas.openmrs.org)         | `openmrs-atlas`    | release tags (`3.0`, `3.1`), approved |
+| Environment | Site                                                   | Host   | Image                                           | Built from                            |
+| ----------- | ------------------------------------------------------ | ------ | ----------------------------------------------- | ------------------------------------- |
+| staging     | [atlas-stg.openmrs.org](https://atlas-stg.openmrs.org) | `gode` | `openmrsinfra/atlas:staging`                    | every push to `main` that passes CI   |
+| production  | [atlas.openmrs.org](https://atlas.openmrs.org)         | `goba` | `openmrsinfra/atlas:production` (and `:latest`) | release tags (`4.0`, `4.1`), approved |
 
-The script creates everything except the parts that need a browser (Firebase, the sheet,
-Keycloak, DNS). It is safe to run again, and it records the setup until it moves to Terraform.
-Its per-environment settings are in [`staging.env`](staging.env) and
-[`production.env`](production.env).
+The compose stacks that run them are in
+[openmrs-contrib-ansible-docker-compose](https://github.com/openmrs/openmrs-contrib-ansible-docker-compose),
+under `files/atlas-stg/` and `files/atlas/`, and are deployed with the Ansible in
+[openmrs-contrib-itsmresources](https://github.com/openmrs/openmrs-contrib-itsmresources). The
+host picks up a new image when its tag changes (`deploy-compose-if-newer`). The host's reverse
+proxy terminates TLS and forwards to the container.
 
-## Resources
+The container needs nothing else from Google Cloud except the Sheets API. The sheet is still the
+source of truth, Keycloak (`id-stg.openmrs.org` / `id.openmrs.org`, realm `openmrs`) still signs
+people in, and Mandrill still sends the email.
 
-Names that differ are shown as staging / production. Everything else is named the same in both
-projects.
+## The image
 
-| Resource                       | Name                                                                                               |
-| ------------------------------ | -------------------------------------------------------------------------------------------------- |
-| Public bucket                  | `gs://openmrs-atlas-stg` / `gs://openmrs-atlas` (CORS, 90-day `history/` rule, 30-day soft delete) |
-| Publish service (Cloud Run)    | `atlas-service-stg` / `atlas-service`, runs as `atlas-service@…`                                   |
-| Shared secret (Secret Manager) | `atlas-publish-secret`                                                                             |
-| Other secrets                  | `atlas-keycloak-service-secret`, `atlas-mandrill-api-key`, `atlas-link-signing-key`                |
-| Nightly publish                | Cloud Scheduler job `atlas-nightly-publish`, 03:00 UTC                                             |
-| Daily reminders                | Cloud Scheduler job `atlas-daily-reminders`, 14:00 UTC                                             |
-| Service images                 | Artifact Registry repository `atlas`                                                               |
-| CI deploys                     | `atlas-deploy@…` through Workload Identity Federation                                              |
-| Map site                       | Firebase Hosting site `atlas-stg-513316` / `openmrs-atlas`                                         |
-| Keycloak                       | `id-stg.openmrs.org` / `id.openmrs.org`, realm `openmrs`                                           |
+`service/Dockerfile` builds one image: the service, plus the map site built for one environment.
+The site's settings are fixed when it is built, so staging and production are separate builds.
 
-The service accounts are `atlas-service` (reads and writes the sheet, writes the bucket, reads
-the secrets), `atlas-scheduler` (signs the scheduled requests) and `atlas-deploy` (GitHub
-Actions). Each project's deploy account trusts only its own environment: staging accepts tokens
-from pushes to `main`; production accepts only tokens issued to the `production` GitHub
-environment on a tag, which GitHub grants only after the release checks and approval.
+| Tag                    | Pushed by                                              |
+| ---------------------- | ------------------------------------------------------ |
+| `staging`              | every push to `main` that passes CI                    |
+| `staging-<sha>`        | the same, one per commit, to pin or compare            |
+| `production`, `latest` | an approved release                                    |
+| `<release>` (`4.0`)    | the same, one per release, to pin or roll back by hand |
 
-`firebase.json` lists one hosting target per environment, because its rewrites and redirects
-can't read variables. Each sends `/api/**` and the `/marker/**` permalink pages to its Cloud Run
-service. They must differ only in the service and bucket names, and the Keycloak host in the
-security headers. [`firebase.test.ts`](firebase.test.ts) fails CI if they drift apart.
+In the container:
 
-### Security headers
+- **Port 8080**, plain HTTP. Put the host's TLS proxy in front. It must allow request bodies of at
+  least 3 MB, for logo uploads (2 MB at most).
+- **`/atlas_data`**, the data folder: published files, `history/`, `cards/` and `logos/`. Mount a
+  named volume here and back it up (see below). A new volume takes the folder's owner, `node`.
+- **`/health`** answers `{"ok":true,"environment":…,"commit":…}`. The image has a Docker
+  `HEALTHCHECK` that calls it with Node's `fetch` (there's no `curl` in the image), and the example
+  stack below repeats it, as OpenMRS stacks give every container a healthcheck.
+- **One container per environment, always.** Sheet writes and publishes are queued in memory, so
+  two containers would overwrite each other.
+- The service runs its own daily jobs: the nightly publish at 03:00 UTC and the reminders at
+  14:00 UTC (service/README.md, "Daily jobs").
+- Logs are one JSON object per line on standard output: `docker logs`.
 
-Both targets send security headers (specs/deployment):
+### Settings
 
-- **The site's two pages** (`{/,/index.html}` and `/reminder{,.html}`) get an enforced
-  Content-Security-Policy. It allows only what the site uses: itself, the bucket
-  (`storage.googleapis.com`), OpenFreeMap, Nominatim, the environment's Keycloak and Google
-  Analytics.
-- **Everything** (`**`) gets `X-Content-Type-Options: nosniff` and a `Permissions-Policy` that
-  turns off unused device features.
-- **`Referrer-Policy`** is `strict-origin-when-cross-origin` on the map page and `no-referrer` on the
-  reminder page.
-- **Not on `/marker/**`:** the policy isn't applied to the permalink pages, whose redirect is an
-  inline script.
+Set these in the stack's `.env`. The full list, with defaults, is in
+[`service/README.md`](../service/README.md#configuration).
 
-**When the site starts using a new origin**, add it to the right directive in both targets: for
-example, a new API to `connect-src`, or new images to `img-src`. The e2e tests run under the
-staging target's policy and fail on any violation, naming the directive that blocked it.
+| Variable                         | staging                                     | production                              |
+| -------------------------------- | ------------------------------------------- | --------------------------------------- |
+| `SHEET_ID`                       | the staging sheet's id                      | the production sheet's id               |
+| `SITE_URL`                       | `https://atlas-stg.openmrs.org`             | `https://atlas.openmrs.org`             |
+| `KEYCLOAK_ISSUER`                | `https://id-stg.openmrs.org/realms/openmrs` | `https://id.openmrs.org/realms/openmrs` |
+| `KEYCLOAK_CLIENT_ID`             | `atlas`                                     | `atlas`                                 |
+| `KEYCLOAK_SERVICE_CLIENT_ID`     | `atlas-service`                             | `atlas-service`                         |
+| `EMAIL_ALLOWLIST`                | addresses staging may email                 | unset (everyone)                        |
+| `NOTICE_EMAIL`                   | optional                                    | `infrastructure@openmrs.org`            |
+| Secrets                          |                                             |                                         |
+| `GOOGLE_SERVICE_ACCOUNT_KEY`     | the Sheets service account's JSON key       | the same, for production's account      |
+| `PUBLISH_SECRET`                 | shared with the sheet's Apps Script         | its own value                           |
+| `KEYCLOAK_SERVICE_CLIENT_SECRET` | the `atlas-service` client's secret         | its own value                           |
+| `MANDRILL_API_KEY`               | Atlas's Mandrill key (Messages › Send only) | the same key, or its own                |
+| `LINK_SIGNING_KEY`               | `openssl rand -base64 32`                   | its own value                           |
 
-### Restoring a deleted file
+The staging image emails only its allowlist, emails no one when it is unset, and refuses to start
+when it is `*`, whatever the host's settings say. Only the production image includes Google
+Analytics.
 
-Each bucket keeps deleted and overwritten files for 30 days (soft delete, set by `setup.sh`). The
-nightly logo sweep deletes logos no marker uses, so a logo lost to a sheet mistake can be brought
-back. List what was deleted under `logos/`, with each file's generation and deletion time:
+`GOOGLE_SERVICE_ACCOUNT_KEY` is the JSON key of the service account the sheet is shared with as
+an Editor, either as is on one line or base64-encoded (`base64 -i key.json`). Treat it like any
+other secret; if it leaks, delete the key in Google Cloud and create another.
 
-```sh
-gcloud storage ls --soft-deleted --long "gs://<bucket>/logos/**"
+### Example compose service
+
+A starting point for `files/atlas-stg/docker-compose.yml`. Production is the same with `:production`,
+its own names, and no `EMAIL_ALLOWLIST` line. Each setting is listed under `environment:` and filled
+in from the stack's `.env`. A setting that is missing from both reaches Atlas as an empty string,
+which the service treats as unset everywhere except `EMAIL_ALLOWLIST`.
+
+```yaml
+services:
+  atlas:
+    image: openmrsinfra/atlas:staging
+    restart: always
+    # Each setting comes from the stack's .env. Compose doesn't pass .env into containers itself.
+    environment:
+      - SHEET_ID=${SHEET_ID}
+      - SITE_URL=${SITE_URL}
+      - KEYCLOAK_ISSUER=${KEYCLOAK_ISSUER}
+      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
+      - KEYCLOAK_SERVICE_CLIENT_ID=${KEYCLOAK_SERVICE_CLIENT_ID}
+      - KEYCLOAK_SERVICE_CLIENT_SECRET=${KEYCLOAK_SERVICE_CLIENT_SECRET}
+      - GOOGLE_SERVICE_ACCOUNT_KEY=${GOOGLE_SERVICE_ACCOUNT_KEY}
+      - PUBLISH_SECRET=${PUBLISH_SECRET}
+      - MANDRILL_API_KEY=${MANDRILL_API_KEY}
+      - LINK_SIGNING_KEY=${LINK_SIGNING_KEY}
+      - NOTICE_EMAIL=${NOTICE_EMAIL:-}
+      # Staging only. Leave this line out of production's stack: there, an empty value would
+      # mean "email no one", and unset means everyone.
+      - EMAIL_ALLOWLIST=${EMAIL_ALLOWLIST}
+    ports:
+      - "8548:8080"
+    volumes:
+      - atlas-data:/atlas_data
+    # The same check the image has, spelled out as the OpenMRS stacks do. No curl in the image,
+    # so Node's fetch: healthy when /health answers 200 within 5 seconds.
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:8080/health').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+  backup:
+    image: openmrsinfra/cron-backup:latest
+    depends_on:
+      - atlas
+    volumes:
+      - atlas-data:/atlas_data
+      - ${BACKUP_DIR-/opt/backups}:/backup
+    environment:
+      - DIRS=/atlas_data:atlas-stg-data
+      - SCHEDULE=0 0 * * *
+    restart: always
+    healthcheck:
+      test: "exit 0"
+
+volumes:
+  atlas-data:
 ```
 
-Restore one under its old name, using the generation from the listing:
+### Building it yourself
 
 ```sh
-gcloud storage restore "gs://<bucket>/logos/<name>.webp#<generation>"
+docker build -f service/Dockerfile -t atlas:staging \
+  --build-arg ATLAS_ENVIRONMENT=staging --build-arg ATLAS_COMMIT="$(git rev-parse HEAD)" \
+  --build-arg VITE_SITE_URL=https://atlas-stg.openmrs.org \
+  --build-arg VITE_KEYCLOAK_ISSUER=https://id-stg.openmrs.org/realms/openmrs \
+  --build-arg VITE_KEYCLOAK_CLIENT_ID=atlas .
+docker run --rm -p 8080:8080 -v atlas-data:/atlas_data --env-file .env.staging atlas:staging
+```
+
+## Security headers
+
+The service sends the headers itself ([`service/src/site.ts`](../service/src/site.ts),
+specs/deployment):
+
+- **The site's two pages** (`/` and `/reminder`) get an enforced Content-Security-Policy. It allows
+  only what the site uses: itself, OpenFreeMap, Nominatim, the environment's Keycloak (from
+  `KEYCLOAK_ISSUER`) and Google Analytics.
+- **Everything** gets `X-Content-Type-Options: nosniff` and a `Permissions-Policy` that turns off
+  unused device features.
+- **`Referrer-Policy`** is `strict-origin-when-cross-origin` on the map page and `no-referrer` on the
+  reminder page.
+- **Not on `/marker/*`:** the policy isn't applied to the permalink pages, whose redirect is an
+  inline script.
+
+**When the site starts using a new origin**, add it to the right directive in
+`contentSecurityPolicy`: for example, a new API to `connect-src`, or new images to `img-src`. The
+e2e tests run under the same policy and fail on any violation, naming the directive that blocked
+it.
+
+## Backups and restoring a file
+
+The host backs up the `/atlas_data` volume every night with `openmrsinfra/cron-backup`. The
+nightly logo sweep deletes only logos that no marker has used for more than a day, so every logo
+it deletes is in at least one backup. To restore a file, unpack it from the most recent backup
+that has it (`cron-backup` writes them to the host's `BACKUP_DIR`), then copy it back under the
+same name:
+
+```sh
+docker cp <restored>/logos/<name>.webp <container>:/atlas_data/logos/<name>.webp
 ```
 
 The marker shows it again as soon as its `logo_url` points to it. Snapshots and social cards can be
-restored the same way, though the next publish rewrites them anyway.
+restored the same way, though the next publish rewrites them anyway. To roll back a bad publish,
+see [`service/README.md`](../service/README.md#rolling-back-a-bad-publish).
 
 ## GitHub environments
 
-Deploy settings live in the GitHub Environments `staging` and `production` (Settings ›
-Environments). There are deliberately no repository variables: a job that uses an environment
-also sees repository variables, so a setting missing from production would silently take the
-staging value. Each deploy starts by failing if a required variable is empty.
+The settings the image is built with live in the GitHub Environments `staging` and `production`
+(Settings › Environments). There are deliberately no repository variables: a job that uses an
+environment also sees repository variables, so a setting missing from production would silently
+take the staging value. Each deploy starts by failing if a required variable is empty.
 
-| Variable                            | staging                                            | production                                     |
-| ----------------------------------- | -------------------------------------------------- | ---------------------------------------------- |
-| `GCP_PROJECT`                       | `atlas-stg-513316`                                 | `openmrs-atlas`                                |
-| `GCP_REGION`                        | `us-central1`                                      | `us-central1`                                  |
-| `GCP_WIF_PROVIDER`, `GCP_DEPLOY_SA` | printed by `setup.sh`                              | printed by `setup.sh`                          |
-| `SERVICE`                           | `atlas-service-stg`                                | `atlas-service`                                |
-| `HOSTING_TARGET`                    | `staging`                                          | `production`                                   |
-| `SITE_URL`                          | `https://atlas-stg.openmrs.org`                    | `https://atlas.openmrs.org`                    |
-| `DATA_URL`                          | `https://storage.googleapis.com/openmrs-atlas-stg` | `https://storage.googleapis.com/openmrs-atlas` |
-| `KEYCLOAK_ISSUER`                   | `https://id-stg.openmrs.org/realms/openmrs`        | `https://id.openmrs.org/realms/openmrs`        |
-| `KEYCLOAK_CLIENT_ID`                | `atlas`                                            | `atlas`                                        |
-| `EMAIL_ALLOWLIST`                   | addresses staging may email                        | at first `burke@openmrs.org`; then removed     |
-| `NOTICE_EMAIL`                      | optional                                           | `infrastructure@openmrs.org`                   |
-| `GA_ID`                             | not used                                           | `G-9XFSTG4KZ0` (required)                      |
+| Variable             | staging                                     | production                              |
+| -------------------- | ------------------------------------------- | --------------------------------------- |
+| `SITE_URL`           | `https://atlas-stg.openmrs.org`             | `https://atlas.openmrs.org`             |
+| `KEYCLOAK_ISSUER`    | `https://id-stg.openmrs.org/realms/openmrs` | `https://id.openmrs.org/realms/openmrs` |
+| `KEYCLOAK_CLIENT_ID` | `atlas`                                     | `atlas`                                 |
+| `GA_ID`              | not used                                    | `G-9XFSTG4KZ0` (required)               |
 
-The deploy workflow enforces two rules whatever these say:
-
-- **Only production may email people who aren't on an allowlist.** Staging without
-  `EMAIL_ALLOWLIST` emails no one, and a `*` there fails the deploy. Production without it emails
-  everyone (the service is given `EMAIL_ALLOWLIST=*`).
-- **Only production is built with Google Analytics.**
+Pushing to Docker Hub uses the `DOCKER_HUB_USERNAME` and `DOCKER_HUB_TOKEN` secrets. The workflow
+chooses the tags from the environment, never from a setting: only the `production` job, which
+runs only for a release tag after `release-guard` passes and a maintainer approves, can push
+`production`, `latest` or a release number.
 
 The `staging` environment accepts deploys only from `main`. The `production` environment accepts
 only tags matching `[0-9]*.[0-9]*`, and waits for a required reviewer's approval.
@@ -116,119 +215,111 @@ only tags matching `[0-9]*.[0-9]*`, and waits for a required reviewer's approval
 - **Release:** tag a commit on `main` as `<major>.<minor>` and push the tag:
 
   ```sh
-  git tag -a 3.1 -m "Atlas 3.1" && git push origin 3.1
+  git tag -a 4.1 -m "Atlas 4.1" && git push origin 4.1
   ```
 
   CI runs the tests on the tagged commit, `release-guard` checks the tag is a release on `main`,
   and `deploy-production` then waits for approval (Actions › the run › _Review deployments_).
-  After it deploys, a GitHub Release is created with notes generated from the commits since the
-  last release. Any other tag (`3.1.1`, `v3.1`, `3.1-rc1`) runs the tests and fails
-  `release-guard`, deploying nothing.
+  It then pushes the production image, and the host picks it up. A GitHub Release is created with
+  notes generated from the commits since the last release. Any other tag (`4.1.1`, `v4.1`,
+  `4.1-rc1`) runs the tests and fails `release-guard`, pushing nothing.
 
 - **Roll back:** Actions › CI › _Run workflow_, choose the older tag under _Use workflow from_.
-  It runs the same checks and approval. Its existing GitHub Release is left alone. The sheet and
-  the published data aren't touched. Note that a tag runs the workflow as it was at that tag.
+  It runs the same checks and approval, and pushes that release's image as `production` and
+  `latest` again. Its existing GitHub Release is left alone. The sheet and the published data
+  aren't touched. Note that a tag runs the workflow as it was at that tag. In a hurry, the host's
+  compose file can also be pointed at a release's own tag, such as `openmrsinfra/atlas:4.0`.
 
 - **Release tags are fixed.** A tag ruleset lets only admins and maintainers create tags matching
   `[0-9]*.[0-9]*`, and lets no one move or delete them.
 
 ## Setting up an environment
 
-Production's steps are the same as staging's were; the checklist below records the order. Do it
-with a project owner's gcloud account (`CLOUDSDK_ACTIVE_CONFIG_NAME=openmrs`).
-
-1. **Add Firebase to the project.** At <https://console.firebase.google.com>, choose _Create a
-   project_, then pick the existing Google Cloud project. Skip Google Analytics (the site uses the
-   OpenMRS measurement ID instead). Open _Hosting_ and click _Get started_ to create the default
-   site, which is named after the project. Skip the CLI steps; CI does the deploys.
-2. **Create the sheet** in the OpenMRS Google Drive ("OpenMRS Atlas", or "OpenMRS Atlas
-   (staging)") and copy its id from the URL.
-3. **Run the setup script:**
-
-   ```sh
-   CLOUDSDK_ACTIVE_CONFIG_NAME=openmrs SHEET_ID=<sheet id> bash infra/setup.sh <environment>
-   ```
-
-   It ends by printing the GitHub environment variables and the Apps Script properties. In
-   production it creates the reminder job paused. Now that the service account exists, share
-   the sheet with `atlas-service@<project>.iam.gserviceaccount.com` as an Editor.
-
-4. **Set the GitHub environment variables** it printed, plus those in the table above:
-   `gh variable set <NAME> --env <environment> --body <value>`.
-5. **Prepare the sheet** as the service account. This replaces your Application Default
-   Credentials, so sign in again as yourself afterwards:
-
-   ```sh
-   gcloud auth application-default login \
-     --impersonate-service-account=atlas-service@<project>.iam.gserviceaccount.com
-   npm run setup:sheet -- <sheet id>
-   ```
-
-   Then load the data with [`migration/README.md`](../migration/README.md), using
-   `--sheet <sheet id> --bucket <bucket>`, dry run first.
-
-6. **Install the Apps Script** on the sheet as in [`apps-script/README.md`](../apps-script/README.md),
-   with the `SERVICE_URL` printed in step 3 and the secret from
-   `gcloud secrets versions access latest --secret=atlas-publish-secret --project=<project>`.
-7. **Keycloak.** In the environment's realm, create the `atlas` and `atlas-service` clients as in
+1. **A service account for the sheet.** In a Google Cloud project, create a service account (for
+   example `atlas-stg-sheets-access@atlas-stg-513316`), enable the Sheets API, and create a JSON key
+   for it. Share the
+   sheet with the account as an Editor. If the organization blocks key creation
+   (`iam.disableServiceAccountKeyCreation`), an organization policy admin has to allow it for that
+   project.
+2. **Keycloak.** In the environment's realm, create the `atlas` and `atlas-service` clients as in
    [`service/README.md`](../service/README.md#keycloak), with the environment's site as the
    redirect and origin, and the `atlas-administrators` group.
-8. **Secrets.** `setup.sh` generated `atlas-link-signing-key` and created the other two empty. Add
-   their values without putting them on the command line:
+3. **The stack on its host** (`gode` for staging, `goba` for production): the compose service
+   above, with the settings in its `.env`.
+4. **The Apps Script** on the sheet, as in [`apps-script/README.md`](../apps-script/README.md),
+   with `SERVICE_URL` set to the site and the stack's `PUBLISH_SECRET`.
+5. **DNS** for the site, pointing at its host, and a certificate on the host's proxy.
+6. **Check:** `curl https://<site>/health`, publish from the sheet (Atlas › Publish), then
+   `curl -sI https://<site>/data/atlas.json`.
+
+## Moving an environment off Google Cloud
+
+Until 4.0, each environment ran on Google Cloud: Cloud Run for the service, Firebase Hosting for
+the site, a Cloud Storage bucket for the files, and Cloud Scheduler for the daily jobs. The sheet
+is shared, so moving an environment means moving its files and its addresses. In order:
+
+1. **The image.** Staging: pushed by CI. Production: merge, tag `4.0` and approve it. Cloud Run
+   keeps running the old release throughout.
+2. **The service account key**, for an account the sheet is shared with as an Editor (step 1
+   above).
+3. **The stack** on its host, with its settings. Copy the secrets from the project's Secret
+   Manager: `atlas-publish-secret`, `atlas-keycloak-service-secret`, `atlas-mandrill-api-key`
+   and `atlas-link-signing-key`. Reading them into the `.env` without printing them:
 
    ```sh
-   gcloud secrets versions add atlas-keycloak-service-secret --project=<project> --data-file=-
-   gcloud secrets versions add atlas-mandrill-api-key --project=<project> --data-file=-
+   gcloud secrets versions access latest --secret=<name> --project=<project>
    ```
 
-   (Paste the value, then press Ctrl-D.) The Mandrill key should be Atlas's own, with only
-   Messages › Send.
-
-9. **Deploy**, then check:
+4. **The logos.** Copy them from the bucket into the volume. The hosts have no `gcloud`, so
+   download them on a machine that does, copy them to the host, and put them in the volume with a
+   throwaway container that also gives them to `node` (uid 1000):
 
    ```sh
-   curl https://<service url>/health
-   gcloud scheduler jobs run atlas-nightly-publish --location=us-central1 --project=<project>
-   curl -sI https://storage.googleapis.com/<bucket>/atlas.json
+   # On a machine with gcloud
+   gcloud storage rsync -r gs://<bucket>/logos ./logos
+   ls logos | wc -l
+   scp -r logos <host>:~/atlas-logos
+
+   # On the host: find the volume (`docker volume ls`), such as atlas-stg_atlas-data
+   docker run --rm -v <volume>:/atlas_data -v ~/atlas-logos:/incoming:ro alpine sh -c \
+     'mkdir -p /atlas_data/logos && cp -a /incoming/. /atlas_data/logos/ &&
+      chown -R 1000:1000 /atlas_data/logos && ls /atlas_data/logos | wc -l'
    ```
 
-10. **Add the custom domain.** In Firebase Hosting choose _Add custom domain_ and use Quick setup.
-    In Cloudflare, add the records it shows, with the proxy off (DNS only). The certificate can
-    take up to a day.
+   The two counts should match. Atlas can keep running, and the copies can be deleted afterwards.
 
-### Production checklist
+5. **Pause Cloud Scheduler**, so Cloud Run's nightly sweep doesn't see the moved logos as unused:
 
-Done together with the maintainer, in this order.
+   ```sh
+   gcloud scheduler jobs pause atlas-nightly-publish --location=us-central1 --project=<project>
+   gcloud scheduler jobs pause atlas-daily-reminders --location=us-central1 --project=<project>
+   ```
 
-- [ ] Firebase added to `openmrs-atlas`, Hosting site `openmrs-atlas` created (step 1)
-- [ ] Production sheet created (step 2)
-- [ ] `bash infra/setup.sh production` run (step 3); reminder job paused; sheet shared with
-      `atlas-service@openmrs-atlas.iam.gserviceaccount.com`
-- [ ] `production` environment variables set (step 4), including `GA_ID`,
-      `EMAIL_ALLOWLIST=burke@openmrs.org` and `NOTICE_EMAIL=infrastructure@openmrs.org`
-- [ ] Sheet prepared; a first migration loaded to rehearse (step 5)
-- [ ] Apps Script installed (step 6)
-- [ ] Keycloak on `id.openmrs.org`: `atlas` client for `https://atlas.openmrs.org` (and
-      `https://openmrs-atlas.web.app` until the DNS switch), `atlas-service` client,
-      `atlas-administrators` group with the admins (step 7)
-- [ ] Secret values added (step 8)
-- [ ] `npm run report:accounts -w service -- <sheet id>` with production's issuer and service
-      secret (see the script's header), to check owners and editors resolve to accounts
-- [ ] First release: tag `3.0` on `main`, approve, check the site at
-      `https://openmrs-atlas.web.app` and the service (step 9); rewrite the generated release notes
-- [ ] Final migration from 2.0 into the production sheet, right before the switch
-- [ ] Custom domain `atlas.openmrs.org` added in Firebase and DNS switched in Cloudflare (step 10)
-- [ ] Reminder job resumed:
-      `gcloud scheduler jobs resume atlas-daily-reminders --location=us-central1 --project=openmrs-atlas`
-- [ ] After reviewing the first day's reminders in the `reminders` tab, `EMAIL_ALLOWLIST` removed
-      from the `production` environment and production redeployed (_Run workflow_ on the tag)
+6. **The logo addresses.** From the repository root, with the environment's settings loaded
+   (the script doesn't read `.env` itself), preview, then apply (service/README.md, "Moving logo
+   addresses"):
 
-## If the setup script fails
+   ```sh
+   set -a && . ./.env && set +a      # GOOGLE_SERVICE_ACCOUNT_KEY and SHEET_ID
+   npm run move:logos -w service -- "$SHEET_ID" \
+     --from https://storage.googleapis.com/<bucket>/logos/ --to https://<site>/data/logos/
+   ```
 
-- **Public access to the bucket, or `--allow-unauthenticated`, is refused.** The organization
-  enforces _Domain restricted sharing_ (`iam.allowedPolicyMemberDomains`) or _Public access
-  prevention_ (`storage.publicAccessPrevention`). An organization policy admin has to override
-  these for this project. Both are needed: the map data is public, and the Apps Script calls the
-  service without a Google token.
-- **The bucket name is taken.** Bucket names are global. Change `BUCKET` in the settings file,
-  and the redirects in `firebase.json` and the names in `firebase.test.ts` to match.
+   The preview's count should match the number of logos copied in step 4.
+
+7. **The Apps Script's `SERVICE_URL`**: the site, instead of the Cloud Run address.
+8. **DNS**: point the site at its host. For production, lower the record's TTL a day ahead and
+   switch at a quiet hour, since both Cloud Run and `goba` can take edits until it propagates.
+9. **Publish** from the sheet, and check the site. For production, once DNS has settled, run
+   steps 4 and 6 again to catch logos uploaded to Cloud Run in the meantime.
+
+| Environment | Project            | Bucket                   |
+| ----------- | ------------------ | ------------------------ |
+| staging     | `atlas-stg-513316` | `gs://openmrs-atlas-stg` |
+| production  | `openmrs-atlas`    | `gs://openmrs-atlas`     |
+
+**Rolling back** an environment: point DNS back at Firebase Hosting, copy any new logos from the
+volume to the bucket (`gcloud storage rsync -r <volume>/logos gs://<bucket>/logos`), run the
+address script the other way, resume the two scheduler jobs, and set the Apps Script's
+`SERVICE_URL` back to the Cloud Run address. Cloud Run, Firebase Hosting and the buckets stay in
+place until a later change removes them.

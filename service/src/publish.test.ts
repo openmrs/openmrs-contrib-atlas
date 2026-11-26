@@ -2,7 +2,6 @@ import { COLUMNS, type Cell, type Problem } from "@openmrs-atlas/shared";
 import { SEED_LOOKUPS } from "@openmrs-atlas/shared/seed";
 import { describe, expect, it } from "vitest";
 import { createApp } from "./app.ts";
-import type { IdTokenVerifier } from "./auth.ts";
 import {
   publish,
   type PublicFile,
@@ -65,25 +64,18 @@ class FakeBucket implements SnapshotStore {
   }
 }
 
-const auth = {
-  publishSecret: "s3cret-value",
-  schedulerEmail: "scheduler@project.iam.gserviceaccount.com",
-  audience: "https://atlas-service.example",
-};
-const verify: IdTokenVerifier = async (token) =>
-  token === "valid-oidc" ? auth.schedulerEmail : token === "other-oidc" ? "x@y.z" : undefined;
+const auth = { publishSecret: "s3cret-value" };
 
-function setup(rows: Cell[][], published?: number) {
+function setup(rows: Cell[][], published?: number, snapshots?: FakeBucket) {
   const sheet = new FakeSheet(rows);
-  const bucket = new FakeBucket(published);
-  const app = createApp({ sheet, snapshots: bucket, auth, verify, now: () => now, siteUrl: SITE });
+  const bucket = snapshots ?? new FakeBucket(published);
+  const app = createApp({ sheet, snapshots: bucket, auth, now: () => now, siteUrl: SITE });
   const call = (headers: Record<string, string> = {}, query = "") =>
     app.request(`/publish${query}`, { method: "POST", headers });
-  return { sheet, bucket, call };
+  return { sheet, bucket, call, nightly: app.jobs.nightlyPublish };
 }
 
 const asSecret = { Authorization: `Bearer ${auth.publishSecret}` };
-const asScheduler = { Authorization: "Bearer valid-oidc" };
 
 describe("POST /publish", () => {
   it("publishes the three files and a history copy, then rewrites problems", async () => {
@@ -105,9 +97,8 @@ describe("POST /publish", () => {
 
   it("Scenario: Rows accidentally deleted", async () => {
     const rows = Array.from({ length: 250 }, (_, i) => markerRow(i));
-    const { sheet, bucket, call } = setup(rows, 450);
-    const res = await call(asScheduler);
-    expect(res.status).toBe(409);
+    const { sheet, bucket, nightly } = setup(rows, 450);
+    expect((await nightly()).status).toBe("refused");
     expect(bucket.files.size).toBe(0);
     expect(sheet.problems?.[0]?.reasons[0]).toContain("publish refused");
   });
@@ -141,15 +132,75 @@ describe("Publish endpoint is protected", () => {
     const { bucket, call } = setup([markerRow(1)]);
     expect((await call()).status).toBe(401);
     expect((await call({ Authorization: "Bearer wrong" })).status).toBe(401);
-    expect((await call({ Authorization: "Bearer other-oidc" })).status).toBe(401);
     expect((await call({ Authorization: auth.publishSecret })).status).toBe(401);
     expect(bucket.files.size).toBe(0);
   });
 
-  it("accepts the scheduler's OIDC token but not a forced publish from it", async () => {
-    const { call } = setup([markerRow(1)]);
-    expect((await call(asScheduler)).status).toBe(200);
-    expect((await call(asScheduler, "?force=true")).status).toBe(403);
+  it("has no outside scheduler: only the service's own nightly job runs as the scheduler", async () => {
+    const { call, nightly } = setup([markerRow(1)]);
+    expect((await call({ Authorization: "Bearer scheduler" })).status).toBe(401);
+    expect(await nightly()).toMatchObject({ status: "published" });
+  });
+});
+
+describe("history pruning", () => {
+  it("only the nightly publish prunes history, back 90 days", async () => {
+    const bucket = new PruningBucket();
+    const { call, nightly } = setup([markerRow(1)], undefined, bucket);
+    await call(asSecret);
+    expect(bucket.prunedBefore).toEqual([]);
+    await nightly();
+    expect(bucket.prunedBefore).toEqual([new Date("2026-08-03T12:00:00Z")]);
+  });
+
+  class PruningBucket extends FakeBucket {
+    prunedBefore: Date[] = [];
+    failing = false;
+    async pruneHistory(before: Date) {
+      if (this.failing) throw new Error("disk full");
+      this.prunedBefore.push(before);
+      return 1;
+    }
+  }
+
+  it("prunes history when asked, after the files are written", async () => {
+    const bucket = new PruningBucket();
+    const before = new Date("2026-08-03T12:00:00Z");
+    const result = await publish(new FakeSheet([markerRow(1)]), bucket, {
+      force: false,
+      now,
+      siteUrl: SITE,
+      history: { before },
+    });
+    expect(result.status).toBe("published");
+    expect(bucket.prunedBefore).toEqual([before]);
+    expect(bucket.files.has("atlas.json")).toBe(true);
+  });
+
+  it("prunes nothing when not asked, or when the publish is refused", async () => {
+    const bucket = new PruningBucket();
+    await publish(new FakeSheet([markerRow(1)]), bucket, { force: false, now, siteUrl: SITE });
+    const refusing = new PruningBucket(100);
+    await publish(new FakeSheet([markerRow(1)]), refusing, {
+      force: false,
+      now,
+      siteUrl: SITE,
+      history: { before: now },
+    });
+    expect(bucket.prunedBefore).toEqual([]);
+    expect(refusing.prunedBefore).toEqual([]);
+  });
+
+  it("a failed prune doesn't fail the publish", async () => {
+    const bucket = new PruningBucket();
+    bucket.failing = true;
+    const result = await publish(new FakeSheet([markerRow(1)]), bucket, {
+      force: false,
+      now,
+      siteUrl: SITE,
+      history: { before: now },
+    });
+    expect(result.status).toBe("published");
   });
 });
 

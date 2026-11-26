@@ -1,6 +1,6 @@
 /**
  * Runs sheet writes and publishes one at a time, so they can't overwrite one another.
- * The service runs as a single Cloud Run instance, so one queue in memory is enough.
+ * The service runs as a single container, so one queue in memory is enough.
  */
 export class WriteQueue {
   private tail: Promise<unknown> = Promise.resolve();

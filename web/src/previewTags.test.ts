@@ -5,6 +5,11 @@ const content = (tags: ReturnType<typeof previewTags>, key: string) =>
   tags.find((t) => t.attrs.property === key || t.attrs.name === key)?.attrs.content;
 
 describe("Home page previews", () => {
+  it("names the world card in full when the data is on the site's own origin", () => {
+    const tags = previewTags("https://atlas.example.org", "/data");
+    expect(content(tags, "og:image")).toBe("https://atlas.example.org/data/cards/world.png");
+  });
+
   it("Scenario: Sharing the home page", () => {
     const tags = previewTags("https://atlas.example.org", "https://storage.example.org/b");
     expect(content(tags, "og:title")).toBe("OpenMRS Atlas");

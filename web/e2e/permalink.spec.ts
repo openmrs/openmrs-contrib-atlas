@@ -4,7 +4,7 @@ import type { AtlasSnapshot } from "@openmrs-atlas/shared";
 import { createPermalinks } from "../../service/src/permalinks.ts";
 import { STATIC_DIR, expect, ids, test } from "./fixtures.ts";
 
-// The service's permalink page, served where Firebase Hosting would send /marker/**.
+// The service's permalink page, as the service serves it at /marker/:id.
 test("Marker permalinks: Scenario: Opening a permalink", async ({ page, baseURL }) => {
   const snapshot = JSON.parse(
     await readFile(resolve(STATIC_DIR, "atlas.json"), "utf8"),

@@ -6,7 +6,7 @@ import { expect, ids, mapIdle, test } from "./fixtures.ts";
 const openKampala = `/?marker=${ids.kampala}&map=6/0.3476/32.5825`;
 const PNG = resolve(import.meta.dirname, "../public/openmrs-cross.png");
 
-/** Stands in for the service's card redirect, which Firebase Hosting would send to Cloud Run. */
+/** Stands in for the service's card redirect at /marker/:id/card.png. */
 async function stubCards(page: Page, status = 200) {
   const requests: string[] = [];
   await page.route("**/marker/*/card.png", async (route) => {

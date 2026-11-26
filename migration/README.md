@@ -7,8 +7,8 @@ Atlas 3.0 sheet. Marker ids are kept, so 2.0 links (`/?marker=<id>`) keep workin
 - **Each run replaces the sheet's data tabs**: `markers`, `private`, `types`, `distributions`,
   `versions`. It's safe to re-run, and anything typed only into the target sheet is overwritten.
   It also appends one `import` row to `changes`.
-- **Logos** are resized to WebP within 300 × 300 and uploaded to `logos/<id>.webp` in the public
-  bucket.
+- **Logos** are resized to WebP within 300 × 300 and written to `logos/<id>.webp` in the data
+  folder given by `--data-dir`.
 
 The full rules are in `openspec/specs/legacy-migration/spec.md`
 (`openspec/specs/legacy-migration/` once archived).
@@ -18,7 +18,7 @@ The full rules are in `openspec/specs/legacy-migration/spec.md`
 - The target sheet must already have its tabs. Run `npm run setup:sheet -- <id>` once (see the
   root README).
 - Google credentials: Application Default Credentials with the Sheets scope (root README, "Test
-  sheet"), plus write access to the bucket for logo uploads.
+  sheet"), and a folder to write logos to.
 - `MYSQL_URL` points at the 2.0 database. The default,
   `mysql://atlas:atlas@localhost:3306/atlasdb`, is the local Docker database.
 
@@ -51,14 +51,14 @@ Atlas 2.0 → 3.0 migration (dry run: nothing written)
 ## Run it
 
 ```sh
-npm run migrate -- --sheet <spreadsheet-id> --bucket <bucket>
+npm run migrate -- --sheet <spreadsheet-id> --data-dir <folder> \
+  --logo-base https://atlas.openmrs.org/data/logos
 ```
 
-Against the local fake Cloud Storage (`docker compose up -d`):
-
-```sh
-npm run migrate -- --sheet <test-sheet-id> --bucket atlas-local --storage-endpoint http://localhost:4443
-```
+Logos are written to `<folder>/logos/<id>.webp`, and each marker's `logo_url` is
+`<logo-base>/<id>.webp`. Point `--data-dir` at the Atlas's data folder (the `/atlas_data` volume),
+or at a local folder whose `logos/` you then copy into it. Locally, `--data-dir .data
+--logo-base http://localhost:5173/data/logos` works with the service run as in the root README.
 
 ## From production
 
@@ -74,8 +74,6 @@ against that.
 
 ## At cutover
 
-Run the migration once more, from the final 2.0 data into the production sheet and bucket
-(`--bucket openmrs-atlas`, in the `openmrs-atlas` project), right before atlas.openmrs.org switches
-to 3.0. Edits made in 2.0 during staging are then carried over. Edits made only in the staging
-sheet are not. Staging uses `--bucket openmrs-atlas-stg`. The order of the other cutover steps is
-in the production checklist in [`infra/README.md`](../infra/README.md#production-checklist).
+The 3.0 cutover ran the migration once more, from the final 2.0 data into the production sheet,
+right before atlas.openmrs.org switched to 3.0. Logos then went to the Cloud Storage bucket; since
+4.0 they live in the Atlas's data folder (see [`infra/README.md`](../infra/README.md)).

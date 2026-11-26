@@ -1,29 +1,18 @@
-import { readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { test as base, expect, type Page } from "@playwright/test";
+import { COMMON_HEADERS, pageHeaders } from "../../service/src/site.ts";
 
 export const STATIC_DIR = resolve(import.meta.dirname, "static");
 export const NOW = new Date("2026-11-01T00:00:00Z");
 
 /**
- * The security headers staging sends with its pages (firebase.json, specs/deployment), with
- * staging's Keycloak swapped for the e2e build's, so every test runs under the real policy.
+ * The security headers the service sends with the site's pages (service/src/site.ts,
+ * specs/deployment), for the e2e build's Keycloak, so every test runs under the real policy.
  */
-type HeaderBlock = { source: string; headers: { key: string; value: string }[] };
-const firebase = JSON.parse(
-  readFileSync(resolve(import.meta.dirname, "../../firebase.json"), "utf8"),
-) as { hosting: { target: string; headers: HeaderBlock[] }[] };
-const staging = firebase.hosting.find((t) => t.target === "staging")!;
-const blockFor = (source: string) =>
-  Object.fromEntries(
-    (staging.headers.find((b) => b.source === source)?.headers ?? []).map((h) => [
-      h.key,
-      h.value.replaceAll("https://id-stg.openmrs.org", "https://id.e2e.invalid"),
-    ]),
-  );
-const PAGE_HEADERS = { ...blockFor("**"), ...blockFor("{/,/index.html}") };
-const REMINDER_HEADERS = { ...blockFor("**"), ...blockFor("/reminder{,.html}") };
+const E2E_KEYCLOAK = "https://id.e2e.invalid/realms/openmrs";
+const PAGE_HEADERS = { ...COMMON_HEADERS, ...pageHeaders("index.html", E2E_KEYCLOAK) };
+const REMINDER_HEADERS = { ...COMMON_HEADERS, ...pageHeaders("reminder.html", E2E_KEYCLOAK) };
 const isPage = (path: string) => path === "/" || path === "/index.html";
 const isReminder = (path: string) => path === "/reminder" || path === "/reminder.html";
 

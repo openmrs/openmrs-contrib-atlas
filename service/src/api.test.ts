@@ -22,7 +22,7 @@ beforeEach(() => {
     siteUrl: "https://atlas.example.org",
     sheet,
     snapshots: bucket,
-    auth: { publishSecret: "s", schedulerEmail: "", audience: "" },
+    auth: { publishSecret: "s" },
     now: () => NOW,
     editing: {
       store: sheet,
@@ -69,7 +69,7 @@ describe("Requests are checked by the service", () => {
       siteUrl: "https://atlas.example.org",
       sheet,
       snapshots: bucket,
-      auth: { publishSecret: "s", schedulerEmail: "", audience: "" },
+      auth: { publishSecret: "s" },
     });
     expect((await app.request("/api/me")).status).toBe(503);
   });
@@ -876,7 +876,7 @@ describe("Logo upload", () => {
       siteUrl: "https://atlas.example.org",
       sheet,
       snapshots: bucket,
-      auth: { publishSecret: "s", schedulerEmail: "", audience: "" },
+      auth: { publishSecret: "s" },
       editing: {
         store: sheet,
         verifyPerson: async () => ({ username: "jdoe", admin: false }),
@@ -949,7 +949,7 @@ describe("Edit timings are logged", () => {
       const [publish] = timingLines(log, "publish-timing");
       expect(publish).toMatchObject({ caller: "edit", result: "published" });
       expect(Object.keys(publish!.steps)).toEqual(
-        expect.arrayContaining(["sheet.read", "bucket.write", "sheet.writeProblems"]),
+        expect.arrayContaining(["sheet.read", "files.write", "sheet.writeProblems"]),
       );
       const all = log.mock.calls.map(([l]) => String(l)).filter((l) => l.includes("timing"));
       for (const l of all) expect(l).not.toMatch(/asmith|jdoe|example\.org/);

@@ -13,7 +13,8 @@ export interface MetaTag {
  */
 export function previewTags(siteUrl: string | undefined, dataUrl: string | undefined): MetaTag[] {
   if (!siteUrl || !dataUrl) return [];
-  const image = `${dataUrl.replace(/\/$/, "")}/cards/world.png`;
+  // The data address may be relative to the site (/data); previews need a full address.
+  const image = new URL(`${dataUrl.replace(/\/$/, "")}/cards/world.png`, siteUrl).href;
   const tags: [string, string, string][] = [
     ["property", "og:type", "website"],
     ["property", "og:site_name", "OpenMRS Atlas"],

@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { routePath } from "hono/route";
 import type { Accounts } from "./accounts.ts";
 import { createApi, type ApiDeps } from "./api.ts";
-import { identify, type AuthConfig, type IdTokenVerifier } from "./auth.ts";
+import { identify, type AuthConfig, type Caller } from "./auth.ts";
 import { MarkerEditor } from "./edits/index.ts";
 import type { LinkSigner } from "./links.ts";
 import type { Mailer } from "./mailer.ts";
@@ -13,6 +13,8 @@ import { WriteQueue } from "./queue.ts";
 import { createPermalinks } from "./permalinks.ts";
 import { createReminderLinks } from "./reminder-links.ts";
 import { runReminders } from "./reminders.ts";
+import { mountSite, useSiteHeaders, type SiteConfig } from "./site.ts";
+import { HISTORY_DAYS } from "./storage.ts";
 import { timed, timedStore, withTiming } from "./timing.ts";
 
 export interface AppDeps {
@@ -21,7 +23,6 @@ export interface AppDeps {
   /** Social cards and the permalink pages that show them; without it, neither runs. */
   cards?: CardStore;
   auth: AuthConfig;
-  verify?: IdTokenVerifier;
   now?: () => Date;
   /** The public site, for links in the feed and in email, e.g. https://atlas.openmrs.org. */
   siteUrl: string;
@@ -36,6 +37,10 @@ export interface AppDeps {
   reminders?: { mailer: Mailer; signer: LinkSigner };
   /** The notice sent when a marker is added. */
   notices?: NoticeConfig;
+  /** The map site and the data folder, served by this service (specs/deployment). */
+  site?: SiteConfig;
+  /** What /health reports: the environment the image was built for, and its commit. */
+  about?: { environment?: string; commit?: string };
 }
 
 /** Cards drawn by a publish that isn't the nightly one (specs/social-cards). */
@@ -44,6 +49,7 @@ export const EDIT_CARD_LIMIT = 10;
 export function createApp(input: AppDeps) {
   const deps = timedDeps(input);
   const app = new Hono();
+  useSiteHeaders(app);
   const queue = new WriteQueue();
   let remindersRunning = false;
   const now = () => deps.now?.() ?? new Date();
@@ -57,6 +63,9 @@ export function createApp(input: AppDeps) {
 
   // Every publish checks the logo sweep; only the scheduler's nightly run deletes.
   const logos = (sweep: boolean) => deps.editing?.logos && { store: deps.editing.logos, sweep };
+
+  // Only the nightly run prunes history (specs/snapshot-publishing).
+  const historyCutoff = () => ({ before: new Date(now().getTime() - HISTORY_DAYS * 86_400_000) });
 
   // Each publish logs where its time went, in its own scope (specs/snapshot-publishing).
   const timedPublish = (caller: string, run: () => ReturnType<typeof publish>) =>
@@ -89,73 +98,75 @@ export function createApp(input: AppDeps) {
     return result.status === "published";
   };
 
-  // Not /healthz: Cloud Run reserves some paths ending in "z" and answers them itself.
-  app.get("/health", (c) => c.json({ ok: true }));
+  app.get("/health", (c) => c.json({ ok: true, ...deps.about }));
 
-  // Public permalink pages: Firebase Hosting sends /marker/** here (specs/marker-permalinks).
+  // Public permalink pages (specs/marker-permalinks).
   if (deps.cards)
     app.route("/marker", createPermalinks({ cards: deps.cards, siteUrl: deps.siteUrl }));
 
-  // ?force=true skips the safety check; only the sheet's admin menu (shared secret) may force.
-  app.post("/publish", async (c) => {
-    const caller = await identify(c.req.header("Authorization"), deps.auth, deps.verify);
-    if (!caller) return c.json({ error: "unauthorized" }, 401);
-    const force = c.req.query("force") === "true";
-    if (force && caller !== "apps-script") return c.json({ error: "forbidden" }, 403);
-
+  // A publish from the sheet (forced or not) or the nightly job. Only the nightly one draws
+  // every card, sweeps logos and prunes history.
+  const runPublish = async (caller: Caller, force: boolean) => {
+    const nightly = caller === "scheduler";
     const run = () =>
       timedPublish(caller, () =>
         publish(deps.sheet, deps.snapshots, {
           force,
           now: now(),
           siteUrl: deps.siteUrl,
-          cards: cards(caller === "scheduler"),
-          logos: logos(caller === "scheduler"),
+          cards: cards(nightly),
+          logos: logos(nightly),
+          history: nightly ? historyCutoff() : undefined,
         }),
       );
     const result = await (force ? queue.run(run) : queue.shared(run));
     console.log(JSON.stringify({ event: "publish", caller, force, ...result }));
+    return result;
+  };
+
+  // ?force=true skips the safety check; only the sheet's admin menu (shared secret) may force.
+  app.post("/publish", async (c) => {
+    const caller = identify(c.req.header("Authorization"), deps.auth);
+    if (!caller) return c.json({ error: "unauthorized" }, 401);
+    const result = await runPublish(caller, c.req.query("force") === "true");
     return c.json(result, result.status === "published" ? 200 : 409);
   });
 
-  // The daily reminder job: Cloud Scheduler, or a signed-in admin (specs/reminder-emails).
-  app.post("/reminders", async (c) => {
-    const header = c.req.header("Authorization");
-    const token = /^Bearer (.+)$/.exec(header ?? "")?.[1];
-    const person = token && deps.editing ? await deps.editing.verifyPerson(token) : undefined;
-    let caller: string | undefined = person?.admin ? `admin:${person.username}` : undefined;
-    if (!caller && !person) {
-      caller =
-        (await identify(header, deps.auth, deps.verify)) === "scheduler" ? "scheduler" : undefined;
-    }
-    if (!caller) return c.json({ error: "unauthorized" }, person ? 403 : 401);
-    if (!deps.editing || !deps.accounts || !deps.reminders) {
-      return c.json({ error: "Reminders are not set up." }, 503);
-    }
-    const { store } = deps.editing;
-    const { accounts } = deps;
-    const { mailer, signer } = deps.reminders;
-    // One run at a time: the job holds the write queue only for sheet work, so a second run
-    // started meanwhile could otherwise send the same reminders (specs/reminder-emails).
-    if (remindersRunning) {
-      return c.json({ error: "The reminder job is already running." }, 409);
-    }
+  // The daily reminder job, started by the service's own timer or a signed-in admin
+  // (specs/reminder-emails). One run at a time: the job holds the write queue only for sheet
+  // work, so a second run started meanwhile could otherwise send the same reminders.
+  const runReminderJob = async (caller: string) => {
+    if (!deps.editing || !deps.accounts || !deps.reminders) return { status: "off" } as const;
+    if (remindersRunning) return { status: "running" } as const;
     remindersRunning = true;
     try {
       const result = await runReminders({
-        store,
-        accounts,
-        mailer,
-        signer,
+        store: deps.editing.store,
+        accounts: deps.accounts,
+        mailer: deps.reminders.mailer,
+        signer: deps.reminders.signer,
         queue,
         siteUrl: deps.siteUrl,
         now,
       });
       console.log(JSON.stringify({ event: "reminders", caller, ...result }));
-      return c.json(result);
+      return { status: "done", result } as const;
     } finally {
       remindersRunning = false;
     }
+  };
+
+  app.post("/reminders", async (c) => {
+    const token = /^Bearer (.+)$/.exec(c.req.header("Authorization") ?? "")?.[1];
+    const person = token && deps.editing ? await deps.editing.verifyPerson(token) : undefined;
+    if (!person) return c.json({ error: "unauthorized" }, 401);
+    if (!person.admin) return c.json({ error: "forbidden" }, 403);
+    const job = await runReminderJob(`admin:${person.username}`);
+    if (job.status === "off") return c.json({ error: "Reminders are not set up." }, 503);
+    if (job.status === "running") {
+      return c.json({ error: "The reminder job is already running." }, 409);
+    }
+    return c.json(job.result);
   });
 
   // One line per API request: where its time went, by route pattern, never the path, which can
@@ -203,16 +214,24 @@ export function createApp(input: AppDeps) {
     app.all("/api/*", (c) => c.json({ error: "Sign-in is not set up." }, 503));
   }
 
-  return app;
+  // Last, so the site's catch-all never shadows the routes above.
+  if (deps.site) mountSite(app, deps.site);
+
+  /** The daily jobs, for the service's own timer (scheduler.ts) and tests. */
+  const jobs = {
+    nightlyPublish: () => runPublish("scheduler", false),
+    reminders: () => runReminderJob("scheduler"),
+  };
+  return Object.assign(app, { jobs });
 }
 
-/** The same dependencies, with each sheet, bucket and account call timed (service/README.md). */
+/** The same dependencies, with each sheet, file and account call timed (service/README.md). */
 function timedDeps(deps: AppDeps): AppDeps {
   const { editing } = deps;
   return {
     ...deps,
     sheet: timedStore("sheet", deps.sheet),
-    snapshots: timedStore("bucket", deps.snapshots),
+    snapshots: timedStore("files", deps.snapshots),
     cards: deps.cards && timedStore("cards", deps.cards),
     accounts: deps.accounts && timedStore("accounts", deps.accounts),
     editing: editing && {

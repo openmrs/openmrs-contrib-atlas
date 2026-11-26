@@ -141,7 +141,7 @@ describe("Permalinks read only published data", () => {
       sheet,
       snapshots: new FakeBucket(),
       cards,
-      auth: { publishSecret: "s", schedulerEmail: "x@y.z", audience: "a" },
+      auth: { publishSecret: "s" },
       siteUrl: SITE,
     });
     const res = await app.request(`/marker/${ID}`);

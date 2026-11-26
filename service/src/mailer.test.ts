@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { mandrillMailer, parseAllowlist, type Email } from "./mailer.ts";
+import { emailAllowlist, mandrillMailer, parseAllowlist, type Email } from "./mailer.ts";
 
 const EMAIL: Email = {
   to: "Burke@OpenMRS.org",
@@ -137,5 +137,20 @@ describe("Email is never sent without configuration", () => {
     expect(await mailer.send(EMAIL)).toEqual({ status: "off" });
     expect(requests).toHaveLength(0);
     expect(logs[0]).toContain('"event":"email-off"');
+  });
+});
+
+describe("allowlist by environment (specs/deployment)", () => {
+  it("production: as set, and unset or * means everyone", () => {
+    expect(emailAllowlist(undefined, "production")).toBeUndefined();
+    expect(emailAllowlist("*", "production")).toBeUndefined();
+    expect(emailAllowlist("a@x.org", "production")).toEqual(["a@x.org"]);
+  });
+
+  it.each(["staging", undefined])("%s: unset means no one, and * stops start-up", (env) => {
+    expect(emailAllowlist(undefined, env)).toEqual([]);
+    expect(emailAllowlist("a@x.org b@x.org", env)).toEqual(["a@x.org", "b@x.org"]);
+    expect(() => emailAllowlist("*", env)).toThrow(/only be "\*" in production/);
+    expect(() => emailAllowlist("a@x.org *", env)).toThrow(/production/);
   });
 });

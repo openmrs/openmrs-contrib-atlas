@@ -100,7 +100,7 @@ describe("The nightly publish sweeps logos", () => {
   let logos: FakeLogos;
   let bucket: FakeBucket;
   let app: ReturnType<typeof createApp>;
-  const auth = { publishSecret: "s", schedulerEmail: "sched@x.iam", audience: "aud" };
+  const auth = { publishSecret: "s" };
 
   beforeEach(() => {
     sheet = new FakeSheet();
@@ -112,7 +112,6 @@ describe("The nightly publish sweeps logos", () => {
       sheet,
       snapshots: bucket,
       auth,
-      verify: async (token) => (token === "oidc" ? auth.schedulerEmail : undefined),
       now: () => NOW,
       editing: {
         store: sheet,
@@ -122,17 +121,23 @@ describe("The nightly publish sweeps logos", () => {
     });
   });
 
-  const publish = (token: string, query = "") =>
-    app.request(`/publish${query}`, {
+  // "nightly" runs the service's own nightly job; anything else is sent as the Apps Script would.
+  const publish = async (token: string, query = "") => {
+    if (token === "nightly") {
+      const result = await app.jobs.nightlyPublish();
+      return Response.json(result, { status: result.status === "published" ? 200 : 409 });
+    }
+    return app.request(`/publish${query}`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
     });
+  };
 
   it("Scenario: Column renamed", async () => {
     const header = sheet.tabs.markers![0]!;
     header[header.indexOf("logo_url")] = "logo";
     for (const [token, query] of [
-      ["oidc", ""],
+      ["nightly", ""],
       ["s", "?force=true"],
     ] as const) {
       const res = await publish(token, query);
@@ -150,7 +155,7 @@ describe("The nightly publish sweeps logos", () => {
   it("only the scheduler's run sweeps", async () => {
     expect((await publish("s")).status).toBe(200);
     expect(logos.files.has("logos/abandoned.webp")).toBe(true);
-    expect((await publish("oidc")).status).toBe(200);
+    expect((await publish("nightly")).status).toBe(200);
     expect(logos.files.has("logos/abandoned.webp")).toBe(false);
   });
 
@@ -167,7 +172,7 @@ describe("The nightly publish sweeps logos", () => {
   it("a failing sweep still publishes", async () => {
     const error = vi.spyOn(console, "error").mockImplementation(() => {});
     logos.failing = true;
-    expect((await publish("oidc")).status).toBe(200);
+    expect((await publish("nightly")).status).toBe(200);
     expect(error).toHaveBeenCalledWith(expect.stringContaining("logos-sweep-failed"));
     error.mockRestore();
   });
@@ -182,7 +187,7 @@ describe("The nightly publish sweeps logos", () => {
 
     it("Scenario: Column cleared by mistake", async () => {
       const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-      expect((await publish("oidc")).status).toBe(200);
+      expect((await publish("nightly")).status).toBe(200);
       expect(logos.files.size).toBe(old.length + 1);
       expect(held()).toHaveLength(1);
       expect(held()[0]!.reasons[0]).toContain(
@@ -205,7 +210,7 @@ describe("The nightly publish sweeps logos", () => {
 
     it("Scenario: Sheet fixed", async () => {
       vi.spyOn(console, "warn").mockImplementation(() => {});
-      await publish("oidc");
+      await publish("nightly");
       expect(held()).toHaveLength(1);
       // The column is restored: rows use the logos again, and the next publish clears the note.
       const rows = sheet.tabs.markers!;
@@ -219,7 +224,7 @@ describe("The nightly publish sweeps logos", () => {
       });
       expect((await publish("s")).status).toBe(200);
       expect(held()).toHaveLength(0);
-      expect((await publish("oidc")).status).toBe(200);
+      expect((await publish("nightly")).status).toBe(200);
       expect(logos.files.has("logos/abandoned.webp")).toBe(false);
       expect(logos.files.size).toBe(old.length);
       vi.restoreAllMocks();

@@ -2,8 +2,8 @@
 #
 # - mysql: an Atlas 2.0 database loaded with the 2.0 schema and demo data,
 #   used as the source for the migration (migration/).
-# - gcs: fake-gcs-server standing in for the public Cloud Storage bucket
-#   that holds published snapshots and logos.
+#
+# The service keeps its files in a local folder (DATA_DIR=.data); see README.md.
 
 services:
   mysql:
@@ -24,14 +24,6 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uatlas", "-patlas"]
       interval: 5s
       retries: 20
-
-  gcs:
-    image: fsouza/fake-gcs-server:1.56.1
-    command: -scheme http -port 4443 -public-host localhost:4443 -external-url http://localhost:4443
-    ports:
-      - "4443:4443"
-    volumes:
-      - ./docker/gcs:/data
 
 volumes:
   mysql-data:

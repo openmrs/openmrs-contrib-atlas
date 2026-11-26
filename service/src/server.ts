@@ -3,9 +3,10 @@ import { createApp } from "./app.ts";
 import { keycloakAccounts } from "./accounts.ts";
 import { keycloakVerifier } from "./keycloak.ts";
 import { linkSigner } from "./links.ts";
-import { mandrillMailer, parseAllowlist } from "./mailer.ts";
+import { emailAllowlist, mandrillMailer } from "./mailer.ts";
 import { googleSheetStore } from "./sheets.ts";
-import { gcsCardStore, gcsLogoStore, gcsSnapshotStore } from "./storage.ts";
+import { jobsOff, startScheduler } from "./scheduler.ts";
+import { folderStores } from "./storage.ts";
 
 function required(name: string): string {
   const value = process.env[name];
@@ -13,13 +14,19 @@ function required(name: string): string {
   return value;
 }
 
-/** Secrets pasted into Secret Manager often end with a newline. */
+/** Secrets pasted into settings often end with a newline. */
 const secret = (name: string) => process.env[name]?.trim() || undefined;
+
+/** Built into the image: `staging` or `production` (specs/deployment). */
+const environment = process.env.ATLAS_ENVIRONMENT || undefined;
+const commit = process.env.ATLAS_COMMIT || undefined;
 
 const sheetId = required("SHEET_ID");
 const sheet = googleSheetStore(sheetId);
-const bucket = required("BUCKET");
 const siteUrl = required("SITE_URL");
+/** Published files, cards and logos: a volume in production (specs/deployment). */
+const dataDir = process.env.DATA_DIR || "/atlas_data";
+const files = folderStores(dataDir, siteUrl);
 const issuer = process.env.KEYCLOAK_ISSUER;
 const clientId = process.env.KEYCLOAK_CLIENT_ID;
 const serviceClientId = process.env.KEYCLOAK_SERVICE_CLIENT_ID;
@@ -35,20 +42,20 @@ if (!accounts) console.log(JSON.stringify({ event: "accounts-off" }));
 const mailer = mandrillMailer({
   apiKey: secret("MANDRILL_API_KEY"),
   from: process.env.EMAIL_FROM ?? "OpenMRS Atlas <atlas-noreply@openmrs.org>",
-  allowlist: parseAllowlist(process.env.EMAIL_ALLOWLIST),
+  allowlist: emailAllowlist(process.env.EMAIL_ALLOWLIST, environment),
 });
 
 const app = createApp({
   sheet,
   siteUrl,
-  snapshots: gcsSnapshotStore(bucket, process.env.STORAGE_ENDPOINT),
-  cards: gcsCardStore(bucket, process.env.STORAGE_ENDPOINT),
+  snapshots: files.snapshots,
+  cards: files.cards,
   editing:
     issuer && clientId
       ? {
           store: sheet,
           verifyPerson: keycloakVerifier({ issuer, clientId }),
-          logos: gcsLogoStore(bucket, process.env.STORAGE_ENDPOINT),
+          logos: files.logos,
         }
       : undefined,
   accounts,
@@ -59,12 +66,24 @@ const app = createApp({
     siteUrl,
     sheetUrl: `https://docs.google.com/spreadsheets/d/${sheetId}/edit`,
   },
-  auth: {
-    publishSecret: required("PUBLISH_SECRET"),
-    schedulerEmail: process.env.SCHEDULER_SA_EMAIL ?? "",
-    audience: process.env.SERVICE_URL ?? "",
+  site: {
+    webDir: process.env.WEB_DIR || new URL("../../web/dist", import.meta.url).pathname,
+    dataDir,
+    keycloakIssuer: issuer,
   },
+  about: { environment, commit },
+  auth: { publishSecret: required("PUBLISH_SECRET") },
 });
+
+// The nightly publish and the daily reminders (specs/deployment). Off for local development.
+if (jobsOff(process.env.SCHEDULED_JOBS)) {
+  console.log(JSON.stringify({ event: "jobs-off" }));
+} else {
+  startScheduler([
+    { name: "nightly-publish", hourUtc: 3, run: app.jobs.nightlyPublish },
+    { name: "reminders", hourUtc: 14, run: app.jobs.reminders },
+  ]);
+}
 
 const port = Number(process.env.PORT ?? 8080);
 serve({ fetch: app.fetch, port }, () => console.log(`atlas service listening on ${port}`));

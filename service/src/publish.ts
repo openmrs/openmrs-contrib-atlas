@@ -39,6 +39,8 @@ export interface SnapshotStore {
   currentCount(): Promise<number | undefined>;
   /** Writes public files; each is served with short caching. */
   write(files: PublicFile[]): Promise<void>;
+  /** Deletes history copies published before `before`; returns how many. */
+  pruneHistory?(before: Date): Promise<number>;
 }
 
 export type PublishResult =
@@ -67,6 +69,8 @@ export async function publish(
       store: Pick<LogoStore, "publicPrefix" | "listLogos" | "removeLogos">;
       sweep: boolean;
     };
+    /** The nightly publish deletes history copies published before this (specs/snapshot-publishing). */
+    history?: { before: Date };
   },
 ): Promise<PublishResult> {
   // Reads that don't depend on one another start together. The listing and the manifest are
@@ -157,6 +161,15 @@ export async function publish(
       console.log(JSON.stringify({ event: "logos-swept", deleted: sweep.remove.length }));
     } catch (err) {
       console.error(JSON.stringify({ event: "logos-sweep-failed", error: String(err) }));
+    }
+  }
+  if (options.history && snapshots.pruneHistory) {
+    // Old history never holds up a publish either; it is tried again tomorrow.
+    try {
+      const removed = await snapshots.pruneHistory(options.history.before);
+      console.log(JSON.stringify({ event: "history-pruned", removed }));
+    } catch (err) {
+      console.error(JSON.stringify({ event: "history-prune-failed", error: String(err) }));
     }
   }
   return { status: "published", markers: snapshot.markers.length, problems: problems.length };

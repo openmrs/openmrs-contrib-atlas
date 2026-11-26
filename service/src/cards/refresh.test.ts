@@ -2,7 +2,6 @@ import { COLUMNS, type AtlasSnapshot, type Cell, type PublicMarker } from "@open
 import { SEED_LOOKUPS } from "@openmrs-atlas/shared/seed";
 import { describe, expect, it, vi } from "vitest";
 import { EDIT_CARD_LIMIT, createApp } from "../app.ts";
-import type { IdTokenVerifier } from "../auth.ts";
 import type { SheetStore } from "../publish.ts";
 import { FakeBucket, FakeCards } from "../testing.ts";
 import { cardHash } from "./card.ts";
@@ -135,15 +134,19 @@ function setup(count: number, published?: number) {
     bucket.currentCount = (async () => published) as unknown as FakeBucket["currentCount"];
   }
   const cards = new FakeCards();
-  const auth = {
-    publishSecret: "s3cret-value",
-    schedulerEmail: "scheduler@example.iam.gserviceaccount.com",
-    audience: "https://atlas-service.example",
+  const auth = { publishSecret: "s3cret-value" };
+  const app = createApp({ sheet, snapshots: bucket, cards, auth, siteUrl: SITE });
+  // "nightly" runs the service's own nightly job; anything else is sent as the Apps Script would.
+  const publish = async (token: string) => {
+    if (token === "nightly") {
+      const result = await app.jobs.nightlyPublish();
+      return Response.json(result, { status: result.status === "published" ? 200 : 409 });
+    }
+    return app.request("/publish", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
   };
-  const verify: IdTokenVerifier = async (t) => (t === "oidc" ? auth.schedulerEmail : undefined);
-  const app = createApp({ sheet, snapshots: bucket, cards, auth, verify, siteUrl: SITE });
-  const publish = (token: string) =>
-    app.request("/publish", { method: "POST", headers: { Authorization: `Bearer ${token}` } });
   return { bucket, cards, publish, secret: auth.publishSecret };
 }
 
@@ -155,7 +158,7 @@ describe("Nightly publish completes the cards", () => {
     expect(bucket.files.has("atlas.json")).toBe(true);
     expect(Object.keys(cards.manifest!.markers)).toHaveLength(EDIT_CARD_LIMIT);
 
-    expect((await publish("oidc")).status).toBe(200);
+    expect((await publish("nightly")).status).toBe(200);
     expect(Object.keys(cards.manifest!.markers)).toHaveLength(25);
     vi.restoreAllMocks();
   });
@@ -163,7 +166,7 @@ describe("Nightly publish completes the cards", () => {
   it("a refused publish leaves cards unchanged", async () => {
     vi.spyOn(console, "log").mockImplementation(() => {});
     const { cards, publish } = setup(2, 450);
-    expect((await publish("oidc")).status).toBe(409);
+    expect((await publish("nightly")).status).toBe(409);
     expect(cards.files.size).toBe(0);
     expect(cards.manifest).toBeUndefined();
     vi.restoreAllMocks();

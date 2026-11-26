@@ -48,8 +48,8 @@ function parseFrom(from: string): { from_email: string; from_name?: string } {
 
 /**
  * Parses EMAIL_ALLOWLIST: separated by commas or spaces, case-insensitive. Unset, or `*`, means no allowlist
- * (everyone). `*` exists because a Cloud Run deploy can't unset a variable it once set; the deploy
- * workflow sends it only to production. Empty means an allowlist of no one.
+ * (everyone). Empty means an allowlist of no one. Only production may use either form of
+ * "everyone": see `emailAllowlist`.
  */
 export function parseAllowlist(value: string | undefined): string[] | undefined {
   if (value === undefined || value.trim() === "*") return undefined;
@@ -57,6 +57,24 @@ export function parseAllowlist(value: string | undefined): string[] | undefined 
     .split(/[\s,]+/)
     .map((a) => a.trim().toLowerCase())
     .filter(Boolean);
+}
+
+/**
+ * The allowlist for an image built for `environment` (specs/deployment, "Staging never loses its
+ * safety settings"). Production: as set, with unset or `*` meaning everyone. Anything else,
+ * including an image with no environment: unset means no one, and `*` is refused, whatever the
+ * host's settings say.
+ */
+export function emailAllowlist(
+  value: string | undefined,
+  environment: string | undefined,
+): string[] | undefined {
+  if (environment === "production") return parseAllowlist(value);
+  if (value === undefined) return [];
+  if (value.includes("*")) {
+    throw new Error(`EMAIL_ALLOWLIST may only be "*" in production, not ${environment ?? "here"}`);
+  }
+  return parseAllowlist(value);
 }
 
 export function mandrillMailer(config: MandrillConfig, fetchFn: typeof fetch = fetch): Mailer {

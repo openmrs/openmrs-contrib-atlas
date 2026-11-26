@@ -10,11 +10,9 @@
     "migrate": "tsx src/cli.ts"
   },
   "dependencies": {
-    "@google-cloud/storage": "^8.4.0",
     "@googleapis/sheets": "^18.1.1",
-    "google-auth-library": "^11.3.2",
+    "@openmrs-atlas/shared": "*",
     "mysql2": "^3.24.6",
-    "sharp": "^0.35.5",
-    "@openmrs-atlas/shared": "*"
+    "sharp": "^0.35.5"
   }
 }
