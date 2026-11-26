@@ -8,6 +8,7 @@
  *     --to https://atlas-stg.openmrs.org/data/logos/ [--apply]
  *
  * Credentials for the sheet: GOOGLE_SERVICE_ACCOUNT_KEY, or Application Default Credentials.
+ * This script doesn't read .env; load it first with `set -a && . ./.env && set +a`.
  */
 import { parseArgs } from "node:util";
 import { moveLogoUrls } from "../logo-move.ts";

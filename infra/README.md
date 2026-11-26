@@ -39,7 +39,8 @@ In the container:
 - **`/atlas_data`**, the data folder: published files, `history/`, `cards/` and `logos/`. Mount a
   named volume here and back it up (see below). A new volume takes the folder's owner, `node`.
 - **`/health`** answers `{"ok":true,"environment":…,"commit":…}`. The image has a Docker
-  `HEALTHCHECK` that calls it.
+  `HEALTHCHECK` that calls it with Node's `fetch` (there's no `curl` in the image), and the example
+  stack below repeats it, as OpenMRS stacks give every container a healthcheck.
 - **One container per environment, always.** Sheet writes and publishes are queued in memory, so
   two containers would overwrite each other.
 - The service runs its own daily jobs: the nightly publish at 03:00 UTC and the reminders at
@@ -77,19 +78,50 @@ other secret; if it leaks, delete the key in Google Cloud and create another.
 
 ### Example compose service
 
-A starting point for `files/atlas-stg/docker-compose.yml`. Production is the same with `:production`
-and its own names.
+A starting point for `files/atlas-stg/docker-compose.yml`. Production is the same with `:production`,
+its own names, and no `EMAIL_ALLOWLIST` line. Each setting is listed under `environment:` and filled
+in from the stack's `.env`. A setting that is missing from both reaches Atlas as an empty string,
+which the service treats as unset everywhere except `EMAIL_ALLOWLIST`.
 
 ```yaml
 services:
   atlas:
     image: openmrsinfra/atlas:staging
     restart: always
-    env_file: .env
+    # Each setting comes from the stack's .env. Compose doesn't pass .env into containers itself.
+    environment:
+      - SHEET_ID=${SHEET_ID}
+      - SITE_URL=${SITE_URL}
+      - KEYCLOAK_ISSUER=${KEYCLOAK_ISSUER}
+      - KEYCLOAK_CLIENT_ID=${KEYCLOAK_CLIENT_ID}
+      - KEYCLOAK_SERVICE_CLIENT_ID=${KEYCLOAK_SERVICE_CLIENT_ID}
+      - KEYCLOAK_SERVICE_CLIENT_SECRET=${KEYCLOAK_SERVICE_CLIENT_SECRET}
+      - GOOGLE_SERVICE_ACCOUNT_KEY=${GOOGLE_SERVICE_ACCOUNT_KEY}
+      - PUBLISH_SECRET=${PUBLISH_SECRET}
+      - MANDRILL_API_KEY=${MANDRILL_API_KEY}
+      - LINK_SIGNING_KEY=${LINK_SIGNING_KEY}
+      - NOTICE_EMAIL=${NOTICE_EMAIL:-}
+      # Staging only. Leave this line out of production's stack: there, an empty value would
+      # mean "email no one", and unset means everyone.
+      - EMAIL_ALLOWLIST=${EMAIL_ALLOWLIST}
     ports:
       - "8548:8080"
     volumes:
       - atlas-data:/atlas_data
+    # The same check the image has, spelled out as the OpenMRS stacks do. No curl in the image,
+    # so Node's fetch: healthy when /health answers 200 within 5 seconds.
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://localhost:8080/health').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
 
   backup:
     image: openmrsinfra/cron-backup:latest
@@ -238,11 +270,23 @@ is shared, so moving an environment means moving its files and its addresses. In
    gcloud secrets versions access latest --secret=<name> --project=<project>
    ```
 
-4. **The logos.** Copy them from the bucket into the volume (the history is optional):
+4. **The logos.** Copy them from the bucket into the volume. The hosts have no `gcloud`, so
+   download them on a machine that does, copy them to the host, and put them in the volume with a
+   throwaway container that also gives them to `node` (uid 1000):
 
    ```sh
-   gcloud storage rsync -r gs://<bucket>/logos <volume>/logos
+   # On a machine with gcloud
+   gcloud storage rsync -r gs://<bucket>/logos ./logos
+   ls logos | wc -l
+   scp -r logos <host>:~/atlas-logos
+
+   # On the host: find the volume (`docker volume ls`), such as atlas-stg_atlas-data
+   docker run --rm -v <volume>:/atlas_data -v ~/atlas-logos:/incoming:ro alpine sh -c \
+     'mkdir -p /atlas_data/logos && cp -a /incoming/. /atlas_data/logos/ &&
+      chown -R 1000:1000 /atlas_data/logos && ls /atlas_data/logos | wc -l'
    ```
+
+   The two counts should match. Atlas can keep running, and the copies can be deleted afterwards.
 
 5. **Pause Cloud Scheduler**, so Cloud Run's nightly sweep doesn't see the moved logos as unused:
 
@@ -251,12 +295,17 @@ is shared, so moving an environment means moving its files and its addresses. In
    gcloud scheduler jobs pause atlas-daily-reminders --location=us-central1 --project=<project>
    ```
 
-6. **The logo addresses.** Preview, then apply (service/README.md, "Moving logo addresses"):
+6. **The logo addresses.** From the repository root, with the environment's settings loaded
+   (the script doesn't read `.env` itself), preview, then apply (service/README.md, "Moving logo
+   addresses"):
 
    ```sh
-   npm run move:logos -w service -- <sheet id> \
+   set -a && . ./.env && set +a      # GOOGLE_SERVICE_ACCOUNT_KEY and SHEET_ID
+   npm run move:logos -w service -- "$SHEET_ID" \
      --from https://storage.googleapis.com/<bucket>/logos/ --to https://<site>/data/logos/
    ```
+
+   The preview's count should match the number of logos copied in step 4.
 
 7. **The Apps Script's `SERVICE_URL`**: the site, instead of the Cloud Run address.
 8. **DNS**: point the site at its host. For production, lower the record's TTL a day ahead and

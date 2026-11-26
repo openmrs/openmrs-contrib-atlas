@@ -70,8 +70,8 @@
 
 - [x] 7.1 Run the typecheck, lint, format check, unit tests, the e2e suite (`cd web && npx playwright test`) and `npm run build`. Check that `git grep -i "storage.googleapis\|firebase\|cloud run"` finds only history and archive mentions.
 - [x] 7.2 (manual) Create a service account for the staging sheet (`atlas-stg-sheets-access@atlas-stg-513316`), share the sheet with it as an Editor, and create a key under the organization's key policy.
-- [ ] 7.3 (manual) Set up the `atlas-stg` compose stack on `gode` with the staging settings and secrets, and copy `gs://openmrs-atlas-stg/logos` into the volume.
-- [ ] 7.4 (manual) Pause the staging Cloud Scheduler jobs. Run the address script on the staging sheet: preview, then apply. Set the staging Apps Script's `SERVICE_URL`. Point atlas-stg.openmrs.org at `gode`.
+- [x] 7.3 (manual) Set up the `atlas-stg` compose stack on `gode` with the staging settings and secrets, and copy `gs://openmrs-atlas-stg/logos` into the volume.
+- [x] 7.4 (manual) Pause the staging Cloud Scheduler jobs. Run the address script on the staging sheet: preview, then apply. Set the staging Apps Script's `SERVICE_URL`. Point atlas-stg.openmrs.org at `gode`.
 - [ ] 7.5 (manual) On staging:
   - load the map and the downloads;
   - sign in, then add a marker with a logo, edit it and add an editor;
