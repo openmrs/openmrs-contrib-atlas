@@ -16,9 +16,16 @@ export interface SiteConfig {
   keycloakIssuer?: string;
 }
 
-const TYPES: Record<string, string> = {
+/**
+ * Content types by extension. Anything missing goes out as application/octet-stream, which
+ * nosniff makes browsers refuse as a script or style, so every type the site's build emits must
+ * be here (site.test.ts checks web/public and Vite's output types).
+ */
+export const TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
+  // MapLibre's worker is a module file; without its type the map draws no tiles or markers.
+  ".mjs": "text/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".json": "application/json",
   ".geojson": "application/geo+json",

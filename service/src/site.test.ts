@@ -1,9 +1,10 @@
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { extname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createApp } from "./app.ts";
-import { CACHE, contentSecurityPolicy, dataFile } from "./site.ts";
+import { CACHE, contentSecurityPolicy, dataFile, TYPES } from "./site.ts";
 import { FakeBucket, FakeSheet } from "./testing.ts";
 
 let root: string;
@@ -22,6 +23,7 @@ beforeAll(async () => {
   await put("web/index.html", "<!doctype html><title>Atlas</title>");
   await put("web/reminder.html", "<!doctype html><title>Reminder</title>");
   await put("web/assets/main-abc123.js", "console.log('atlas');".repeat(100));
+  await put("web/assets/maplibre-gl-worker-abc123.mjs", "self.onmessage = () => {};");
   await put("web/favicon-32.png", "png");
   await put("web/.hidden", "secret");
   await put("data/atlas.json", JSON.stringify({ markers: [] }));
@@ -134,6 +136,25 @@ describe("the map site", () => {
       CACHE.immutable,
     );
     expect((await get("/favicon-32.png")).headers.get("Cache-Control")).toBe(CACHE.other);
+  });
+
+  it("serves module scripts, such as MapLibre's worker, as JavaScript", async () => {
+    const res = await get("/assets/maplibre-gl-worker-abc123.mjs");
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Type")).toBe("text/javascript; charset=utf-8");
+    expect(res.headers.get("Cache-Control")).toBe(CACHE.immutable);
+  });
+
+  it("knows the content type of every file the site's build can emit", async () => {
+    // Vite's output (scripts, module workers, styles, fonts, images) plus everything in
+    // web/public, which Vite copies as is. A missing type goes out as octet-stream, and nosniff
+    // makes the browser refuse it.
+    const publicDir = fileURLToPath(new URL("../../web/public/", import.meta.url));
+    const publicFiles = await readdir(publicDir, { recursive: true, withFileTypes: true });
+    const extensions = new Set([".html", ".js", ".mjs", ".css", ".woff", ".woff2", ".svg", ".png"]);
+    for (const file of publicFiles) if (file.isFile()) extensions.add(extname(file.name));
+    const missing = [...extensions].filter((ext) => !(ext.toLowerCase() in TYPES));
+    expect(missing).toEqual([]);
   });
 
   it("compresses text for clients that accept it", async () => {
