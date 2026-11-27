@@ -13,8 +13,18 @@ The compose stacks that run them are in
 [openmrs-contrib-ansible-docker-compose](https://github.com/openmrs/openmrs-contrib-ansible-docker-compose),
 under `files/atlas-stg/` and `files/atlas/`, and are deployed with the Ansible in
 [openmrs-contrib-itsmresources](https://github.com/openmrs/openmrs-contrib-itsmresources). The
-host picks up a new image when its tag changes (`deploy-compose-if-newer`). The host's reverse
-proxy terminates TLS and forwards to the container.
+host's reverse proxy terminates TLS and forwards to the container.
+
+**New images aren't picked up automatically yet.** The hosts are meant to pull a new image when
+its tag changes (`deploy-compose-if-newer`), but that isn't working on `gode` or `goba`. After CI
+pushes `staging`, or after a release is approved, update the stack by hand in its folder on the
+host:
+
+```sh
+docker compose pull && docker compose up -d
+```
+
+Then check that `/health` reports the new commit.
 
 The container needs nothing else from Google Cloud except the Sheets API. The sheet is still the
 source of truth, Keycloak (`id-stg.openmrs.org` / `id.openmrs.org`, realm `openmrs`) still signs
@@ -220,7 +230,8 @@ only tags matching `[0-9]*.[0-9]*`, and waits for a required reviewer's approval
 
   CI runs the tests on the tagged commit, `release-guard` checks the tag is a release on `main`,
   and `deploy-production` then waits for approval (Actions › the run › _Review deployments_).
-  It then pushes the production image, and the host picks it up. A GitHub Release is created with
+  It then pushes the production image, which `goba` runs once its stack is updated (by hand for
+  now: see "New images aren't picked up automatically yet" above). A GitHub Release is created with
   notes generated from the commits since the last release. Any other tag (`4.1.1`, `v4.1`,
   `4.1-rc1`) runs the tests and fails `release-guard`, pushing nothing.
 

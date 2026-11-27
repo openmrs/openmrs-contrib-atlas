@@ -45,7 +45,7 @@
 
   Check it with `actionlint` if available, or by reading it, and confirm the tag logic against design Decision 7.
 - [x] 5.2 In `.github/workflows/ci.yml`, add `jetstream` to the push branches. Let `deploy-staging` run for `refs/heads/jetstream` as well as `main`, with a comment that this is temporary. Verify that a push to `jetstream` publishes `openmrsinfra/atlas:staging` on Docker Hub.
-- [ ] 5.3 (manual) In GitHub Settings › Environments:
+- [x] 5.3 (manual) In GitHub Settings › Environments:
   - remove `GCP_*`, `SERVICE`, `HOSTING_TARGET` and `DATA_URL`;
   - keep `SITE_URL`, `KEYCLOAK_ISSUER`, `KEYCLOAK_CLIENT_ID` and `GA_ID`;
   - optionally, move the Docker Hub secrets into the two environments.

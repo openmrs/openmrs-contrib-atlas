@@ -246,7 +246,7 @@ Adding a marker SHALL write its private row (owner, editors and contact) before 
 - **THEN** the add fails, nothing is published, and no marker without an owner can be claimed
 
 ### Requirement: Logo addresses come from uploads
-A `logo_url` set through the Atlas SHALL be blank or an address in the public bucket's `logos/` folder. Any other address SHALL be refused, with the reason given for the logo field, and nothing SHALL be written. Values already in the sheet, and values admins type into the sheet, SHALL NOT be checked.
+A `logo_url` set through the Atlas SHALL be blank or an address in the Atlas's public `logos/` folder, `<site>/data/logos/`. Any other address SHALL be refused, with the reason given for the logo field, and nothing SHALL be written. Values already in the sheet, and values admins type into the sheet, SHALL NOT be checked.
 
 #### Scenario: Address from an upload
 - **WHEN** a person saves a marker with the address the logo upload returned
@@ -254,6 +254,10 @@ A `logo_url` set through the Atlas SHALL be blank or an address in the public bu
 
 #### Scenario: Address elsewhere
 - **WHEN** a request sets `logo_url` to `https://tracker.example/pixel.png`
+- **THEN** nothing is written and the logo field says the logo must be uploaded to the Atlas
+
+#### Scenario: Old bucket address
+- **WHEN** a request sets `logo_url` to an address in the retired Cloud Storage bucket
 - **THEN** nothing is written and the logo field says the logo must be uploaded to the Atlas
 
 ### Requirement: Daily limits on adding and uploading
@@ -276,7 +280,7 @@ A person who isn't an admin SHALL be able to add at most 5 markers and upload at
 - **THEN** all five are added
 
 ### Requirement: Unused logos are removed
-The nightly publish SHALL delete each file in the bucket's `logos/` folder that no row of the `markers` tab uses, whatever its status, and that is more than one day old. It SHALL delete nothing when that would be more than 20 files, or more than 5 files and more than half of the folder, or when the tab has no `logo_url` column. Then it SHALL record why in `problems`, and every publish SHALL keep that note there while the cause remains. The sweep SHALL try again the next night.
+The nightly publish SHALL delete each file in the Atlas's `logos/` folder that no row of the `markers` tab uses, whatever its status, and that is more than one day old. It SHALL delete nothing when that would be more than 20 files, or more than 5 files and more than half of the folder, or when the tab has no `logo_url` column. Then it SHALL record why in `problems`, and every publish SHALL keep that note there while the cause remains. The sweep SHALL try again the next night.
 
 #### Scenario: Abandoned upload
 - **WHEN** a logo was uploaded two days ago and its form was never saved
@@ -306,8 +310,12 @@ The nightly publish SHALL delete each file in the bucket's `logos/` folder that 
 - **WHEN** the column is restored from version history the next day
 - **THEN** the next publish removes the note, and that night's sweep deletes only the logos no row uses
 
+#### Scenario: Addresses not yet moved
+- **WHEN** the sheet's `logo_url` values still name the old bucket after the logos were copied to the folder, and the nightly publish runs
+- **THEN** the sweep holds back, no logo is deleted, and `problems` says why
+
 ### Requirement: Edit timings are logged
-Each write request to the Atlas service SHALL write one log line giving its route pattern, its response status, its total time, and for each kind of sheet, bucket and account call the time taken and the number of calls, including the publish that follows. The line SHALL name the route pattern, never the requested path, and SHALL NOT contain emails, usernames or private sheet data.
+Each write request to the Atlas service SHALL write one log line giving its route pattern, its response status, its total time, and for each kind of sheet, file and account call the time taken and the number of calls, including the publish that follows. The line SHALL name the route pattern, never the requested path, and SHALL NOT contain emails, usernames or private sheet data.
 
 #### Scenario: Editor added
 - **WHEN** an owner adds an editor
@@ -346,3 +354,18 @@ When a person opens the edit form for a marker shown on the map, the form SHALL 
 #### Scenario: Marker not on the map
 - **WHEN** an owner opens the edit form for a hidden marker from My markers
 - **THEN** the form says "Loading…" until the service answers, as before
+
+### Requirement: Logo addresses can be moved in bulk
+A maintainer SHALL be able to rewrite every `logo_url` in an environment's sheet that starts with one address to start with another, so logos keep working when they move. The rewrite SHALL show what it would change and write nothing unless told to apply, and SHALL leave every other value untouched. Like an admin's direct sheet edit, it SHALL NOT restart any marker's freshness clock or add items to the change feed.
+
+#### Scenario: Preview
+- **WHEN** a maintainer runs the rewrite from the bucket address to `https://atlas-stg.openmrs.org/data/logos/` without applying
+- **THEN** it reports how many values it would change and writes nothing
+
+#### Scenario: Apply
+- **WHEN** the maintainer runs it again and applies
+- **THEN** those values start with the new address, no other cell is changed, and the feed and every `confirmed_at` are as before
+
+#### Scenario: Moving back
+- **WHEN** the move is rolled back and the maintainer rewrites from the new address to the bucket address
+- **THEN** the values name the bucket again
