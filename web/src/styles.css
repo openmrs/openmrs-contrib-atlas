@@ -146,6 +146,11 @@ button:disabled {
   outline: 3px solid #f3a712;
   outline-offset: 2px;
 }
+/* Headings Atlas focuses so screen readers announce a panel aren't controls, so no ring, even
+   after a key such as Escape (specs/map-view, "Focus rings mark controls, not headings"). */
+:is(h1, h2, h3)[tabindex="-1"]:focus-visible {
+  outline: none;
+}
 
 /* Search */
 .search {
@@ -879,8 +884,9 @@ a.button {
     min-width: 0;
     max-width: none;
   }
-  /* The box is narrow here, so results take the width of the screen. */
-  .search-results {
+  /* The box is narrow here, so its results take the width of the screen. Only the top bar's:
+     an OpenMRS ID field's suggestions stay under their field (specs/account-lookup). */
+  .search .search-results {
     position: fixed;
     top: 54px;
     left: 8px;

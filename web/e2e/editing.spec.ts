@@ -855,6 +855,25 @@ test.describe("Account picker", () => {
     expect(searches.every((n) => new URL(n).searchParams.get("q")!.length >= 3)).toBe(true);
   });
 
+  // specs/account-lookup, "Suggestions in OpenMRS ID fields": the phone rule for the top bar's
+  // search results once pinned these to the top of the screen, off-screen behind an iPhone's
+  // keyboard.
+  test("Scenario: On a phone", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await stubApi(page);
+    await signedIn(page);
+    await page.goto(`/?panel=edit&marker=${ids.kampala}`);
+    const field = page.getByRole("combobox", { name: "Add an editor by OpenMRS ID" });
+    await field.scrollIntoViewIfNeeded();
+    await field.pressSequentially("smit");
+    const list = page.getByRole("listbox", { name: "Matching OpenMRS IDs" });
+    await expect(list.getByRole("option")).toHaveText(["asmithAl Smith", "carolCarol Smithers"]);
+    const fieldBox = (await field.boundingBox())!;
+    const listBox = (await list.boundingBox())!;
+    expect(Math.abs(listBox.y - (fieldBox.y + fieldBox.height))).toBeLessThanOrEqual(8);
+    expect(listBox.x).toBeCloseTo(fieldBox.x, 0);
+  });
+
   test("Scenario: Unknown OpenMRS ID", async ({ page }) => {
     await stubApi(page);
     await signedIn(page);

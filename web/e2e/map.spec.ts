@@ -224,6 +224,36 @@ test.describe("Search", () => {
     await expect(heading).toBeVisible();
   });
 
+  // specs/map-view, "Focus rings mark controls, not headings".
+  const outline = (el: Element) => getComputedStyle(el).outlineStyle;
+
+  for (const name of ["List", "Filters"]) {
+    test(`Focus rings: Scenario: Escape leaves the marker's name without a focus ring (${name})`, async ({
+      page,
+    }) => {
+      await page.goto(`/?marker=${ids.makerere}`);
+      await mapIdle(page);
+      const heading = page.getByRole("heading", { name: "Makerere Research Clinic" });
+      await page.getByRole("button", { name, exact: true }).click();
+      await expect(heading).toBeHidden();
+      await page.keyboard.press("Escape");
+      await expect(heading).toBeFocused();
+      expect(await heading.evaluate(outline)).toBe("none");
+    });
+  }
+
+  test("Focus rings: Scenario: Escape leaves a button's focus ring", async ({ page }) => {
+    await page.goto("/");
+    await mapIdle(page);
+    const filters = page.getByRole("button", { name: "Filters", exact: true });
+    await filters.click();
+    await expect(page.getByRole("complementary", { name: "Filters" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("complementary", { name: "Filters" })).toBeHidden();
+    await expect(filters).toBeFocused();
+    expect(await filters.evaluate(outline)).not.toBe("none");
+  });
+
   test("Keyboard access: Scenario: Slash moves focus to search", async ({ page }) => {
     await page.goto("/");
     await mapIdle(page);

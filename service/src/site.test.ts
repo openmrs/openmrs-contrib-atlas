@@ -24,6 +24,7 @@ beforeAll(async () => {
   await put("web/reminder.html", "<!doctype html><title>Reminder</title>");
   await put("web/assets/main-abc123.js", "console.log('atlas');".repeat(100));
   await put("web/assets/maplibre-gl-worker-abc123.mjs", "self.onmessage = () => {};");
+  await put("web/assets/thing-abc123.xyz", "a type the service doesn't know");
   await put("web/favicon-32.png", "png");
   await put("web/.hidden", "secret");
   await put("data/atlas.json", JSON.stringify({ markers: [] }));
@@ -143,6 +144,15 @@ describe("the map site", () => {
     expect(res.status).toBe(200);
     expect(res.headers.get("Content-Type")).toBe("text/javascript; charset=utf-8");
     expect(res.headers.get("Cache-Control")).toBe(CACHE.immutable);
+  });
+
+  // specs/deployment, "Only files of a known type are cached for good": a missing type once
+  // kept Safari on a broken MapLibre worker for good.
+  it("caches a file of unknown type for an hour at most, even under /assets/", async () => {
+    const res = await get("/assets/thing-abc123.xyz");
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Content-Type")).toBe("application/octet-stream");
+    expect(res.headers.get("Cache-Control")).toBe(CACHE.other);
   });
 
   it("knows the content type of every file the site's build can emit", async () => {

@@ -19,7 +19,8 @@ export interface SiteConfig {
 /**
  * Content types by extension. Anything missing goes out as application/octet-stream, which
  * nosniff makes browsers refuse as a script or style, so every type the site's build emits must
- * be here (site.test.ts checks web/public and Vite's output types).
+ * be here (site.test.ts checks web/public and Vite's output types). Only files with a type here
+ * are cached for good; anything else is cached for an hour at most.
  */
 export const TYPES: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -209,12 +210,12 @@ export function mountSite(app: Hono, config: SiteConfig): void {
     if (name.split("/").some((part) => part.startsWith("."))) return notFound(c);
     const file = name === "" ? "index.html" : extname(name) ? name : `${name}.html`;
     const path = under(webDir, file);
+    // Hashed bundles are kept for good, but only with a known type: a wrong type cached for a
+    // year can't be fixed by a deploy (specs/deployment).
+    const forGood = file.startsWith("assets/") && extname(file).toLowerCase() in TYPES;
     const headers =
       pages[file] ??
-      ({ "Cache-Control": file.startsWith("assets/") ? CACHE.immutable : CACHE.other } as Record<
-        string,
-        string
-      >);
+      ({ "Cache-Control": forGood ? CACHE.immutable : CACHE.other } as Record<string, string>);
     const sent = path && (await sendFile(c, path, headers));
     return sent || notFound(c);
   });

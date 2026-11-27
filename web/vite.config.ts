@@ -58,8 +58,28 @@ function preloads(): Plugin {
   };
 }
 
+/**
+ * Removes the source-map pointer MapLibre's worker ends with, since its .map isn't published:
+ * otherwise developer tools ask for it and get a 404 (openspec small-fixes-for-4-1). The asset's
+ * hashed name is fixed by now, and only a comment changes.
+ */
+function noWorkerSourceMap(): Plugin {
+  return {
+    name: "atlas-no-worker-source-map",
+    apply: "build",
+    generateBundle(_options, bundle) {
+      for (const file of Object.values(bundle)) {
+        if (file.type !== "asset" || !file.fileName.endsWith(".mjs")) continue;
+        const source =
+          typeof file.source === "string" ? file.source : new TextDecoder().decode(file.source);
+        file.source = source.replace(/\n\/\/# sourceMappingURL=\S+\s*$/, "\n");
+      }
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), devData(), preloads()],
+  plugins: [react(), devData(), preloads(), noWorkerSourceMap()],
   // MapLibre alone is ~300 KB gzipped; load time is measured on staging instead (task 9.4).
   build: {
     chunkSizeWarningLimit: 1600,
