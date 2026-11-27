@@ -26,11 +26,11 @@
 ## 5. Checks and staging
 
 - [x] 5.1 Run the format check, typecheck, lint, unit tests, the e2e suite (`cd web && npx playwright test`) and `npm run build`.
-- [ ] 5.2 Commit and push to `main`. Once CI has pushed `staging`, update `gode` and check:
+- [x] 5.2 Commit and push to `main`. Once CI has pushed `staging`, update `gode` and check:
   - `/health` reports the new commit;
   - `curl -sI` on the worker still shows `text/javascript` with the year-long cache;
   - `curl -s` on the worker no longer contains `sourceMappingURL`.
-- [ ] 5.3 (manual) On staging, on an iPhone: adding an editor shows suggestions under the field. In Chrome and Safari: with a marker open, open the list, press Escape, and the marker's name has no ring. With Web Inspector open, there's no 404 for `maplibre-gl-worker.mjs.map`.
+- [x] 5.3 (manual) On staging, on an iPhone: adding an editor shows suggestions under the field. In Chrome and Safari: with a marker open, open the list, press Escape, and the marker's name has no ring. With Web Inspector open, there's no 404 for `maplibre-gl-worker.mjs.map`.
 
 ## Workflow follow-up
 
