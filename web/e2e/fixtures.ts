@@ -41,33 +41,7 @@ export const test = base.extend<{ allowCspViolations: boolean; cspViolations: st
         report?.(`${e.violatedDirective} blocked ${e.blockedURI || "inline"}`);
       });
     });
-    await page.route(
-      (url) =>
-        url.origin === "http://localhost:4173" &&
-        (isPage(url.pathname) || isReminder(url.pathname)),
-      async (route) => {
-        const response = await route.fetch();
-        const path = new URL(route.request().url()).pathname;
-        await route.fulfill({
-          response,
-          headers: {
-            ...response.headers(),
-            ...(isReminder(path) ? REMINDER_HEADERS : PAGE_HEADERS),
-          },
-        });
-      },
-    );
-    await page.clock.setFixedTime(NOW);
-    await page.route("**/e2e/**", async (route) => {
-      const path = decodeURIComponent(
-        new URL(route.request().url()).pathname.replace(/^\/e2e\//, ""),
-      );
-      try {
-        await route.fulfill({ body: await readFile(resolve(STATIC_DIR, path)) });
-      } catch {
-        await route.fulfill({ status: 404 });
-      }
-    });
+    await preparePage(page);
     await use(page);
     if (!allowCspViolations)
       expect(cspViolations, "Content-Security-Policy violations").toEqual([]);
@@ -75,6 +49,39 @@ export const test = base.extend<{ allowCspViolations: boolean; cspViolations: st
 });
 
 export { expect };
+
+/**
+ * What every test page gets: the site's security headers, a fixed clock, and /e2e/* served from
+ * e2e/static. The `page` fixture does this; a second tab (`context.newPage()`) needs it too.
+ */
+export async function preparePage(page: Page): Promise<void> {
+  await page.route(
+    (url) =>
+      url.origin === "http://localhost:4173" && (isPage(url.pathname) || isReminder(url.pathname)),
+    async (route) => {
+      const response = await route.fetch();
+      const path = new URL(route.request().url()).pathname;
+      await route.fulfill({
+        response,
+        headers: {
+          ...response.headers(),
+          ...(isReminder(path) ? REMINDER_HEADERS : PAGE_HEADERS),
+        },
+      });
+    },
+  );
+  await page.clock.setFixedTime(NOW);
+  await page.route("**/e2e/**", async (route) => {
+    const path = decodeURIComponent(
+      new URL(route.request().url()).pathname.replace(/^\/e2e\//, ""),
+    );
+    try {
+      await route.fulfill({ body: await readFile(resolve(STATIC_DIR, path)) });
+    } catch {
+      await route.fulfill({ status: 404 });
+    }
+  });
+}
 
 export const ids = {
   kampala: "e2e00000-0000-4000-8000-000000000001",

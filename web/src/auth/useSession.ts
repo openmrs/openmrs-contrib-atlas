@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { ApiError, api, type Me } from "../lib/api.ts";
-import { checkSession, hasSession, onSessionEnded, sessionEndsAt } from "./session.ts";
+import {
+  checkSession,
+  clearLapsedSession,
+  hasSession,
+  onOtherTabSignIn,
+  onSessionEnded,
+  sessionEnded,
+  sessionEndsAt,
+} from "./session.ts";
 
 export type Session =
   | {
@@ -47,7 +55,11 @@ export function useSession(onEnded: () => void) {
     // Only when a session exists: visitors never call the service.
     if (!hasSession()) return;
     let current = true;
-    void loadSession().then(async (next) => {
+    // A sign-in from an earlier visit that Keycloak has since ended is cleared without a notice.
+    const opened = clearLapsedSession().then(() =>
+      hasSession() ? loadSession() : ({ status: "anonymous" } as const),
+    );
+    void opened.then(async (next) => {
       if (current) setSession((was) => merge(was, next));
       if (next.status !== "signed-in") return;
       // A session has started: the service confirms this person's recently confirmed markers
@@ -77,6 +89,20 @@ export function useSession(onEnded: () => void) {
         onEnded();
       }),
     [onEnded],
+  );
+
+  // Signing in or out in another tab applies here too (specs/user-sign-in).
+  useEffect(
+    () =>
+      onOtherTabSignIn((signedIn) => {
+        if (signedIn) {
+          setSession((current) =>
+            current.status === "anonymous" ? { status: "loading" } : current,
+          );
+          void refresh();
+        } else sessionEnded();
+      }),
+    [refresh],
   );
 
   // Nothing calls the service while a page sits idle, so look for the end of the session too.

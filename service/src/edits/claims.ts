@@ -9,6 +9,7 @@ import {
   Tabs,
   forbidden,
   notFound,
+  requireRecentSignIn,
   type Claim,
   type ClaimDecision,
   type MarkerResult,
@@ -152,6 +153,7 @@ export class Claims extends EditorBase {
     claimId: string,
   ): Promise<MarkerResult & { decisions: ClaimDecision[] }> {
     if (!person.admin) throw forbidden();
+    requireRecentSignIn(person, this.now());
     const tabs = await this.tabs();
     const marker = tabs.marker(id);
     if (!marker) throw notFound();
@@ -188,6 +190,7 @@ export class Claims extends EditorBase {
     reason: unknown,
   ): Promise<ClaimDecision> {
     if (!person.admin) throw forbidden();
+    requireRecentSignIn(person, this.now());
     if (reason !== undefined && typeof reason !== "string") {
       throw new ApiError(400, { error: "That request is not valid." });
     }

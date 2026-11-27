@@ -19,6 +19,7 @@ import {
   accountsUnavailable,
   forbidden,
   notFound,
+  requireRecentSignIn,
   type CellUpdate,
   type EditStore,
   type MarkerResult,
@@ -91,14 +92,26 @@ export class EditorBase {
     return this.now().toISOString();
   }
 
-  /** The marker, or 404; deleted markers exist only for admins. */
-  protected find(tabs: Tabs, person: Person, id: string, action: Action) {
+  /**
+   * The marker, or 404; deleted markers exist only for admins. A change that only admin rights
+   * allow needs a recent sign-in (specs/user-sign-in); reading, such as opening the form, doesn't.
+   */
+  protected find(
+    tabs: Tabs,
+    person: Person,
+    id: string,
+    action: Action,
+    { reading = false }: { reading?: boolean } = {},
+  ) {
     const marker = tabs.marker(id);
     if (!marker) throw notFound();
     if (text(marker.cells.status) === "deleted" && !person.admin) throw notFound();
     const priv = tabs.privateOf(id);
     const role = roleOn(person, priv);
     if (!can(role, action)) throw forbidden();
+    if (!reading && !can(roleOn({ ...person, admin: false }, priv), action)) {
+      requireRecentSignIn(person, this.now());
+    }
     return { marker, priv, role: role! };
   }
 

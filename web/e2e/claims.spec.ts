@@ -211,3 +211,38 @@ test.describe("On a phone", () => {
     expect(scrollWidth).toBeLessThanOrEqual(375);
   });
 });
+
+// specs/user-sign-in, "Weighty actions need a recent sign-in".
+test.describe("Reviewing a claim on a long sign-in", () => {
+  test("Scenario: Admin reviews a claim", async ({ page }) => {
+    await signedIn(page, "root");
+    await page.addInitScript(() => localStorage.setItem("atlas.e2e.account", "root"));
+    const state = await stubApi(page, true);
+    let asked = false;
+    await page.route("**/api/markers/*/claims/c1/decline", (route) => {
+      if (asked) return route.fallback();
+      asked = true;
+      return route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "Please sign in again to do this.", code: "sign-in-again" }),
+      });
+    });
+    await page.goto(openMakerere);
+    await details(page).getByRole("button", { name: "Decline bjones's claim" }).click();
+    await page.getByLabel("Reason (optional, sent to bjones)").fill("Ask your country lead");
+    await page.getByRole("button", { name: "Decline claim" }).click();
+    await expect(page.getByRole("alert").filter({ hasText: "For your safety" })).toBeVisible();
+    await page.getByRole("button", { name: "Sign in again" }).click();
+    await expect(page.getByLabel("Reason (optional, sent to bjones)")).toHaveValue(
+      "Ask your country lead",
+    );
+    await page.getByRole("button", { name: "Decline claim" }).click();
+    await expect(details(page).getByRole("heading", { name: "A claim to review" })).toHaveCount(0);
+    expect(state.requests.at(-1)).toEqual({
+      method: "POST",
+      path: `/markers/${ids.makerere}/claims/c1/decline`,
+      body: { reason: "Ask your country lead" },
+    });
+  });
+});

@@ -2,11 +2,21 @@ import { ADMIN_GROUP, COLUMNS, text } from "@openmrs-atlas/shared";
 import sharp from "sharp";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "./app.ts";
-import { FakeBucket, FakeSheet, ID, NOW, NOW_ISO, OLD, SECRET_EMAIL } from "./testing.ts";
+import {
+  FakeBucket,
+  FakeSheet,
+  ID,
+  NOW,
+  NOW_ISO,
+  OLD,
+  SECRET_EMAIL,
+  testPerson,
+} from "./testing.ts";
 
 let sheet: FakeSheet;
 let bucket: FakeBucket;
 let saved: Map<string, Buffer>;
+let app: ReturnType<typeof createApp>;
 let call: (
   who: string | undefined,
   method: string,
@@ -18,7 +28,7 @@ beforeEach(() => {
   sheet = new FakeSheet();
   bucket = new FakeBucket();
   saved = new Map();
-  const app = createApp({
+  app = createApp({
     siteUrl: "https://atlas.example.org",
     sheet,
     snapshots: bucket,
@@ -26,10 +36,7 @@ beforeEach(() => {
     now: () => NOW,
     editing: {
       store: sheet,
-      verifyPerson: async (token) =>
-        token === "bad"
-          ? undefined
-          : { username: token.replace("admin:", ""), admin: token.startsWith("admin:") },
+      verifyPerson: async (token) => (token === "bad" ? undefined : testPerson(token, NOW)),
       logos: {
         publicPrefix: "https://bucket.example/",
         listLogos: async () => [],
@@ -1006,5 +1013,76 @@ describe("An edit writes its cells in one call", () => {
     expect(sheet.lastChange().fields).toEqual([
       { field: "editors", from: "asmith", to: "asmith,bob" },
     ]);
+  });
+});
+
+// specs/user-sign-in, "Weighty actions need a recent sign-in". `#<minutes>` on a test token is
+// how long ago the person signed in (testing.ts, testPerson).
+describe("Weighty actions need a recent sign-in", () => {
+  const offer = (who: string) =>
+    call(who, "POST", `/markers/${ID}/transfer`, { username: "asmith" });
+  const signInAgain = { error: "Please sign in again to do this.", code: "sign-in-again" };
+
+  it("Scenario: Offering a transfer on a long sign-in", async () => {
+    const res = await offer(`jdoe#${3 * 24 * 60}`);
+    expect(res.status).toBe(401);
+    expect(await res.json()).toEqual(signInAgain);
+    const form = await (await call("jdoe", "GET", `/markers/${ID}`)).json();
+    expect(form).not.toHaveProperty("offer_to");
+  });
+
+  it("Scenario: Offering a transfer just after signing in", async () => {
+    expect((await offer("jdoe#5")).status).toBe(200);
+  });
+
+  it("Scenario: Admin edits someone else's marker", async () => {
+    const res = await edit("admin:root#60", { fields: { notes: "admin was here" } });
+    expect(res.status).toBe(401);
+    expect(await res.json()).toEqual(signInAgain);
+    expect(sheet.marker("notes")).not.toBe("admin was here");
+    // Opening the form is reading, and doesn't ask.
+    expect((await call("admin:root#60", "GET", `/markers/${ID}`)).status).toBe(200);
+  });
+
+  it("Scenario: Ordinary edit on a long sign-in", async () => {
+    const long = `jdoe#${3 * 24 * 60}`;
+    expect((await edit(long, { fields: { notes: "still here" } })).status).toBe(200);
+    expect((await call(long, "POST", `/markers/${ID}/confirm`)).status).toBe(200);
+    const added = await call(long, "POST", `/markers/${ID}/editors`, { username: "bob" });
+    expect(added.status).toBe(200);
+  });
+
+  it("Scenario: Admin edits their own marker", async () => {
+    sheet.tabs.private![1]![COLUMNS.private.indexOf("owner")] = "root";
+    expect((await edit("admin:root#60", { fields: { notes: "mine" } })).status).toBe(200);
+    // Changing its owner, editors or status is admin-only, so that does ask.
+    expect((await edit("admin:root#60", { owner: "jdoe" })).status).toBe(401);
+    expect((await edit("admin:root#60", { status: "closed" })).status).toBe(401);
+    expect(sheet.priv("owner")).toBe("root");
+  });
+
+  it("asks an admin adding a marker on someone's behalf, unless they signed in recently", async () => {
+    const fields = { name: "New site", latitude: 0.5, longitude: 32.5, type: "Clinical" };
+    const res = await call("admin:root#60", "POST", "/markers", { fields, owner: "jdoe" });
+    expect(res.status).toBe(401);
+    expect(sheet.tabs.private).toHaveLength(2);
+    const recent = await call("admin:root#5", "POST", "/markers", { fields, owner: "jdoe" });
+    expect(recent.status).toBe(201);
+    // Adding one's own marker isn't admin-only, so a long sign-in is fine.
+    expect((await call("admin:root#60", "POST", "/markers", { fields })).status).toBe(201);
+  });
+
+  it("still answers 403, not a sign-in, to someone without rights", async () => {
+    expect((await edit("asmith#60", { owner: "asmith" })).status).toBe(403);
+    expect((await offer("asmith#60")).status).toBe(403);
+  });
+
+  it("asks an admin sending reminders on a long sign-in", async () => {
+    const res = await app.request("/reminders", {
+      method: "POST",
+      headers: { Authorization: "Bearer admin:root#60" },
+    });
+    expect(res.status).toBe(401);
+    expect(await res.json()).toEqual(signInAgain);
   });
 });

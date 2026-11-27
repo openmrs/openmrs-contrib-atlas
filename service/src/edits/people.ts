@@ -14,6 +14,7 @@ import {
   forbidden,
   invalidUsername,
   offerGone,
+  requireRecentSignIn,
   type MarkerResult,
 } from "./core.ts";
 import { EditorBase } from "./editor-base.ts";
@@ -75,6 +76,8 @@ export class People extends EditorBase {
   async offer(person: Person, id: string, username: string) {
     const tabs = await this.tabs();
     const { marker, priv } = this.find(tabs, person, id, "transfer");
+    // Giving a marker away needs a recent sign-in, even for its owner (specs/user-sign-in).
+    requireRecentSignIn(person, this.now());
     const to = normaliseUsername(username);
     if (!isUsername(to)) throw invalidUsername("username");
     if (!priv?.owner) throw new ApiError(409, { error: "This marker has no owner to transfer." });

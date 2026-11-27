@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import type { Page, Route } from "@playwright/test";
-import { STATIC_DIR, expect, ids, mapIdle, stat, test } from "./fixtures.ts";
+import { STATIC_DIR, expect, ids, mapIdle, preparePage, stat, test } from "./fixtures.ts";
 
 const NOW = "2026-11-01T00:00:00.000Z";
 
@@ -1343,5 +1343,130 @@ test.describe("Changes show while they're saved", () => {
     await expect(form.getByRole("status")).toHaveText("Loading…");
     await expect(page.getByLabel("Name (required)")).toHaveCount(0);
     release();
+  });
+});
+
+// specs/user-sign-in: signed in across tabs and visits, keeping a sign-in, and signing in again
+// for weighty actions. In e2e builds a sign-in writes the test token to localStorage, and records
+// how it was asked for under `atlas.e2e.sign-in`.
+test.describe("Staying signed in", () => {
+  const asJdoe = (page: Page) =>
+    page.addInitScript(() => localStorage.setItem("atlas.e2e.account", "jdoe"));
+  const signInThroughThePanel = async (page: Page, keep = false) => {
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    if (keep) await page.getByLabel("Keep me signed in on this device").check();
+    await page.getByRole("button", { name: "Sign in with OpenMRS ID" }).click();
+    await expect(page.getByRole("button", { name: "jdoe" })).toBeVisible();
+  };
+  const lastSignIn = (page: Page) =>
+    page.evaluate(() => JSON.parse(localStorage.getItem("atlas.e2e.sign-in") ?? "null"));
+
+  test("Scenario: New tab", async ({ page, context }) => {
+    await stubApi(page);
+    await asJdoe(page);
+    await page.goto(openKampala);
+    await signInThroughThePanel(page);
+    const other = await context.newPage();
+    await preparePage(other);
+    await stubApi(other);
+    await other.goto("/");
+    await expect(other.getByRole("button", { name: "jdoe" })).toBeVisible();
+  });
+
+  test("Scenario: Signing out in another tab", async ({ page, context }) => {
+    await stubApi(page);
+    await asJdoe(page);
+    await page.goto(openKampala);
+    await signInThroughThePanel(page);
+    const other = await context.newPage();
+    await preparePage(other);
+    await stubApi(other);
+    await other.goto(openKampala);
+    await expect(other.getByRole("button", { name: "Edit" })).toBeVisible();
+    // Signing in opened My markers, where Sign out is.
+    await page.getByRole("button", { name: "Sign out" }).click();
+    await expect(other.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
+    await expect(other.getByRole("button", { name: "Edit" })).toHaveCount(0);
+  });
+
+  test("Scenario: Keep me signed in is off by default", async ({ page }) => {
+    await stubApi(page);
+    await asJdoe(page);
+    await page.goto("/");
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    const keep = page.getByLabel("Keep me signed in on this device");
+    await expect(keep).not.toBeChecked();
+    await expect(page.getByText("Only on a device you don't share.")).toBeVisible();
+    await page.getByRole("button", { name: "Sign in with OpenMRS ID" }).click();
+    await expect(page.getByRole("button", { name: "jdoe" })).toBeVisible();
+    expect(await lastSignIn(page)).toEqual({ keep: false, fresh: false });
+  });
+
+  test("ticking Keep me signed in asks for a kept sign-in, and signing out forgets it", async ({
+    page,
+  }) => {
+    await stubApi(page);
+    await asJdoe(page);
+    await page.goto("/");
+    await signInThroughThePanel(page, true);
+    expect(await lastSignIn(page)).toEqual({ keep: true, fresh: false });
+    expect(await page.evaluate(() => localStorage.getItem("atlas.keep"))).toBe("1");
+    await page.getByRole("button", { name: "Sign out" }).click();
+    await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible();
+    expect(await page.evaluate(() => localStorage.getItem("atlas.keep"))).toBeNull();
+  });
+
+  const signInAgain = { error: "Please sign in again to do this.", code: "sign-in-again" };
+
+  test("Scenario: Offering a transfer on a long sign-in", async ({ page }) => {
+    const state = await stubApi(page);
+    await signedIn(page);
+    await asJdoe(page);
+    let asked = false;
+    await page.route("**/api/markers/*/transfer", (route) => {
+      if (route.request().method() !== "POST" || asked) return route.fallback();
+      asked = true;
+      return route.fulfill({
+        status: 401,
+        contentType: "application/json",
+        body: JSON.stringify(signInAgain),
+      });
+    });
+    await page.goto(openKampala);
+    await page.getByRole("button", { name: "Edit" }).click();
+    await page.getByLabel("New owner's OpenMRS ID").fill("asmith");
+    await page.getByRole("button", { name: "Offer ownership" }).click();
+    await expect(page.getByRole("alert").filter({ hasText: "For your safety" })).toBeVisible();
+    // Scenario: Sign-in again is not a lapsed session.
+    await expect(page.getByRole("button", { name: "jdoe" })).toBeVisible();
+    await expect(page.getByText("session has ended")).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Sign in again" }).click();
+    await expect(page).toHaveURL(/panel=edit/);
+    expect(await lastSignIn(page)).toMatchObject({ fresh: true });
+    await expect(page.getByLabel("New owner's OpenMRS ID")).toHaveValue("asmith");
+    await page.getByRole("button", { name: "Offer ownership" }).click();
+    await expect(page.getByText("Waiting for asmith to accept")).toBeVisible();
+    expect(state.requests.filter((r) => r.path.endsWith("/transfer"))).toHaveLength(1);
+  });
+
+  test("Scenario: Admin edits someone else's marker", async ({ page }) => {
+    const state = await stubApi(page, {
+      role: "admin",
+      me: { username: "root", admin: true, markers: [], offers: [] },
+    });
+    state.nextPatch = { status: 401, body: signInAgain };
+    await signedIn(page, "root");
+    await page.addInitScript(() => localStorage.setItem("atlas.e2e.account", "root"));
+    await page.goto(openKampala);
+    await page.getByRole("button", { name: "Edit" }).click();
+    await page.getByLabel("Notes").fill("Checked by an admin");
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByRole("alert").filter({ hasText: "For your safety" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "root" })).toBeVisible();
+    await page.getByRole("button", { name: "Sign in again" }).click();
+    await expect(page).toHaveURL(/panel=edit/);
+    expect(await lastSignIn(page)).toMatchObject({ fresh: true });
+    await expect(page.getByLabel("Notes")).toHaveValue("Checked by an admin");
   });
 });

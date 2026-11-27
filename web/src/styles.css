@@ -314,6 +314,17 @@ button:disabled {
 .sign-in-action {
   margin: 12px 0 4px;
 }
+/* "Keep me signed in on this device" (specs/user-sign-in). */
+.keep-signed-in {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0 2px;
+  font-size: 14px;
+}
+.keep-signed-in + .hint {
+  margin-left: 22px;
+}
 .add-site {
   margin: 10px 0;
 }

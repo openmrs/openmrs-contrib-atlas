@@ -18,6 +18,7 @@ export interface KeycloakConfig {
 export function keycloakVerifier(config: KeycloakConfig, keys?: JWTVerifyGetKey): PersonVerifier {
   const jwks =
     keys ?? createRemoteJWKSet(new URL(`${config.issuer}/protocol/openid-connect/certs`));
+  let warnedNoAuthTime = false;
   return async (token) => {
     try {
       const { payload } = await jwtVerify(token, jwks, { issuer: config.issuer });
@@ -33,6 +34,14 @@ export function keycloakVerifier(config: KeycloakConfig, keys?: JWTVerifyGetKey)
       };
       // The `email` scope puts it in the token; it is only ever shown back to this person.
       if (typeof payload.email === "string" && payload.email) person.email = payload.email;
+      // The `basic` scope puts `auth_time` in access tokens. Without it, nothing counts as a
+      // recent sign-in, so say so once (never the token or who it belongs to).
+      if (typeof payload.auth_time === "number" && payload.auth_time > 0) {
+        person.signedInAt = payload.auth_time * 1000;
+      } else if (!warnedNoAuthTime) {
+        warnedNoAuthTime = true;
+        console.log(JSON.stringify({ event: "auth-time-missing" }));
+      }
       return person;
     } catch {
       return undefined;

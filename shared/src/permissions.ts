@@ -10,6 +10,11 @@ export interface Person {
   admin: boolean;
   /** From the person's own sign-in token; only ever shown back to them. */
   email?: string;
+  /**
+   * When they last entered their password (the token's `auth_time`), in ms. Renewals keep it,
+   * so weighty actions can ask for a recent sign-in (specs/user-sign-in).
+   */
+  signedInAt?: number;
 }
 
 export type Role = "admin" | "owner" | "editor";

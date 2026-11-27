@@ -26,6 +26,7 @@ beforeEach(() => {
       verifyPerson: async (token) => ({
         username: token.replace("admin:", ""),
         admin: token.startsWith("admin:"),
+        signedInAt: now.getTime(),
       }),
       logos,
     },

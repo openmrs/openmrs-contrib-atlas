@@ -265,6 +265,32 @@ the same two values from the host's settings. The client needs:
   redirect URIs**, and its origin (no trailing slash) as **Web origins**.
 - A **Group Membership** mapper on its dedicated scope: token claim name `groups`, **Full group
   path** off, **Add to access token** on. `preferred_username` comes with the `profile` scope.
+- `offline_access` as an **Optional** client scope (Keycloak's default), for "Keep me signed in
+  on this device", and the realm's `basic` scope as a **Default** client scope, whose `auth time`
+  mapper puts `auth_time` in access tokens.
+
+### Staying signed in
+
+These rules come from specs/user-sign-in.
+
+- **Kept across tabs and visits.** The site keeps the sign-in in the browser's `localStorage`,
+  and renews it quietly while Keycloak's normal session lasts. In both realms that is 30 minutes
+  idle and 10 hours at most.
+- **"Keep me signed in on this device".** Ticking it asks for `offline_access`, so the sign-in
+  lasts as long as Keycloak's **offline** session: until it has gone unused for the realm's
+  _Offline Session Idle_, which is 30 days in both realms, with no maximum. The sign-in panel's
+  hint says "30 days", so update it in `web/src/components/SignInPanel.tsx` if the realm setting
+  changes.
+- **Signing out** revokes the refresh token, which ends a kept sign-in's offline session, then
+  ends Keycloak's session. People can also revoke "offline access" for the Atlas on their
+  Keycloak account page.
+- **Weighty actions need a sign-in within the last 10 minutes,** however long the session has
+  run: offering a marker to a new owner, and anything only admin rights allow (another person's
+  marker, setting an owner, editors or status, reviewing claims, `POST /reminders`). Without one,
+  the service answers 401 with `{"code": "sign-in-again"}`. The site keeps what was typed and
+  sends the person to Keycloak with `max_age=0` to enter their password. The time comes from the
+  token's `auth_time`. A token without it never counts as recent, and the service logs
+  `auth-time-missing` once.
 
 ### The `atlas-service` client
 

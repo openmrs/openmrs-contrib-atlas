@@ -26,6 +26,7 @@ import {
   cleanFields,
   forbidden,
   invalidUsername,
+  requireRecentSignIn,
   type ChangeBody,
   type ClaimDecision,
   type EditStore,
@@ -163,7 +164,7 @@ export class MarkerEditor extends EditorBase {
   /** The form's starting values. Private values only for those entitled to them. */
   async read(person: Person, id: string) {
     const tabs = await this.tabs();
-    const { marker, priv, role } = this.find(tabs, person, id, "edit");
+    const { marker, priv, role } = this.find(tabs, person, id, "edit", { reading: true });
     const fields = Object.fromEntries(EDITABLE_FIELDS.map((f) => [f, marker.cells[f] ?? ""]));
     const { problems } = validateMarkers(tabs.values.markers, tabs.lookups);
     return {
@@ -193,6 +194,10 @@ export class MarkerEditor extends EditorBase {
     }
     if (body.status !== undefined || body.version !== undefined) {
       throw new ApiError(400, { error: "That request is not valid." });
+    }
+    // Setting a new marker's owner or editors is admin-only (specs/user-sign-in).
+    if (body.owner !== undefined || body.editors !== undefined) {
+      requireRecentSignIn(person, this.now());
     }
     const tabs = await this.tabs();
     const id = randomUUID();
@@ -245,6 +250,10 @@ export class MarkerEditor extends EditorBase {
       throw forbidden();
     }
     if (body.status !== undefined && !can(role, "set-status")) throw forbidden();
+    // Owner, editors and status are admin-only fields (specs/user-sign-in).
+    if (body.owner !== undefined || body.editors !== undefined || body.status !== undefined) {
+      requireRecentSignIn(person, this.now());
+    }
     if (body.version !== text(marker.cells.updated_at)) {
       throw new ApiError(409, { error: "This marker has changed since you opened it." });
     }

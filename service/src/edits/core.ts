@@ -15,6 +15,7 @@ import {
   type Cell,
   type FieldError,
   type Lookups,
+  type Person,
   type PublicMarker,
   type RawRow,
 } from "@openmrs-atlas/shared";
@@ -66,8 +67,8 @@ export interface EditStore {
 }
 
 export class ApiError extends Error {
-  status: 400 | 403 | 404 | 409 | 410 | 422 | 429 | 503;
-  body: { error: string; errors?: FieldError[] };
+  status: 400 | 401 | 403 | 404 | 409 | 410 | 422 | 429 | 503;
+  body: { error: string; errors?: FieldError[]; code?: string };
 
   constructor(status: ApiError["status"], body: ApiError["body"]) {
     super(body.error);
@@ -80,6 +81,20 @@ export const notFound = () => new ApiError(404, { error: "That marker was not fo
 export const forbidden = () =>
   new ApiError(403, { error: "You don't have permission to do that." });
 export const offerGone = () => new ApiError(410, { error: "That offer is no longer open." });
+/** How recently a person must have entered their password for a weighty action. */
+export const RECENT_SIGN_IN_MS = 10 * 60_000;
+
+/**
+ * Offering a marker to a new owner, and anything only admin rights allow, need a sign-in within
+ * the last 10 minutes, however long the session has run (specs/user-sign-in, "Weighty actions
+ * need a recent sign-in"). A token without a sign-in time is never recent.
+ */
+export function requireRecentSignIn(person: Person, now: Date): void {
+  const at = person.signedInAt;
+  if (at !== undefined && now.getTime() - at <= RECENT_SIGN_IN_MS) return;
+  throw new ApiError(401, { error: "Please sign in again to do this.", code: "sign-in-again" });
+}
+
 export const accountsUnavailable = () =>
   new ApiError(503, {
     error: "We couldn't check OpenMRS IDs just now. Please try again shortly.",

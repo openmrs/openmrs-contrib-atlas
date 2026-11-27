@@ -3,7 +3,7 @@ import { routePath } from "hono/route";
 import type { Accounts } from "./accounts.ts";
 import { createApi, type ApiDeps } from "./api.ts";
 import { identify, type AuthConfig, type Caller } from "./auth.ts";
-import { MarkerEditor } from "./edits/index.ts";
+import { ApiError, MarkerEditor, requireRecentSignIn } from "./edits/index.ts";
 import type { LinkSigner } from "./links.ts";
 import type { Mailer } from "./mailer.ts";
 import type { NoticeConfig } from "./notices.ts";
@@ -161,6 +161,13 @@ export function createApp(input: AppDeps) {
     const person = token && deps.editing ? await deps.editing.verifyPerson(token) : undefined;
     if (!person) return c.json({ error: "unauthorized" }, 401);
     if (!person.admin) return c.json({ error: "forbidden" }, 403);
+    // An admin-only action: a recent sign-in, as for the API's (specs/user-sign-in).
+    try {
+      requireRecentSignIn(person, now());
+    } catch (err) {
+      if (err instanceof ApiError) return c.json(err.body, 401);
+      throw err;
+    }
     const job = await runReminderJob(`admin:${person.username}`);
     if (job.status === "off") return c.json({ error: "Reminders are not set up." }, 503);
     if (job.status === "running") {

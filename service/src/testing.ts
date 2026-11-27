@@ -13,6 +13,20 @@ export const NOW = new Date("2026-11-02T12:00:00.000Z");
 export const NOW_ISO = NOW.toISOString();
 export const SECRET_EMAIL = "secret-contact@example.org";
 
+/**
+ * The person a fake token stands for: `jdoe`, or `admin:boss` for an admin. They signed in at
+ * `now`, unless the token ends `#<minutes>`, such as `jdoe#60` for an hour ago
+ * (specs/user-sign-in, "Weighty actions need a recent sign-in").
+ */
+export function testPerson(token: string, now: Date) {
+  const [who = "", minutes] = token.split("#");
+  return {
+    username: who.replace("admin:", ""),
+    admin: who.startsWith("admin:"),
+    signedInAt: now.getTime() - Number(minutes ?? 0) * 60_000,
+  };
+}
+
 type Tab = keyof typeof TABS;
 
 /** The sheet in memory, behaving as Sheets does: blank rows stay, cleared rows are blank. */

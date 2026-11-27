@@ -5,6 +5,7 @@ import {
   approveClaim,
   claimMarker,
   declineClaim,
+  needsSignInAgain,
   withdrawClaim,
   type ClaimToReview,
   type MarkerResult,
@@ -41,10 +42,38 @@ interface Props {
   onChanged: () => void;
   /** An approval changed the marker. */
   onApproved: (result: MarkerResult) => void;
+  /** Reviewing a claim needs a recent sign-in (specs/user-sign-in). */
+  onSignInAgain?: () => void;
+}
+
+/** A decline reason being typed, kept across the fresh sign-in a review may need. */
+const DECLINE_DRAFT = "atlas.decline-draft";
+
+function takeDecline(markerId: string): { claimId: string; reason: string } | undefined {
+  try {
+    const stored = sessionStorage.getItem(DECLINE_DRAFT);
+    sessionStorage.removeItem(DECLINE_DRAFT);
+    const draft = stored
+      ? (JSON.parse(stored) as { markerId?: string; claimId?: string; reason?: string })
+      : undefined;
+    return draft?.markerId === markerId && draft.claimId && typeof draft.reason === "string"
+      ? { claimId: draft.claimId, reason: draft.reason }
+      : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 /** Claiming a marker with no owner, and the admin's review of claims (specs/marker-claims). */
-export function ClaimPanel({ markerId, claimable, mine, review, onChanged, onApproved }: Props) {
+export function ClaimPanel({
+  markerId,
+  claimable,
+  mine,
+  review,
+  onChanged,
+  onApproved,
+  onSignInAgain,
+}: Props) {
   if (review.length > 0) {
     return (
       <ClaimReview
@@ -52,6 +81,7 @@ export function ClaimPanel({ markerId, claimable, mine, review, onChanged, onApp
         review={review}
         onChanged={onChanged}
         onApproved={onApproved}
+        onSignInAgain={onSignInAgain}
       />
     );
   }
@@ -188,16 +218,34 @@ function ClaimReview({
   review,
   onChanged,
   onApproved,
+  onSignInAgain,
 }: {
   markerId: string;
   review: ClaimToReview[];
   onChanged: () => void;
   onApproved: (result: MarkerResult) => void;
+  onSignInAgain?: () => void;
 }) {
+  const [kept] = useState(() => takeDecline(markerId));
   const [busy, setBusy] = useState<string>();
-  const [declining, setDeclining] = useState<string>();
-  const [reason, setReason] = useState("");
+  const [declining, setDeclining] = useState<string | undefined>(kept?.claimId);
+  const [reason, setReason] = useState(kept?.reason ?? "");
   const [error, setError] = useState<string>();
+  const [freshNeeded, setFreshNeeded] = useState(false);
+
+  function signInAgain() {
+    if (declining) {
+      try {
+        sessionStorage.setItem(
+          DECLINE_DRAFT,
+          JSON.stringify({ markerId, claimId: declining, reason }),
+        );
+      } catch {
+        // Without storage the reason is typed again.
+      }
+    }
+    onSignInAgain?.();
+  }
   const reasonField = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -207,13 +255,15 @@ function ClaimReview({
   async function run(id: string, action: () => Promise<void>) {
     setBusy(id);
     setError(undefined);
+    setFreshNeeded(false);
     try {
       await action();
       setDeclining(undefined);
       setReason("");
       onChanged();
     } catch (err) {
-      setError(failed(err));
+      if (needsSignInAgain(err) && onSignInAgain) setFreshNeeded(true);
+      else setError(failed(err));
     } finally {
       setBusy(undefined);
     }
@@ -234,6 +284,17 @@ function ClaimReview({
         <p className="error" role="alert">
           {error}
         </p>
+      )}
+      {freshNeeded && (
+        <div role="alert" className="confirm">
+          <p>
+            For your safety, please sign in again to review this claim.
+            {declining ? " Your reason will be kept." : ""}
+          </p>
+          <button type="button" className="primary" onClick={signInAgain}>
+            Sign in again
+          </button>
+        </div>
       )}
       <ul>
         {review.map((claim) => (

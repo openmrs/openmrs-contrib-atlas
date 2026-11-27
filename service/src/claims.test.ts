@@ -5,7 +5,7 @@ import { createApp, type AppDeps } from "./app.ts";
 import { renderClaimDecision, renderClaimNotice } from "./claims-mail.ts";
 import { ANOTHER_APPROVED, MAX_PENDING_CLAIMS, NOW_OWNED } from "./edits/index.ts";
 import type { Email, Mailer } from "./mailer.ts";
-import { FakeBucket, FakeSheet, ID, NOW, NOW_ISO, OLD } from "./testing.ts";
+import { FakeBucket, FakeSheet, ID, NOW, NOW_ISO, OLD, testPerson } from "./testing.ts";
 
 /** Specs: marker-claims, and the claim parts of marker-ownership and marker-data. */
 
@@ -57,10 +57,7 @@ function build(overrides: Partial<AppDeps> = {}) {
     now: () => NOW,
     editing: {
       store: sheet,
-      verifyPerson: async (token) =>
-        token === "bad"
-          ? undefined
-          : { username: token.replace("admin:", ""), admin: token.startsWith("admin:") },
+      verifyPerson: async (token) => (token === "bad" ? undefined : testPerson(token, NOW)),
       logos: {
         publicPrefix: "https://bucket.example/",
         listLogos: async () => [],
@@ -338,6 +335,22 @@ describe("Admins review claims", () => {
     expect((await call("asmith", "POST", `${path}/approve`)).status).toBe(403);
     expect((await call("jdoe", "POST", `${path}/decline`, {})).status).toBe(403);
     expect(claimCell("status")).toBe("pending");
+  });
+
+  // specs/user-sign-in, "Weighty actions need a recent sign-in".
+  it("Scenario: Admin reviews a claim", async () => {
+    orphan();
+    const { body } = await claim("asmith");
+    const path = `/markers/${ID}/claims/${body.claim!.id}`;
+    for (const res of [
+      await call("admin:root#60", "POST", `${path}/approve`),
+      await call("admin:root#60", "POST", `${path}/decline`, {}),
+    ]) {
+      expect(res.status).toBe(401);
+      expect(await res.json()).toMatchObject({ code: "sign-in-again" });
+    }
+    expect(claimCell("status")).toBe("pending");
+    expect((await call("admin:root#5", "POST", `${path}/approve`)).status).toBe(200);
   });
 
   it("claims on deleted markers leave the review", async () => {

@@ -1,6 +1,6 @@
 import type { Map as MapLibreMap } from "maplibre-gl";
 import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { signIn, signInEnabled, signOut } from "./auth/session.ts";
+import { signIn, signInEnabled, signOut, type SignInOptions } from "./auth/session.ts";
 import { useSession } from "./auth/useSession.ts";
 import { DownloadPanel } from "./components/DownloadPanel.tsx";
 import { FilterPanel } from "./components/FilterPanel.tsx";
@@ -208,7 +208,7 @@ export function App({ signInError }: { signInError?: string }) {
     [initial, snapshot, setNotice],
   );
 
-  const startSignIn = (panelAfter?: SignedInPanel) => {
+  const startSignIn = (panelAfter?: SignedInPanel, options?: SignInOptions) => {
     const query = formatUrlState({
       marker: selectedId,
       view,
@@ -216,7 +216,7 @@ export function App({ signInError }: { signInError?: string }) {
       filters,
       panel: panelAfter,
     });
-    signIn(`${window.location.pathname}${query}`).catch(() =>
+    signIn(`${window.location.pathname}${query}`, options).catch(() =>
       setNotice("Sign-in is unavailable right now. The map still works."),
     );
   };
@@ -463,7 +463,10 @@ export function App({ signInError }: { signInError?: string }) {
           />
         )}
         {panel === "sign-in" && (
-          <SignInPanel onSignIn={() => startSignIn("mine")} onClose={() => setPanel(undefined)} />
+          <SignInPanel
+            onSignIn={(keep) => startSignIn("mine", { keep })}
+            onClose={() => setPanel(undefined)}
+          />
         )}
         {selected && !panel && (
           <MarkerDetails
@@ -496,6 +499,7 @@ export function App({ signInError }: { signInError?: string }) {
                 review={me.review?.filter((c) => c.marker_id === selected.id) ?? []}
                 onChanged={() => void refresh()}
                 onApproved={(result) => applyResult(selected.id, result)}
+                onSignInAgain={() => startSignIn(undefined, { fresh: true })}
               />
             )}
             {session.status === "anonymous" && signInEnabled && (
@@ -557,7 +561,7 @@ export function App({ signInError }: { signInError?: string }) {
                   setSelectedId(undefined);
                 }
               }}
-              onSignIn={() => startSignIn(panel === "edit" ? "edit" : "add")}
+              onSignIn={(fresh) => startSignIn(panel === "edit" ? "edit" : "add", { fresh })}
             />
           )}
         </Suspense>

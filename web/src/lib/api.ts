@@ -10,13 +10,24 @@ export interface FieldError {
 export class ApiError extends Error {
   status: number;
   errors: FieldError[];
+  /** `sign-in-again`: a weighty action needs a recent sign-in (specs/user-sign-in). */
+  code?: string;
 
-  constructor(status: number, message: string, errors: FieldError[] = []) {
+  constructor(status: number, message: string, errors: FieldError[] = [], code?: string) {
     super(message);
     this.status = status;
     this.errors = errors;
+    this.code = code;
   }
 }
+
+/** The service wants a fresh sign-in for this action; the session itself is fine. */
+export const needsSignInAgain = (err: unknown): boolean =>
+  err instanceof ApiError && err.status === 401 && err.code === "sign-in-again";
+
+/** The session has ended, as opposed to a weighty action asking for a fresh sign-in. */
+export const sessionHasEnded = (err: unknown): boolean =>
+  err instanceof ApiError && err.status === 401 && err.code !== "sign-in-again";
 
 export interface MyMarker {
   id: string;
@@ -134,10 +145,12 @@ export async function api<T>(path: string, method = "GET", body?: unknown): Prom
   const data = (await res.json().catch(() => ({}))) as {
     error?: string;
     errors?: FieldError[];
+    code?: string;
   };
-  if (res.status === 401) sessionEnded();
+  // A request for a fresh sign-in isn't the end of the session.
+  if (res.status === 401 && data.code !== "sign-in-again") sessionEnded();
   if (!res.ok) {
-    throw new ApiError(res.status, data.error ?? "Something went wrong.", data.errors);
+    throw new ApiError(res.status, data.error ?? "Something went wrong.", data.errors, data.code);
   }
   return data as T;
 }

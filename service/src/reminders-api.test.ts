@@ -71,6 +71,7 @@ function build(overrides: Partial<AppDeps> = {}) {
           ? {
               username: token.split(":")[1]!,
               admin: token.startsWith("admin:"),
+              signedInAt: now.getTime(),
               email: `${token.split(":")[1]}@own-token.example`,
             }
           : undefined,

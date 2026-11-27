@@ -6,6 +6,7 @@ import {
   ApiError,
   api,
   markerPath,
+  needsSignInAgain,
   type FieldError,
   type MarkerForm as FormData_,
   type MarkerResult,
@@ -152,7 +153,8 @@ interface Props {
   /** A change that keeps the form open, such as adding an editor. */
   onChanged: (result: MarkerResult, id: string) => void;
   onClose: () => void;
-  onSignIn: () => void;
+  /** `fresh`: a weighty action needs the password again (specs/user-sign-in). */
+  onSignIn: (fresh?: boolean) => void;
   /** The session ended with this form open. */
   sessionEnded: boolean;
 }
@@ -185,6 +187,9 @@ export function MarkerForm({
   const [message, setMessage] = useState<string>();
   const [conflict, setConflict] = useState(false);
   const [expired, setExpired] = useState(false);
+  // A weighty change (an owner, status, or someone else's marker, by an admin) needs a recent
+  // sign-in; the session itself is fine (specs/user-sign-in).
+  const [freshNeeded, setFreshNeeded] = useState(false);
   const [saving, setSaving] = useState(false);
   const [discarding, setDiscarding] = useState(false);
   const [logoError, setLogoError] = useState<string>();
@@ -378,7 +383,8 @@ export function MarkerForm({
         : await api<MarkerResult>("/markers", "POST", body);
       onSaved(result, markerId ?? result.id!);
     } catch (err) {
-      if (err instanceof ApiError && err.status === 401) setExpired(true);
+      if (needsSignInAgain(err)) setFreshNeeded(true);
+      else if (err instanceof ApiError && err.status === 401) setExpired(true);
       else if (err instanceof ApiError && err.status === 409) setConflict(true);
       else if (err instanceof ApiError) {
         setErrors(err.errors);
@@ -389,9 +395,9 @@ export function MarkerForm({
     }
   }
 
-  function signInAgain() {
+  function signInAgain(fresh = false) {
     saveDraft({ key: draftKey, values, version: form?.version });
-    onSignIn();
+    onSignIn(fresh);
   }
 
   const errorFor = (field: string) => errors.filter((e) => e.field === field).map(friendly);
@@ -555,7 +561,19 @@ export function MarkerForm({
               ? "Your session has ended. Sign in again to carry on; what you typed will be kept."
               : "Your session has ended. Sign in again to edit this marker."}
           </p>
-          <button type="button" className="primary" onClick={signInAgain}>
+          <button type="button" className="primary" onClick={() => signInAgain()}>
+            Sign in again
+          </button>
+        </div>
+      )}
+
+      {freshNeeded && !expired && !sessionEnded && (
+        <div role="alert" className="confirm">
+          <p>
+            For your safety, please sign in again to do this. What you typed will be kept, and you
+            can save once you're back.
+          </p>
+          <button type="button" className="primary" onClick={() => signInAgain(true)}>
             Sign in again
           </button>
         </div>
@@ -772,6 +790,7 @@ export function MarkerForm({
               }}
               onEditors={(editors) => setForm((f) => (f ? { ...f, editors } : f))}
               onOffer={(to) => setForm((f) => (f ? { ...f, offer_to: to } : f))}
+              onSignInAgain={() => signInAgain(true)}
             />
           )}
         </>

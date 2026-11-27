@@ -115,7 +115,7 @@ describe("The nightly publish sweeps logos", () => {
       now: () => NOW,
       editing: {
         store: sheet,
-        verifyPerson: async () => ({ username: "jdoe", admin: false }),
+        verifyPerson: async () => ({ username: "jdoe", admin: false, signedInAt: NOW.getTime() }),
         logos,
       },
     });

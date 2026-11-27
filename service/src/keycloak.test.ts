@@ -1,6 +1,6 @@
 import { ADMIN_GROUP } from "@openmrs-atlas/shared";
 import { SignJWT, createLocalJWKSet, exportJWK, generateKeyPair } from "jose";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { keycloakVerifier } from "./keycloak.ts";
 
 const issuer = "https://id.example/realms/openmrs";
@@ -57,5 +57,28 @@ describe("Requests are checked by the service", () => {
 
   it("rejects a token with no username", async () => {
     expect(await verify(await sign({ preferred_username: "" }))).toBeUndefined();
+  });
+});
+
+describe("Weighty actions need a recent sign-in: the sign-in time", () => {
+  it("reads when the person signed in from `auth_time`", async () => {
+    const person = await verify(await sign({ auth_time: 1_790_000_000 }));
+    expect(person?.signedInAt).toBe(1_790_000_000_000);
+  });
+
+  it("leaves it out, and says so once, when the token has no `auth_time`", async () => {
+    const fresh = keycloakVerifier(
+      { issuer, clientId: "atlas" },
+      createLocalJWKSet({ keys: [jwk] }),
+    );
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      expect((await fresh(await sign({})))?.signedInAt).toBeUndefined();
+      expect((await fresh(await sign({ auth_time: 0 })))?.signedInAt).toBeUndefined();
+      const lines = log.mock.calls.map((call) => String(call[0]));
+      expect(lines).toEqual([JSON.stringify({ event: "auth-time-missing" })]);
+    } finally {
+      log.mockRestore();
+    }
   });
 });
