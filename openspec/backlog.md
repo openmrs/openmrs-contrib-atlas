@@ -29,8 +29,6 @@ Already built from this phase: headline stats (M9) and the RSS feed (X3).
 
 - Owner email campaign at the announcement (design spec, gate 2).
 - Retire Atlas 2.0, its MySQL database and LDAP; retire the Atlas module and its ping API.
-- Remove the `openmrs-atlas.web.app` addresses from the production `atlas` Keycloak client after
-  the DNS switch.
 - Carbon Design look, starting with Carbon's tokens only (option B).
 - Infrastructure and DNS in Terraform.
 

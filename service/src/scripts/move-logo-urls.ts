@@ -4,7 +4,7 @@
  * Prints marker ids and counts only.
  *
  *   npm run move:logos -w service -- <sheet id> \
- *     --from https://storage.googleapis.com/openmrs-atlas-stg/logos/ \
+ *     --from https://old.example.org/data/logos/ \
  *     --to https://atlas-stg.openmrs.org/data/logos/ [--apply]
  *
  * Credentials for the sheet: GOOGLE_SERVICE_ACCOUNT_KEY, or Application Default Credentials.

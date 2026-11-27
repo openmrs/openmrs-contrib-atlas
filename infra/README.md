@@ -30,6 +30,19 @@ The container needs nothing else from Google Cloud except the Sheets API. The sh
 source of truth, Keycloak (`id-stg.openmrs.org` / `id.openmrs.org`, realm `openmrs`) still signs
 people in, and Mandrill still sends the email.
 
+Each environment's Google Cloud project now holds only the service account that reaches its sheet,
+with the Sheets API:
+
+| Environment | Project            | Service account                                                    |
+| ----------- | ------------------ | ------------------------------------------------------------------ |
+| staging     | `atlas-stg-513316` | `atlas-stg-sheets-access@atlas-stg-513316.iam.gserviceaccount.com` |
+| production  | `openmrs-atlas`    | `atlas-sheets-access@openmrs-atlas.iam.gserviceaccount.com`        |
+
+Before 4.0, Atlas ran on Google Cloud: Cloud Run, Firebase Hosting, Cloud Storage and Cloud
+Scheduler. The move to Jetstream 2 is in
+`openspec/changes/archive/2026-11-26-move-to-jetstream/`, and that hosting was deleted afterwards
+(`shut-down-google-cloud`).
+
 ## The image
 
 `service/Dockerfile` builds one image: the service, plus the map site built for one environment.
@@ -263,75 +276,3 @@ admins and maintainers can do, is the decision to deploy it.
 5. **DNS** for the site, pointing at its host, and a certificate on the host's proxy.
 6. **Check:** `curl https://<site>/health`, publish from the sheet (Atlas › Publish), then
    `curl -sI https://<site>/data/atlas.json`.
-
-## Moving an environment off Google Cloud
-
-Until 4.0, each environment ran on Google Cloud: Cloud Run for the service, Firebase Hosting for
-the site, a Cloud Storage bucket for the files, and Cloud Scheduler for the daily jobs. The sheet
-is shared, so moving an environment means moving its files and its addresses. In order:
-
-1. **The image.** Staging: pushed by CI. Production: merge, tag `4.0` and approve it. Cloud Run
-   keeps running the old release throughout.
-2. **The service account key**, for an account the sheet is shared with as an Editor (step 1
-   above).
-3. **The stack** on its host, with its settings. Copy the secrets from the project's Secret
-   Manager: `atlas-publish-secret`, `atlas-keycloak-service-secret`, `atlas-mandrill-api-key`
-   and `atlas-link-signing-key`. Reading them into the `.env` without printing them:
-
-   ```sh
-   gcloud secrets versions access latest --secret=<name> --project=<project>
-   ```
-
-4. **The logos.** Copy them from the bucket into the volume. The hosts have no `gcloud`, so
-   download them on a machine that does, copy them to the host, and put them in the volume with a
-   throwaway container that also gives them to `node` (uid 1000):
-
-   ```sh
-   # On a machine with gcloud
-   gcloud storage rsync -r gs://<bucket>/logos ./logos
-   ls logos | wc -l
-   scp -r logos <host>:~/atlas-logos
-
-   # On the host: find the volume (`docker volume ls`), such as atlas-stg_atlas-data
-   docker run --rm -v <volume>:/atlas_data -v ~/atlas-logos:/incoming:ro alpine sh -c \
-     'mkdir -p /atlas_data/logos && cp -a /incoming/. /atlas_data/logos/ &&
-      chown -R 1000:1000 /atlas_data/logos && ls /atlas_data/logos | wc -l'
-   ```
-
-   The two counts should match. Atlas can keep running, and the copies can be deleted afterwards.
-
-5. **Pause Cloud Scheduler**, so Cloud Run's nightly sweep doesn't see the moved logos as unused:
-
-   ```sh
-   gcloud scheduler jobs pause atlas-nightly-publish --location=us-central1 --project=<project>
-   gcloud scheduler jobs pause atlas-daily-reminders --location=us-central1 --project=<project>
-   ```
-
-6. **The logo addresses.** From the repository root, with the environment's settings loaded
-   (the script doesn't read `.env` itself), preview, then apply (service/README.md, "Moving logo
-   addresses"):
-
-   ```sh
-   set -a && . ./.env && set +a      # GOOGLE_SERVICE_ACCOUNT_KEY and SHEET_ID
-   npm run move:logos -w service -- "$SHEET_ID" \
-     --from https://storage.googleapis.com/<bucket>/logos/ --to https://<site>/data/logos/
-   ```
-
-   The preview's count should match the number of logos copied in step 4.
-
-7. **The Apps Script's `SERVICE_URL`**: the site, instead of the Cloud Run address.
-8. **DNS**: point the site at its host. For production, lower the record's TTL a day ahead and
-   switch at a quiet hour, since both Cloud Run and `goba` can take edits until it propagates.
-9. **Publish** from the sheet, and check the site. For production, once DNS has settled, run
-   steps 4 and 6 again to catch logos uploaded to Cloud Run in the meantime.
-
-| Environment | Project            | Bucket                   |
-| ----------- | ------------------ | ------------------------ |
-| staging     | `atlas-stg-513316` | `gs://openmrs-atlas-stg` |
-| production  | `openmrs-atlas`    | `gs://openmrs-atlas`     |
-
-**Rolling back** an environment: point DNS back at Firebase Hosting, copy any new logos from the
-volume to the bucket (`gcloud storage rsync -r <volume>/logos gs://<bucket>/logos`), run the
-address script the other way, resume the two scheduler jobs, and set the Apps Script's
-`SERVICE_URL` back to the Cloud Run address. Cloud Run, Firebase Hosting and the buckets stay in
-place until a later change removes them.

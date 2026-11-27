@@ -34,7 +34,7 @@ next one catches up. `SCHEDULED_JOBS=off` turns both jobs off, for local develop
 
 ### The site and the published files
 
-The service also serves what Firebase Hosting and the bucket used to:
+The service serves the map site and the published files itself, on the site's own origin:
 
 | Path                                                         | What                                   | Cache-Control                                |
 | ------------------------------------------------------------ | -------------------------------------- | -------------------------------------------- |
@@ -183,17 +183,16 @@ left alone.
 
 ### Moving logo addresses
 
-`logo_url` cells hold full addresses. When logos move (from the Cloud Storage bucket to
-`/data/logos/`, or back for a rollback), rewrite every address that starts with one prefix to
-start with another. Run it from the repository root. It reads the sheet's key from
-`GOOGLE_SERVICE_ACCOUNT_KEY` in the environment, not from `.env`, so load `.env` first. Without
-the key it falls back to your own gcloud login, which usually can't open the sheet ("The caller
-does not have permission"):
+`logo_url` cells hold full addresses. If logos ever move, for example because the site's address
+changes, rewrite every address that starts with one prefix to start with another. Run it from the
+repository root. It reads the sheet's key from `GOOGLE_SERVICE_ACCOUNT_KEY` in the environment,
+not from `.env`, so load `.env` first. Without the key it falls back to your own gcloud login,
+which usually can't open the sheet ("The caller does not have permission"):
 
 ```sh
 set -a && . ./.env && set +a      # GOOGLE_SERVICE_ACCOUNT_KEY and SHEET_ID
 npm run move:logos -w service -- "$SHEET_ID" \
-  --from https://storage.googleapis.com/openmrs-atlas-stg/logos/ \
+  --from https://old.example.org/data/logos/ \
   --to https://atlas-stg.openmrs.org/data/logos/     # a preview: writes nothing
 # then the same again with --apply
 ```

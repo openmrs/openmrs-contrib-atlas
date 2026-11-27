@@ -5,7 +5,7 @@ import { compress } from "hono/compress";
 
 /**
  * The map site, the published files and the logos, all served by the service on the site's own
- * origin, with the headers Firebase Hosting used to send (specs/deployment).
+ * origin, with the site's security and caching headers (specs/deployment).
  */
 export interface SiteConfig {
   /** The built map site (`web/dist`). Without it, only the data files are served. */
@@ -202,7 +202,7 @@ export function mountSite(app: Hono, config: SiteConfig): void {
     } catch {
       return notFound(c);
     }
-    // Clean URLs, as Firebase served them: /reminder, not /reminder.html.
+    // Clean URLs: /reminder, not /reminder.html. Links in sent emails rely on them.
     if (name.endsWith(".html")) {
       const clean = name === "index.html" ? "/" : `/${name.slice(0, -".html".length)}`;
       return c.redirect(clean + (new URL(c.req.url).search || ""), 301);
