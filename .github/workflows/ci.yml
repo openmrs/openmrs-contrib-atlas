@@ -5,7 +5,7 @@ name: CI
 #     atlas-stg.openmrs.org runs;
 #   - a release tag such as 4.0 (or "Run workflow" on an older tag, to roll back) pushes
 #     openmrsinfra/atlas:production and :latest, which atlas.openmrs.org runs, once
-#     release-guard passes and a maintainer approves.
+#     release-guard passes. Tagging the release is the decision; there's no approval step.
 # The build is in deploy.yml; the settings are in the GitHub Environments `staging` and
 # `production`. See infra/README.md.
 
@@ -63,7 +63,7 @@ jobs:
 
   release-guard:
     # Only a tag named <major>.<minor> (3.0, 3.12) on a commit in main is a release. Runs before
-    # the production approval, so any other tag fails here and never asks for one.
+    # the production deploy, so any other tag fails here and pushes nothing.
     if: github.event_name != 'pull_request' && startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:

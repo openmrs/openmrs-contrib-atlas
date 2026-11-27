@@ -10,8 +10,8 @@ name: Deploy
 #
 # The map site's settings come from the GitHub Environment named by `environment` (Settings >
 # Environments). There are deliberately no repository variables, so one environment can never
-# borrow another's value. Only the production job, behind the environment's approval and the
-# release-guard, may push the production tags.
+# borrow another's value. Only the production job, which runs for a release tag once
+# release-guard passes, may push the production tags.
 
 on:
   workflow_call:

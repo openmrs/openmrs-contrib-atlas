@@ -56,7 +56,7 @@
 
 ## 6. Staging
 
-- [ ] 6.1 (manual) In both realms' admin consoles, confirm:
+- [x] 6.1 (manual) In both realms' admin consoles, confirm:
   - the `basic` client scope's `auth_time` mapper adds the claim to access tokens;
   - Realm settings › Tokens › "Revoke Refresh Token" is off.
 - [x] 6.2 Push to `main`, update `gode`, and check `/health`.

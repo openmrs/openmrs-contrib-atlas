@@ -4,10 +4,10 @@ Each environment runs as one Docker container on an OpenMRS server on Jetstream 
 on Docker Hub. Staging runs on `gode`, with the staging versions of the other OpenMRS apps, and
 production on `goba`:
 
-| Environment | Site                                                   | Host   | Image                                           | Built from                            |
-| ----------- | ------------------------------------------------------ | ------ | ----------------------------------------------- | ------------------------------------- |
-| staging     | [atlas-stg.openmrs.org](https://atlas-stg.openmrs.org) | `gode` | `openmrsinfra/atlas:staging`                    | every push to `main` that passes CI   |
-| production  | [atlas.openmrs.org](https://atlas.openmrs.org)         | `goba` | `openmrsinfra/atlas:production` (and `:latest`) | release tags (`4.0`, `4.1`), approved |
+| Environment | Site                                                   | Host   | Image                                           | Built from                          |
+| ----------- | ------------------------------------------------------ | ------ | ----------------------------------------------- | ----------------------------------- |
+| staging     | [atlas-stg.openmrs.org](https://atlas-stg.openmrs.org) | `gode` | `openmrsinfra/atlas:staging`                    | every push to `main` that passes CI |
+| production  | [atlas.openmrs.org](https://atlas.openmrs.org)         | `goba` | `openmrsinfra/atlas:production` (and `:latest`) | release tags (`4.0`, `4.1`)         |
 
 The compose stacks that run them are in
 [openmrs-contrib-ansible-docker-compose](https://github.com/openmrs/openmrs-contrib-ansible-docker-compose),
@@ -17,8 +17,8 @@ host's reverse proxy terminates TLS and forwards to the container.
 
 **New images aren't picked up automatically yet.** The hosts are meant to pull a new image when
 its tag changes (`deploy-compose-if-newer`), but that isn't working on `gode` or `goba`. After CI
-pushes `staging`, or after a release is approved, update the stack by hand in its folder on the
-host:
+pushes `staging`, or a release tag's CI run has finished, update the stack by hand in its folder
+on the host:
 
 ```sh
 docker compose pull && docker compose up -d
@@ -39,7 +39,7 @@ The site's settings are fixed when it is built, so staging and production are se
 | ---------------------- | ------------------------------------------------------ |
 | `staging`              | every push to `main` that passes CI                    |
 | `staging-<sha>`        | the same, one per commit, to pin or compare            |
-| `production`, `latest` | an approved release                                    |
+| `production`, `latest` | a release tag that passes CI                           |
 | `<release>` (`4.0`)    | the same, one per release, to pin or roll back by hand |
 
 In the container:
@@ -214,11 +214,12 @@ take the staging value. Each deploy starts by failing if a required variable is 
 
 Pushing to Docker Hub uses the `DOCKER_HUB_USERNAME` and `DOCKER_HUB_TOKEN` secrets. The workflow
 chooses the tags from the environment, never from a setting: only the `production` job, which
-runs only for a release tag after `release-guard` passes and a maintainer approves, can push
+runs only for a release tag after `release-guard` and the tests pass, can push
 `production`, `latest` or a release number.
 
 The `staging` environment accepts deploys only from `main`. The `production` environment accepts
-only tags matching `[0-9]*.[0-9]*`, and waits for a required reviewer's approval.
+only tags matching `[0-9]*.[0-9]*`. It has no required reviewer: tagging a release, which only
+admins and maintainers can do, is the decision to deploy it.
 
 ## Releasing and rolling back
 
@@ -229,14 +230,14 @@ only tags matching `[0-9]*.[0-9]*`, and waits for a required reviewer's approval
   ```
 
   CI runs the tests on the tagged commit, `release-guard` checks the tag is a release on `main`,
-  and `deploy-production` then waits for approval (Actions › the run › _Review deployments_).
-  It then pushes the production image, which `goba` runs once its stack is updated (by hand for
-  now: see "New images aren't picked up automatically yet" above). A GitHub Release is created with
-  notes generated from the commits since the last release. Any other tag (`4.1.1`, `v4.1`,
+  and `deploy-production` then pushes the production image without waiting for anyone. Test on
+  staging first: the tag is the decision. `goba` runs the new image once its stack is updated (by
+  hand for now: see "New images aren't picked up automatically yet" above). A GitHub Release is
+  created with notes generated from the commits since the last release. Any other tag (`4.1.1`, `v4.1`,
   `4.1-rc1`) runs the tests and fails `release-guard`, pushing nothing.
 
 - **Roll back:** Actions › CI › _Run workflow_, choose the older tag under _Use workflow from_.
-  It runs the same checks and approval, and pushes that release's image as `production` and
+  It runs the same checks, and pushes that release's image as `production` and
   `latest` again. Its existing GitHub Release is left alone. The sheet and the published data
   aren't touched. Note that a tag runs the workflow as it was at that tag. In a hurry, the host's
   compose file can also be pointed at a release's own tag, such as `openmrsinfra/atlas:4.0`.
