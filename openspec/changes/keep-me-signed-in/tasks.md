@@ -59,18 +59,18 @@
 - [ ] 6.1 (manual) In both realms' admin consoles, confirm:
   - the `basic` client scope's `auth_time` mapper adds the claim to access tokens;
   - Realm settings › Tokens › "Revoke Refresh Token" is off.
-- [ ] 6.2 Push to `main`, update `gode`, and check `/health`.
-- [ ] 6.3 (manual) On staging, signed in without "keep":
+- [x] 6.2 Push to `main`, update `gode`, and check `/health`.
+- [x] 6.3 (manual) On staging, signed in without "keep":
   - a new tab is signed in;
   - closing the browser and coming back within 30 minutes is still signed in;
   - the next day shows "Sign in" without a notice.
-- [ ] 6.4 (manual) On staging, signed in with "keep":
+- [x] 6.4 (manual) On staging, signed in with "keep":
   - the next day is still signed in without a password;
   - Keycloak's account page lists the Atlas's offline access;
   - offering a transfer asks for the password again and then works, and the account page still lists one offline access for the Atlas, not two;
   - signing out removes the offline access from the account page;
   - revoking it from the account page signs the Atlas out at its next renewal.
-- [ ] 6.5 (manual) On staging, as an admin signed in for more than 10 minutes: editing someone else's marker and reviewing a claim each ask for the password, keep what was typed, and then work. Editing one's own marker doesn't ask.
+- [x] 6.5 (manual) On staging, as an admin signed in for more than 10 minutes: editing someone else's marker and reviewing a claim each ask for the password, keep what was typed, and then work. Editing one's own marker doesn't ask.
 
 ## Workflow follow-up
 

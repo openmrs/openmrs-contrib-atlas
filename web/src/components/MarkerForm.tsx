@@ -265,6 +265,11 @@ export function MarkerForm({
   useEffect(() => {
     if (discarding) keepEditing.current?.focus();
   }, [discarding]);
+  // The same for the request to sign in again before a weighty change (specs/user-sign-in).
+  const freshSignIn = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (freshNeeded) freshSignIn.current?.focus();
+  }, [freshNeeded]);
 
   // The location: a draggable pin, placed by clicking the map or choosing a search result.
   const latitude = Number(values.latitude);
@@ -568,12 +573,17 @@ export function MarkerForm({
       )}
 
       {freshNeeded && !expired && !sessionEnded && (
-        <div role="alert" className="confirm">
+        <div role="alert" className="confirm floating">
           <p>
             For your safety, please sign in again to do this. What you typed will be kept, and you
             can save once you're back.
           </p>
-          <button type="button" className="primary" onClick={() => signInAgain(true)}>
+          <button
+            ref={freshSignIn}
+            type="button"
+            className="primary"
+            onClick={() => signInAgain(true)}
+          >
             Sign in again
           </button>
         </div>

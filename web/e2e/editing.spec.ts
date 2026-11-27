@@ -1461,8 +1461,14 @@ test.describe("Staying signed in", () => {
     await page.goto(openKampala);
     await page.getByRole("button", { name: "Edit" }).click();
     await page.getByLabel("Notes").fill("Checked by an admin");
-    await page.getByRole("button", { name: "Save" }).click();
-    await expect(page.getByRole("alert").filter({ hasText: "For your safety" })).toBeVisible();
+    const save = page.getByRole("button", { name: "Save" });
+    await save.scrollIntoViewIfNeeded();
+    await save.click();
+    // In view however far down the form is, like "Discard your changes?".
+    const prompt = page.getByRole("alert").filter({ hasText: "For your safety" });
+    await expect(prompt).toBeInViewport({ ratio: 1 });
+    await expect(prompt.getByRole("button", { name: "Sign in again" })).toBeFocused();
+    await expect(save).toBeInViewport();
     await expect(page.getByRole("button", { name: "root" })).toBeVisible();
     await page.getByRole("button", { name: "Sign in again" }).click();
     await expect(page).toHaveURL(/panel=edit/);
