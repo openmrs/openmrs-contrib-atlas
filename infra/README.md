@@ -33,10 +33,10 @@ people in, and Mandrill still sends the email.
 Each environment's Google Cloud project now holds only the service account that reaches its sheet,
 with the Sheets API:
 
-| Environment | Project            | Service account                                                    |
-| ----------- | ------------------ | ------------------------------------------------------------------ |
-| staging     | `atlas-stg-513316` | `atlas-stg-sheets-access@atlas-stg-513316.iam.gserviceaccount.com` |
-| production  | `openmrs-atlas`    | `atlas-sheets-access@openmrs-atlas.iam.gserviceaccount.com`        |
+| Environment | Project             | Service account                                                     |
+| ----------- | ------------------- | ------------------------------------------------------------------- |
+| staging     | `openmrs-atlas-stg` | `atlas-stg-sheets-access@openmrs-atlas-stg.iam.gserviceaccount.com` |
+| production  | `openmrs-atlas`     | `atlas-sheets-access@openmrs-atlas.iam.gserviceaccount.com`         |
 
 Before 4.0, Atlas ran on Google Cloud: Cloud Run, Firebase Hosting, Cloud Storage and Cloud
 Scheduler. The move to Jetstream 2 is in
@@ -260,12 +260,14 @@ admins and maintainers can do, is the decision to deploy it.
 
 ## Setting up an environment
 
-1. **A service account for the sheet.** In a Google Cloud project, create a service account (for
-   example `atlas-stg-sheets-access@atlas-stg-513316`), enable the Sheets API, and create a JSON key
-   for it. Share the
-   sheet with the account as an Editor. If the organization blocks key creation
+1. **A service account for the sheet.** In a Google Cloud project, turn on the **Sheets API**
+   (`gcloud services enable sheets.googleapis.com --project <project>`). Without it, every publish
+   fails with "Google Sheets API has not been used in project … or it is disabled". Then create a
+   service account (for example `atlas-stg-sheets-access@openmrs-atlas-stg`) and a JSON key for
+   it, and share the sheet with the account as an Editor. If the organization blocks key creation
    (`iam.disableServiceAccountKeyCreation`), an organization policy admin has to allow it for that
-   project.
+   project. After changing the key in a stack's `.env`, recreate the container with
+   `docker compose up -d`: `docker compose restart` keeps the old settings.
 2. **Keycloak.** In the environment's realm, create the `atlas` and `atlas-service` clients as in
    [`service/README.md`](../service/README.md#keycloak), with the environment's site as the
    redirect and origin, and the `atlas-administrators` group.
