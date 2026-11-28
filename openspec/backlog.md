@@ -4,11 +4,6 @@ Work not yet proposed as an OpenSpec change. When an item is picked up, it becom
 `openspec/changes/` and is removed from here. Requirement IDs (M8, C7, …) are from the
 [Atlas 3.0 design spec](https://claude.ai/artifact/GKHHVKkbSRPtCpya5DZVfZ).
 
-## Before the announcement
-
-Agreed 2026-11-07, in this order: `simplify-confirming` (done 2026-11-08), then the list view (done 2026-11-08),
-then share cards and the website badge (done 2026-11-08), then orphan claims (done 2026-11-08).
-
 ## Phase 3 · Grow (from the design spec)
 
 - **Contact relay form (C7, Should).** Opt-in per marker: visitors write through a form relayed to
@@ -28,14 +23,12 @@ Already built from this phase: headline stats (M9) and the RSS feed (X3).
 ## Cutover and clean-up
 
 - Owner email campaign at the announcement (design spec, gate 2).
-- Retire Atlas 2.0, its MySQL database and LDAP; retire the Atlas module and its ping API.
 - Carbon Design look, starting with Carbon's tokens only (option B).
-- Infrastructure and DNS in Terraform.
 
 ## Smaller items deferred by earlier changes
 
 - Email when a transfer is offered or accepted.
-- Longer sessions (offline tokens, or Keycloak session settings shared with other OpenMRS
-  services).
 - Bounce and complaint handling beyond Mandrill's rejection list.
 - An Atom feed, or feeds filtered by country or type.
+- Find the source of the `MaxListenersExceededWarning` in the service's logs. The service runs with
+  `--trace-warnings`, so the next one logs where it came from.
