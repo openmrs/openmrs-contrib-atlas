@@ -37,7 +37,7 @@
 - [x] 3.1 (manual) Copy `gs://openmrs-atlas/history` into `atlas_atlas-data` on `goba`, as in 2.1.
 - [x] 3.2 (manual) Delete production's resources in the same order as 2.2: the Cloud Run service is `atlas-service` and the bucket `gs://openmrs-atlas`. Keep the project, the Sheets API and `atlas-sheets-access@` with its key.
 - [x] 3.3 (manual) In the `id.openmrs.org` realm, remove the `openmrs-atlas.web.app` and any other `*.web.app` or `*.firebaseapp.com` entries from the `atlas` client.
-- [ ] 3.4 (manual) Check production as in 2.4, and the next morning that the nightly publish ran.
+- [x] 3.4 (manual) Check production as in 2.4, and the next morning that the nightly publish ran.
 
 ## 4. DNS
 
